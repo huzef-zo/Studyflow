@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="StudyFlow - Settings">
+  <meta name="theme-color" content="#030712">
+  <title>Settings - StudyFlow</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <!-- Navigation Containers -->
+  <div id="sidebar-container"></div>
+  <div id="bottom-nav-container"></div>
+
+  <!-- Main Content -->
+  <main class="main-container">
+    <!-- Page Header -->
+    <header class="page-header">
+      <h1>Settings</h1>
+      <p class="subtitle">Customize your StudyFlow experience</p>
+    </header>
+
+    <!-- Profile Section -->
+    <section class="settings-section">
+      <h2 class="settings-section-title">Profile</h2>
+      
+      <div class="settings-item">
+        <div class="settings-item-info">
+          <div class="settings-item-title">Display Name</div>
+          <div class="settings-item-desc">Your name displayed in the app</div>
+        </div>
+        <input type="text" 
+               class="form-input" 
+               id="display-name" 
+               style="max-width: 200px;"
+               placeholder="Enter your name">
+      </div>
+      
+      <div class="settings-item">
+        <div class="settings-item-info">
+          <div class="settings-item-title">Email (Optional)</div>
+          <div class="settings-item-desc">For display purposes only</div>
+        </div>
+        <input type="email" 
+               class="form-input" 
+               id="user-email" 
+               style="max-width: 200px;"
+               placeholder="email@example.com">
+      </div>
+    </section>
+
+    <!-- Timer Settings -->
+    <section class="settings-section">
+      <h2 class="settings-section-title">Timer Settings</h2>
+      
+      <div class="settings-item">
+        <div class="settings-item-info">
+          <div class="settings-item-title">Work Duration</div>
+          <div class="settings-item-desc">Length of work sessions in minutes</div>
+        </div>
+        <input type="number" 
+               class="form-input" 
+               id="work-duration" 
+               style="max-width: 100px;"
+               min="1" 
+               max="60"
+               value="25">
+      </div>
+      
+      <div class="settings-item">
+        <div class="settings-item-info">
+          <div class="settings-item-title">Short Break</div>
+          <div class="settings-item-desc">Length of short breaks in minutes</div>
+        </div>
+        <input type="number" 
+               class="form-input" 
+               id="short-break" 
+               style="max-width: 100px;"
+               min="1" 
+               max="30"
+               value="5">
+      </div>
+      
+      <div class="settings-item">
+        <div class="settings-item-info">
+          <div class="settings-item-title">Long Break</div>
+          <div class="settings-item-desc">Length of long breaks in minutes</div>
+        </div>
+        <input type="number" 
+               class="form-input" 
+               id="long-break" 
+               style="max-width: 100px;"
+               min="1" 
+               max="60"
+               value="15">
+      </div>
+      
+      <div class="settings-item">
+        <div class="settings-item-info">
+          <div class="settings-item-title">Sessions Until Long Break</div>
+          <div class="settings-item-desc">Number of work sessions before a long break</div>
+        </div>
+        <input type="number" 
+               class="form-input" 
+               id="sessions-until-long" 
+               style="max-width: 100px;"
+               min="2" 
+               max="10"
+               value="4">
+      </div>
+    </section>
+
+    <!-- Notification Settings -->
+    <section class="settings-section">
+      <h2 class="settings-section-title">Notifications</h2>
+      
+      <div class="settings-item">
+        <div class="settings-item-info">
+          <div class="settings-item-title">Sound Notifications</div>
+          <div class="settings-item-desc">Play sound when timer completes</div>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="sound-enabled" checked>
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      
+      <div class="settings-item">
+        <div class="settings-item-info">
+          <div class="settings-item-title">Auto-start Breaks</div>
+          <div class="settings-item-desc">Automatically start break timer after work session</div>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="auto-start-break">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+    </section>
+
+    <!-- Subjects Section -->
+    <section class="settings-section">
+      <div class="flex items-center justify-between mb-md">
+        <h2 class="settings-section-title" style="margin-bottom: 0; border-bottom: none; padding-bottom: 0;">Subjects</h2>
+        <button class="btn btn-secondary btn-sm" id="add-subject-btn">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
+          Add Subject
+        </button>
+      </div>
+      
+      <div id="subjects-list">
+        <!-- Populated by JS -->
+      </div>
+    </section>
+
+    <!-- Data Management -->
+    <section class="settings-section">
+      <h2 class="settings-section-title">Data Management</h2>
+      
+      <div class="settings-item">
+        <div class="settings-item-info">
+          <div class="settings-item-title">Export Data</div>
+          <div class="settings-item-desc">Download all your data as a JSON file</div>
+        </div>
+        <button class="btn btn-secondary" id="export-btn">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+          Export
+        </button>
+      </div>
+      
+      <div class="settings-item">
+        <div class="settings-item-info">
+          <div class="settings-item-title">Import Data</div>
+          <div class="settings-item-desc">Restore data from a previously exported file</div>
+        </div>
+        <label class="btn btn-secondary">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
+          Import
+          <input type="file" id="import-input" accept=".json" style="display: none;">
+        </label>
+      </div>
+      
+      <div class="settings-item">
+        <div class="settings-item-info">
+          <div class="settings-item-title text-danger">Clear All Data</div>
+          <div class="settings-item-desc">Permanently delete all your data</div>
+        </div>
+        <button class="btn btn-danger" id="clear-data-btn">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          Clear All
+        </button>
+      </div>
+    </section>
+
+    <!-- About Section -->
+    <section class="settings-section">
+      <h2 class="settings-section-title">About</h2>
+      
+      <div class="card">
+        <div class="card-body text-center">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 48px; height: 48px; color: var(--primary); margin: 0 auto var(--spacing-md);"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+          <h3 style="margin-bottom: var(--spacing-xs);">StudyFlow</h3>
+          <p class="text-secondary" style="font-size: 0.875rem;">Version 1.0.0</p>
+          <p class="text-secondary" style="font-size: 0.75rem; margin-top: var(--spacing-md);">
+            A simple, offline-capable study organizer.<br>
+            All data is stored locally in your browser.
+          </p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Scripts -->
+  <script src="js/storage.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    // Settings page specific code
+    (function() {
+      'use strict';
+
+      // DOM Elements
+      const elements = {
+        displayName: document.getElementById('display-name'),
+        userEmail: document.getElementById('user-email'),
+        workDuration: document.getElementById('work-duration'),
+        shortBreak: document.getElementById('short-break'),
+        longBreak: document.getElementById('long-break'),
+        sessionsUntilLong: document.getElementById('sessions-until-long'),
+        soundEnabled: document.getElementById('sound-enabled'),
+        autoStartBreak: document.getElementById('auto-start-break'),
+        subjectsList: document.getElementById('subjects-list'),
+        addSubjectBtn: document.getElementById('add-subject-btn'),
+        exportBtn: document.getElementById('export-btn'),
+        importInput: document.getElementById('import-input'),
+        clearDataBtn: document.getElementById('clear-data-btn')
+      };
+
+      /**
+       * Load settings from storage
+       */
+      function loadSettings() {
+        const user = Storage.getUser();
+        const settings = Storage.getSettings();
+        
+        // Profile
+        elements.displayName.value = user.name || '';
+        elements.userEmail.value = user.email || '';
+        
+        // Timer settings
+        elements.workDuration.value = settings.work_duration || 25;
+        elements.shortBreak.value = settings.short_break || 5;
+        elements.longBreak.value = settings.long_break || 15;
+        elements.sessionsUntilLong.value = settings.sessions_until_long_break || 4;
+        
+        // Notifications
+        elements.soundEnabled.checked = settings.sound !== false;
+        elements.autoStartBreak.checked = settings.auto_start_break === true;
+      }
+
+      /**
+       * Save settings to storage
+       */
+      function saveSettings() {
+        // User settings
+        Storage.updateUserName(elements.displayName.value.trim() || 'Student');
+        Storage.updateUserEmail(elements.userEmail.value.trim());
+        
+        // Timer settings
+        Storage.updateSetting('work_duration', parseInt(elements.workDuration.value, 10) || 25);
+        Storage.updateSetting('short_break', parseInt(elements.shortBreak.value, 10) || 5);
+        Storage.updateSetting('long_break', parseInt(elements.longBreak.value, 10) || 15);
+        Storage.updateSetting('sessions_until_long_break', parseInt(elements.sessionsUntilLong.value, 10) || 4);
+        
+        // Notifications
+        Storage.updateSetting('sound', elements.soundEnabled.checked);
+        Storage.updateSetting('auto_start_break', elements.autoStartBreak.checked);
+      }
+
+      /**
+       * Render subjects list
+       */
+      function renderSubjects() {
+        const subjects = Storage.getSubjects();
+        
+        elements.subjectsList.innerHTML = subjects.map(subject => `
+          <div class="subject-item" data-subject-id="${subject.id}">
+            <div class="subject-color" style="background-color: ${subject.color};"></div>
+            <span class="subject-name">${App.escapeHtml(subject.name)}</span>
+            <div class="subject-actions">
+              <button class="btn btn-ghost btn-icon btn-sm edit-subject-btn" aria-label="Edit subject">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              </button>
+              <button class="btn btn-ghost btn-icon btn-sm delete-subject-btn" aria-label="Delete subject">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+              </button>
+            </div>
+          </div>
+        `).join('');
+        
+        // Attach listeners
+        elements.subjectsList.querySelectorAll('.edit-subject-btn').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const subjectId = e.target.closest('.subject-item').dataset.subjectId;
+            openSubjectModal(subjectId);
+          });
+        });
+        
+        elements.subjectsList.querySelectorAll('.delete-subject-btn').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const subjectId = e.target.closest('.subject-item').dataset.subjectId;
+            deleteSubject(subjectId);
+          });
+        });
+      }
+
+      /**
+       * Open subject modal for add/edit
+       */
+      function openSubjectModal(subjectId = null) {
+        const isEdit = !!subjectId;
+        const subject = isEdit ? Storage.getSubjectById(subjectId) : null;
+        
+        const content = `
+          <form id="subject-form">
+            <div class="form-group">
+              <label class="form-label" for="subject-name">Subject Name *</label>
+              <input type="text" 
+                     class="form-input" 
+                     id="subject-name" 
+                     name="name" 
+                     placeholder="e.g., Mathematics"
+                     value="${subject ? App.escapeHtml(subject.name) : ''}"
+                     required>
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label" for="subject-color">Color</label>
+              <div class="flex gap-sm flex-wrap">
+                <input type="color" 
+                       class="form-input" 
+                       id="subject-color" 
+                       name="color"
+                       value="${subject ? subject.color : '#2563EB'}"
+                       style="width: 60px; height: 44px; padding: 4px;">
+                <div class="flex gap-xs flex-wrap" style="flex: 1;">
+                  ${['#2563EB', '#22C55E', '#EAB308', '#F97316', '#EF4444', '#06B6D4', '#8B5CF6', '#EC4899'].map(color => `
+                    <button type="button" 
+                            class="color-preset" 
+                            data-color="${color}"
+                            style="width: 32px; height: 32px; border-radius: 4px; border: 2px solid ${subject && subject.color === color ? 'white' : 'transparent'}; background-color: ${color}; cursor: pointer;">
+                    </button>
+                  `).join('')}
+                </div>
+              </div>
+            </div>
+          </form>
+        `;
+        
+        const modal = App.createModal({
+          id: 'subject-modal',
+          title: isEdit ? 'Edit Subject' : 'Add Subject',
+          content: content,
+          footer: `
+            <button type="button" class="btn btn-secondary" data-action="cancel">Cancel</button>
+            <button type="submit" form="subject-form" class="btn btn-primary">${isEdit ? 'Save' : 'Add'}</button>
+          `
+        });
+        
+        // Color preset listeners
+        modal.querySelectorAll('.color-preset').forEach(btn => {
+          btn.addEventListener('click', () => {
+            document.getElementById('subject-color').value = btn.dataset.color;
+            modal.querySelectorAll('.color-preset').forEach(b => {
+              b.style.borderColor = 'transparent';
+            });
+            btn.style.borderColor = 'white';
+          });
+        });
+        
+        // Form submission
+        const form = modal.querySelector('#subject-form');
+        form.addEventListener('submit', (e) => {
+          e.preventDefault();
+          const data = App.getFormData(form);
+          
+          if (!data.name.trim()) {
+            App.showToast('Please enter a subject name', 'error');
+            return;
+          }
+          
+          if (isEdit) {
+            Storage.updateSubject(subjectId, {
+              name: data.name.trim(),
+              color: data.color
+            });
+            App.showToast('Subject updated', 'success');
+          } else {
+            Storage.addSubject(data.name.trim(), data.color);
+            App.showToast('Subject added', 'success');
+          }
+          
+          App.closeModal();
+          renderSubjects();
+        });
+        
+        modal.querySelector('[data-action="cancel"]').addEventListener('click', () => {
+          App.closeModal(modal);
+        });
+        
+        App.openModal(modal);
+        document.getElementById('subject-name').focus();
+      }
+
+      /**
+       * Delete a subject
+       */
+      async function deleteSubject(subjectId) {
+        const subject = Storage.getSubjectById(subjectId);
+        
+        const confirmed = await App.confirm({
+          title: 'Delete Subject',
+          message: `Are you sure you want to delete "${subject.name}"? Tasks with this subject will keep their subject name.`,
+          confirmText: 'Delete',
+          danger: true
+        });
+        
+        if (confirmed) {
+          Storage.deleteSubject(subjectId);
+          App.showToast('Subject deleted', 'success');
+          renderSubjects();
+        }
+      }
+
+      /**
+       * Export data
+       */
+      function exportData() {
+        const data = Storage.exportData();
+        const json = JSON.stringify(data, null, 2);
+        const blob = new Blob([json], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `studyflow-backup-${Storage.formatDate(new Date())}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        App.showToast('Data exported successfully', 'success');
+      }
+
+      /**
+       * Import data
+       */
+      function importData(file) {
+        const reader = new FileReader();
+        
+        reader.onload = (e) => {
+          try {
+            const data = JSON.parse(e.target.result);
+            
+            if (!data.version || !data.tasks) {
+              throw new Error('Invalid backup file');
+            }
+            
+            Storage.importData(data);
+            App.showToast('Data imported successfully', 'success');
+            loadSettings();
+            renderSubjects();
+          } catch (error) {
+            App.showToast('Invalid backup file', 'error');
+          }
+        };
+        
+        reader.readAsText(file);
+      }
+
+      /**
+       * Clear all data
+       */
+      async function clearAllData() {
+        const confirmed = await App.confirm({
+          title: 'Clear All Data',
+          message: 'This will permanently delete all your tasks, subjects, sessions, and settings. This action cannot be undone.',
+          confirmText: 'Delete Everything',
+          danger: true
+        });
+        
+        if (confirmed) {
+          Storage.clearAllData();
+          App.showToast('All data has been cleared', 'success');
+          loadSettings();
+          renderSubjects();
+        }
+      }
+
+      /**
+       * Set up event listeners
+       */
+      function setupEventListeners() {
+        // Auto-save on change
+        const inputs = [
+          elements.displayName,
+          elements.userEmail,
+          elements.workDuration,
+          elements.shortBreak,
+          elements.longBreak,
+          elements.sessionsUntilLong,
+          elements.soundEnabled,
+          elements.autoStartBreak
+        ];
+        
+        inputs.forEach(input => {
+          input?.addEventListener('change', saveSettings);
+        });
+        
+        // Subject actions
+        elements.addSubjectBtn?.addEventListener('click', () => openSubjectModal());
+        
+        // Data management
+        elements.exportBtn?.addEventListener('click', exportData);
+        elements.importInput?.addEventListener('change', (e) => {
+          if (e.target.files.length > 0) {
+            importData(e.target.files[0]);
+            e.target.value = '';
+          }
+        });
+        elements.clearDataBtn?.addEventListener('click', clearAllData);
+      }
+
+      /**
+       * Initialize settings page
+       */
+      function init() {
+        loadSettings();
+        renderSubjects();
+        setupEventListeners();
+      }
+
+      // Initialize on DOM ready
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+      } else {
+        init();
+      }
+    })();
+  </script>
+</body>
+</html>
