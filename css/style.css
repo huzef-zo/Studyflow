@@ -190,8 +190,35 @@ a:hover {
 }
 
 @media (max-width: 767px) {
-  .grid-2, .grid-3, .grid-4 {
+  .grid-2, .grid-3 {
     grid-template-columns: 1fr;
+  }
+
+  .grid-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .grid-3-mobile {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+
+  .stat-card {
+    padding: var(--spacing-md);
+  }
+
+  .stat-card .stat-value {
+    font-size: 1.5rem;
+  }
+
+  .stat-icon {
+    width: 36px;
+    height: 36px;
+    margin-bottom: var(--spacing-sm);
+  }
+
+  .stat-icon svg {
+    width: 18px;
+    height: 18px;
   }
 }
 
@@ -307,7 +334,7 @@ a:hover {
   margin-top: var(--spacing-xs);
 }
 
-.stat-card .stat-icon {
+.stat-icon {
   width: 48px;
   height: 48px;
   margin: 0 auto var(--spacing-md);
@@ -318,7 +345,7 @@ a:hover {
   background-color: var(--bg-tertiary);
 }
 
-.stat-card .stat-icon svg {
+.stat-icon svg {
   width: 24px;
   height: 24px;
 }
