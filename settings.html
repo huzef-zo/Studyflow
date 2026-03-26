@@ -125,6 +125,17 @@
           <span class="toggle-slider"></span>
         </label>
       </div>
+
+      <div class="settings-item">
+        <div class="settings-item-info">
+          <div class="settings-item-title">Task Due Reminders</div>
+          <div class="settings-item-desc">Send notifications when a task is due</div>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="task-notifications-enabled">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
       
       <div class="settings-item">
         <div class="settings-item-info">
@@ -228,6 +239,7 @@
         sessionsUntilLong: document.getElementById('sessions-until-long'),
         soundEnabled: document.getElementById('sound-enabled'),
         autoStartBreak: document.getElementById('auto-start-break'),
+        taskNotificationsEnabled: document.getElementById('task-notifications-enabled'),
         subjectsList: document.getElementById('subjects-list'),
         addSubjectBtn: document.getElementById('add-subject-btn'),
         exportBtn: document.getElementById('export-btn'),
@@ -255,6 +267,7 @@
         // Notifications
         elements.soundEnabled.checked = settings.sound !== false;
         elements.autoStartBreak.checked = settings.auto_start_break === true;
+        elements.taskNotificationsEnabled.checked = settings.task_notifications !== false;
       }
 
       /**
@@ -274,6 +287,7 @@
         // Notifications
         Storage.updateSetting('sound', elements.soundEnabled.checked);
         Storage.updateSetting('auto_start_break', elements.autoStartBreak.checked);
+        Storage.updateSetting('task_notifications', elements.taskNotificationsEnabled.checked);
       }
 
       /**
@@ -509,11 +523,21 @@
           elements.longBreak,
           elements.sessionsUntilLong,
           elements.soundEnabled,
-          elements.autoStartBreak
+          elements.autoStartBreak,
+          elements.taskNotificationsEnabled
         ];
         
         inputs.forEach(input => {
-          input?.addEventListener('change', saveSettings);
+          input?.addEventListener('change', (e) => {
+            saveSettings();
+
+            // Request notification permission when task reminders are enabled
+            if (input.id === 'task-notifications-enabled' && input.checked) {
+              if ('Notification' in window && Notification.permission === 'default') {
+                Notification.requestPermission();
+              }
+            }
+          });
         });
         
         // Subject actions

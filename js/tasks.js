@@ -41,10 +41,12 @@ const Tasks = (function() {
     
     let dueDateHtml = '';
     if (task.dueDate) {
+      const timeHtml = task.dueTime ? `<span class="task-time" style="margin-left: 4px; font-size: 0.75rem; color: var(--text-secondary);">at ${task.dueTime}</span>` : '';
       dueDateHtml = `
         <span class="task-meta-item">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
           ${App.createDeadlineBadge(task.dueDate)}
+          ${timeHtml}
         </span>
       `;
     }
@@ -239,14 +241,24 @@ const Tasks = (function() {
                  required>
         </div>
         
-        <div class="form-group">
-          <label class="form-label" for="task-due-date">Due Date</label>
-          <input type="date" 
-                 class="form-input" 
-                 id="task-due-date" 
-                 name="dueDate"
-                 min="${today}"
-                 value="${task && task.dueDate ? task.dueDate : ''}">
+        <div class="grid grid-2">
+          <div class="form-group">
+            <label class="form-label" for="task-due-date">Due Date</label>
+            <input type="date"
+                   class="form-input"
+                   id="task-due-date"
+                   name="dueDate"
+                   min="${today}"
+                   value="${task && task.dueDate ? task.dueDate : ''}">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="task-due-time">Due Time</label>
+            <input type="time"
+                   class="form-input"
+                   id="task-due-time"
+                   name="dueTime"
+                   value="${task && task.dueTime ? task.dueTime : ''}">
+          </div>
         </div>
         
         <div class="grid grid-2">
@@ -321,6 +333,7 @@ const Tasks = (function() {
       Storage.updateTask(editingTaskId, {
         title: data.title.trim(),
         dueDate: data.dueDate || null,
+        dueTime: data.dueTime || null,
         priority: data.priority,
         subject: data.subject
       });
@@ -330,6 +343,7 @@ const Tasks = (function() {
       Storage.addTask({
         title: data.title.trim(),
         dueDate: data.dueDate || null,
+        dueTime: data.dueTime || null,
         priority: data.priority,
         subject: data.subject
       });
