@@ -41,6 +41,7 @@ const Storage = (function() {
     },
     settings: {
       notifications: true,
+      task_notifications: true,
       sound: true,
       auto_start_break: false,
       work_duration: 25,
@@ -198,6 +199,7 @@ const Storage = (function() {
       id: generateId(),
       title: task.title,
       dueDate: task.dueDate || null,
+      dueTime: task.dueTime || null,
       priority: task.priority || 'medium',
       subject: task.subject || 'Other',
       completed: false,
