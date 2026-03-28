@@ -706,7 +706,7 @@ a:hover {
   padding: var(--spacing-sm);
   color: var(--text-secondary);
   text-decoration: none;
-  min-width: 64px;
+  min-width: 48px;
   min-height: 56px;
   border-radius: var(--radius-md);
   transition: all var(--transition-fast);
