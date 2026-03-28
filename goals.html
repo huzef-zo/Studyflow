@@ -127,16 +127,17 @@
     }
     
     /* Daily Progress Grid */
+    .daily-progress-scroll-container {
+      overflow-x: auto;
+      margin: 0 calc(var(--spacing-lg) * -1);
+      padding: 0 var(--spacing-lg) var(--spacing-sm);
+    }
+
     .daily-progress-grid {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
       gap: var(--spacing-sm);
-    }
-    
-    @media (max-width: 479px) {
-      .daily-progress-grid {
-        grid-template-columns: repeat(4, 1fr);
-      }
+      min-width: 600px;
     }
     
     .daily-progress-item {
@@ -160,6 +161,14 @@
     
     .daily-progress-item.future {
       opacity: 0.5;
+    }
+
+    .daily-progress-day {
+      font-size: 0.625rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      margin-bottom: var(--spacing-xs);
     }
     
     .daily-progress-circle {
@@ -282,8 +291,10 @@
         <h3 class="card-title">Daily Progress</h3>
       </div>
       <div class="card-body">
-        <div class="daily-progress-grid" id="daily-progress">
-          <!-- Populated by JS -->
+        <div class="daily-progress-scroll-container">
+          <div class="daily-progress-grid" id="daily-progress">
+            <!-- Populated by JS -->
+          </div>
         </div>
       </div>
     </section>

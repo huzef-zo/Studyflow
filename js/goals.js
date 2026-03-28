@@ -167,12 +167,13 @@ const Goals = (function() {
       }
     });
     
-    // Calculate daily targets (weekly goal / 7)
-    const dailyTaskTarget = Math.ceil(goals.weekly_tasks / 7);
-    const dailyMinuteTarget = Math.ceil((goals.weekly_hours * 60) / 7);
+    // Use goals from storage
+    const dailyTaskTarget = goals.daily_tasks;
+    const dailyMinuteTarget = goals.daily_hours * 60;
+    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     
     let html = '';
-    Object.keys(dailyData).forEach(dateStr => {
+    Object.keys(dailyData).forEach((dateStr, index) => {
       const day = dailyData[dateStr];
       
       // Task progress
@@ -201,6 +202,7 @@ const Goals = (function() {
       
       html += `
         <div class="daily-progress-item ${statusClass} ${day.isToday ? 'today' : ''}">
+          <div class="daily-progress-day">${days[index]}</div>
           <div class="daily-progress-circle">
             <svg viewBox="0 0 36 36">
               <circle 
@@ -244,6 +246,7 @@ const Goals = (function() {
     
     const content = `
       <form id="goals-form">
+        <h4 class="mb-sm">Weekly Goals</h4>
         <div class="form-group">
           <label class="form-label" for="weekly-tasks">Weekly Task Goal</label>
           <input type="number" 
@@ -254,9 +257,6 @@ const Goals = (function() {
                  max="100"
                  value="${goals.weekly_tasks}"
                  required>
-          <small class="text-secondary" style="display: block; margin-top: 0.25rem;">
-            How many tasks do you want to complete this week?
-          </small>
         </div>
         
         <div class="form-group">
@@ -270,9 +270,32 @@ const Goals = (function() {
                  step="0.5"
                  value="${goals.weekly_hours}"
                  required>
-          <small class="text-secondary" style="display: block; margin-top: 0.25rem;">
-            How many hours do you want to study this week?
-          </small>
+        </div>
+
+        <h4 class="mb-sm mt-md">Daily Goals</h4>
+        <div class="form-group">
+          <label class="form-label" for="daily-tasks">Daily Task Goal</label>
+          <input type="number"
+                 class="form-input"
+                 id="daily-tasks"
+                 name="daily_tasks"
+                 min="1"
+                 max="50"
+                 value="${goals.daily_tasks}"
+                 required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="daily-hours">Daily Study Hours Goal</label>
+          <input type="number"
+                 class="form-input"
+                 id="daily-hours"
+                 name="daily_hours"
+                 min="1"
+                 max="24"
+                 step="0.5"
+                 value="${goals.daily_hours}"
+                 required>
         </div>
       </form>
     `;
@@ -294,7 +317,9 @@ const Goals = (function() {
       
       Storage.updateGoals({
         weekly_tasks: parseInt(data.weekly_tasks, 10),
-        weekly_hours: parseFloat(data.weekly_hours)
+        weekly_hours: parseFloat(data.weekly_hours),
+        daily_tasks: parseInt(data.daily_tasks, 10),
+        daily_hours: parseFloat(data.daily_hours)
       });
       
       App.showToast('Goals updated!', 'success');

@@ -35,6 +35,8 @@ const Storage = (function() {
     goals: {
       weekly_tasks: 10,
       weekly_hours: 20,
+      daily_tasks: 2,
+      daily_hours: 3,
       current_tasks: 0,
       current_hours: 0,
       week_start: getWeekStart(new Date()).toISOString()
@@ -403,7 +405,10 @@ const Storage = (function() {
   // ============================================
 
   function getGoals() {
-    const goals = loadData(KEYS.GOALS, DEFAULTS.goals);
+    let goals = loadData(KEYS.GOALS, DEFAULTS.goals);
+
+    // Merge with defaults to ensure new properties exist (like daily goals)
+    goals = { ...DEFAULTS.goals, ...goals };
     
     // Check if we need to reset for new week
     const currentWeekStart = getWeekStart(new Date()).toISOString();
