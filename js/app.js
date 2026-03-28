@@ -33,7 +33,8 @@ const App = (function() {
     bookOpen: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>`,
     target: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>`,
     award: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg>`,
-    empty: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`
+    empty: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`,
+    history: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m7 16 3-3 3 3 5-5"/></svg>`
   };
 
   /**
@@ -55,6 +56,7 @@ const App = (function() {
       { id: 'calendar', label: 'Calendar', icon: 'calendar', href: 'calendar.html' },
       { id: 'timer', label: 'Timer', icon: 'timer', href: 'timer.html' },
       { id: 'goals', label: 'Goals', icon: 'goals', href: 'goals.html' },
+      { id: 'history', label: 'History', icon: 'history', href: 'history.html' },
       { id: 'settings', label: 'Settings', icon: 'settings', href: 'settings.html' }
     ];
 
@@ -93,6 +95,7 @@ const App = (function() {
       { id: 'dashboard', label: 'Home', icon: 'home', href: 'index.html' },
       { id: 'tasks', label: 'Tasks', icon: 'tasks', href: 'tasks.html' },
       { id: 'timer', label: 'Timer', icon: 'timer', href: 'timer.html' },
+      { id: 'history', label: 'History', icon: 'history', href: 'history.html' },
       { id: 'calendar', label: 'Calendar', icon: 'calendar', href: 'calendar.html' },
       { id: 'settings', label: 'Settings', icon: 'settings', href: 'settings.html' }
     ];
@@ -123,6 +126,7 @@ const App = (function() {
       'calendar.html': 'calendar',
       'timer.html': 'timer',
       'goals.html': 'goals',
+      'history.html': 'history',
       'settings.html': 'settings'
     };
     
