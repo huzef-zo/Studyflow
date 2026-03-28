@@ -1614,60 +1614,89 @@ a:hover {
 
 /* Frequency Graph Styles */
 .frequency-graph {
-  display: flex;
-  align-items: flex-end;
-  gap: 4px;
-  height: 200px;
-  padding-top: var(--spacing-xl);
+  height: 250px;
   margin-top: var(--spacing-md);
-  border-bottom: 1px solid var(--border);
 }
 
-.frequency-bar-wrapper {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--spacing-xs);
-  height: 100%;
-  justify-content: flex-end;
+.line-graph-container {
+  overflow-x: auto;
+  padding-bottom: var(--spacing-md);
 }
 
-.frequency-bar {
-  width: 100%;
-  background-color: var(--primary);
-  border-radius: 2px 2px 0 0;
-  min-height: 2px;
-  transition: height var(--transition-slow);
+.line-graph-wrapper {
   position: relative;
+  min-width: 600px;
+  height: 200px;
 }
 
-.frequency-bar:hover {
-  background-color: var(--primary-light);
+.line-graph-svg {
+  width: 100%;
+  height: 100%;
 }
 
-.frequency-bar::after {
-  content: attr(data-value);
+.graph-grid-line {
+  stroke: var(--border);
+  stroke-width: 1;
+  stroke-dasharray: 4,4;
+}
+
+.graph-line {
+  fill: none;
+  stroke: var(--primary);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.graph-area {
+  fill: rgba(37, 99, 235, 0.1);
+  stroke: none;
+}
+
+.graph-dot {
+  fill: var(--bg-card);
+  stroke: var(--primary);
+  stroke-width: 2;
+  cursor: pointer;
+  transition: r var(--transition-fast), stroke-width var(--transition-fast);
+}
+
+.graph-dot:hover {
+  r: 6;
+  stroke-width: 3;
+}
+
+.graph-labels-x {
   position: absolute;
-  top: -20px;
-  left: 50%;
+  bottom: -30px;
+  left: 0;
+  right: 0;
+  height: 20px;
+}
+
+.graph-label-x {
+  position: absolute;
   transform: translateX(-50%);
   font-size: 0.625rem;
-  color: var(--text-secondary);
-  opacity: 0;
-  transition: opacity var(--transition-fast);
+  color: var(--text-muted);
+  white-space: nowrap;
 }
 
-.frequency-bar:hover::after {
-  opacity: 1;
+.graph-labels-y {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 30px;
+  pointer-events: none;
 }
 
-.frequency-label {
+.graph-label-y {
+  position: absolute;
+  left: 0;
   font-size: 0.625rem;
   color: var(--text-muted);
-  transform: rotate(-45deg);
-  white-space: nowrap;
-  margin-top: 10px;
+  transform: translateY(-50%);
 }
 
 /* ============================================

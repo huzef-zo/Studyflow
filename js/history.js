@@ -138,7 +138,7 @@ const History = (function() {
   }
 
   /**
-   * Render Frequency Graph
+   * Render Frequency Graph (Line Chart)
    */
   function renderFrequencyGraph() {
     if (!elements.frequencyGraph) return;
@@ -161,22 +161,75 @@ const History = (function() {
     }
 
     // Ensure at least some height if all counts are 0
-    if (maxCount === 0) maxCount = 10;
+    if (maxCount === 0) maxCount = 5;
 
-    let html = '';
-    days.forEach(day => {
-      const height = (day.count / maxCount) * 100;
-      const label = day.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    const width = 800;
+    const height = 200;
+    const paddingX = 40;
+    const paddingY = 30;
+    const chartWidth = width - (paddingX * 2);
+    const chartHeight = height - (paddingY * 2);
 
-      html += `
-        <div class="frequency-bar-wrapper">
-          <div class="frequency-bar" style="height: ${Math.max(2, height)}%" data-value="${day.count}"></div>
-          <span class="frequency-label">${label}</span>
-        </div>
-      `;
+    // Calculate points
+    const points = days.map((day, i) => {
+      const x = paddingX + (i * (chartWidth / (daysCount - 1)));
+      const y = height - paddingY - (day.count / maxCount * chartHeight);
+      return { x, y, count: day.count, date: day.date };
     });
 
-    elements.frequencyGraph.innerHTML = html;
+    // Create line path
+    const linePath = points.map((p, i) => (i === 0 ? 'M' : 'L') + `${p.x},${p.y}`).join(' ');
+
+    // Create area path
+    const areaPath = `${linePath} L ${points[points.length - 1].x},${height - paddingY} L ${points[0].x},${height - paddingY} Z`;
+
+    let svgHtml = `
+      <div class="line-graph-wrapper">
+        <svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" class="line-graph-svg">
+          <!-- Grid Lines (Horizontal) -->
+          <line x1="${paddingX}" y1="${paddingY}" x2="${width - paddingX}" y2="${paddingY}" class="graph-grid-line" />
+          <line x1="${paddingX}" y1="${paddingY + chartHeight / 2}" x2="${width - paddingX}" y2="${paddingY + chartHeight / 2}" class="graph-grid-line" />
+          <line x1="${paddingX}" y1="${height - paddingY}" x2="${width - paddingX}" y2="${height - paddingY}" class="graph-grid-line" />
+
+          <!-- Area -->
+          <path d="${areaPath}" class="graph-area" />
+
+          <!-- Line -->
+          <path d="${linePath}" class="graph-line" />
+
+          <!-- Dots -->
+          ${points.map(p => `
+            <circle cx="${p.x}" cy="${p.y}" r="4" class="graph-dot">
+              <title>${p.count} activities on ${p.date.toLocaleDateString()}</title>
+            </circle>
+          `).join('')}
+        </svg>
+
+        <!-- X-Axis Labels -->
+        <div class="graph-labels-x">
+          ${days.filter((_, i) => i % 5 === 0 || i === daysCount - 1).map(day => {
+            const index = days.indexOf(day);
+            const left = (paddingX + (index * (chartWidth / (daysCount - 1)))) / width * 100;
+            return `
+              <span class="graph-label-x" style="left: ${left}%">
+                ${day.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+              </span>
+            `;
+          }).join('')}
+        </div>
+
+        <!-- Y-Axis Labels -->
+        <div class="graph-labels-y">
+          <span class="graph-label-y" style="bottom: ${paddingY / height * 100}%">0</span>
+          <span class="graph-label-y" style="bottom: 50%">${Math.round(maxCount / 2)}</span>
+          <span class="graph-label-y" style="top: ${paddingY / height * 100}%">${maxCount}</span>
+        </div>
+      </div>
+    `;
+
+    elements.frequencyGraph.innerHTML = svgHtml;
+    // Reset container style
+    elements.frequencyGraph.classList.add('line-graph-container');
   }
 
   // Public API
