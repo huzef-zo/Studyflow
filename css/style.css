@@ -1565,7 +1565,7 @@ a:hover {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-xs);
-  min-width: 700px;
+  min-width: 800px;
 }
 
 .heatmap-grid {
@@ -1618,6 +1618,7 @@ a:hover {
   align-items: flex-end;
   gap: 4px;
   height: 200px;
+  min-width: 600px;
   padding-top: var(--spacing-xl);
   margin-top: var(--spacing-md);
   border-bottom: 1px solid var(--border);
