@@ -1700,6 +1700,105 @@ a:hover {
 }
 
 /* ============================================
+   Task Type Selector & Repeating Days
+   ============================================ */
+.task-type-selector {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  margin-bottom: var(--spacing-lg);
+  background-color: var(--bg-tertiary);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+.task-type-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-md);
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+  border-bottom: 1px solid var(--border);
+}
+
+.task-type-option:last-child {
+  border-bottom: none;
+}
+
+.task-type-option:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.task-type-option input {
+  display: none;
+}
+
+.task-type-option .radio-circle {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--text-muted);
+  border-radius: 50%;
+  position: relative;
+  transition: border-color var(--transition-fast);
+}
+
+.task-type-option input:checked + .radio-circle {
+  border-color: var(--primary-light);
+}
+
+.task-type-option input:checked + .radio-circle::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 10px;
+  height: 10px;
+  background-color: var(--primary-light);
+  border-radius: 50%;
+}
+
+.task-type-label {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.repeat-days-grid {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--spacing-xs);
+  margin-top: var(--spacing-sm);
+}
+
+.day-toggle {
+  flex: 1;
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  transition: all var(--transition-fast);
+}
+
+.day-toggle:hover {
+  border-color: var(--text-muted);
+}
+
+.day-toggle.active {
+  background-color: var(--primary);
+  border-color: var(--primary);
+  color: white;
+}
+
+/* ============================================
    Utility Classes
    ============================================ */
 .hidden { display: none !important; }

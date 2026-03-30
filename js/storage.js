@@ -200,11 +200,13 @@ const Storage = (function() {
     const newTask = {
       id: generateId(),
       title: task.title,
+      type: task.type || 'one-time',
       startDate: task.startDate || task.dueDate || null,
       dueDate: task.dueDate || null,
       dueTime: task.dueTime || null,
       priority: task.priority || 'medium',
       subject: task.subject || 'Other',
+      repeatDays: task.repeatDays || [],
       completed: false,
       createdAt: new Date().toISOString()
     };
@@ -246,7 +248,14 @@ const Storage = (function() {
 
   function getTasksByDate(dateStr) {
     const tasks = getTasks();
+    const date = new Date(dateStr);
+    const dayOfWeek = date.getDay();
+
     return tasks.filter(t => {
+      if (t.type === 'repeating') {
+        return t.repeatDays && t.repeatDays.includes(dayOfWeek);
+      }
+
       if (!t.dueDate) return false;
       const start = t.startDate || t.dueDate;
       return dateStr >= start && dateStr <= t.dueDate;
@@ -279,12 +288,19 @@ const Storage = (function() {
     const futureStr = formatDate(futureDate);
 
     return tasks.filter(t => {
-      if (t.completed || !t.dueDate) return false;
+      if (t.completed) return false;
+
+      if (t.type === 'repeating') return true;
+
+      if (!t.dueDate) return false;
       const start = t.startDate || t.dueDate;
-      // Task is upcoming if its range overlaps with [today, futureDate]
-      // Or more simply, if it's not finished yet and its due date is in the future
       return t.dueDate >= todayStr && start <= futureStr;
-    }).sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
+    }).sort((a, b) => {
+      if (a.type === 'repeating' && b.type !== 'repeating') return 1;
+      if (a.type !== 'repeating' && b.type === 'repeating') return -1;
+      if (a.type === 'repeating' && b.type === 'repeating') return 0;
+      return new Date(a.dueDate) - new Date(b.dueDate);
+    });
   }
 
   function getOverdueTasks() {

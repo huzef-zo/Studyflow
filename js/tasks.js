@@ -40,8 +40,17 @@ const Tasks = (function() {
     const priorityLabel = App.getPriorityLabel(task.priority);
     
     let dueDateHtml = '';
-    if (task.dueDate) {
-      const timeHtml = task.dueTime ? `<span class="task-time" style="margin-left: 4px; font-size: 0.75rem; color: var(--text-secondary);">at ${task.dueTime}</span>` : '';
+    const timeHtml = task.dueTime ? `<span class="task-time" style="margin-left: 4px; font-size: 0.75rem; color: var(--text-secondary);">at ${task.dueTime}</span>` : '';
+
+    if (task.type === 'repeating') {
+      const repeatLabel = App.getRepeatDaysLabel(task.repeatDays);
+      dueDateHtml = `
+        <span class="task-meta-item">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21 21-4.3-4.3"/><path d="M18 8A10 10 0 0 0 8 18"/><path d="M18 8h-4"/><path d="M18 8v4"/><path d="M21.1 12a9 9 0 0 0-9-9"/><path d="M11.9 21.1a9 9 0 0 1-9-9"/><path d="M2 12a10 10 0 0 1 10-10"/></svg>
+          ${repeatLabel} ${timeHtml}
+        </span>
+      `;
+    } else if (task.dueDate) {
       const dateBadge = App.createDateRangeBadge(task.startDate, task.dueDate);
       dueDateHtml = `
         <span class="task-meta-item">
@@ -224,7 +233,7 @@ const Tasks = (function() {
   function openTaskModal(taskId = null) {
     editingTaskId = taskId;
     const isEdit = !!taskId;
-    const task = isEdit ? Storage.getTaskById(taskId) : null;
+    const task = isEdit ? Storage.getTaskById(taskId) : { type: 'one-time' };
     const subjects = Storage.getSubjects();
     
     const today = Storage.formatDate(new Date());
@@ -238,59 +247,64 @@ const Tasks = (function() {
                  id="task-title" 
                  name="title" 
                  placeholder="What needs to be done?"
-                 value="${task ? App.escapeHtml(task.title) : ''}"
+                 value="${isEdit ? App.escapeHtml(task.title) : ''}"
                  required>
         </div>
-        
-        <div class="grid grid-3-mobile">
-          <div class="form-group">
-            <label class="form-label" for="task-start-date">Start Date</label>
-            <input type="date"
-                   class="form-input"
-                   id="task-start-date"
-                   name="startDate"
-                   value="${task && task.startDate ? task.startDate : ''}">
+
+        <div class="form-group">
+          <label class="form-label">Task Type</label>
+          <div class="task-type-selector">
+            <label class="task-type-option">
+              <span class="task-type-label">Repeating Task</span>
+              <input type="radio" name="type" value="repeating" ${task.type === 'repeating' ? 'checked' : ''}>
+              <span class="radio-circle"></span>
+            </label>
+            <label class="task-type-option">
+              <span class="task-type-label">One-time Task</span>
+              <input type="radio" name="type" value="one-time" ${task.type === 'one-time' ? 'checked' : ''}>
+              <span class="radio-circle"></span>
+            </label>
+            <label class="task-type-option">
+              <span class="task-type-label">Date Range Task</span>
+              <input type="radio" name="type" value="date-range" ${task.type === 'date-range' ? 'checked' : ''}>
+              <span class="radio-circle"></span>
+            </label>
           </div>
-          <div class="form-group">
-            <label class="form-label" for="task-due-date">Due Date</label>
-            <input type="date"
-                   class="form-input"
-                   id="task-due-date"
-                   name="dueDate"
-                   min="${today}"
-                   value="${task && task.dueDate ? task.dueDate : ''}">
-          </div>
+        </div>
+
+        <div id="date-inputs-container">
+          <!-- Dynamically filled -->
+        </div>
+
+        <div class="grid grid-2">
           <div class="form-group">
             <label class="form-label" for="task-due-time">Due Time</label>
             <input type="time"
                    class="form-input"
                    id="task-due-time"
                    name="dueTime"
-                   value="${task && task.dueTime ? task.dueTime : ''}">
+                   value="${isEdit && task.dueTime ? task.dueTime : ''}">
           </div>
-        </div>
-        
-        <div class="grid grid-2">
           <div class="form-group">
             <label class="form-label" for="task-priority">Priority</label>
             <select class="form-select" id="task-priority" name="priority">
-              <option value="low" ${task && task.priority === 'low' ? 'selected' : ''}>Low</option>
-              <option value="medium" ${task && task.priority === 'medium' ? 'selected' : ''}>Medium</option>
-              <option value="high" ${task && task.priority === 'high' ? 'selected' : ''}>High</option>
-              <option value="critical" ${task && task.priority === 'critical' ? 'selected' : ''}>Critical</option>
+              <option value="low" ${isEdit && task.priority === 'low' ? 'selected' : ''}>Low</option>
+              <option value="medium" ${!isEdit || task.priority === 'medium' ? 'selected' : ''}>Medium</option>
+              <option value="high" ${isEdit && task.priority === 'high' ? 'selected' : ''}>High</option>
+              <option value="critical" ${isEdit && task.priority === 'critical' ? 'selected' : ''}>Critical</option>
             </select>
           </div>
-          
-          <div class="form-group">
-            <label class="form-label" for="task-subject">Subject</label>
-            <select class="form-select" id="task-subject" name="subject">
-              ${subjects.map(s => `
-                <option value="${App.escapeHtml(s.name)}" ${task && task.subject === s.name ? 'selected' : ''}>
-                  ${App.escapeHtml(s.name)}
-                </option>
-              `).join('')}
-            </select>
-          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="task-subject">Subject</label>
+          <select class="form-select" id="task-subject" name="subject">
+            ${subjects.map(s => `
+              <option value="${App.escapeHtml(s.name)}" ${isEdit && task.subject === s.name ? 'selected' : ''}>
+                ${App.escapeHtml(s.name)}
+              </option>
+            `).join('')}
+          </select>
         </div>
       </form>
     `;
@@ -305,6 +319,63 @@ const Tasks = (function() {
       `,
       onClose: () => { editingTaskId = null; }
     });
+
+    const dateContainer = modal.querySelector('#date-inputs-container');
+
+    function updateDateInputs(type) {
+      if (type === 'repeating') {
+        const days = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+        const repeatDays = isEdit ? (task.repeatDays || []) : [];
+        dateContainer.innerHTML = `
+          <div class="form-group">
+            <label class="form-label">Repeat On:</label>
+            <div class="repeat-days-grid">
+              ${days.map((day, i) => `
+                <div class="day-toggle ${repeatDays.includes(i) ? 'active' : ''}" data-day="${i}">${day}</div>
+              `).join('')}
+            </div>
+            <button type="button" class="btn btn-ghost btn-sm mt-sm" id="select-every-day">Select Every Day</button>
+          </div>
+        `;
+
+        dateContainer.querySelectorAll('.day-toggle').forEach(el => {
+          el.addEventListener('click', () => {
+            el.classList.toggle('active');
+          });
+        });
+
+        dateContainer.querySelector('#select-every-day').addEventListener('click', () => {
+          dateContainer.querySelectorAll('.day-toggle').forEach(el => el.classList.add('active'));
+        });
+
+      } else if (type === 'date-range') {
+        dateContainer.innerHTML = `
+          <div class="grid grid-2">
+            <div class="form-group">
+              <label class="form-label" for="task-start-date">Start Date</label>
+              <input type="date" class="form-input" id="task-start-date" name="startDate" value="${isEdit && task.startDate ? task.startDate : today}">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="task-due-date">Due Date</label>
+              <input type="date" class="form-input" id="task-due-date" name="dueDate" min="${today}" value="${isEdit && task.dueDate ? task.dueDate : today}">
+            </div>
+          </div>
+        `;
+      } else {
+        dateContainer.innerHTML = `
+          <div class="form-group">
+            <label class="form-label" for="task-due-date">Due Date</label>
+            <input type="date" class="form-input" id="task-due-date" name="dueDate" min="${today}" value="${isEdit && task.dueDate ? task.dueDate : today}">
+          </div>
+        `;
+      }
+    }
+
+    modal.querySelectorAll('input[name="type"]').forEach(radio => {
+      radio.addEventListener('change', (e) => updateDateInputs(e.target.value));
+    });
+
+    updateDateInputs(task.type);
     
     // Form submission
     const form = modal.querySelector('#task-form');
@@ -331,24 +402,37 @@ const Tasks = (function() {
     
     const form = e.target;
     const data = App.getFormData(form);
+    const type = form.querySelector('input[name="type"]:checked').value;
     
     if (!data.title.trim()) {
       App.showToast('Please enter a task title', 'error');
       return;
     }
     
-    if (data.startDate && data.dueDate && data.startDate > data.dueDate) {
+    let repeatDays = [];
+    if (type === 'repeating') {
+      const activeDays = form.querySelectorAll('.day-toggle.active');
+      repeatDays = Array.from(activeDays).map(el => parseInt(el.dataset.day));
+      if (repeatDays.length === 0) {
+        App.showToast('Please select at least one day for repeating task', 'error');
+        return;
+      }
+    }
+
+    if (type === 'date-range' && data.startDate && data.dueDate && data.startDate > data.dueDate) {
       App.showToast('Start date cannot be after due date', 'error');
       return;
     }
 
     const taskData = {
       title: data.title.trim(),
-      startDate: data.startDate || data.dueDate || null,
-      dueDate: data.dueDate || null,
+      type: type,
+      startDate: type === 'date-range' ? (data.startDate || data.dueDate) : (type === 'one-time' ? data.dueDate : null),
+      dueDate: (type === 'repeating') ? null : (data.dueDate || data.startDate),
       dueTime: data.dueTime || null,
       priority: data.priority,
-      subject: data.subject
+      subject: data.subject,
+      repeatDays: repeatDays
     };
 
     if (editingTaskId) {
