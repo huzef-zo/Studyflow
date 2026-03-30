@@ -452,9 +452,22 @@ const App = (function() {
   }
 
   /**
+   * Format repeating days
+   */
+  function getRepeatDaysLabel(repeatDays) {
+    if (!repeatDays || repeatDays.length === 0) return '';
+    if (repeatDays.length === 7) return 'Every day';
+
+    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    return repeatDays.map(d => dayNames[d]).join(', ');
+  }
+
+  /**
    * Create a date range badge
    */
   function createDateRangeBadge(startDate, dueDate) {
+    if (!dueDate && !startDate) return '';
+
     if (!startDate || startDate === dueDate) {
       return createDeadlineBadge(dueDate);
     }
@@ -671,6 +684,7 @@ const App = (function() {
     formatNumber,
     getPriorityClass,
     getPriorityLabel,
+    getRepeatDaysLabel,
     createDeadlineBadge,
     createDateRangeBadge,
     escapeHtml,

@@ -55,7 +55,18 @@ const Calendar = (function() {
     const monthEnd = new Date(year, month + 1, 0);
 
     tasks.forEach(task => {
-      if (task.dueDate) {
+      if (task.type === 'repeating') {
+        // Iterate through each day of the month
+        for (let d = new Date(monthStart); d <= monthEnd; d.setDate(d.getDate() + 1)) {
+          const dateStr = Storage.formatDate(d);
+          if (task.repeatDays && task.repeatDays.includes(d.getDay())) {
+            if (!monthTasks[dateStr]) {
+              monthTasks[dateStr] = [];
+            }
+            monthTasks[dateStr].push(task);
+          }
+        }
+      } else if (task.dueDate) {
         const startDateStr = task.startDate || task.dueDate;
 
         // Iterate through each day of the month and see if task falls in it
@@ -258,26 +269,32 @@ const Calendar = (function() {
                  placeholder="What needs to be done?"
                  required>
         </div>
-        
-        <div class="grid grid-2">
-          <div class="form-group">
-            <label class="form-label" for="cal-task-start-date">Start Date</label>
-            <input type="date"
-                   class="form-input"
-                   id="cal-task-start-date"
-                   name="startDate"
-                   value="${dateStr}">
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="cal-task-due-date">Due Date</label>
-            <input type="date"
-                   class="form-input"
-                   id="cal-task-due-date"
-                   name="dueDate"
-                   value="${dateStr}">
+
+        <div class="form-group">
+          <label class="form-label">Task Type</label>
+          <div class="task-type-selector">
+            <label class="task-type-option">
+              <span class="task-type-label">Repeating Task</span>
+              <input type="radio" name="type" value="repeating">
+              <span class="radio-circle"></span>
+            </label>
+            <label class="task-type-option">
+              <span class="task-type-label">One-time Task</span>
+              <input type="radio" name="type" value="one-time" checked>
+              <span class="radio-circle"></span>
+            </label>
+            <label class="task-type-option">
+              <span class="task-type-label">Date Range Task</span>
+              <input type="radio" name="type" value="date-range">
+              <span class="radio-circle"></span>
+            </label>
           </div>
         </div>
         
+        <div id="cal-date-inputs-container">
+          <!-- Dynamically filled -->
+        </div>
+
         <div class="grid grid-2">
           <div class="form-group">
             <label class="form-label" for="cal-task-priority">Priority</label>
@@ -312,26 +329,91 @@ const Calendar = (function() {
     });
     
     const form = modal.querySelector('#calendar-task-form');
+    const dateContainer = modal.querySelector('#cal-date-inputs-container');
+
+    function updateDateInputs(type) {
+      if (type === 'repeating') {
+        const days = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+        const selectedDay = new Date(dateStr).getDay();
+        dateContainer.innerHTML = `
+          <div class="form-group">
+            <label class="form-label">Repeat On:</label>
+            <div class="repeat-days-grid">
+              ${days.map((day, i) => `
+                <div class="day-toggle ${i === selectedDay ? 'active' : ''}" data-day="${i}">${day}</div>
+              `).join('')}
+            </div>
+            <button type="button" class="btn btn-ghost btn-sm mt-sm" id="cal-select-every-day">Select Every Day</button>
+          </div>
+        `;
+        dateContainer.querySelectorAll('.day-toggle').forEach(el => {
+          el.addEventListener('click', () => el.classList.toggle('active'));
+        });
+        dateContainer.querySelector('#cal-select-every-day').addEventListener('click', () => {
+          dateContainer.querySelectorAll('.day-toggle').forEach(el => el.classList.add('active'));
+        });
+      } else if (type === 'date-range') {
+        dateContainer.innerHTML = `
+          <div class="grid grid-2">
+            <div class="form-group">
+              <label class="form-label" for="cal-task-start-date">Start Date</label>
+              <input type="date" class="form-input" id="cal-task-start-date" name="startDate" value="${dateStr}">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="cal-task-due-date">Due Date</label>
+              <input type="date" class="form-input" id="cal-task-due-date" name="dueDate" value="${dateStr}">
+            </div>
+          </div>
+        `;
+      } else {
+        dateContainer.innerHTML = `
+          <div class="form-group">
+            <label class="form-label" for="cal-task-due-date">Due Date</label>
+            <input type="date" class="form-input" id="cal-task-due-date" name="dueDate" value="${dateStr}">
+          </div>
+        `;
+      }
+    }
+
+    modal.querySelectorAll('input[name="type"]').forEach(radio => {
+      radio.addEventListener('change', (e) => updateDateInputs(e.target.value));
+    });
+
+    updateDateInputs('one-time');
+
     form.addEventListener('submit', (e) => {
       e.preventDefault();
       const data = App.getFormData(form);
+      const type = form.querySelector('input[name="type"]:checked').value;
       
       if (!data.title.trim()) {
         App.showToast('Please enter a task title', 'error');
         return;
       }
       
-      if (data.startDate && data.dueDate && data.startDate > data.dueDate) {
+      let repeatDays = [];
+      if (type === 'repeating') {
+        const activeDays = form.querySelectorAll('.day-toggle.active');
+        repeatDays = Array.from(activeDays).map(el => parseInt(el.dataset.day));
+        if (repeatDays.length === 0) {
+          App.showToast('Please select at least one day for repeating task', 'error');
+          return;
+        }
+      }
+
+      if (type === 'date-range' && data.startDate && data.dueDate && data.startDate > data.dueDate) {
         App.showToast('Start date cannot be after due date', 'error');
         return;
       }
 
       Storage.addTask({
         title: data.title.trim(),
-        startDate: data.startDate || data.dueDate || null,
-        dueDate: data.dueDate || null,
+        type: type,
+        startDate: type === 'date-range' ? (data.startDate || data.dueDate) : (type === 'one-time' ? data.dueDate : null),
+        dueDate: (type === 'repeating') ? null : (data.dueDate || data.startDate),
         priority: data.priority,
-        subject: data.subject
+        subject: data.subject,
+        repeatDays: repeatDays
       });
       
       App.showToast('Task added', 'success');
