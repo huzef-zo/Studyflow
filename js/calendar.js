@@ -50,15 +50,23 @@ const Calendar = (function() {
     const tasks = Storage.getTasks();
     const monthTasks = {};
     
+    // Get start and end of the month
+    const monthStart = new Date(year, month, 1);
+    const monthEnd = new Date(year, month + 1, 0);
+
     tasks.forEach(task => {
       if (task.dueDate) {
-        const taskDate = new Date(task.dueDate);
-        if (taskDate.getFullYear() === year && taskDate.getMonth() === month) {
-          const dateStr = Storage.formatDate(taskDate);
-          if (!monthTasks[dateStr]) {
-            monthTasks[dateStr] = [];
+        const startDateStr = task.startDate || task.dueDate;
+
+        // Iterate through each day of the month and see if task falls in it
+        for (let d = new Date(monthStart); d <= monthEnd; d.setDate(d.getDate() + 1)) {
+          const dateStr = Storage.formatDate(d);
+          if (dateStr >= startDateStr && dateStr <= task.dueDate) {
+            if (!monthTasks[dateStr]) {
+              monthTasks[dateStr] = [];
+            }
+            monthTasks[dateStr].push(task);
           }
-          monthTasks[dateStr].push(task);
         }
       }
     });
@@ -251,13 +259,23 @@ const Calendar = (function() {
                  required>
         </div>
         
-        <div class="form-group">
-          <label class="form-label" for="cal-task-due-date">Due Date</label>
-          <input type="date" 
-                 class="form-input" 
-                 id="cal-task-due-date" 
-                 name="dueDate"
-                 value="${dateStr}">
+        <div class="grid grid-2">
+          <div class="form-group">
+            <label class="form-label" for="cal-task-start-date">Start Date</label>
+            <input type="date"
+                   class="form-input"
+                   id="cal-task-start-date"
+                   name="startDate"
+                   value="${dateStr}">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="cal-task-due-date">Due Date</label>
+            <input type="date"
+                   class="form-input"
+                   id="cal-task-due-date"
+                   name="dueDate"
+                   value="${dateStr}">
+          </div>
         </div>
         
         <div class="grid grid-2">
@@ -303,8 +321,14 @@ const Calendar = (function() {
         return;
       }
       
+      if (data.startDate && data.dueDate && data.startDate > data.dueDate) {
+        App.showToast('Start date cannot be after due date', 'error');
+        return;
+      }
+
       Storage.addTask({
         title: data.title.trim(),
+        startDate: data.startDate || data.dueDate || null,
         dueDate: data.dueDate || null,
         priority: data.priority,
         subject: data.subject

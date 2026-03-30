@@ -200,6 +200,7 @@ const Storage = (function() {
     const newTask = {
       id: generateId(),
       title: task.title,
+      startDate: task.startDate || task.dueDate || null,
       dueDate: task.dueDate || null,
       dueTime: task.dueTime || null,
       priority: task.priority || 'medium',
@@ -245,7 +246,11 @@ const Storage = (function() {
 
   function getTasksByDate(dateStr) {
     const tasks = getTasks();
-    return tasks.filter(t => t.dueDate === dateStr);
+    return tasks.filter(t => {
+      if (!t.dueDate) return false;
+      const start = t.startDate || t.dueDate;
+      return dateStr >= start && dateStr <= t.dueDate;
+    });
   }
 
   function getTasksByStatus(completed) {
@@ -270,10 +275,15 @@ const Storage = (function() {
     const futureDate = new Date(today);
     futureDate.setDate(futureDate.getDate() + days);
     
+    const todayStr = formatDate(today);
+    const futureStr = formatDate(futureDate);
+
     return tasks.filter(t => {
       if (t.completed || !t.dueDate) return false;
-      const dueDate = new Date(t.dueDate);
-      return dueDate >= today && dueDate <= futureDate;
+      const start = t.startDate || t.dueDate;
+      // Task is upcoming if its range overlaps with [today, futureDate]
+      // Or more simply, if it's not finished yet and its due date is in the future
+      return t.dueDate >= todayStr && start <= futureStr;
     }).sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
   }
 
@@ -475,7 +485,7 @@ const Storage = (function() {
     const totalTasks = tasks.length;
     const completedTasks = tasks.filter(t => t.completed).length;
     const pendingTasks = totalTasks - completedTasks;
-    const todayTasks = tasks.filter(t => t.dueDate === today);
+    const todayTasks = getTasksByDate(today);
     const todayCompleted = todayTasks.filter(t => t.completed).length;
     
     // Week stats
