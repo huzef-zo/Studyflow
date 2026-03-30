@@ -42,10 +42,11 @@ const Tasks = (function() {
     let dueDateHtml = '';
     if (task.dueDate) {
       const timeHtml = task.dueTime ? `<span class="task-time" style="margin-left: 4px; font-size: 0.75rem; color: var(--text-secondary);">at ${task.dueTime}</span>` : '';
+      const dateBadge = App.createDateRangeBadge(task.startDate, task.dueDate);
       dueDateHtml = `
         <span class="task-meta-item">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
-          ${App.createDeadlineBadge(task.dueDate)}
+          ${dateBadge}
           ${timeHtml}
         </span>
       `;
@@ -241,7 +242,15 @@ const Tasks = (function() {
                  required>
         </div>
         
-        <div class="grid grid-2">
+        <div class="grid grid-3-mobile">
+          <div class="form-group">
+            <label class="form-label" for="task-start-date">Start Date</label>
+            <input type="date"
+                   class="form-input"
+                   id="task-start-date"
+                   name="startDate"
+                   value="${task && task.startDate ? task.startDate : ''}">
+          </div>
           <div class="form-group">
             <label class="form-label" for="task-due-date">Due Date</label>
             <input type="date"
@@ -328,25 +337,27 @@ const Tasks = (function() {
       return;
     }
     
+    if (data.startDate && data.dueDate && data.startDate > data.dueDate) {
+      App.showToast('Start date cannot be after due date', 'error');
+      return;
+    }
+
+    const taskData = {
+      title: data.title.trim(),
+      startDate: data.startDate || data.dueDate || null,
+      dueDate: data.dueDate || null,
+      dueTime: data.dueTime || null,
+      priority: data.priority,
+      subject: data.subject
+    };
+
     if (editingTaskId) {
       // Update existing task
-      Storage.updateTask(editingTaskId, {
-        title: data.title.trim(),
-        dueDate: data.dueDate || null,
-        dueTime: data.dueTime || null,
-        priority: data.priority,
-        subject: data.subject
-      });
+      Storage.updateTask(editingTaskId, taskData);
       App.showToast('Task updated', 'success');
     } else {
       // Add new task
-      Storage.addTask({
-        title: data.title.trim(),
-        dueDate: data.dueDate || null,
-        dueTime: data.dueTime || null,
-        priority: data.priority,
-        subject: data.subject
-      });
+      Storage.addTask(taskData);
       App.showToast('Task added', 'success');
     }
     

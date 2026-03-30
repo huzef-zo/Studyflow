@@ -452,6 +452,30 @@ const App = (function() {
   }
 
   /**
+   * Create a date range badge
+   */
+  function createDateRangeBadge(startDate, dueDate) {
+    if (!startDate || startDate === dueDate) {
+      return createDeadlineBadge(dueDate);
+    }
+
+    const start = Storage.formatDisplayDate(startDate);
+    const end = Storage.formatDisplayDate(dueDate);
+    const daysUntilEnd = Storage.getDaysUntil(dueDate);
+
+    let className = 'deadline-days';
+    if (daysUntilEnd < 0) {
+      className += ' urgent';
+    } else if (daysUntilEnd <= 3) {
+      className += ' urgent';
+    } else if (daysUntilEnd <= 7) {
+      className += ' soon';
+    }
+
+    return `<span class="${className}">${start} - ${end}</span>`;
+  }
+
+  /**
    * Escape HTML to prevent XSS
    */
   function escapeHtml(text) {
@@ -648,6 +672,7 @@ const App = (function() {
     getPriorityClass,
     getPriorityLabel,
     createDeadlineBadge,
+    createDateRangeBadge,
     escapeHtml,
     getSubjectColor,
     
