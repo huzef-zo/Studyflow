@@ -28,6 +28,17 @@
       <button class="tab" data-mode="long_break">Long Break</button>
     </div>
 
+    <!-- Task Selection -->
+    <div id="task-selection-container" style="max-width: 400px; margin: 0 auto var(--spacing-lg);">
+      <div class="form-group">
+        <label class="form-label" for="timer-task">Working on:</label>
+        <select class="form-select" id="timer-task">
+          <option value="">General Study</option>
+          <!-- Populated by JS -->
+        </select>
+      </div>
+    </div>
+
     <!-- Timer Container -->
     <div class="timer-container">
       <div class="timer-ring" id="timer-ring">

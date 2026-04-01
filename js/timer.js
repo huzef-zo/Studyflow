@@ -27,6 +27,7 @@ const Timer = (function() {
   let totalTime = 25 * 60;
   let intervalId = null;
   let sessionsCompleted = 0;
+  let selectedTaskId = null;
   
   // Settings
   let settings = {
@@ -60,8 +61,29 @@ const Timer = (function() {
       sessionsToday: document.getElementById('sessions-today'),
       totalTimeToday: document.getElementById('total-time-today'),
       sessionCount: document.getElementById('session-count'),
-      modeTabs: document.querySelectorAll('.tab[data-mode]')
+      modeTabs: document.querySelectorAll('.tab[data-mode]'),
+      taskSelect: document.getElementById('timer-task'),
+      taskSelectionContainer: document.getElementById('task-selection-container')
     };
+  }
+
+  /**
+   * Populate tasks dropdown
+   */
+  function populateTasks() {
+    if (!elements.taskSelect) return;
+
+    const tasks = Storage.getTodayTasks().filter(t => !t.completed);
+
+    // Keep current selection if it still exists
+    const currentSelection = elements.taskSelect.value;
+
+    let html = '<option value="">General Study</option>';
+    tasks.forEach(task => {
+      html += `<option value="${task.id}" ${task.id === currentSelection ? 'selected' : ''}>${App.escapeHtml(task.title)}</option>`;
+    });
+
+    elements.taskSelect.innerHTML = html;
   }
 
   /**
@@ -110,6 +132,10 @@ const Timer = (function() {
   function getLabelForType(timerType) {
     switch (timerType) {
       case TYPES.WORK:
+        if (selectedTaskId) {
+          const task = Storage.getTaskById(selectedTaskId);
+          return task ? task.title : 'Work Session';
+        }
         return 'Work Session';
       case TYPES.SHORT_BREAK:
         return 'Short Break';
@@ -130,6 +156,15 @@ const Timer = (function() {
     // Update label
     elements.timerLabel.textContent = getLabelForType(type);
     
+    // Show/hide task selection based on mode and state
+    if (elements.taskSelectionContainer) {
+      if (type === TYPES.WORK && state === STATES.IDLE) {
+        elements.taskSelectionContainer.classList.remove('hidden');
+      } else {
+        elements.taskSelectionContainer.classList.add('hidden');
+      }
+    }
+
     // Update progress ring
     const circumference = 2 * Math.PI * 140; // radius = 140
     const progress = timeRemaining / totalTime;
@@ -230,7 +265,7 @@ const Timer = (function() {
     
     // Save session if it was a work session
     if (type === TYPES.WORK) {
-      Storage.addSession(settings.workDuration, 'work');
+      Storage.addSession(settings.workDuration, 'work', selectedTaskId);
       Storage.addStudyMinutes(settings.workDuration);
       sessionsCompleted++;
       App.showToast('Work session completed! Take a break.', 'success');
@@ -386,6 +421,12 @@ const Timer = (function() {
     elements.resetBtn?.addEventListener('click', reset);
     elements.skipBtn?.addEventListener('click', skip);
     
+    // Task selection
+    elements.taskSelect?.addEventListener('change', (e) => {
+      selectedTaskId = e.target.value || null;
+      updateDisplay();
+    });
+
     // Mode tabs
     elements.modeTabs.forEach(tab => {
       tab.addEventListener('click', () => {
@@ -436,6 +477,7 @@ const Timer = (function() {
   function init() {
     initElements();
     loadSettings();
+    populateTasks();
     setupEventListeners();
     
     // Set initial state
