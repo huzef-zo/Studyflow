@@ -385,12 +385,13 @@ const Storage = (function() {
     return saveData(KEYS.SESSIONS, sessions);
   }
 
-  function addSession(duration, type = 'work') {
+  function addSession(duration, type = 'work', taskId = null) {
     const sessions = getSessions();
     const newSession = {
       id: generateId(),
       duration: duration,
       type: type,
+      taskId: taskId,
       completedAt: new Date().toISOString()
     };
     sessions.push(newSession);
