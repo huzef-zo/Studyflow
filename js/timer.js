@@ -37,7 +37,8 @@ const Timer = (function() {
     longBreak: 15,
     sessionsUntilLongBreak: 4,
     autoStartBreak: false,
-    sound: true
+    sound: true,
+    notifications: true
   };
 
   // DOM Elements
@@ -113,7 +114,8 @@ const Timer = (function() {
       longBreak: storedSettings.long_break || 15,
       sessionsUntilLongBreak: storedSettings.sessions_until_long_break || 4,
       autoStartBreak: storedSettings.auto_start_break || false,
-      sound: storedSettings.sound !== false
+      sound: storedSettings.sound !== false,
+      notifications: storedSettings.notifications !== false
     };
   }
 
@@ -229,6 +231,11 @@ const Timer = (function() {
    */
   function start() {
     if (state === STATES.RUNNING) return;
+
+    // Request notification permission on user gesture if not already granted
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
     
     state = STATES.RUNNING;
     endTime = Date.now() + (timeRemaining * 1000);
@@ -282,13 +289,14 @@ const Timer = (function() {
    * Complete the timer session
    */
   function complete() {
+    const completedType = type;
     pause();
     
     // Play notification sound
     playNotificationSound();
     
     // Save session if it was a work session
-    if (type === TYPES.WORK) {
+    if (completedType === TYPES.WORK) {
       Storage.addSession(settings.workDuration, 'work', selectedTaskId);
       Storage.addStudyMinutes(settings.workDuration);
       sessionsCompleted++;
@@ -299,7 +307,7 @@ const Timer = (function() {
     
     // Determine next session type
     let nextType;
-    if (type === TYPES.WORK) {
+    if (completedType === TYPES.WORK) {
       // Check if it's time for a long break
       if (sessionsCompleted % settings.sessionsUntilLongBreak === 0) {
         nextType = TYPES.LONG_BREAK;
@@ -321,7 +329,7 @@ const Timer = (function() {
     updateStats();
     
     // Show browser notification if permitted
-    showBrowserNotification();
+    showBrowserNotification(completedType);
   }
 
   /**
@@ -413,16 +421,16 @@ const Timer = (function() {
   /**
    * Show browser notification
    */
-  function showBrowserNotification() {
-    if (!('Notification' in window)) return;
+  function showBrowserNotification(completedType) {
+    if (!('Notification' in window) || !settings.notifications) return;
     
     if (Notification.permission === 'granted') {
-      const title = type === TYPES.WORK ? 'Work Session Complete!' : 'Break Finished!';
-      const body = type === TYPES.WORK 
+      const title = completedType === TYPES.WORK ? 'Work Session Complete!' : 'Break Finished!';
+      const body = completedType === TYPES.WORK
         ? 'Great job! Time for a break.' 
         : 'Ready to get back to work?';
       
-      new Notification(title, { body, icon: '/icons/icon-192.png' });
+      new Notification(title, { body });
     }
   }
 

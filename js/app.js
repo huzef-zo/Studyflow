@@ -609,16 +609,20 @@ const App = (function() {
     const settings = Storage.getSettings();
     if (settings.task_notifications === false) return;
 
-    const tasks = Storage.getTasks();
     const now = new Date();
     const currentDate = Storage.formatDate(now);
     const currentTime = now.getHours().toString().padStart(2, '0') + ':' +
                         now.getMinutes().toString().padStart(2, '0');
 
+    // Use Storage.getTasksByDate to include repeating tasks
+    const tasks = Storage.getTasksByDate(currentDate);
+
     tasks.forEach(task => {
-      if (!task.completed && task.dueDate === currentDate && task.dueTime === currentTime) {
-        // Prevent multiple notifications for the same task in the same minute
-        const notifiedKey = `notified_${task.id}_${currentDate}_${currentTime}`;
+      // Notify if task has a due time, is not completed, and is due now or was due earlier today
+      // (to be robust against timer throttling/missed checks)
+      if (!task.completed && task.dueTime && task.dueTime <= currentTime) {
+        // Prevent multiple notifications for the same task in the same day/session
+        const notifiedKey = `notified_${task.id}_${currentDate}`;
         if (!sessionStorage.getItem(notifiedKey)) {
           showTaskNotification(task);
           sessionStorage.setItem(notifiedKey, 'true');
@@ -636,7 +640,7 @@ const App = (function() {
 
     // Browser notification
     if ('Notification' in window && Notification.permission === 'granted') {
-      new Notification(title, { body, icon: 'favicon.ico' });
+      new Notification(title, { body });
     }
 
     // App toast
