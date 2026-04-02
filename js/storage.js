@@ -565,6 +565,25 @@ const Storage = (function() {
   // Statistics Functions
   // ============================================
 
+  function getSubjectMasteryStats() {
+    const tasks = getTasks();
+    const subjects = getSubjects();
+
+    return subjects.map(subject => {
+      const subjectTasks = tasks.filter(t => t.subject === subject.name);
+      const total = subjectTasks.length;
+      const completed = subjectTasks.filter(t => t.completed).length;
+      const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+      return {
+        ...subject,
+        total,
+        completed,
+        percentage
+      };
+    });
+  }
+
   function getStats() {
     const tasks = getTasks();
     const today = formatDate(new Date());
@@ -790,6 +809,7 @@ const Storage = (function() {
     deleteSubject,
     getSubjectById,
     getSubjectByName,
+    getSubjectMasteryStats,
     
     // Session functions
     getSessions,
