@@ -14,7 +14,6 @@ const History = (function() {
    */
   function initElements() {
     elements = {
-      heatmapGrid: document.getElementById('heatmap-grid'),
       frequencyGraph: document.getElementById('frequency-graph'),
       totalCompletedTasks: document.getElementById('total-completed-tasks'),
       totalStudyHours: document.getElementById('total-study-hours'),
@@ -28,7 +27,6 @@ const History = (function() {
   function init() {
     initElements();
     updateSummaryStats();
-    renderHeatMap();
     renderFrequencyGraph();
   }
 
@@ -97,47 +95,6 @@ const History = (function() {
   }
 
   /**
-   * Render Activity Heat Map
-   */
-  function renderHeatMap() {
-    if (!elements.heatmapGrid) return;
-
-    // Last 53 weeks (371 days)
-    const daysCount = 371;
-    const data = getActivityData(daysCount);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    // Find the last Sunday to start the grid (GitHub style)
-    const lastDay = new Date(today);
-    const dayOfWeek = lastDay.getDay(); // 0 is Sunday
-
-    // Total days to show (53 full weeks)
-    const totalDays = 53 * 7;
-    const startDate = new Date(lastDay);
-    startDate.setDate(lastDay.getDate() - totalDays + (dayOfWeek + 1));
-
-    let html = '';
-    for (let i = 0; i < totalDays; i++) {
-      const date = new Date(startDate);
-      date.setDate(startDate.getDate() + i);
-      const dateStr = Storage.formatDate(date);
-      const activityCount = data[dateStr] || 0;
-
-      let level = 0;
-      if (activityCount > 10) level = 4;
-      else if (activityCount > 5) level = 3;
-      else if (activityCount > 2) level = 2;
-      else if (activityCount > 0) level = 1;
-
-      const title = `${activityCount} activities on ${date.toLocaleDateString()}`;
-      html += `<div class="heatmap-day level-${level}" title="${title}"></div>`;
-    }
-
-    elements.heatmapGrid.innerHTML = html;
-  }
-
-  /**
    * Render Frequency Graph (Line Chart)
    */
   function renderFrequencyGraph() {
@@ -177,8 +134,17 @@ const History = (function() {
       return { x, y, count: day.count, date: day.date };
     });
 
-    // Create line path
-    const linePath = points.map((p, i) => (i === 0 ? 'M' : 'L') + `${p.x},${p.y}`).join(' ');
+    // Create smoothed line path using quadratic Bézier curves
+    let linePath = '';
+    if (points.length > 0) {
+      linePath = `M ${points[0].x},${points[0].y}`;
+      for (let i = 0; i < points.length - 1; i++) {
+        const p0 = points[i];
+        const p1 = points[i + 1];
+        const cpX = (p0.x + p1.x) / 2;
+        linePath += ` Q ${cpX},${p0.y} ${cpX},${(p0.y + p1.y) / 2} T ${p1.x},${p1.y}`;
+      }
+    }
 
     // Create area path
     const areaPath = `${linePath} L ${points[points.length - 1].x},${height - paddingY} L ${points[0].x},${height - paddingY} Z`;
@@ -186,16 +152,23 @@ const History = (function() {
     let svgHtml = `
       <div class="line-graph-wrapper">
         <svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" class="line-graph-svg">
+          <defs>
+            <linearGradient id="areaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="var(--primary)" stop-opacity="0.3" />
+              <stop offset="100%" stop-color="var(--primary)" stop-opacity="0.01" />
+            </linearGradient>
+          </defs>
+
           <!-- Grid Lines (Horizontal) -->
           <line x1="${paddingX}" y1="${paddingY}" x2="${width - paddingX}" y2="${paddingY}" class="graph-grid-line" />
           <line x1="${paddingX}" y1="${paddingY + chartHeight / 2}" x2="${width - paddingX}" y2="${paddingY + chartHeight / 2}" class="graph-grid-line" />
           <line x1="${paddingX}" y1="${height - paddingY}" x2="${width - paddingX}" y2="${height - paddingY}" class="graph-grid-line" />
 
           <!-- Area -->
-          <path d="${areaPath}" class="graph-area" />
+          <path d="${areaPath}" fill="url(#areaGradient)" class="graph-area-enhanced" />
 
           <!-- Line -->
-          <path d="${linePath}" class="graph-line" />
+          <path d="${linePath}" class="graph-line" fill="none" stroke="var(--primary)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
 
           <!-- Dots -->
           ${points.map(p => `

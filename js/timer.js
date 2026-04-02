@@ -74,14 +74,29 @@ const Timer = (function() {
   function populateTasks() {
     if (!elements.taskSelect) return;
 
-    const tasks = Storage.getTodayTasks().filter(t => !t.completed);
+    const todayTasks = Storage.getTodayTasks().filter(t => !t.completed);
+    const overdueTasks = Storage.getOverdueTasks().filter(t => !t.completed);
+
+    // Combine and remove duplicates
+    const allTasks = [...todayTasks, ...overdueTasks];
+    const uniqueTasks = [];
+    const taskIds = new Set();
+
+    allTasks.forEach(task => {
+      if (!taskIds.has(task.id)) {
+        taskIds.add(task.id);
+        uniqueTasks.push(task);
+      }
+    });
 
     // Keep current selection if it still exists
     const currentSelection = elements.taskSelect.value;
 
     let html = '<option value="">General Study</option>';
-    tasks.forEach(task => {
-      html += `<option value="${task.id}" ${task.id === currentSelection ? 'selected' : ''}>${App.escapeHtml(task.title)}</option>`;
+    uniqueTasks.forEach(task => {
+      const isOverdue = Storage.getDaysUntil(task.dueDate) < 0 && task.type !== 'repeating';
+      const label = isOverdue ? `[Overdue] ${task.title}` : task.title;
+      html += `<option value="${task.id}" ${task.id === currentSelection ? 'selected' : ''}>${App.escapeHtml(label)}</option>`;
     });
 
     elements.taskSelect.innerHTML = html;
