@@ -1555,62 +1555,6 @@ a:hover {
 /* ============================================
    History Page Styles
    ============================================ */
-.heatmap-scroll-container {
-  overflow-x: auto;
-  padding-bottom: var(--spacing-md);
-  margin-bottom: var(--spacing-lg);
-}
-
-.heatmap-wrapper {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-xs);
-  min-width: 700px;
-}
-
-.heatmap-grid {
-  display: grid;
-  grid-auto-flow: column;
-  grid-template-columns: repeat(53, 1fr);
-  grid-template-rows: repeat(7, 1fr);
-  gap: 3px;
-}
-
-.heatmap-day {
-  width: 12px;
-  height: 12px;
-  border-radius: 2px;
-  background-color: var(--bg-tertiary);
-  cursor: pointer;
-  transition: transform var(--transition-fast);
-}
-
-.heatmap-day:hover {
-  transform: scale(1.2);
-  z-index: 1;
-}
-
-.heatmap-day.level-0 { background-color: var(--bg-tertiary); }
-.heatmap-day.level-1 { background-color: #0e4429; }
-.heatmap-day.level-2 { background-color: #006d32; }
-.heatmap-day.level-3 { background-color: #26a641; }
-.heatmap-day.level-4 { background-color: #39d353; }
-
-.heatmap-legend {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: var(--spacing-xs);
-  font-size: 0.75rem;
-  color: var(--text-secondary);
-  margin-top: var(--spacing-sm);
-}
-
-.heatmap-legend-day {
-  width: 12px;
-  height: 12px;
-  border-radius: 2px;
-}
 
 /* Frequency Graph Styles */
 .frequency-graph {
@@ -1650,6 +1594,10 @@ a:hover {
 
 .graph-area {
   fill: rgba(37, 99, 235, 0.1);
+  stroke: none;
+}
+
+.graph-area-enhanced {
   stroke: none;
 }
 
