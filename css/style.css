@@ -979,18 +979,21 @@ a:hover {
   align-items: center;
   justify-content: center;
   padding: var(--spacing-xl);
+  transition: all var(--transition-slow);
 }
 
 .timer-ring {
   position: relative;
   width: 280px;
   height: 280px;
+  filter: drop-shadow(0 0 10px rgba(37, 99, 235, 0.1));
+  transition: all var(--transition-slow);
 }
 
 @media (min-width: 768px) {
   .timer-ring {
-    width: 320px;
-    height: 320px;
+    width: 340px;
+    height: 340px;
   }
 }
 
@@ -1003,7 +1006,7 @@ a:hover {
 .timer-ring-bg {
   fill: none;
   stroke: var(--bg-tertiary);
-  stroke-width: 8;
+  stroke-width: 6;
 }
 
 .timer-ring-progress {
@@ -1011,11 +1014,13 @@ a:hover {
   stroke: var(--primary);
   stroke-width: 8;
   stroke-linecap: round;
-  transition: stroke-dashoffset 1s linear;
+  transition: stroke-dashoffset 1s linear, stroke var(--transition-normal);
+  filter: drop-shadow(0 0 5px var(--primary));
 }
 
 .timer-ring-progress.break {
   stroke: var(--success);
+  filter: drop-shadow(0 0 5px var(--success));
 }
 
 .timer-display {
@@ -1024,32 +1029,104 @@ a:hover {
   left: 50%;
   transform: translate(-50%, -50%);
   text-align: center;
+  width: 100%;
 }
 
 .timer-time {
-  font-size: 3.5rem;
-  font-weight: 700;
+  font-size: 4.5rem;
+  font-weight: 800;
   color: var(--text-primary);
   font-variant-numeric: tabular-nums;
   line-height: 1;
+  letter-spacing: -1px;
+  text-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+  transition: all var(--transition-slow);
 }
 
 @media (min-width: 768px) {
   .timer-time {
-    font-size: 4rem;
+    font-size: 5.5rem;
   }
 }
 
 .timer-label {
-  font-size: 0.875rem;
+  font-size: 1rem;
+  font-weight: 500;
   color: var(--text-secondary);
-  margin-top: var(--spacing-xs);
+  margin-top: var(--spacing-sm);
+  text-transform: uppercase;
+  letter-spacing: 2px;
 }
 
 .timer-controls {
   display: flex;
-  gap: var(--spacing-md);
-  margin-top: var(--spacing-xl);
+  gap: var(--spacing-lg);
+  margin-top: var(--spacing-2xl);
+  transition: all var(--transition-slow);
+}
+
+/* Focus Mode Styles */
+.focus-mode {
+  overflow: hidden;
+}
+
+.focus-mode .sidebar,
+.focus-mode .bottom-nav,
+.focus-mode .page-header,
+.focus-mode .tabs,
+.focus-mode #task-selection-container,
+.focus-mode .timer-stats,
+.focus-mode section.card {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(20px);
+}
+
+.focus-mode .main-container {
+  padding: 0;
+  margin: 0;
+  max-width: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--bg-primary);
+  z-index: 999;
+}
+
+.focus-mode #reset-btn,
+.focus-mode #skip-btn,
+.focus-mode #start-btn {
+  display: none !important;
+}
+
+.focus-mode .timer-ring {
+  width: 320px;
+  height: 320px;
+  filter: drop-shadow(0 0 20px rgba(37, 99, 235, 0.2));
+}
+
+@media (min-width: 768px) {
+  .focus-mode .timer-ring {
+    width: 450px;
+    height: 450px;
+  }
+}
+
+.focus-mode .timer-time {
+  font-size: 6rem;
+}
+
+@media (min-width: 768px) {
+  .focus-mode .timer-time {
+    font-size: 8rem;
+  }
 }
 
 .timer-stats {

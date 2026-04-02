@@ -13,7 +13,8 @@ const Storage = (function() {
     SUBJECTS: 'studyflow_subjects',
     SESSIONS: 'studyflow_sessions',
     GOALS: 'studyflow_goals',
-    SETTINGS: 'studyflow_settings'
+    SETTINGS: 'studyflow_settings',
+    TIMER: 'studyflow_timer'
   };
 
   // Default data structures
@@ -491,6 +492,76 @@ const Storage = (function() {
   }
 
   // ============================================
+  // Timer Persistence Functions
+  // ============================================
+
+  function getTimerState() {
+    return loadData(KEYS.TIMER, null);
+  }
+
+  function saveTimerState(state) {
+    return saveData(KEYS.TIMER, state);
+  }
+
+  function clearTimerState() {
+    return removeData(KEYS.TIMER);
+  }
+
+  /**
+   * Complete a timer session and return the next state
+   * Useful for both the timer page and background tasks
+   */
+  function completeTimerSession(timerState) {
+    const settings = getSettings();
+    const { type, sessionsCompleted, selectedTaskId } = timerState;
+
+    let nextSessionsCompleted = sessionsCompleted;
+
+    // Save session if it was a work session
+    if (type === 'work') {
+      addSession(settings.work_duration || 25, 'work', selectedTaskId);
+      addStudyMinutes(settings.work_duration || 25);
+      nextSessionsCompleted++;
+    }
+
+    // Determine next session type
+    let nextType;
+    if (type === 'work') {
+      if (nextSessionsCompleted % (settings.sessions_until_long_break || 4) === 0) {
+        nextType = 'long_break';
+      } else {
+        nextType = 'short_break';
+      }
+    } else {
+      nextType = 'work';
+    }
+
+    // Get duration for next type
+    let nextDuration;
+    switch (nextType) {
+      case 'work': nextDuration = (settings.work_duration || 25) * 60; break;
+      case 'short_break': nextDuration = (settings.short_break || 5) * 60; break;
+      case 'long_break': nextDuration = (settings.long_break || 15) * 60; break;
+      default: nextDuration = 25 * 60;
+    }
+
+    const newState = {
+      type: nextType,
+      state: 'idle',
+      timeRemaining: nextDuration,
+      totalTime: nextDuration,
+      endTime: null,
+      sessionsCompleted: nextSessionsCompleted,
+      selectedTaskId: nextType === 'work' ? selectedTaskId : null,
+      lastCompletedType: type,
+      completedAt: new Date().toISOString()
+    };
+
+    saveTimerState(newState);
+    return newState;
+  }
+
+  // ============================================
   // Statistics Functions
   // ============================================
 
@@ -741,6 +812,12 @@ const Storage = (function() {
     saveSettings,
     updateSetting,
     
+    // Timer Persistence
+    getTimerState,
+    saveTimerState,
+    clearTimerState,
+    completeTimerSession,
+
     // Statistics
     getStats,
     calculateStreak,

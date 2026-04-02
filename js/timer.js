@@ -167,6 +167,17 @@ const Timer = (function() {
   }
 
   /**
+   * Toggle Focus Mode
+   */
+  function toggleFocusMode(enabled) {
+    if (enabled) {
+      document.body.classList.add('focus-mode');
+    } else {
+      document.body.classList.remove('focus-mode');
+    }
+  }
+
+  /**
    * Update timer display
    */
   function updateDisplay() {
@@ -187,7 +198,7 @@ const Timer = (function() {
 
     // Update progress ring
     const circumference = 2 * Math.PI * 140; // radius = 140
-    const progress = timeRemaining / totalTime;
+    const progress = totalTime > 0 ? timeRemaining / totalTime : 0;
     const offset = circumference * (1 - progress);
     
     elements.timerProgress.style.strokeDasharray = circumference;
@@ -207,12 +218,15 @@ const Timer = (function() {
     if (state === STATES.IDLE) {
       elements.startBtn.classList.remove('hidden');
       elements.pauseBtn.classList.add('hidden');
+      toggleFocusMode(false);
     } else if (state === STATES.RUNNING) {
       elements.startBtn.classList.add('hidden');
       elements.pauseBtn.classList.remove('hidden');
+      toggleFocusMode(true);
     } else if (state === STATES.PAUSED) {
       elements.startBtn.classList.remove('hidden');
       elements.pauseBtn.classList.add('hidden');
+      toggleFocusMode(false);
     }
   }
 
@@ -229,6 +243,21 @@ const Timer = (function() {
   }
 
   /**
+   * Save current state to storage
+   */
+  function saveState() {
+    Storage.saveTimerState({
+      state,
+      type,
+      timeRemaining,
+      totalTime,
+      endTime,
+      sessionsCompleted,
+      selectedTaskId
+    });
+  }
+
+  /**
    * Start the timer
    */
   function start() {
@@ -242,6 +271,8 @@ const Timer = (function() {
     state = STATES.RUNNING;
     endTime = Date.now() + (timeRemaining * 1000);
     
+    saveState();
+
     intervalId = setInterval(() => {
       timeRemaining = Math.max(0, Math.round((endTime - Date.now()) / 1000));
       
@@ -249,6 +280,8 @@ const Timer = (function() {
         complete();
       } else {
         updateDisplay();
+        // Save periodically in case of crash/close, though endTime handles most of it
+        if (timeRemaining % 10 === 0) saveState();
       }
     }, 1000);
     
@@ -271,6 +304,7 @@ const Timer = (function() {
     intervalId = null;
     endTime = null;
     
+    saveState();
     updateDisplay();
   }
 
@@ -284,6 +318,7 @@ const Timer = (function() {
     timeRemaining = getDurationForType(type);
     totalTime = timeRemaining;
     
+    saveState();
     updateDisplay();
   }
 
@@ -294,37 +329,37 @@ const Timer = (function() {
     const completedType = type;
     pause();
     
+    // Use Storage to handle completion logic for consistency
+    const newState = Storage.completeTimerSession({
+      type: completedType,
+      sessionsCompleted,
+      selectedTaskId
+    });
+
+    // Update local state from the new state returned by storage
+    type = newState.type;
+    state = newState.state;
+    timeRemaining = newState.timeRemaining;
+    totalTime = newState.totalTime;
+    sessionsCompleted = newState.sessionsCompleted;
+    selectedTaskId = newState.selectedTaskId;
+
     // Play notification sound
     playNotificationSound();
     
-    // Save session if it was a work session
     if (completedType === TYPES.WORK) {
-      Storage.addSession(settings.workDuration, 'work', selectedTaskId);
-      Storage.addStudyMinutes(settings.workDuration);
-      sessionsCompleted++;
       App.showToast('Work session completed! Take a break.', 'success');
     } else {
       App.showToast('Break finished! Ready to work?', 'success');
     }
     
-    // Determine next session type
-    let nextType;
-    if (completedType === TYPES.WORK) {
-      // Check if it's time for a long break
-      if (sessionsCompleted % settings.sessionsUntilLongBreak === 0) {
-        nextType = TYPES.LONG_BREAK;
-      } else {
-        nextType = TYPES.SHORT_BREAK;
-      }
-    } else {
-      nextType = TYPES.WORK;
-    }
-    
-    // Switch to next type
-    setTimerType(nextType);
-    
+    // Update active tab
+    elements.modeTabs.forEach(tab => {
+      tab.classList.toggle('active', tab.dataset.mode === type);
+    });
+
     // Auto-start next session if enabled
-    if (nextType === TYPES.WORK) {
+    if (type === TYPES.WORK) {
       if (settings.autoStartWork) {
         setTimeout(start, 1000);
       }
@@ -335,6 +370,7 @@ const Timer = (function() {
     }
     
     updateStats();
+    updateDisplay();
     
     // Show browser notification if permitted
     showBrowserNotification(completedType);
@@ -373,6 +409,7 @@ const Timer = (function() {
       tab.classList.toggle('active', tab.dataset.mode === newType);
     });
     
+    saveState();
     updateDisplay();
   }
 
@@ -522,9 +559,43 @@ const Timer = (function() {
     populateTasks();
     setupEventListeners();
     
-    // Set initial state
-    timeRemaining = getDurationForType(type);
-    totalTime = timeRemaining;
+    // Load state from storage
+    const storedState = Storage.getTimerState();
+    if (storedState) {
+      state = storedState.state;
+      type = storedState.type;
+      totalTime = storedState.totalTime;
+      sessionsCompleted = storedState.sessionsCompleted || 0;
+      selectedTaskId = storedState.selectedTaskId;
+
+      if (state === STATES.RUNNING && storedState.endTime) {
+        endTime = storedState.endTime;
+        timeRemaining = Math.max(0, Math.round((endTime - Date.now()) / 1000));
+
+        if (timeRemaining <= 0) {
+          complete();
+        } else {
+          start(); // Resume interval
+        }
+      } else {
+        timeRemaining = storedState.timeRemaining;
+        if (state === STATES.RUNNING) state = STATES.PAUSED; // Fallback
+      }
+
+      // Update task select if we had one
+      if (selectedTaskId && elements.taskSelect) {
+        elements.taskSelect.value = selectedTaskId;
+      }
+
+      // Update active tab
+      elements.modeTabs.forEach(tab => {
+        tab.classList.toggle('active', tab.dataset.mode === type);
+      });
+    } else {
+      // Set initial state
+      timeRemaining = getDurationForType(type);
+      totalTime = timeRemaining;
+    }
     
     updateDisplay();
     updateStats();
