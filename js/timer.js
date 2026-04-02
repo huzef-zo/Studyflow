@@ -26,6 +26,7 @@ const Timer = (function() {
   let timeRemaining = 25 * 60; // seconds
   let totalTime = 25 * 60;
   let intervalId = null;
+  let endTime = null;
   let sessionsCompleted = 0;
   let selectedTaskId = null;
   
@@ -215,9 +216,10 @@ const Timer = (function() {
     if (state === STATES.RUNNING) return;
     
     state = STATES.RUNNING;
+    endTime = Date.now() + (timeRemaining * 1000);
     
     intervalId = setInterval(() => {
-      timeRemaining--;
+      timeRemaining = Math.max(0, Math.round((endTime - Date.now()) / 1000));
       
       if (timeRemaining <= 0) {
         complete();
@@ -236,8 +238,14 @@ const Timer = (function() {
     if (state !== STATES.RUNNING) return;
     
     state = STATES.PAUSED;
+
+    if (endTime) {
+      timeRemaining = Math.max(0, Math.round((endTime - Date.now()) / 1000));
+    }
+
     clearInterval(intervalId);
     intervalId = null;
+    endTime = null;
     
     updateDisplay();
   }
@@ -248,6 +256,7 @@ const Timer = (function() {
   function reset() {
     pause();
     state = STATES.IDLE;
+    endTime = null;
     timeRemaining = getDurationForType(type);
     totalTime = timeRemaining;
     
@@ -324,6 +333,7 @@ const Timer = (function() {
   function setTimerType(newType) {
     type = newType;
     state = STATES.IDLE;
+    endTime = null;
     timeRemaining = getDurationForType(newType);
     totalTime = timeRemaining;
     
@@ -462,11 +472,12 @@ const Timer = (function() {
       }
     });
     
-    // Visibility change - pause when tab is hidden (optional)
+    // Visibility change
     document.addEventListener('visibilitychange', () => {
-      if (document.hidden && state === STATES.RUNNING) {
-        // Timer continues in background
-        // Could optionally pause here
+      if (!document.hidden && state === STATES.RUNNING && endTime) {
+        // Recalculate time remaining when returning to the tab
+        timeRemaining = Math.max(0, Math.round((endTime - Date.now()) / 1000));
+        updateDisplay();
       }
     });
   }
