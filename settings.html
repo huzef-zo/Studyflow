@@ -128,6 +128,17 @@
 
       <div class="settings-item">
         <div class="settings-item-info">
+          <div class="settings-item-title">Timer Browser Notifications</div>
+          <div class="settings-item-desc">Show browser notifications when timer completes</div>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="timer-notifications-enabled">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="settings-item">
+        <div class="settings-item-info">
           <div class="settings-item-title">Task Due Reminders</div>
           <div class="settings-item-desc">Send notifications when a task is due</div>
         </div>
@@ -135,6 +146,14 @@
           <input type="checkbox" id="task-notifications-enabled">
           <span class="toggle-slider"></span>
         </label>
+      </div>
+
+      <div class="settings-item" id="notification-permission-item">
+        <div class="settings-item-info">
+          <div class="settings-item-title">Browser Notification Permission</div>
+          <div class="settings-item-desc" id="permission-status">Permission required for browser notifications</div>
+        </div>
+        <button class="btn btn-secondary btn-sm" id="request-permission-btn">Enable</button>
       </div>
       
       <div class="settings-item">
@@ -238,8 +257,11 @@
         longBreak: document.getElementById('long-break'),
         sessionsUntilLong: document.getElementById('sessions-until-long'),
         soundEnabled: document.getElementById('sound-enabled'),
+        timerNotificationsEnabled: document.getElementById('timer-notifications-enabled'),
         autoStartBreak: document.getElementById('auto-start-break'),
         taskNotificationsEnabled: document.getElementById('task-notifications-enabled'),
+        requestPermissionBtn: document.getElementById('request-permission-btn'),
+        permissionStatus: document.getElementById('permission-status'),
         subjectsList: document.getElementById('subjects-list'),
         addSubjectBtn: document.getElementById('add-subject-btn'),
         exportBtn: document.getElementById('export-btn'),
@@ -266,8 +288,33 @@
         
         // Notifications
         elements.soundEnabled.checked = settings.sound !== false;
+        elements.timerNotificationsEnabled.checked = settings.notifications !== false;
         elements.autoStartBreak.checked = settings.auto_start_break === true;
         elements.taskNotificationsEnabled.checked = settings.task_notifications !== false;
+
+        updatePermissionStatus();
+      }
+
+      /**
+       * Update permission status display
+       */
+      function updatePermissionStatus() {
+        if (!('Notification' in window)) {
+          elements.permissionStatus.textContent = 'Notifications not supported in this browser';
+          elements.requestPermissionBtn.style.display = 'none';
+          return;
+        }
+
+        if (Notification.permission === 'granted') {
+          elements.permissionStatus.textContent = 'Permission granted';
+          elements.requestPermissionBtn.style.display = 'none';
+        } else if (Notification.permission === 'denied') {
+          elements.permissionStatus.textContent = 'Permission denied. Please enable in browser settings.';
+          elements.requestPermissionBtn.style.display = 'none';
+        } else {
+          elements.permissionStatus.textContent = 'Permission required for browser notifications';
+          elements.requestPermissionBtn.style.display = 'block';
+        }
       }
 
       /**
@@ -286,6 +333,7 @@
         
         // Notifications
         Storage.updateSetting('sound', elements.soundEnabled.checked);
+        Storage.updateSetting('notifications', elements.timerNotificationsEnabled.checked);
         Storage.updateSetting('auto_start_break', elements.autoStartBreak.checked);
         Storage.updateSetting('task_notifications', elements.taskNotificationsEnabled.checked);
       }
@@ -531,13 +579,24 @@
           input?.addEventListener('change', (e) => {
             saveSettings();
 
-            // Request notification permission when task reminders are enabled
-            if (input.id === 'task-notifications-enabled' && input.checked) {
+            // Request notification permission when task reminders or timer notifications are enabled
+            if ((input.id === 'task-notifications-enabled' || input.id === 'timer-notifications-enabled') && input.checked) {
               if ('Notification' in window && Notification.permission === 'default') {
-                Notification.requestPermission();
+                Notification.requestPermission().then(() => {
+                  updatePermissionStatus();
+                });
               }
             }
           });
+        });
+
+        // Request permission button
+        elements.requestPermissionBtn?.addEventListener('click', () => {
+          if ('Notification' in window) {
+            Notification.requestPermission().then(() => {
+              updatePermissionStatus();
+            });
+          }
         });
         
         // Subject actions
