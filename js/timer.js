@@ -37,6 +37,7 @@ const Timer = (function() {
     longBreak: 15,
     sessionsUntilLongBreak: 4,
     autoStartBreak: false,
+    autoStartWork: false,
     sound: true,
     notifications: true
   };
@@ -114,6 +115,7 @@ const Timer = (function() {
       longBreak: storedSettings.long_break || 15,
       sessionsUntilLongBreak: storedSettings.sessions_until_long_break || 4,
       autoStartBreak: storedSettings.auto_start_break || false,
+      autoStartWork: storedSettings.auto_start_work || false,
       sound: storedSettings.sound !== false,
       notifications: storedSettings.notifications !== false
     };
@@ -321,9 +323,15 @@ const Timer = (function() {
     // Switch to next type
     setTimerType(nextType);
     
-    // Auto-start break if enabled
-    if (settings.autoStartBreak && nextType !== TYPES.WORK) {
-      setTimeout(start, 1000);
+    // Auto-start next session if enabled
+    if (nextType === TYPES.WORK) {
+      if (settings.autoStartWork) {
+        setTimeout(start, 1000);
+      }
+    } else {
+      if (settings.autoStartBreak) {
+        setTimeout(start, 1000);
+      }
     }
     
     updateStats();
