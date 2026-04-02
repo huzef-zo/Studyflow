@@ -166,6 +166,17 @@
           <span class="toggle-slider"></span>
         </label>
       </div>
+
+      <div class="settings-item">
+        <div class="settings-item-info">
+          <div class="settings-item-title">Auto-start Work Sessions</div>
+          <div class="settings-item-desc">Automatically start work timer after break finished</div>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="auto-start-work">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
     </section>
 
     <!-- Subjects Section -->
@@ -259,6 +270,7 @@
         soundEnabled: document.getElementById('sound-enabled'),
         timerNotificationsEnabled: document.getElementById('timer-notifications-enabled'),
         autoStartBreak: document.getElementById('auto-start-break'),
+        autoStartWork: document.getElementById('auto-start-work'),
         taskNotificationsEnabled: document.getElementById('task-notifications-enabled'),
         requestPermissionBtn: document.getElementById('request-permission-btn'),
         permissionStatus: document.getElementById('permission-status'),
@@ -290,6 +302,7 @@
         elements.soundEnabled.checked = settings.sound !== false;
         elements.timerNotificationsEnabled.checked = settings.notifications !== false;
         elements.autoStartBreak.checked = settings.auto_start_break === true;
+        elements.autoStartWork.checked = settings.auto_start_work === true;
         elements.taskNotificationsEnabled.checked = settings.task_notifications !== false;
 
         updatePermissionStatus();
@@ -335,6 +348,7 @@
         Storage.updateSetting('sound', elements.soundEnabled.checked);
         Storage.updateSetting('notifications', elements.timerNotificationsEnabled.checked);
         Storage.updateSetting('auto_start_break', elements.autoStartBreak.checked);
+        Storage.updateSetting('auto_start_work', elements.autoStartWork.checked);
         Storage.updateSetting('task_notifications', elements.taskNotificationsEnabled.checked);
       }
 
@@ -572,6 +586,7 @@
           elements.sessionsUntilLong,
           elements.soundEnabled,
           elements.autoStartBreak,
+          elements.autoStartWork,
           elements.taskNotificationsEnabled
         ];
         

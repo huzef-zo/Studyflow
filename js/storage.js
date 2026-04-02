@@ -46,6 +46,7 @@ const Storage = (function() {
       task_notifications: true,
       sound: true,
       auto_start_break: false,
+      auto_start_work: false,
       work_duration: 25,
       short_break: 5,
       long_break: 15,
