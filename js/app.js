@@ -647,6 +647,37 @@ const App = (function() {
     showToast(body, 'info', 10000);
   }
 
+  /**
+   * Check for timer completion in background
+   */
+  function checkTimerBackground() {
+    // Skip if we are on the timer page, as Timer.js handles its own state
+    if (getCurrentPage() === 'timer') return;
+
+    const timerState = Storage.getTimerState();
+    if (!timerState || timerState.state !== 'running' || !timerState.endTime) return;
+
+    if (Date.now() >= timerState.endTime) {
+      // Timer finished in background
+      const newState = Storage.completeTimerSession(timerState);
+
+      // Notify user
+      const completedType = timerState.type;
+      const title = completedType === 'work' ? 'Work Session Complete!' : 'Break Finished!';
+      const body = completedType === 'work' ? 'Great job! Time for a break.' : 'Ready to get back to work?';
+
+      if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification(title, { body });
+      }
+
+      showToast(body, 'success', 10000);
+
+      // If we are on the timer page, the Timer module's own interval or visibility change listener
+      // will handle the UI update. If we're on another page, we've updated storage so
+      // the timer page will see the new 'idle' state when the user navigates back.
+    }
+  }
+
   function init() {
     initNavigation();
     initToastContainer();
@@ -662,6 +693,9 @@ const App = (function() {
     setInterval(checkTaskNotifications, 60000);
     // Initial check
     setTimeout(checkTaskNotifications, 1000);
+
+    // Check for timer completion every second
+    setInterval(checkTimerBackground, 1000);
   }
 
   // Public API
