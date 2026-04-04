@@ -60,30 +60,59 @@ const Tasks = (function() {
         </span>
       `;
     }
+
+    const hasSubtasks = task.subtasks && task.subtasks.length > 0;
+    const progressHtml = hasSubtasks ? App.createProgressBar(task.subtasks.filter(s => s.isCompleted).length, task.subtasks.length, 'Sub-tasks Progress') : '';
     
-    return `
-      <div class="task-item ${task.completed ? 'completed' : ''}" data-task-id="${task.id}">
-        <div class="task-checkbox">
-          <input type="checkbox" 
-                 ${task.completed ? 'checked' : ''} 
-                 aria-label="Mark task as ${task.completed ? 'incomplete' : 'complete'}">
+    const subtasksHtml = `
+      <div class="subtasks-container">
+        <div class="subtask-list">
+          ${(task.subtasks || []).map(subtask => `
+            <div class="subtask-item ${subtask.isCompleted ? 'completed' : ''}" data-subtask-id="${subtask.id}">
+              <input type="checkbox" class="subtask-checkbox" ${subtask.isCompleted ? 'checked' : ''}>
+              <span class="subtask-title">${App.escapeHtml(subtask.title)}</span>
+              <span class="subtask-meta">${subtask.estimatedCycles} cycles</span>
+            </div>
+          `).join('')}
         </div>
-        <div class="task-content">
-          <div class="task-title">${App.escapeHtml(task.title)}</div>
-          <div class="task-meta">
-            ${dueDateHtml}
-            <span class="priority-badge ${priorityClass}">${priorityLabel}</span>
-            <span class="subject-badge" style="--subject-color: ${subjectColor};">${App.escapeHtml(task.subject)}</span>
+        <form class="add-subtask-form">
+          <input type="text" class="form-input" placeholder="New sub-task title..." required>
+          <input type="number" class="form-input" value="1" min="1" style="width: 70px;" required>
+          <button type="submit" class="btn btn-primary btn-sm">Add</button>
+        </form>
+      </div>
+    `;
+
+    return `
+      <div class="task-item task-item-column ${task.completed ? 'completed' : ''}" data-task-id="${task.id}">
+        <div class="task-item-main">
+          <div class="task-checkbox">
+            <input type="checkbox"
+                   ${task.completed ? 'checked' : ''}
+                   aria-label="Mark task as ${task.completed ? 'incomplete' : 'complete'}">
+          </div>
+          <div class="task-content">
+            <div class="task-title">${App.escapeHtml(task.title)}</div>
+            <div class="task-meta">
+              ${dueDateHtml}
+              <span class="priority-badge ${priorityClass}">${priorityLabel}</span>
+              <span class="subject-badge" style="--subject-color: ${subjectColor};">${App.escapeHtml(task.subject)}</span>
+            </div>
+          </div>
+          <div class="task-actions">
+            <button class="btn btn-ghost btn-icon btn-sm task-expand-btn" aria-label="Expand task">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <button class="btn btn-ghost btn-icon btn-sm edit-btn" aria-label="Edit task">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </button>
+            <button class="btn btn-ghost btn-icon btn-sm delete-btn" aria-label="Delete task">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            </button>
           </div>
         </div>
-        <div class="task-actions">
-          <button class="btn btn-ghost btn-icon btn-sm edit-btn" aria-label="Edit task">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-          </button>
-          <button class="btn btn-ghost btn-icon btn-sm delete-btn" aria-label="Delete task">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-          </button>
-        </div>
+        ${progressHtml}
+        ${subtasksHtml}
       </div>
     `;
   }
@@ -160,6 +189,21 @@ const Tasks = (function() {
     elements.taskList.querySelectorAll('.task-checkbox input').forEach(checkbox => {
       checkbox.addEventListener('change', handleTaskToggle);
     });
+
+    // Subtask checkbox listeners
+    elements.taskList.querySelectorAll('.subtask-checkbox').forEach(checkbox => {
+      checkbox.addEventListener('change', handleSubtaskToggle);
+    });
+
+    // Task expansion listeners
+    elements.taskList.querySelectorAll('.task-expand-btn').forEach(btn => {
+      btn.addEventListener('click', handleExpandClick);
+    });
+
+    // Add subtask form listeners
+    elements.taskList.querySelectorAll('.add-subtask-form').forEach(form => {
+      form.addEventListener('submit', handleAddSubtaskSubmit);
+    });
     
     // Edit button listeners
     elements.taskList.querySelectorAll('.edit-btn').forEach(btn => {
@@ -191,8 +235,63 @@ const Tasks = (function() {
       App.showToast('Task marked as incomplete', 'info');
     }
     
-    // Re-render to update sorting
+    // Re-render to update sorting and subtasks
     setTimeout(renderTasks, 300);
+  }
+
+  /**
+   * Handle subtask completion toggle
+   */
+  function handleSubtaskToggle(e) {
+    const taskItem = e.target.closest('.task-item');
+    const subtaskItem = e.target.closest('.subtask-item');
+    const taskId = taskItem.dataset.taskId;
+    const subtaskId = subtaskItem.dataset.subtaskId;
+    const isChecked = e.target.checked;
+
+    Storage.toggleSubtask(taskId, subtaskId, isChecked);
+
+    // Re-render to update main task status and progress bar
+    renderTasks();
+
+    // Keep expanded
+    const newTaskItem = elements.taskList.querySelector(`[data-task-id="${taskId}"]`);
+    if (newTaskItem) newTaskItem.classList.add('expanded');
+  }
+
+  /**
+   * Handle expansion toggle
+   */
+  function handleExpandClick(e) {
+    const taskItem = e.target.closest('.task-item');
+    taskItem.classList.toggle('expanded');
+  }
+
+  /**
+   * Handle add subtask submission
+   */
+  function handleAddSubtaskSubmit(e) {
+    e.preventDefault();
+    const taskItem = e.target.closest('.task-item');
+    const taskId = taskItem.dataset.taskId;
+    const inputs = e.target.querySelectorAll('input');
+    const title = inputs[0].value.trim();
+    const cycles = parseInt(inputs[1].value);
+
+    if (title) {
+      Storage.addSubtask(taskId, {
+        title: title,
+        estimatedCycles: cycles
+      });
+
+      renderTasks();
+
+      // Keep expanded
+      const newTaskItem = elements.taskList.querySelector(`[data-task-id="${taskId}"]`);
+      if (newTaskItem) newTaskItem.classList.add('expanded');
+
+      App.showToast('Sub-task added', 'success');
+    }
   }
 
   /**
@@ -306,6 +405,26 @@ const Tasks = (function() {
             `).join('')}
           </select>
         </div>
+
+        <div class="form-group">
+          <label class="form-label">Sub-tasks</label>
+          <div id="modal-subtask-list" class="subtask-list">
+            ${isEdit && task.subtasks ? task.subtasks.map((s) => `
+              <div class="subtask-item modal-subtask-item" data-subtask-id="${s.id}">
+                <input type="checkbox" class="subtask-checkbox" ${s.isCompleted ? 'checked' : ''}>
+                <input type="text" class="form-input modal-subtask-title" value="${App.escapeHtml(s.title)}">
+                <input type="number" class="form-input modal-subtask-cycles" value="${s.estimatedCycles}" min="1">
+                <button type="button" class="btn btn-ghost btn-icon btn-sm remove-subtask-btn" style="width: 36px; height: 36px;">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                </button>
+              </div>
+            `).join('') : ''}
+          </div>
+          <button type="button" class="btn btn-secondary btn-sm mt-sm" id="modal-add-subtask-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
+            Add Sub-task
+          </button>
+        </div>
       </form>
     `;
     
@@ -376,6 +495,30 @@ const Tasks = (function() {
     });
 
     updateDateInputs(task.type);
+
+    // Modal subtask management
+    const modalSubtaskList = modal.querySelector('#modal-subtask-list');
+    const modalAddSubtaskBtn = modal.querySelector('#modal-add-subtask-btn');
+
+    modalAddSubtaskBtn.addEventListener('click', () => {
+      const div = document.createElement('div');
+      div.className = 'subtask-item modal-subtask-item';
+      div.innerHTML = `
+        <input type="checkbox" class="subtask-checkbox">
+        <input type="text" class="form-input modal-subtask-title" placeholder="Sub-task title...">
+        <input type="number" class="form-input modal-subtask-cycles" value="1" min="1">
+        <button type="button" class="btn btn-ghost btn-icon btn-sm remove-subtask-btn" style="width: 36px; height: 36px;">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+        </button>
+      `;
+      modalSubtaskList.appendChild(div);
+      div.querySelector('.remove-subtask-btn').addEventListener('click', () => div.remove());
+      div.querySelector('input[type="text"]').focus();
+    });
+
+    modalSubtaskList.querySelectorAll('.remove-subtask-btn').forEach(btn => {
+      btn.addEventListener('click', () => btn.closest('.subtask-item').remove());
+    });
     
     // Form submission
     const form = modal.querySelector('#task-form');
@@ -424,6 +567,26 @@ const Tasks = (function() {
       return;
     }
 
+    // Collect subtasks
+    const subtasks = [];
+    form.querySelectorAll('#modal-subtask-list .subtask-item').forEach(item => {
+      const titleInput = item.querySelector('.modal-subtask-title');
+      const cyclesInput = item.querySelector('.modal-subtask-cycles');
+      const checkbox = item.querySelector('.subtask-checkbox');
+      const title = titleInput.value.trim();
+      const cycles = parseInt(cyclesInput.value);
+      const existingId = item.dataset.subtaskId;
+
+      if (title) {
+        subtasks.push({
+          id: existingId || Storage.generateId(),
+          title: title,
+          isCompleted: checkbox.checked,
+          estimatedCycles: cycles
+        });
+      }
+    });
+
     const taskData = {
       title: data.title.trim(),
       type: type,
@@ -432,7 +595,8 @@ const Tasks = (function() {
       dueTime: data.dueTime || null,
       priority: data.priority,
       subject: data.subject,
-      repeatDays: repeatDays
+      repeatDays: repeatDays,
+      subtasks: subtasks
     };
 
     if (editingTaskId) {

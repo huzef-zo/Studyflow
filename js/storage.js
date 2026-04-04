@@ -199,6 +199,17 @@ const Storage = (function() {
 
   function addTask(task) {
     const tasks = getTasks();
+    const subtasks = task.subtasks || [];
+
+    let completed = task.completed || false;
+    let progress = 0;
+
+    if (subtasks.length > 0) {
+      const completedSubtasks = subtasks.filter(s => s.isCompleted).length;
+      progress = Math.round((completedSubtasks / subtasks.length) * 100);
+      completed = subtasks.every(s => s.isCompleted);
+    }
+
     const newTask = {
       id: generateId(),
       title: task.title,
@@ -209,7 +220,9 @@ const Storage = (function() {
       priority: task.priority || 'medium',
       subject: task.subject || 'Other',
       repeatDays: task.repeatDays || [],
-      completed: false,
+      completed: completed,
+      subtasks: subtasks,
+      progress: progress,
       createdAt: new Date().toISOString()
     };
     tasks.push(newTask);
@@ -221,11 +234,52 @@ const Storage = (function() {
     const tasks = getTasks();
     const index = tasks.findIndex(t => t.id === id);
     if (index !== -1) {
-      tasks[index] = { ...tasks[index], ...updates };
+      const task = { ...tasks[index], ...updates };
+
+      // Update progress and completion status if subtasks changed
+      if (task.subtasks && task.subtasks.length > 0) {
+        const completedCount = task.subtasks.filter(s => s.isCompleted).length;
+        task.progress = Math.round((completedCount / task.subtasks.length) * 100);
+        task.completed = task.subtasks.every(s => s.isCompleted);
+      } else if (task.subtasks) {
+        task.progress = 0;
+      }
+
+      tasks[index] = task;
       saveTasks(tasks);
       return tasks[index];
     }
     return null;
+  }
+
+  function addSubtask(taskId, subtaskData) {
+    const task = getTaskById(taskId);
+    if (!task) return null;
+
+    const subtasks = task.subtasks || [];
+    const newSubtask = {
+      id: generateId(),
+      title: subtaskData.title,
+      isCompleted: subtaskData.isCompleted || false,
+      estimatedCycles: subtaskData.estimatedCycles || 1
+    };
+
+    subtasks.push(newSubtask);
+    return updateTask(taskId, { subtasks: subtasks });
+  }
+
+  function toggleSubtask(taskId, subtaskId, isCompleted) {
+    const task = getTaskById(taskId);
+    if (!task || !task.subtasks) return null;
+
+    const subtasks = task.subtasks.map(s => {
+      if (s.id === subtaskId) {
+        return { ...s, isCompleted: isCompleted };
+      }
+      return s;
+    });
+
+    return updateTask(taskId, { subtasks: subtasks });
   }
 
   function deleteTask(id) {
@@ -236,10 +290,20 @@ const Storage = (function() {
   }
 
   function completeTask(id) {
+    const task = getTaskById(id);
+    if (task && task.subtasks && task.subtasks.length > 0) {
+      const updatedSubtasks = task.subtasks.map(s => ({ ...s, isCompleted: true }));
+      return updateTask(id, { completed: true, completedAt: new Date().toISOString(), subtasks: updatedSubtasks });
+    }
     return updateTask(id, { completed: true, completedAt: new Date().toISOString() });
   }
 
   function uncompleteTask(id) {
+    const task = getTaskById(id);
+    if (task && task.subtasks && task.subtasks.length > 0) {
+      const updatedSubtasks = task.subtasks.map(s => ({ ...s, isCompleted: false }));
+      return updateTask(id, { completed: false, completedAt: null, subtasks: updatedSubtasks });
+    }
     return updateTask(id, { completed: false, completedAt: null });
   }
 
@@ -800,6 +864,8 @@ const Storage = (function() {
     getUpcomingTasks,
     getOverdueTasks,
     getTodayTasks,
+    addSubtask,
+    toggleSubtask,
     
     // Subject functions
     getSubjects,
