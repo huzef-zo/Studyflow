@@ -182,12 +182,12 @@ const Calendar = (function() {
   function renderSelectedDayTasks() {
     if (!selectedDate) {
       elements.selectedDateTitle.textContent = 'Select a date';
-      elements.dayTasks.innerHTML = `
-        <div class="empty-state" style="padding: 2rem;">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 48px; height: 48px; color: var(--text-muted); margin-bottom: 1rem;"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
-          <p class="text-secondary">Click on a date to see tasks</p>
-        </div>
-      `;
+      elements.dayTasks.innerHTML = App.createEmptyStateHtml({
+        title: 'Select a Date',
+        text: 'Choose a date from the calendar to view scheduled missions.',
+        icon: 'calendar',
+        padding: '2rem'
+      });
       return;
     }
     
@@ -198,13 +198,14 @@ const Calendar = (function() {
     const tasks = getTasksForDate(selectedDate);
     
     if (tasks.length === 0) {
-      elements.dayTasks.innerHTML = `
-        <div class="empty-state" style="padding: 2rem;">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 48px; height: 48px; color: var(--text-muted); margin-bottom: 1rem;"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-          <p class="text-secondary">No tasks for this date</p>
-          <button class="btn btn-primary mt-md" id="add-task-day">Add Task</button>
-        </div>
-      `;
+      elements.dayTasks.innerHTML = App.createEmptyStateHtml({
+        title: 'Clear Schedule',
+        text: 'No missions scheduled for this day. Enjoy your free time or plan ahead.',
+        icon: 'check',
+        actionText: 'Schedule Mission',
+        actionId: 'add-task-day',
+        padding: '2rem'
+      });
       
       document.getElementById('add-task-day')?.addEventListener('click', () => {
         openAddTaskForDate(selectedDate);

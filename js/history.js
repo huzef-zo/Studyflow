@@ -99,8 +99,13 @@ const History = (function() {
 
     if (stats.length === 0) {
       elements.masteryOverview.innerHTML = `
-        <div class="empty-state" style="padding: 1rem; grid-column: 1 / -1;">
-          <p class="text-secondary text-center">No subjects defined. Add them in Settings.</p>
+        <div style="grid-column: 1 / -1;">
+          ${App.createEmptyStateHtml({
+            title: 'No Subjects',
+            text: 'Define your subjects in Settings to begin tracking mastery.',
+            icon: 'settings',
+            padding: '2rem'
+          })}
         </div>
       `;
       return;

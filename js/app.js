@@ -301,6 +301,7 @@ const App = (function() {
   let toastContainer = null;
 
   function initToastContainer() {
+    if (toastContainer && document.getElementById('toast-container')) return;
     if (!toastContainer) {
       toastContainer = document.createElement('div');
       toastContainer.id = 'toast-container';
@@ -492,6 +493,7 @@ const App = (function() {
    * Escape HTML to prevent XSS
    */
   function escapeHtml(text) {
+    if (text === null || text === undefined) return '';
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
@@ -578,24 +580,26 @@ const App = (function() {
   // ============================================
 
   /**
-   * Create an empty state element
+   * Create an empty state HTML string
    */
-  function createEmptyState(title, text, actionText, actionCallback) {
-    const container = document.createElement('div');
-    container.className = 'empty-state';
-    
-    container.innerHTML = `
-      ${Icons.empty}
-      <h4 class="empty-state-title">${title}</h4>
-      <p class="empty-state-text">${text}</p>
-      ${actionText ? `<button class="btn btn-primary">${actionText}</button>` : ''}
+  function createEmptyStateHtml(options) {
+    const {
+      title = 'No Data',
+      text = 'Nothing to show here yet.',
+      icon = 'empty',
+      actionText = '',
+      actionId = '',
+      padding = '4rem'
+    } = options;
+
+    return `
+      <div class="empty-state" style="padding: ${padding};">
+        <div class="empty-state-icon">${Icons[icon] || Icons.empty}</div>
+        <h4 style="color: white; font-size: 1.25rem; margin-bottom: 8px; font-weight: 600;">${escapeHtml(title)}</h4>
+        <p style="color: var(--text-muted); font-size: 0.875rem; margin-bottom: 1.5rem; max-width: 250px;">${escapeHtml(text)}</p>
+        ${actionText ? `<button class="btn btn-primary" id="${actionId}">${escapeHtml(actionText)}</button>` : ''}
+      </div>
     `;
-    
-    if (actionCallback && actionText) {
-      container.querySelector('button').addEventListener('click', actionCallback);
-    }
-    
-    return container;
   }
 
   // ============================================
@@ -736,7 +740,7 @@ const App = (function() {
     createProgressBar,
     
     // Empty State
-    createEmptyState
+    createEmptyStateHtml
   };
 })();
 
