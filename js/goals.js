@@ -202,7 +202,7 @@ const Goals = (function() {
       
       html += `
         <div class="daily-progress-item ${statusClass} ${day.isToday ? 'today' : ''}">
-          <div class="daily-progress-day">${days[index]}</div>
+          <div class="daily-progress-day" style="margin-bottom: 1rem;">${days[index]}</div>
           <div class="daily-progress-circle">
             <svg viewBox="0 0 36 36">
               <circle 
@@ -227,7 +227,7 @@ const Goals = (function() {
             </svg>
             <span class="daily-progress-value">${day.isFuture ? '-' : avgPercent + '%'}</span>
           </div>
-          <div class="daily-progress-label">
+          <div class="daily-progress-label" style="line-height: 2; margin-top: 1rem;">
             ${day.tasks}/${dailyTaskTarget} tasks<br>
             ${Math.round(day.minutes / 60 * 10) / 10}h
           </div>

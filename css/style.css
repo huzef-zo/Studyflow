@@ -9,7 +9,7 @@
   /* Colors */
   --bg-deep: #0B0F19;
   --glass-bg: rgba(15, 23, 42, 0.4);
-  --glass-border: rgba(255, 255, 255, 0.05);
+  --glass-border: rgba(255, 255, 255, 0.08);
   --primary: #3B82F6;
   --primary-rgb: 59, 130, 246;
   --primary-glow: rgba(59, 130, 246, 0.5);
@@ -110,9 +110,9 @@ h2 { font-size: 20px; font-weight: 600; color: var(--text-secondary); }
 
 /* Glassmorphism Containers */
 .card {
-  background: var(--glass-bg);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: var(--glass-bg) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
   padding: var(--spacing-md);
@@ -173,6 +173,7 @@ h2 { font-size: 20px; font-weight: 600; color: var(--text-secondary); }
 }
 
 .btn:active { transform: scale(0.95); }
+.btn:hover { backdrop-filter: blur(30px) !important; }
 
 .btn-primary {
   background: var(--primary-gradient);
@@ -235,8 +236,9 @@ h2 { font-size: 20px; font-weight: 600; color: var(--text-secondary); }
 }
 
 .stat-pill {
-  background: var(--glass-bg);
-  backdrop-filter: blur(20px);
+  background: var(--glass-bg) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-full);
   padding: 12px 24px;
@@ -353,8 +355,9 @@ h2 { font-size: 20px; font-weight: 600; color: var(--text-secondary); }
   top: 0;
   bottom: 0;
   width: 280px;
-  background: rgba(11, 15, 25, 0.8);
-  backdrop-filter: blur(20px);
+  background: var(--glass-bg) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
   border-right: 1px solid var(--glass-border);
   padding: var(--spacing-lg);
   display: none;
@@ -393,8 +396,9 @@ h2 { font-size: 20px; font-weight: 600; color: var(--text-secondary); }
   left: 0;
   right: 0;
   height: 72px;
-  background: rgba(11, 15, 25, 0.8);
-  backdrop-filter: blur(20px);
+  background: var(--glass-bg) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
   border-top: 1px solid var(--glass-border);
   display: flex;
   justify-content: space-around;
@@ -421,7 +425,7 @@ h2 { font-size: 20px; font-weight: 600; color: var(--text-secondary); }
 }
 
 .bottom-nav-item.active svg {
-  filter: drop-shadow(0 0 8px var(--primary-glow));
+  filter: drop-shadow(0 0 8px #3B82F6);
 }
 
 /* Forms */
@@ -429,8 +433,9 @@ h2 { font-size: 20px; font-weight: 600; color: var(--text-secondary); }
 .form-label { display: block; margin-bottom: 8px; font-size: 14px; font-weight: 600; color: var(--text-secondary); }
 .form-input {
   width: 100%;
-  background: rgba(15, 23, 42, 0.6);
-  backdrop-filter: blur(10px);
+  background: var(--glass-bg) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-md);
   padding: 12px 16px;
@@ -622,9 +627,10 @@ h2 { font-size: 20px; font-weight: 600; color: var(--text-secondary); }
   font-weight: 800;
   text-transform: uppercase;
   background: rgba(var(--tag-color, var(--primary-rgb)), 0.15);
-  border: 1px solid rgba(var(--tag-color, var(--primary-rgb)), 0.3);
+  border: 1px solid rgba(var(--tag-color, var(--primary-rgb)), 0.4);
   color: rgb(var(--tag-color, var(--primary-rgb)));
   text-shadow: 0 0 8px rgba(var(--tag-color, var(--primary-rgb)), 0.5);
+  box-shadow: 0 0 10px rgba(var(--tag-color, var(--primary-rgb)), 0.2);
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -644,7 +650,8 @@ h2 { font-size: 20px; font-weight: 600; color: var(--text-secondary); }
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(8px);
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -741,8 +748,10 @@ h2 { font-size: 20px; font-weight: 600; color: var(--text-secondary); }
 
 /* Additional premium touches */
 .glass-pill {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--glass-bg) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border: 1px solid var(--glass-border);
   border-radius: 99px;
   padding: 4px 12px;
   display: inline-flex;
