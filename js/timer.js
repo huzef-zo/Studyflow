@@ -25,6 +25,7 @@ const Timer = (function() {
    */
   function initElements() {
     elements = {
+      timerContainer: document.getElementById('timer-container'),
       timerDisplay: document.getElementById('timer-time'),
       timerLabel: document.getElementById('timer-label'),
       timerProgress: document.getElementById('timer-progress'),
@@ -81,6 +82,7 @@ const Timer = (function() {
     // UI Update
     elements.playPauseIcon.innerHTML = `<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>`;
     document.body.classList.add('focus-mode');
+    elements.timerContainer.classList.add('active');
     
     timerInterval = setInterval(tick, 1000);
     saveTimerState();
@@ -103,6 +105,7 @@ const Timer = (function() {
     // UI Update
     elements.playPauseIcon.innerHTML = `<polygon points="5 3 19 12 5 21 5 3"/>`;
     document.body.classList.remove('focus-mode');
+    elements.timerContainer.classList.remove('active');
     
     saveTimerState();
   }

@@ -507,6 +507,29 @@ const App = (function() {
     return subject ? subject.color : '#6B7280';
   }
 
+  /**
+   * Convert hex color to RGB string (r, g, b)
+   */
+  function hexToRgb(hex) {
+    if (!hex) return '59, 130, 246'; // Default primary blue
+
+    // Remove hash
+    hex = hex.replace('#', '');
+
+    // Expand short hex
+    if (hex.length === 3) {
+      hex = hex.split('').map(char => char + char).join('');
+    }
+
+    const r = parseInt(hex.substring(0, 2), 16);
+    const g = parseInt(hex.substring(2, 4), 16);
+    const b = parseInt(hex.substring(4, 6), 16);
+
+    if (isNaN(r) || isNaN(g) || isNaN(b)) return '59, 130, 246';
+
+    return `${r}, ${g}, ${b}`;
+  }
+
   // ============================================
   // Form Helpers
   // ============================================
@@ -550,26 +573,16 @@ const App = (function() {
    */
   function createProgressBar(current, max, label, showPercentage = true) {
     const percentage = max > 0 ? Math.min(100, Math.round((current / max) * 100)) : 0;
-    let fillClass = '';
-    
-    if (percentage >= 100) {
-      fillClass = 'success';
-    } else if (percentage >= 75) {
-      fillClass = 'success';
-    } else if (percentage >= 50) {
-      fillClass = '';
-    } else {
-      fillClass = '';
-    }
+    const color = label.toLowerCase().includes('focus') || label.toLowerCase().includes('hour') ? '#8B5CF6' : '#3B82F6';
     
     return `
       <div class="progress-wrapper">
         <div class="progress-header">
           <span class="progress-label">${label}</span>
-          <span class="progress-value">${current}/${max}${showPercentage ? ` (${percentage}%)` : ''}</span>
+          <span class="progress-value" style="color: ${color}">${current} / ${max}${showPercentage ? ` (${percentage}%)` : ''}</span>
         </div>
-        <div class="progress-bar">
-          <div class="progress-bar-fill ${fillClass}" style="width: ${percentage}%"></div>
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill" style="width: ${percentage}%; background: ${color}; color: ${color}"></div>
         </div>
       </div>
     `;
@@ -731,6 +744,7 @@ const App = (function() {
     createDateRangeBadge,
     escapeHtml,
     getSubjectColor,
+    hexToRgb,
     
     // Forms
     getFormData,

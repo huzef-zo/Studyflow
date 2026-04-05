@@ -11,7 +11,7 @@
     /* Tasks specific minimal design */
     .task-card {
       background: var(--glass-bg);
-      backdrop-filter: blur(12px);
+      backdrop-filter: blur(20px);
       border: 1px solid var(--glass-border);
       border-left: 6px solid transparent;
       border-radius: 16px;
@@ -20,19 +20,21 @@
       display: flex;
       align-items: flex-start;
       gap: 1rem;
-      transition: all 0.2s;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       position: relative;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
     }
 
     .task-card:hover {
-      transform: translateX(8px);
+      transform: translateX(8px) scale(1.01);
       background: rgba(255, 255, 255, 0.05);
+      border-color: rgba(255, 255, 255, 0.1);
     }
 
-    .task-card.priority-critical { border-left-color: var(--danger); }
-    .task-card.priority-high { border-left-color: #F97316; }
-    .task-card.priority-medium { border-left-color: var(--warning); }
-    .task-card.priority-low { border-left-color: var(--success); }
+    .task-card.priority-critical { border-left-color: var(--danger); box-shadow: -4px 0 20px rgba(var(--danger-rgb), 0.4); }
+    .task-card.priority-high { border-left-color: #F97316; box-shadow: -4px 0 20px rgba(249, 115, 22, 0.4); }
+    .task-card.priority-medium { border-left-color: #F59E0B; box-shadow: -4px 0 20px rgba(var(--warning-rgb), 0.4); }
+    .task-card.priority-low { border-left-color: var(--success); box-shadow: -4px 0 20px rgba(var(--success-rgb), 0.4); }
 
     .subject-pill {
       background: rgba(59, 130, 246, 0.15);
@@ -116,16 +118,16 @@
 
       <div class="flex items-center gap-sm flex-1" style="min-width: 300px;">
         <div class="form-group mb-0 flex-1">
-          <input type="text" id="search-tasks" class="form-input" placeholder="Search objectives..." style="padding: 8px 16px;">
+          <input type="text" id="search-tasks" class="form-input glass-pill-input" placeholder="Search objectives..." style="padding: 8px 20px;">
         </div>
-        <select id="filter-priority" class="form-input" style="width: auto; padding: 8px 16px;">
+        <select id="filter-priority" class="form-input glass-pill-input" style="width: auto; padding: 8px 20px;">
           <option value="all">All Priorities</option>
           <option value="critical">Critical</option>
           <option value="high">High</option>
           <option value="medium">Medium</option>
           <option value="low">Low</option>
         </select>
-        <select id="filter-subject" class="form-input" style="width: auto; padding: 8px 16px;">
+        <select id="filter-subject" class="form-input glass-pill-input" style="width: auto; padding: 8px 20px;">
           <option value="all">All Sectors</option>
           <!-- Populated by JS -->
         </select>
