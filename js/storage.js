@@ -261,7 +261,8 @@ const Storage = (function() {
       id: generateId(),
       title: subtaskData.title,
       isCompleted: subtaskData.isCompleted || false,
-      estimatedCycles: subtaskData.estimatedCycles || 1
+      estimatedCycles: subtaskData.estimatedCycles || 1,
+      completedCycles: subtaskData.completedCycles || 0
     };
 
     subtasks.push(newSubtask);
@@ -269,12 +270,16 @@ const Storage = (function() {
   }
 
   function toggleSubtask(taskId, subtaskId, isCompleted) {
+    return updateSubtask(taskId, subtaskId, { isCompleted: isCompleted });
+  }
+
+  function updateSubtask(taskId, subtaskId, updates) {
     const task = getTaskById(taskId);
     if (!task || !task.subtasks) return null;
 
     const subtasks = task.subtasks.map(s => {
       if (s.id === subtaskId) {
-        return { ...s, isCompleted: isCompleted };
+        return { ...s, ...updates };
       }
       return s;
     });
@@ -577,7 +582,7 @@ const Storage = (function() {
    */
   function completeTimerSession(timerState) {
     const settings = getSettings();
-    const { type, sessionsCompleted, selectedTaskId } = timerState;
+    const { type, sessionsCompleted, selectedTaskId, selectedSubtaskId } = timerState;
 
     let nextSessionsCompleted = sessionsCompleted;
 
@@ -586,6 +591,21 @@ const Storage = (function() {
       addSession(settings.work_duration || 25, 'work', selectedTaskId);
       addStudyMinutes(settings.work_duration || 25);
       nextSessionsCompleted++;
+
+      // Increment sub-task cycles if selected
+      if (selectedTaskId && selectedSubtaskId) {
+        const task = getTaskById(selectedTaskId);
+        if (task && task.subtasks) {
+          const subtask = task.subtasks.find(s => s.id === selectedSubtaskId);
+          if (subtask) {
+            const newCycles = (subtask.completedCycles || 0) + 1;
+            updateSubtask(selectedTaskId, selectedSubtaskId, {
+              completedCycles: newCycles,
+              // Auto-complete if cycles reached? Maybe not, let user decide
+            });
+          }
+        }
+      }
     }
 
     // Determine next session type
@@ -866,6 +886,7 @@ const Storage = (function() {
     getTodayTasks,
     addSubtask,
     toggleSubtask,
+    updateSubtask,
     
     // Subject functions
     getSubjects,
