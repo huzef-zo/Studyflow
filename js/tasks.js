@@ -113,20 +113,21 @@ const Tasks = (function() {
     elements.taskList.innerHTML = tasks.sort((a,b) => {
       if (a.completed !== b.completed) return a.completed ? 1 : -1;
       return new Date(a.dueDate) - new Date(b.dueDate);
-    }).map(task => {
+    }).map((task, index) => {
       const priorityClass = `priority-${task.priority}`;
       const subjectColor = App.getSubjectColor(task.subject);
       const isExpanded = false; // Internal state not persisted for simplicity in this view
+      const staggerClass = index < 5 ? `stagger-${index + 1}` : '';
 
       return `
-        <div class="task-card ${priorityClass} ${task.completed ? 'completed' : ''}" data-id="${task.id}">
+        <div class="task-card ${priorityClass} ${task.completed ? 'completed' : ''} animate-fade-in ${staggerClass}" data-id="${task.id}">
           <div class="swipe-hint">Swipe to complete</div>
           <div class="flex items-start gap-md">
             <div class="task-checkbox ${task.completed ? 'checked' : ''}" data-id="${task.id}"></div>
             <div class="flex-1">
               <div class="flex items-center gap-md mb-xs">
-                <div class="subject-pill" style="background: ${subjectColor}20; color: ${subjectColor}">${App.escapeHtml(task.subject)}</div>
-                ${task.priority === 'critical' ? '<span class="badge" style="background: var(--danger-glow); color: var(--danger); font-size: 9px;">Critical</span>' : ''}
+                <div class="subject-pill" style="--tag-color: ${App.hexToRgb(subjectColor)}">${App.escapeHtml(task.subject)}</div>
+                ${task.priority === 'critical' ? '<span class="badge" style="--tag-color: var(--danger-rgb); font-size: 9px;">Critical</span>' : ''}
               </div>
               <div class="task-title-text" style="${task.completed ? 'text-decoration: line-through; opacity: 0.5;' : ''}">${App.escapeHtml(task.title)}</div>
               <div class="task-meta-text">
@@ -166,8 +167,20 @@ const Tasks = (function() {
         e.stopPropagation();
         const id = cb.dataset.id;
         const task = Storage.getTaskById(id);
-        task.completed ? Storage.uncompleteTask(id) : Storage.completeTask(id);
-        renderTasks();
+        const card = cb.closest('.task-card');
+
+        if (!task.completed) {
+          // Success animation
+          card.style.transform = 'scale(0.95)';
+          card.style.opacity = '0.5';
+          setTimeout(() => {
+            Storage.completeTask(id);
+            renderTasks();
+          }, 300);
+        } else {
+          Storage.uncompleteTask(id);
+          renderTasks();
+        }
       };
     });
 

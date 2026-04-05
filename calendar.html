@@ -11,9 +11,11 @@
     /* Calendar specific minimal design */
     .calendar-container {
       background: var(--glass-bg);
-      backdrop-filter: blur(12px);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border);
       border-radius: var(--radius-xl);
       padding: 1.5rem;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
     }
 
     .calendar-grid {
@@ -78,7 +80,7 @@
   <!-- Main Content -->
   <main class="main-container">
     <!-- Page Header -->
-    <header class="page-header animate-fade-in">
+    <header class="page-header animate-fade-in stagger-1">
       <h1 class="glowing-text">Temporal Map</h1>
       <p class="subtitle" style="font-weight: 500;">Navigate your study timeline</p>
     </header>
@@ -87,7 +89,7 @@
     <div class="narrow-layout">
       
       <!-- Calendar Card -->
-      <section class="calendar-container animate-fade-in" style="animation-delay: 0.1s;">
+      <section class="calendar-container animate-fade-in stagger-2">
         <div class="flex items-center justify-between mb-lg">
           <h2 id="calendar-title" style="color: white; font-size: 1.125rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;">March 2026</h2>
           <div class="flex gap-xs">
@@ -106,7 +108,7 @@
       </section>
 
       <!-- Selected Day Tasks -->
-      <section class="card animate-fade-in" style="animation-delay: 0.2s;">
+      <section class="card animate-fade-in stagger-3">
         <div class="card-header">
           <h3 class="card-title" id="selected-date-title">Target Date</h3>
           <button class="btn btn-ghost btn-icon btn-sm" id="add-task-btn" style="display: none;">
@@ -119,7 +121,7 @@
       </section>
 
       <!-- Legend (Pills) -->
-      <section class="animate-fade-in" style="animation-delay: 0.3s;">
+      <section class="animate-fade-in stagger-4">
         <div class="flex flex-wrap gap-sm justify-center">
           <div class="glass-pill" style="padding: 4px 12px; font-size: 0.65rem;">
             <div style="width: 6px; height: 6px; border-radius: 50%; background: var(--primary);"></div>

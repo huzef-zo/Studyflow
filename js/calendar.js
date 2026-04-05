@@ -215,21 +215,22 @@ const Calendar = (function() {
     
     elements.dayTasks.innerHTML = tasks.map(task => {
       const subjectColor = App.getSubjectColor(task.subject);
-      const priorityClass = App.getPriorityClass(task.priority);
+      const priorityClass = `priority-${task.priority}`;
       
       return `
-        <div class="task-item ${task.completed ? 'completed' : ''}">
-          <div class="task-checkbox">
-            <input type="checkbox" 
-                   ${task.completed ? 'checked' : ''} 
-                   data-task-id="${task.id}"
-                   aria-label="Mark task as ${task.completed ? 'incomplete' : 'complete'}">
-          </div>
-          <div class="task-content">
-            <div class="task-title">${App.escapeHtml(task.title)}</div>
-            <div class="task-meta">
-              <span class="priority-badge ${priorityClass}">${App.getPriorityLabel(task.priority)}</span>
-              <span class="subject-badge" style="--subject-color: ${subjectColor};">${App.escapeHtml(task.subject)}</span>
+        <div class="task-card ${priorityClass} ${task.completed ? 'completed' : ''}"
+             data-id="${task.id}"
+             style="--priority-color: ${App.hexToRgb(subjectColor)};">
+          <div class="flex items-start gap-md w-full">
+            <div class="task-checkbox ${task.completed ? 'checked' : ''}" data-id="${task.id}"></div>
+            <div class="flex-1">
+              <div class="flex items-center gap-md mb-xs">
+                <div class="subject-pill" style="--tag-color: ${App.hexToRgb(subjectColor)}">${App.escapeHtml(task.subject)}</div>
+              </div>
+              <div class="task-title-text" style="${task.completed ? 'text-decoration: line-through; opacity: 0.5;' : ''}">${App.escapeHtml(task.title)}</div>
+              <div class="task-meta-text">
+                ${task.dueTime ? `Time: ${task.dueTime}` : 'All Day'}
+              </div>
             </div>
           </div>
         </div>
@@ -237,18 +238,16 @@ const Calendar = (function() {
     }).join('');
     
     // Attach checkbox listeners
-    elements.dayTasks.querySelectorAll('.task-checkbox input').forEach(checkbox => {
-      checkbox.addEventListener('change', (e) => {
-        const taskId = e.target.dataset.taskId;
-        if (e.target.checked) {
-          Storage.completeTask(taskId);
-          App.showToast('Task completed!', 'success');
-        } else {
-          Storage.uncompleteTask(taskId);
-        }
+    elements.dayTasks.querySelectorAll('.task-checkbox').forEach(cb => {
+      cb.onclick = (e) => {
+        e.stopPropagation();
+        const id = cb.dataset.id;
+        const task = Storage.getTaskById(id);
+        task.completed ? Storage.uncompleteTask(id) : Storage.completeTask(id);
+        if (!task.completed) App.showToast('Task completed!', 'success');
         renderCalendar();
         renderSelectedDayTasks();
-      });
+      };
     });
   }
 
