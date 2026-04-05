@@ -31,9 +31,16 @@
     <!-- Task Selection -->
     <div id="task-selection-container" style="max-width: 400px; margin: 0 auto var(--spacing-lg);">
       <div class="form-group">
-        <label class="form-label" for="timer-task">Working on:</label>
+        <label class="form-label" for="timer-task">Working on Task:</label>
         <select class="form-select" id="timer-task">
           <option value="">General Study</option>
+          <!-- Populated by JS -->
+        </select>
+      </div>
+      <div class="form-group hidden" id="subtask-selection-container">
+        <label class="form-label" for="timer-subtask">Specific Sub-task:</label>
+        <select class="form-select" id="timer-subtask">
+          <option value="">Whole Task / None</option>
           <!-- Populated by JS -->
         </select>
       </div>

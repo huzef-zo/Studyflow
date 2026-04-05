@@ -29,6 +29,7 @@ const Timer = (function() {
   let endTime = null;
   let sessionsCompleted = 0;
   let selectedTaskId = null;
+  let selectedSubtaskId = null;
   
   // Settings
   let settings = {
@@ -66,7 +67,9 @@ const Timer = (function() {
       sessionCount: document.getElementById('session-count'),
       modeTabs: document.querySelectorAll('.tab[data-mode]'),
       taskSelect: document.getElementById('timer-task'),
-      taskSelectionContainer: document.getElementById('task-selection-container')
+      subtaskSelect: document.getElementById('timer-subtask'),
+      taskSelectionContainer: document.getElementById('task-selection-container'),
+      subtaskSelectionContainer: document.getElementById('subtask-selection-container')
     };
   }
 
@@ -102,6 +105,49 @@ const Timer = (function() {
     });
 
     elements.taskSelect.innerHTML = html;
+
+    // Also populate sub-tasks if a task is already selected
+    if (selectedTaskId) {
+      populateSubtasks(selectedTaskId);
+    }
+  }
+
+  /**
+   * Populate sub-tasks dropdown based on selected task
+   */
+  function populateSubtasks(taskId) {
+    if (!elements.subtaskSelect || !elements.subtaskSelectionContainer) return;
+
+    if (!taskId) {
+      elements.subtaskSelectionContainer.classList.add('hidden');
+      selectedSubtaskId = null;
+      return;
+    }
+
+    const task = Storage.getTaskById(taskId);
+    if (!task || !task.subtasks || task.subtasks.length === 0) {
+      elements.subtaskSelectionContainer.classList.add('hidden');
+      selectedSubtaskId = null;
+      return;
+    }
+
+    elements.subtaskSelectionContainer.classList.remove('hidden');
+
+    // Keep current selection if it still exists
+    const currentSelection = selectedSubtaskId || elements.subtaskSelect.value;
+
+    let html = '<option value="">Whole Task / None</option>';
+    task.subtasks.forEach(subtask => {
+      const cyclesInfo = `(${subtask.completedCycles || 0}/${subtask.estimatedCycles})`;
+      html += `<option value="${subtask.id}" ${subtask.id === currentSelection ? 'selected' : ''}>${App.escapeHtml(subtask.title)} ${cyclesInfo}</option>`;
+    });
+
+    elements.subtaskSelect.innerHTML = html;
+
+    // Update selectedSubtaskId if current selection is not valid anymore
+    if (currentSelection && !task.subtasks.find(s => s.id === currentSelection)) {
+      selectedSubtaskId = null;
+    }
   }
 
   /**
@@ -191,6 +237,9 @@ const Timer = (function() {
     if (elements.taskSelectionContainer) {
       if (type === TYPES.WORK && state === STATES.IDLE) {
         elements.taskSelectionContainer.classList.remove('hidden');
+        if (selectedTaskId) {
+          populateSubtasks(selectedTaskId);
+        }
       } else {
         elements.taskSelectionContainer.classList.add('hidden');
       }
@@ -253,7 +302,8 @@ const Timer = (function() {
       totalTime,
       endTime,
       sessionsCompleted,
-      selectedTaskId
+      selectedTaskId,
+      selectedSubtaskId
     });
   }
 
@@ -333,7 +383,8 @@ const Timer = (function() {
     const newState = Storage.completeTimerSession({
       type: completedType,
       sessionsCompleted,
-      selectedTaskId
+      selectedTaskId,
+      selectedSubtaskId
     });
 
     // Update local state from the new state returned by storage
@@ -343,6 +394,7 @@ const Timer = (function() {
     totalTime = newState.totalTime;
     sessionsCompleted = newState.sessionsCompleted;
     selectedTaskId = newState.selectedTaskId;
+    selectedSubtaskId = newState.selectedSubtaskId;
 
     // Play notification sound
     playNotificationSound();
@@ -502,7 +554,15 @@ const Timer = (function() {
     // Task selection
     elements.taskSelect?.addEventListener('change', (e) => {
       selectedTaskId = e.target.value || null;
+      selectedSubtaskId = null; // Reset subtask when task changes
+      populateSubtasks(selectedTaskId);
       updateDisplay();
+    });
+
+    // Subtask selection
+    elements.subtaskSelect?.addEventListener('change', (e) => {
+      selectedSubtaskId = e.target.value || null;
+      saveState();
     });
 
     // Mode tabs
@@ -567,6 +627,7 @@ const Timer = (function() {
       totalTime = storedState.totalTime;
       sessionsCompleted = storedState.sessionsCompleted || 0;
       selectedTaskId = storedState.selectedTaskId;
+      selectedSubtaskId = storedState.selectedSubtaskId;
 
       if (state === STATES.RUNNING && storedState.endTime) {
         endTime = storedState.endTime;
@@ -582,9 +643,13 @@ const Timer = (function() {
         if (state === STATES.RUNNING) state = STATES.PAUSED; // Fallback
       }
 
-      // Update task select if we had one
+      // Update task selects if we had them
       if (selectedTaskId && elements.taskSelect) {
         elements.taskSelect.value = selectedTaskId;
+        populateSubtasks(selectedTaskId);
+        if (selectedSubtaskId && elements.subtaskSelect) {
+          elements.subtaskSelect.value = selectedSubtaskId;
+        }
       }
 
       // Update active tab

@@ -910,13 +910,69 @@ a:hover {
   .subtask-item {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: var(--spacing-sm);
-    padding: var(--spacing-xs) 0;
+    padding: var(--spacing-sm) 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  .subtask-item:last-child {
+    border-bottom: none;
   }
 
   .subtask-item.completed .subtask-title {
     text-decoration: line-through;
     color: var(--text-muted);
+  }
+
+  .subtask-item-main {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    flex: 1;
+    min-width: 0;
+  }
+
+  .subtask-cycle-tracker {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    background-color: var(--bg-secondary);
+    padding: 2px 4px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
+  }
+
+  .subtask-cycles-display {
+    font-size: 0.75rem;
+    font-weight: 600;
+    min-width: 40px;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .btn-cycle-adjust {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+    transition: all var(--transition-fast);
+  }
+
+  .btn-cycle-adjust:hover {
+    background-color: var(--bg-tertiary);
+    color: var(--text-primary);
+  }
+
+  .btn-cycle-adjust svg {
+    width: 14px;
+    height: 14px;
   }
 
   .task-item-main {
@@ -1949,6 +2005,7 @@ a:hover {
     display: flex;
     align-items: center;
     gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-xs);
   }
 
   .modal-subtask-title {
@@ -1957,10 +2014,12 @@ a:hover {
     padding: 0.375rem 0.75rem;
   }
 
-  .modal-subtask-cycles {
+  .modal-subtask-cycles,
+  .modal-subtask-completed-cycles {
     width: 60px;
     min-height: 36px;
     padding: 0.375rem 0.75rem;
+    text-align: center;
   }
 
 .day-toggle {

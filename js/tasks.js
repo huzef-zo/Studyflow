@@ -69,9 +69,21 @@ const Tasks = (function() {
         <div class="subtask-list">
           ${(task.subtasks || []).map(subtask => `
             <div class="subtask-item ${subtask.isCompleted ? 'completed' : ''}" data-subtask-id="${subtask.id}">
-              <input type="checkbox" class="subtask-checkbox" ${subtask.isCompleted ? 'checked' : ''}>
-              <span class="subtask-title">${App.escapeHtml(subtask.title)}</span>
-              <span class="subtask-meta">${subtask.estimatedCycles} cycles</span>
+              <div class="subtask-item-main">
+                <input type="checkbox" class="subtask-checkbox" ${subtask.isCompleted ? 'checked' : ''}>
+                <span class="subtask-title">${App.escapeHtml(subtask.title)}</span>
+              </div>
+              <div class="subtask-cycle-tracker">
+                <button class="btn-cycle-adjust dec" aria-label="Decrease cycle">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                </button>
+                <span class="subtask-cycles-display">
+                  <span class="completed-count">${subtask.completedCycles || 0}</span> / <span class="estimated-count">${subtask.estimatedCycles}</span>
+                </span>
+                <button class="btn-cycle-adjust inc" aria-label="Increase cycle">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                </button>
+              </div>
             </div>
           `).join('')}
         </div>
@@ -195,6 +207,11 @@ const Tasks = (function() {
       checkbox.addEventListener('change', handleSubtaskToggle);
     });
 
+    // Subtask cycle adjustment listeners
+    elements.taskList.querySelectorAll('.btn-cycle-adjust').forEach(btn => {
+      btn.addEventListener('click', handleSubtaskCycleAdjust);
+    });
+
     // Task expansion listeners
     elements.taskList.querySelectorAll('.task-expand-btn').forEach(btn => {
       btn.addEventListener('click', handleExpandClick);
@@ -252,6 +269,40 @@ const Tasks = (function() {
     Storage.toggleSubtask(taskId, subtaskId, isChecked);
 
     // Re-render to update main task status and progress bar
+    renderTasks();
+
+    // Keep expanded
+    const newTaskItem = elements.taskList.querySelector(`[data-task-id="${taskId}"]`);
+    if (newTaskItem) newTaskItem.classList.add('expanded');
+  }
+
+  /**
+   * Handle subtask cycle adjustment
+   */
+  function handleSubtaskCycleAdjust(e) {
+    const btn = e.target.closest('.btn-cycle-adjust');
+    const subtaskItem = btn.closest('.subtask-item');
+    const taskItem = subtaskItem.closest('.task-item');
+    const taskId = taskItem.dataset.taskId;
+    const subtaskId = subtaskItem.dataset.subtaskId;
+
+    const task = Storage.getTaskById(taskId);
+    if (!task || !task.subtasks) return;
+
+    const subtask = task.subtasks.find(s => s.id === subtaskId);
+    if (!subtask) return;
+
+    let completedCycles = subtask.completedCycles || 0;
+
+    if (btn.classList.contains('inc')) {
+      completedCycles++;
+    } else if (btn.classList.contains('dec')) {
+      completedCycles = Math.max(0, completedCycles - 1);
+    }
+
+    Storage.updateSubtask(taskId, subtaskId, { completedCycles: completedCycles });
+
+    // Re-render
     renderTasks();
 
     // Keep expanded
@@ -407,13 +458,14 @@ const Tasks = (function() {
         </div>
 
         <div class="form-group">
-          <label class="form-label">Sub-tasks</label>
+          <label class="form-label">Sub-tasks (Title, Estimated Cycles, Completed Cycles)</label>
           <div id="modal-subtask-list" class="subtask-list">
             ${isEdit && task.subtasks ? task.subtasks.map((s) => `
-              <div class="subtask-item modal-subtask-item" data-subtask-id="${s.id}">
+              <div class="subtask-item modal-subtask-item" data-subtask-id="${s.id}" data-completed-cycles="${s.completedCycles || 0}">
                 <input type="checkbox" class="subtask-checkbox" ${s.isCompleted ? 'checked' : ''}>
-                <input type="text" class="form-input modal-subtask-title" value="${App.escapeHtml(s.title)}">
-                <input type="number" class="form-input modal-subtask-cycles" value="${s.estimatedCycles}" min="1">
+                <input type="text" class="form-input modal-subtask-title" value="${App.escapeHtml(s.title)}" placeholder="Title">
+                <input type="number" class="form-input modal-subtask-cycles" value="${s.estimatedCycles}" min="1" title="Estimated Cycles">
+                <input type="number" class="form-input modal-subtask-completed-cycles" value="${s.completedCycles || 0}" min="0" title="Completed Cycles">
                 <button type="button" class="btn btn-ghost btn-icon btn-sm remove-subtask-btn" style="width: 36px; height: 36px;">
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                 </button>
@@ -506,7 +558,8 @@ const Tasks = (function() {
       div.innerHTML = `
         <input type="checkbox" class="subtask-checkbox">
         <input type="text" class="form-input modal-subtask-title" placeholder="Sub-task title...">
-        <input type="number" class="form-input modal-subtask-cycles" value="1" min="1">
+        <input type="number" class="form-input modal-subtask-cycles" value="1" min="1" title="Estimated Cycles">
+        <input type="number" class="form-input modal-subtask-completed-cycles" value="0" min="0" title="Completed Cycles">
         <button type="button" class="btn btn-ghost btn-icon btn-sm remove-subtask-btn" style="width: 36px; height: 36px;">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
         </button>
@@ -572,9 +625,11 @@ const Tasks = (function() {
     form.querySelectorAll('#modal-subtask-list .subtask-item').forEach(item => {
       const titleInput = item.querySelector('.modal-subtask-title');
       const cyclesInput = item.querySelector('.modal-subtask-cycles');
+      const completedCyclesInput = item.querySelector('.modal-subtask-completed-cycles');
       const checkbox = item.querySelector('.subtask-checkbox');
       const title = titleInput.value.trim();
       const cycles = parseInt(cyclesInput.value);
+      const completedCycles = parseInt(completedCyclesInput.value) || 0;
       const existingId = item.dataset.subtaskId;
 
       if (title) {
@@ -582,7 +637,8 @@ const Tasks = (function() {
           id: existingId || Storage.generateId(),
           title: title,
           isCompleted: checkbox.checked,
-          estimatedCycles: cycles
+          estimatedCycles: cycles,
+          completedCycles: completedCycles
         });
       }
     });
