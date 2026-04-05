@@ -96,56 +96,46 @@
       </div>
     </div>
 
-    <!-- Session Stats -->
-    <div class="timer-stats">
-      <div class="timer-stat">
-        <div class="timer-stat-value" id="sessions-today">0</div>
-        <div class="timer-stat-label">Sessions Today</div>
-      </div>
-      <div class="timer-stat">
-        <div class="timer-stat-value" id="total-time-today">0m</div>
-        <div class="timer-stat-label">Total Time</div>
-      </div>
-      <div class="timer-stat">
-        <div class="timer-stat-value" id="session-count">0</div>
-        <div class="timer-stat-label">This Streak</div>
-      </div>
-    </div>
-
-    <!-- How to Use -->
-    <section class="card mt-lg">
-      <div class="card-header">
-        <h3 class="card-title">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="16" y2="12"/><line x1="12" x2="12.01" y1="8" y2="8"/></svg>
-          How It Works
-        </h3>
-      </div>
-      <div class="card-body">
-        <div class="grid grid-3 grid-3-mobile" style="gap: var(--spacing-lg);">
-          <div class="text-center">
-            <div class="stat-icon mx-auto mb-md" style="background-color: rgba(37, 99, 235, 0.2);">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--primary);"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    <!-- Main Content Grid -->
+    <div class="grid dashboard-layout mt-lg" style="gap: var(--spacing-lg);">
+      <!-- Today's Stats -->
+      <section class="card">
+        <div class="card-header">
+          <h3 class="card-title">Today's Stats</h3>
+        </div>
+        <div class="card-body">
+          <div class="grid grid-3 grid-3-mobile">
+            <div class="timer-stat">
+              <div class="timer-stat-value" id="sessions-today">0</div>
+              <div class="timer-stat-label">Sessions</div>
             </div>
-            <h4 class="mb-sm">1. Work</h4>
-            <p class="text-secondary" style="font-size: 0.875rem;">Focus on your task for 25 minutes without distractions.</p>
-          </div>
-          <div class="text-center">
-            <div class="stat-icon mx-auto mb-md" style="background-color: rgba(34, 197, 94, 0.2);">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--success);"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" x2="6" y1="1" y2="4"/><line x1="10" x2="10" y1="1" y2="4"/><line x1="14" x2="14" y1="1" y2="4"/></svg>
+            <div class="timer-stat">
+              <div class="timer-stat-value" id="total-time-today">0m</div>
+              <div class="timer-stat-label">Total Time</div>
             </div>
-            <h4 class="mb-sm">2. Break</h4>
-            <p class="text-secondary" style="font-size: 0.875rem;">Take a 5-minute short break to recharge.</p>
-          </div>
-          <div class="text-center">
-            <div class="stat-icon mx-auto mb-md" style="background-color: rgba(234, 179, 8, 0.2);">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--warning);"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>
+            <div class="timer-stat">
+              <div class="timer-stat-value" id="session-count">0</div>
+              <div class="timer-stat-label">This Streak</div>
             </div>
-            <h4 class="mb-sm">3. Repeat</h4>
-            <p class="text-secondary" style="font-size: 0.875rem;">After 4 sessions, take a longer 15-minute break.</p>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
+
+      <!-- Recent Sessions -->
+      <section class="card">
+        <div class="card-header">
+          <h3 class="card-title">Recent Sessions</h3>
+        </div>
+        <div class="card-body">
+          <div id="recent-sessions-list" class="deadline-list">
+            <!-- Populated by JS -->
+            <div class="empty-state" style="padding: 1rem;">
+              <p class="text-secondary text-center">No sessions recorded yet</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
 
     <!-- Keyboard Shortcuts -->
     <section class="card mt-lg">

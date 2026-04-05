@@ -65,6 +65,7 @@ const Timer = (function() {
       sessionsToday: document.getElementById('sessions-today'),
       totalTimeToday: document.getElementById('total-time-today'),
       sessionCount: document.getElementById('session-count'),
+      recentSessionsList: document.getElementById('recent-sessions-list'),
       modeTabs: document.querySelectorAll('.tab[data-mode]'),
       taskSelect: document.getElementById('timer-task'),
       subtaskSelect: document.getElementById('timer-subtask'),
@@ -286,9 +287,47 @@ const Timer = (function() {
     const todaySessions = Storage.getTodaySessions();
     const totalMinutes = Storage.getTotalMinutesToday();
     
-    elements.sessionsToday.textContent = todaySessions.length;
-    elements.totalTimeToday.textContent = App.formatDuration(totalMinutes);
-    elements.sessionCount.textContent = sessionsCompleted;
+    if (elements.sessionsToday) elements.sessionsToday.textContent = todaySessions.length;
+    if (elements.totalTimeToday) elements.totalTimeToday.textContent = App.formatDuration(totalMinutes);
+    if (elements.sessionCount) elements.sessionCount.textContent = sessionsCompleted;
+
+    updateRecentSessions();
+  }
+
+  /**
+   * Update recent sessions list
+   */
+  function updateRecentSessions() {
+    if (!elements.recentSessionsList) return;
+
+    const allSessions = Storage.getSessions();
+    const recentSessions = allSessions
+      .filter(s => s.type === TYPES.WORK)
+      .sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt))
+      .slice(0, 5);
+
+    if (recentSessions.length === 0) {
+      elements.recentSessionsList.innerHTML = `
+        <div class="empty-state" style="padding: 1rem;">
+          <p class="text-secondary text-center">No sessions recorded yet</p>
+        </div>
+      `;
+      return;
+    }
+
+    elements.recentSessionsList.innerHTML = recentSessions.map(session => {
+      const task = session.taskId ? Storage.getTaskById(session.taskId) : null;
+      const taskTitle = task ? task.title : 'General Study';
+      const time = new Date(session.completedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+      return `
+        <div class="deadline-item">
+          <span class="deadline-date">${time}</span>
+          <span class="deadline-title">${App.escapeHtml(taskTitle)}</span>
+          <span class="deadline-days">${session.duration}m</span>
+        </div>
+      `;
+    }).join('');
   }
 
   /**
@@ -410,16 +449,8 @@ const Timer = (function() {
       tab.classList.toggle('active', tab.dataset.mode === type);
     });
 
-    // Auto-start next session if enabled
-    if (type === TYPES.WORK) {
-      if (settings.autoStartWork) {
-        setTimeout(start, 1000);
-      }
-    } else {
-      if (settings.autoStartBreak) {
-        setTimeout(start, 1000);
-      }
-    }
+    // Auto-start next session (always on as requested for "focus time clock that changes automatically")
+    setTimeout(start, 1000);
     
     updateStats();
     updateDisplay();
