@@ -1110,6 +1110,31 @@ a:hover {
   background-color: var(--primary);
 }
 
+#day-tasks {
+  max-height: calc(100vh - 400px);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-light) transparent;
+}
+
+/* Subtle scrollbar for the task list */
+#day-tasks::-webkit-scrollbar {
+  width: 6px;
+}
+
+#day-tasks::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+#day-tasks::-webkit-scrollbar-thumb {
+  background: var(--border-light);
+  border-radius: var(--radius-full);
+}
+
+#day-tasks::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
 .calendar-day.selected .calendar-day-number {
   color: white;
 }
