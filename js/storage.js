@@ -636,7 +636,8 @@ const Storage = (function() {
       totalTime: nextDuration,
       endTime: null,
       sessionsCompleted: nextSessionsCompleted,
-      selectedTaskId: nextType === 'work' ? selectedTaskId : null,
+      selectedTaskId: selectedTaskId,
+      selectedSubtaskId: selectedSubtaskId,
       lastCompletedType: type,
       completedAt: new Date().toISOString()
     };

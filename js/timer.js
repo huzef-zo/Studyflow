@@ -66,11 +66,11 @@ const Timer = (function() {
       totalTimeToday: document.getElementById('total-time-today'),
       sessionCount: document.getElementById('session-count'),
       recentSessionsList: document.getElementById('recent-sessions-list'),
-      modeTabs: document.querySelectorAll('.tab[data-mode]'),
       taskSelect: document.getElementById('timer-task'),
       subtaskSelect: document.getElementById('timer-subtask'),
       taskSelectionContainer: document.getElementById('task-selection-container'),
-      subtaskSelectionContainer: document.getElementById('subtask-selection-container')
+      subtaskSelectionContainer: document.getElementById('subtask-selection-container'),
+      subtaskTracker: document.getElementById('timer-subtask-tracker')
     };
   }
 
@@ -149,6 +149,8 @@ const Timer = (function() {
     if (currentSelection && !task.subtasks.find(s => s.id === currentSelection)) {
       selectedSubtaskId = null;
     }
+
+    updateSubtaskTracker();
   }
 
   /**
@@ -214,6 +216,58 @@ const Timer = (function() {
   }
 
   /**
+   * Update sub-task cycle tracker UI
+   */
+  function updateSubtaskTracker() {
+    if (!elements.subtaskTracker) return;
+
+    if (!selectedTaskId || !selectedSubtaskId) {
+      elements.subtaskTracker.innerHTML = '';
+      updateSubtaskTrackerVisibility();
+      return;
+    }
+
+    const task = Storage.getTaskById(selectedTaskId);
+    const subtask = task?.subtasks?.find(s => s.id === selectedSubtaskId);
+
+    if (!subtask) {
+      elements.subtaskTracker.innerHTML = '';
+      updateSubtaskTrackerVisibility();
+      return;
+    }
+
+    elements.subtaskTracker.innerHTML = `
+      <div class="subtask-item">
+        <span class="subtask-title" style="font-size: 0.75rem; color: var(--text-secondary);">Cycle Tracker:</span>
+        <div class="subtask-cycle-tracker">
+          <button class="btn-cycle-adjust dec" aria-label="Decrease cycle">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
+          <span class="subtask-cycles-display">
+            <span class="completed-count">${subtask.completedCycles || 0}</span> / <span class="estimated-count">${subtask.estimatedCycles}</span>
+          </span>
+          <button class="btn-cycle-adjust inc" aria-label="Increase cycle">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
+        </div>
+      </div>
+    `;
+
+    updateSubtaskTrackerVisibility();
+  }
+
+  /**
+   * Update sub-task tracker visibility based on current state
+   */
+  function updateSubtaskTrackerVisibility() {
+    if (!elements.subtaskTracker) return;
+
+    // Appear if a task with sub-task is selected and we are in WORK mode
+    const shouldShow = type === TYPES.WORK && selectedTaskId && selectedSubtaskId;
+    elements.subtaskTracker.classList.toggle('hidden', !shouldShow);
+  }
+
+  /**
    * Toggle Focus Mode
    */
   function toggleFocusMode(enabled) {
@@ -245,6 +299,8 @@ const Timer = (function() {
         elements.taskSelectionContainer.classList.add('hidden');
       }
     }
+
+    updateSubtaskTrackerVisibility();
 
     // Update progress ring
     const circumference = 2 * Math.PI * 140; // radius = 140
@@ -443,17 +499,13 @@ const Timer = (function() {
     } else {
       App.showToast('Break finished! Ready to work?', 'success');
     }
-    
-    // Update active tab
-    elements.modeTabs.forEach(tab => {
-      tab.classList.toggle('active', tab.dataset.mode === type);
-    });
 
     // Auto-start next session (always on as requested for "focus time clock that changes automatically")
     setTimeout(start, 1000);
     
     updateStats();
     updateDisplay();
+    updateSubtaskTracker();
     
     // Show browser notification if permitted
     showBrowserNotification(completedType);
@@ -486,11 +538,6 @@ const Timer = (function() {
     endTime = null;
     timeRemaining = getDurationForType(newType);
     totalTime = timeRemaining;
-    
-    // Update active tab
-    elements.modeTabs.forEach(tab => {
-      tab.classList.toggle('active', tab.dataset.mode === newType);
-    });
     
     saveState();
     updateDisplay();
@@ -594,19 +641,34 @@ const Timer = (function() {
     elements.subtaskSelect?.addEventListener('change', (e) => {
       selectedSubtaskId = e.target.value || null;
       saveState();
+      updateSubtaskTracker();
     });
 
-    // Mode tabs
-    elements.modeTabs.forEach(tab => {
-      tab.addEventListener('click', () => {
-        if (state === STATES.RUNNING) {
-          App.showToast('Pause the timer first to change mode', 'warning');
-          return;
-        }
-        setTimerType(tab.dataset.mode);
-      });
+    // Cycle tracker event delegation
+    elements.subtaskTracker?.addEventListener('click', (e) => {
+      const btn = e.target.closest('.btn-cycle-adjust');
+      if (!btn || !selectedTaskId || !selectedSubtaskId) return;
+
+      const task = Storage.getTaskById(selectedTaskId);
+      if (!task || !task.subtasks) return;
+
+      const subtask = task.subtasks.find(s => s.id === selectedSubtaskId);
+      if (!subtask) return;
+
+      let completedCycles = subtask.completedCycles || 0;
+      if (btn.classList.contains('inc')) {
+        completedCycles++;
+      } else if (btn.classList.contains('dec')) {
+        completedCycles = Math.max(0, completedCycles - 1);
+      }
+
+      Storage.updateSubtask(selectedTaskId, selectedSubtaskId, { completedCycles });
+      updateSubtaskTracker();
+
+      // Update subtask select text to show new cycle count
+      populateSubtasks(selectedTaskId);
     });
-    
+
     // Keyboard shortcuts
     document.addEventListener('keydown', (e) => {
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
@@ -682,11 +744,6 @@ const Timer = (function() {
           elements.subtaskSelect.value = selectedSubtaskId;
         }
       }
-
-      // Update active tab
-      elements.modeTabs.forEach(tab => {
-        tab.classList.toggle('active', tab.dataset.mode === type);
-      });
     } else {
       // Set initial state
       timeRemaining = getDurationForType(type);
@@ -695,6 +752,7 @@ const Timer = (function() {
     
     updateDisplay();
     updateStats();
+    updateSubtaskTracker();
     
     // Request notification permission
     requestNotificationPermission();
