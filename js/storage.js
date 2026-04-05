@@ -508,14 +508,27 @@ const Storage = (function() {
     // Merge with defaults to ensure new properties exist (like daily goals)
     goals = { ...DEFAULTS.goals, ...goals };
     
-    // Check if we need to reset for new week
-    const currentWeekStart = getWeekStart(new Date()).toISOString();
-    if (goals.week_start !== currentWeekStart) {
-      goals.current_tasks = 0;
-      goals.current_hours = 0;
-      goals.week_start = currentWeekStart;
+    // Dynamically calculate current progress
+    const weekStart = getWeekStart(new Date());
+    const weekStartStr = weekStart.toISOString();
+
+    // Reset week_start if needed
+    if (goals.week_start !== weekStartStr) {
+      goals.week_start = weekStartStr;
       saveGoals(goals);
     }
+
+    // Calculate completed tasks this week
+    const tasks = getTasks();
+    goals.current_tasks = tasks.filter(t => {
+      if (!t.completed || !t.completedAt) return false;
+      return new Date(t.completedAt) >= weekStart;
+    }).length;
+
+    // Calculate study hours this week
+    const weekSessions = getWeekSessions();
+    const totalMinutes = weekSessions.reduce((total, s) => total + (s.duration || 0), 0);
+    goals.current_hours = totalMinutes / 60;
     
     return goals;
   }
@@ -528,18 +541,6 @@ const Storage = (function() {
     const goals = getGoals();
     const updated = { ...goals, ...updates };
     return saveGoals(updated);
-  }
-
-  function incrementTasksCompleted() {
-    const goals = getGoals();
-    goals.current_tasks += 1;
-    return saveGoals(goals);
-  }
-
-  function addStudyMinutes(minutes) {
-    const goals = getGoals();
-    goals.current_hours += minutes / 60;
-    return saveGoals(goals);
   }
 
   // ============================================
@@ -589,7 +590,6 @@ const Storage = (function() {
     // Save session if it was a work session
     if (type === 'work') {
       addSession(settings.work_duration || 25, 'work', selectedTaskId);
-      addStudyMinutes(settings.work_duration || 25);
       nextSessionsCompleted++;
 
       // Increment sub-task cycles if selected
@@ -911,8 +911,6 @@ const Storage = (function() {
     getGoals,
     saveGoals,
     updateGoals,
-    incrementTasksCompleted,
-    addStudyMinutes,
     
     // Settings functions
     getSettings,
