@@ -17,7 +17,13 @@ const History = (function() {
       frequencyGraph: document.getElementById('frequency-graph'),
       totalCompletedTasks: document.getElementById('total-completed-tasks'),
       totalStudyHours: document.getElementById('total-study-hours'),
-      allTimeStreak: document.getElementById('all-time-streak')
+      allTimeStreak: document.getElementById('all-time-streak'),
+      completionRate: document.getElementById('completion-rate'),
+      productiveDay: document.getElementById('productive-day'),
+      masteryOverview: document.getElementById('mastery-overview'),
+      tasksProgress: document.getElementById('tasks-progress'),
+      hoursProgress: document.getElementById('hours-progress'),
+      progressPercentage: document.getElementById('progress-percentage')
     };
   }
 
@@ -28,6 +34,8 @@ const History = (function() {
     initElements();
     updateSummaryStats();
     renderFrequencyGraph();
+    updateMasteryOverview();
+    updateWeeklyProgress();
   }
 
   /**
@@ -38,17 +46,112 @@ const History = (function() {
     const sessions = Storage.getSessions();
     const stats = Storage.getStats();
 
-    const completedTasks = tasks.filter(t => t.completed).length;
+    const totalTasksCount = tasks.length;
+    const completedTasksCount = tasks.filter(t => t.completed).length;
     const studyMinutes = sessions.filter(s => s.type === 'work').reduce((total, s) => total + s.duration, 0);
 
     if (elements.totalCompletedTasks) {
-      elements.totalCompletedTasks.textContent = completedTasks;
+      elements.totalCompletedTasks.textContent = completedTasksCount;
     }
     if (elements.totalStudyHours) {
       elements.totalStudyHours.textContent = Math.round(studyMinutes / 60) + 'h';
     }
     if (elements.allTimeStreak) {
       elements.allTimeStreak.textContent = stats.streak;
+    }
+
+    // Completion Rate
+    if (elements.completionRate) {
+      const rate = totalTasksCount > 0 ? Math.round((completedTasksCount / totalTasksCount) * 100) : 0;
+      elements.completionRate.textContent = `${rate}%`;
+    }
+
+    // Most Productive Day
+    if (elements.productiveDay) {
+      const dayActivity = [0, 0, 0, 0, 0, 0, 0]; // Sun-Sat
+      sessions.forEach(s => {
+        if (s.type === 'work' && s.completedAt) {
+          const day = new Date(s.completedAt).getDay();
+          dayActivity[day] += s.duration;
+        }
+      });
+
+      let maxDay = 0;
+      let maxVal = -1;
+      dayActivity.forEach((val, day) => {
+        if (val > maxVal) {
+          maxVal = val;
+          maxDay = day;
+        }
+      });
+
+      const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+      elements.productiveDay.textContent = maxVal > 0 ? dayNames[maxDay] : 'N/A';
+    }
+  }
+
+  /**
+   * Update mastery overview (reused from dashboard)
+   */
+  function updateMasteryOverview() {
+    if (!elements.masteryOverview) return;
+    const stats = Storage.getSubjectMasteryStats();
+
+    if (stats.length === 0) {
+      elements.masteryOverview.innerHTML = `
+        <div class="empty-state" style="padding: 1rem; grid-column: 1 / -1;">
+          <p class="text-secondary text-center">No subjects defined. Add them in Settings.</p>
+        </div>
+      `;
+      return;
+    }
+
+    elements.masteryOverview.innerHTML = stats.map(subject => `
+      <div class="mastery-card">
+        <div class="mastery-subject-name" title="${App.escapeHtml(subject.name)}">${App.escapeHtml(subject.name)}</div>
+        <div class="mastery-progress-mini">
+          <div class="mastery-progress-mini-fill" style="width: ${subject.percentage}%; background-color: ${subject.color};"></div>
+        </div>
+        <div class="mastery-stats">
+          <span>${subject.percentage}%</span>
+          <span>${subject.completed}/${subject.total}</span>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  /**
+   * Update weekly progress (reused from dashboard)
+   */
+  function updateWeeklyProgress() {
+    const goals = Storage.getGoals();
+    const stats = Storage.getStats();
+
+    if (elements.tasksProgress) {
+      const tasksPercentage = goals.weekly_tasks > 0
+        ? Math.round((goals.current_tasks / goals.weekly_tasks) * 100)
+        : 0;
+
+      elements.tasksProgress.innerHTML = App.createProgressBar(
+        goals.current_tasks,
+        goals.weekly_tasks,
+        'Tasks Completed'
+      );
+
+      if (elements.hoursProgress) {
+        const currentHours = Math.round(goals.current_hours * 10) / 10;
+        elements.hoursProgress.innerHTML = App.createProgressBar(
+          currentHours,
+          goals.weekly_hours,
+          'Study Hours'
+        );
+
+        if (elements.progressPercentage) {
+          const hoursPercentage = goals.weekly_hours > 0 ? (goals.current_hours / goals.weekly_hours * 100) : 0;
+          const avgPercentage = Math.round((tasksPercentage + hoursPercentage) / 2);
+          elements.progressPercentage.textContent = `${Math.min(100, avgPercentage)}%`;
+        }
+      }
     }
   }
 
