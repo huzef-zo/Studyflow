@@ -243,7 +243,6 @@ const Tasks = (function() {
     
     if (isChecked) {
       Storage.completeTask(taskId);
-      Storage.incrementTasksCompleted();
       taskItem.classList.add('completed');
       App.showToast('Task completed!', 'success');
     } else {

@@ -198,7 +198,7 @@ a:hover {
     grid-template-columns: 1fr;
   }
 
-  .grid-4 {
+  .grid-4, .grid-5 {
     grid-template-columns: repeat(2, 1fr);
   }
 
@@ -1112,6 +1112,10 @@ a:hover {
 
 .calendar-day.selected .calendar-day-number {
   color: white;
+}
+
+.calendar-day.selected .calendar-task-dot {
+  background-color: white !important;
 }
 
 .calendar-day-number {

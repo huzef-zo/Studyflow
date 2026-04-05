@@ -241,7 +241,6 @@ const Calendar = (function() {
         const taskId = e.target.dataset.taskId;
         if (e.target.checked) {
           Storage.completeTask(taskId);
-          Storage.incrementTasksCompleted();
           App.showToast('Task completed!', 'success');
         } else {
           Storage.uncompleteTask(taskId);
