@@ -4,9 +4,71 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="StudyFlow - Calendar View">
-  <meta name="theme-color" content="#030712">
+  <meta name="theme-color" content="#0B0F19">
   <title>Calendar - StudyFlow</title>
   <link rel="stylesheet" href="css/style.css">
+  <style>
+    /* Calendar specific minimal design */
+    .calendar-container {
+      background: var(--glass-bg);
+      backdrop-filter: blur(12px);
+      border-radius: var(--radius-xl);
+      padding: 1.5rem;
+    }
+
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+    }
+
+    .calendar-day {
+      aspect-ratio: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 255, 255, 0.02);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+    }
+
+    .calendar-day:hover:not(.other-month) {
+      background: rgba(255, 255, 255, 0.08);
+      transform: scale(1.05);
+    }
+
+    .calendar-day.today {
+      background: rgba(59, 130, 246, 0.1);
+      border: 1px solid var(--primary);
+    }
+
+    .calendar-day.selected {
+      background: var(--primary-gradient);
+      box-shadow: 0 4px 15px var(--primary-glow);
+    }
+
+    .calendar-day.selected .calendar-day-number { color: white; }
+
+    .calendar-day-number {
+      font-size: 0.875rem;
+      font-weight: 700;
+      color: var(--text-secondary);
+    }
+
+    .calendar-day.other-month { opacity: 0.2; cursor: default; }
+
+    .calendar-task-dot {
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: var(--primary);
+      position: absolute;
+      bottom: 6px;
+    }
+  </style>
 </head>
 <body>
   <!-- Navigation Containers -->
@@ -16,25 +78,25 @@
   <!-- Main Content -->
   <main class="main-container">
     <!-- Page Header -->
-    <header class="page-header">
-      <h1>Calendar</h1>
-      <p class="subtitle">View and manage your tasks by date</p>
+    <header class="page-header animate-fade-in">
+      <h1 class="glowing-text">Temporal Map</h1>
+      <p class="subtitle" style="font-weight: 500;">Navigate your study timeline</p>
     </header>
 
     <!-- Calendar and Tasks Layout -->
     <div class="narrow-layout">
       
       <!-- Calendar Card -->
-      <section class="calendar-container">
-        <div class="calendar-header">
-          <h2 class="calendar-title" id="calendar-title">March 2026</h2>
-          <div class="calendar-nav">
-            <button class="btn btn-ghost btn-icon btn-sm" id="prev-month" aria-label="Previous month">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      <section class="calendar-container animate-fade-in" style="animation-delay: 0.1s;">
+        <div class="flex items-center justify-between mb-lg">
+          <h2 id="calendar-title" style="color: white; font-size: 1.125rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;">March 2026</h2>
+          <div class="flex gap-xs">
+            <button class="btn btn-ghost btn-icon btn-sm" id="prev-month">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
             </button>
-            <button class="btn btn-secondary btn-sm" id="today-btn">Today</button>
-            <button class="btn btn-ghost btn-icon btn-sm" id="next-month" aria-label="Next month">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            <button class="btn btn-secondary btn-sm" id="today-btn" style="border-radius: var(--radius-full); padding: 0 1rem;">Today</button>
+            <button class="btn btn-ghost btn-icon btn-sm" id="next-month">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
             </button>
           </div>
         </div>
@@ -44,42 +106,32 @@
       </section>
 
       <!-- Selected Day Tasks -->
-      <section class="card">
+      <section class="card animate-fade-in" style="animation-delay: 0.2s;">
         <div class="card-header">
-          <h3 class="card-title" id="selected-date-title">Select a date</h3>
-          <button class="btn btn-ghost btn-sm" id="add-task-btn" style="display: none;">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
-            Add Task
+          <h3 class="card-title" id="selected-date-title">Target Date</h3>
+          <button class="btn btn-ghost btn-icon btn-sm" id="add-task-btn" style="display: none;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
           </button>
         </div>
-        <div class="card-body task-list" id="day-tasks">
+        <div id="day-tasks" class="timeline">
           <!-- Populated by JS -->
         </div>
       </section>
 
-      <!-- Legend -->
-      <section class="card">
-      <div class="card-header">
-        <h3 class="card-title">Legend</h3>
-      </div>
-      <div class="card-body">
-        <div class="flex flex-wrap gap-lg">
-          <div class="flex items-center gap-sm">
-            <div style="width: 12px; height: 12px; border-radius: 50%; background-color: var(--primary);"></div>
-            <span class="text-secondary">Pending Task</span>
+      <!-- Legend (Pills) -->
+      <section class="animate-fade-in" style="animation-delay: 0.3s;">
+        <div class="flex flex-wrap gap-sm justify-center">
+          <div class="glass-pill" style="padding: 4px 12px; font-size: 0.65rem;">
+            <div style="width: 6px; height: 6px; border-radius: 50%; background: var(--primary);"></div>
+            <span style="font-weight: 700; text-transform: uppercase;">Pending Mission</span>
           </div>
-          <div class="flex items-center gap-sm">
-            <div style="width: 12px; height: 12px; border-radius: 50%; background-color: var(--success);"></div>
-            <span class="text-secondary">Completed Task</span>
-          </div>
-          <div class="flex items-center gap-sm">
-            <div style="width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--primary);"></div>
-            <span class="text-secondary">Today</span>
+          <div class="glass-pill" style="padding: 4px 12px; font-size: 0.65rem;">
+            <div style="width: 6px; height: 6px; border-radius: 50%; background: var(--success);"></div>
+            <span style="font-weight: 700; text-transform: uppercase;">Accomplished</span>
           </div>
         </div>
-      </div>
-    </section>
-  </div>
+      </section>
+    </div>
   </main>
 
   <!-- Scripts -->
@@ -87,7 +139,6 @@
   <script src="js/app.js"></script>
   <script src="js/calendar.js"></script>
   <script>
-    // Initialize calendar page
     document.addEventListener('DOMContentLoaded', Calendar.init);
   </script>
 </body>

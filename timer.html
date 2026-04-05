@@ -4,9 +4,142 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="StudyFlow - Pomodoro Timer">
-  <meta name="theme-color" content="#030712">
+  <meta name="theme-color" content="#0B0F19">
   <title>Timer - StudyFlow</title>
   <link rel="stylesheet" href="css/style.css">
+  <style>
+    /* Timer specific visual overrides */
+    .timer-ring-container {
+      position: relative;
+      width: 340px;
+      height: 340px;
+      margin: 4rem auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .timer-ring-svg {
+      width: 100%;
+      height: 100%;
+      transform: rotate(-90deg);
+    }
+
+    .timer-ring-bg {
+      fill: none;
+      stroke: rgba(255, 255, 255, 0.03);
+      stroke-width: 10;
+    }
+
+    .timer-ring-fill {
+      fill: none;
+      stroke: url(#timerGradient);
+      stroke-width: 12;
+      stroke-linecap: round;
+      stroke-dasharray: 880;
+      stroke-dashoffset: 880;
+      transition: stroke-dashoffset 1s linear;
+      filter: drop-shadow(0 0 15px var(--primary-glow));
+    }
+
+    .timer-center {
+      position: absolute;
+      text-align: center;
+    }
+
+    .timer-main-time {
+      font-size: 6rem;
+      font-weight: 800;
+      color: white;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+      margin-bottom: 0.5rem;
+    }
+
+    .timer-status-badge {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--glass-border);
+      padding: 4px 16px;
+      border-radius: 99px;
+      font-size: 0.75rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+    }
+
+    .timer-task-name {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      max-width: 250px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-top: 1rem;
+    }
+
+    .timer-controls-fab {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 2rem;
+      margin-bottom: 4rem;
+    }
+
+    .btn-fab-main {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--primary-gradient);
+      box-shadow: 0 10px 25px var(--primary-glow);
+      border: none;
+      color: white;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-fab-main:hover { transform: scale(1.1); box-shadow: 0 15px 30px var(--primary-glow); }
+    .btn-fab-main:active { transform: scale(0.95); }
+
+    .btn-fab-sub {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--glass-border);
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-fab-sub:hover { background: rgba(255, 255, 255, 0.1); color: white; }
+
+    /* Stats Carousel */
+    .stats-carousel {
+      display: flex;
+      gap: 1rem;
+      overflow-x: auto;
+      padding-bottom: 1rem;
+      scrollbar-width: none;
+    }
+    .stats-carousel::-webkit-scrollbar { display: none; }
+
+    .carousel-card {
+      min-width: 140px;
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      padding: 1rem;
+      border-radius: 20px;
+      text-align: center;
+    }
+  </style>
 </head>
 <body>
   <!-- Navigation Containers -->
@@ -16,143 +149,76 @@
   <!-- Main Content -->
   <main class="main-container">
     <!-- Page Header -->
-    <header class="page-header">
-      <h1>Pomodoro Timer</h1>
-      <p class="subtitle">Stay focused and productive</p>
+    <header class="page-header animate-fade-in">
+      <h1 class="glowing-text">Focus Sphere</h1>
+      <p class="subtitle" style="font-weight: 500;">Deep work state initialization</p>
     </header>
 
-    <!-- Task Selection -->
-    <div id="task-selection-container" style="max-width: 400px; margin: 0 auto var(--spacing-lg);">
-      <div class="form-group">
-        <label class="form-label" for="timer-task">Working on Task:</label>
-        <select class="form-select" id="timer-task">
-          <option value="">General Study</option>
-          <!-- Populated by JS -->
-        </select>
-      </div>
-      <div class="form-group hidden" id="subtask-selection-container">
-        <label class="form-label" for="timer-subtask">Specific Sub-task:</label>
-        <select class="form-select" id="timer-subtask">
-          <option value="">Whole Task / None</option>
-          <!-- Populated by JS -->
-        </select>
-      </div>
-      <div id="timer-subtask-tracker" class="mt-sm hidden"></div>
-    </div>
+    <div class="narrow-layout">
 
-    <!-- Timer Container -->
-    <div class="timer-container">
-      <div class="timer-ring" id="timer-ring">
-        <svg viewBox="0 0 300 300">
-          <!-- Background circle -->
-          <circle 
-            class="timer-ring-bg" 
-            cx="150" 
-            cy="150" 
-            r="140"
-          />
-          <!-- Progress circle -->
-          <circle 
-            id="timer-progress"
-            class="timer-ring-progress" 
-            cx="150" 
-            cy="150" 
-            r="140"
-          />
-        </svg>
-        <div class="timer-display">
-          <div class="timer-time" id="timer-time">25:00</div>
-          <div class="timer-label" id="timer-label">Work Session</div>
-        </div>
-      </div>
-
-      <!-- Timer Controls -->
-      <div class="timer-controls">
-        <button class="btn btn-secondary btn-lg" id="reset-btn" aria-label="Reset timer">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
-          Reset
-        </button>
-        
-        <button class="btn btn-primary btn-lg" id="start-btn" aria-label="Start timer">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-          Start
-        </button>
-        
-        <button class="btn btn-primary btn-lg hidden" id="pause-btn" aria-label="Pause timer">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
-          Pause
-        </button>
-        
-        <button class="btn btn-secondary btn-lg" id="skip-btn" aria-label="Skip to next session">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" x2="19" y1="5" y2="19"/></svg>
-          Skip
-        </button>
-      </div>
-    </div>
-
-    <!-- Main Content Grid -->
-    <div class="grid dashboard-layout mt-lg" style="gap: var(--spacing-lg);">
-      <!-- Today's Stats -->
-      <section class="card">
-        <div class="card-header">
-          <h3 class="card-title">Today's Stats</h3>
-        </div>
-        <div class="card-body">
-          <div class="grid grid-3 grid-3-mobile">
-            <div class="timer-stat">
-              <div class="timer-stat-value" id="sessions-today">0</div>
-              <div class="timer-stat-label">Sessions</div>
-            </div>
-            <div class="timer-stat">
-              <div class="timer-stat-value" id="total-time-today">0m</div>
-              <div class="timer-stat-label">Total Time</div>
-            </div>
-            <div class="timer-stat">
-              <div class="timer-stat-value" id="session-count">0</div>
-              <div class="timer-stat-label">This Streak</div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Recent Sessions -->
-      <section class="card">
-        <div class="card-header">
-          <h3 class="card-title">Recent Sessions</h3>
-        </div>
-        <div class="card-body">
-          <div id="recent-sessions-list" class="deadline-list">
+      <!-- Task Selection -->
+      <section class="animate-fade-in" style="animation-delay: 0.1s;">
+        <div class="form-group">
+          <label class="form-label" style="text-align: center;">Active Mission Selection</label>
+          <select id="timer-task" class="form-input" style="text-align: center; font-weight: 700; border-radius: 99px;">
+            <option value="">GENERAL FOCUS</option>
             <!-- Populated by JS -->
-            <div class="empty-state" style="padding: 1rem;">
-              <p class="text-secondary text-center">No sessions recorded yet</p>
-            </div>
+          </select>
+        </div>
+      </section>
+
+      <!-- Timer Ring -->
+      <section class="timer-ring-container animate-fade-in" style="animation-delay: 0.2s;">
+        <svg class="timer-ring-svg" viewBox="0 0 300 300">
+          <defs>
+            <linearGradient id="timerGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#3B82F6" />
+              <stop offset="100%" stop-color="#8B5CF6" />
+            </linearGradient>
+          </defs>
+          <circle class="timer-ring-bg" cx="150" cy="150" r="140" />
+          <circle id="timer-progress" class="timer-ring-fill" cx="150" cy="150" r="140" />
+        </svg>
+        <div class="timer-center">
+          <div class="timer-status-badge" id="timer-label">Deep Work</div>
+          <div class="timer-main-time" id="timer-time">25:00</div>
+          <div class="timer-task-name" id="selected-task-display">Initializing...</div>
+        </div>
+      </section>
+
+      <!-- Controls -->
+      <section class="timer-controls-fab animate-fade-in" style="animation-delay: 0.3s;">
+        <button class="btn-fab-sub" id="reset-btn" aria-label="Reset Mission">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+        </button>
+        <button class="btn-fab-main" id="start-btn" aria-label="Engage Mission">
+          <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" id="play-pause-icon"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        </button>
+        <button class="btn-fab-sub" id="skip-btn" aria-label="Skip Phase">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" x2="19" y1="5" y2="19"/></svg>
+        </button>
+      </section>
+
+      <!-- Stats Carousel -->
+      <section class="animate-fade-in" style="animation-delay: 0.4s;">
+        <h2 style="color: white; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 1rem; text-align: center;">Mission Intelligence</h2>
+        <div class="stats-carousel">
+          <div class="carousel-card">
+            <div style="font-size: 10px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Sessions</div>
+            <div id="sessions-today" style="font-size: 1.5rem; font-weight: 800; color: white;">0</div>
+          </div>
+          <div class="carousel-card">
+            <div style="font-size: 10px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Deep Work</div>
+            <div id="total-time-today" style="font-size: 1.5rem; font-weight: 800; color: white;">0m</div>
+          </div>
+          <div class="carousel-card">
+            <div style="font-size: 10px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Streak</div>
+            <div id="streak-count" style="font-size: 1.5rem; font-weight: 800; color: white;">0</div>
           </div>
         </div>
       </section>
-    </div>
 
-    <!-- Keyboard Shortcuts -->
-    <section class="card mt-lg">
-      <div class="card-header">
-        <h3 class="card-title">Keyboard Shortcuts</h3>
-      </div>
-      <div class="card-body">
-        <div class="flex flex-wrap gap-lg">
-          <div class="flex items-center gap-sm">
-            <kbd class="badge" style="font-family: monospace; padding: 0.25rem 0.5rem;">Space</kbd>
-            <span class="text-secondary">Start/Pause</span>
-          </div>
-          <div class="flex items-center gap-sm">
-            <kbd class="badge" style="font-family: monospace; padding: 0.25rem 0.5rem;">R</kbd>
-            <span class="text-secondary">Reset</span>
-          </div>
-          <div class="flex items-center gap-sm">
-            <kbd class="badge" style="font-family: monospace; padding: 0.25rem 0.5rem;">S</kbd>
-            <span class="text-secondary">Skip</span>
-          </div>
-        </div>
-      </div>
-    </section>
+    </div>
   </main>
 
   <!-- Scripts -->
