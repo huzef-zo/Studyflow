@@ -9,6 +9,16 @@
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
+  <!-- Global SVG Gradients -->
+  <svg width="0" height="0" style="position:absolute;">
+    <defs>
+      <linearGradient id="primaryGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#3B82F6" />
+        <stop offset="100%" stop-color="#8B5CF6" />
+      </linearGradient>
+    </defs>
+  </svg>
+
   <!-- Navigation Containers -->
   <div id="sidebar-container"></div>
   <div id="bottom-nav-container"></div>
@@ -168,10 +178,10 @@
         return `
           <div class="progress-header">
             <span class="progress-label">${label}</span>
-            <span class="progress-percent" style="color: ${color}">${current} / ${max}</span>
+            <span class="progress-percent" style="color: #FFFFFF;">${current} / ${max}</span>
           </div>
           <div class="progress-bar-bg">
-            <div class="progress-bar-fill" style="width: ${percentage}%; background: ${color}; color: ${color}"></div>
+            <div class="progress-bar-fill" style="width: ${percentage}%;"></div>
           </div>
         `;
       }
@@ -186,13 +196,13 @@
         masteryEl.innerHTML = stats.map(subject => `
           <div class="mastery-item">
             <div class="flex items-center justify-between mb-sm">
-              <span style="font-weight: 700; font-size: 0.875rem;">${App.escapeHtml(subject.name)}</span>
-              <span style="font-weight: 800; color: ${subject.color}; font-size: 0.875rem;">${subject.percentage}%</span>
+              <span style="font-weight: 700; font-size: 0.875rem; color: white;">${App.escapeHtml(subject.name)}</span>
+              <span style="font-weight: 800; color: white; font-size: 0.875rem;">${subject.percentage}%</span>
             </div>
             <div class="progress-bar-bg" style="height: 6px;">
-              <div class="progress-bar-fill" style="width: ${subject.percentage}%; background: ${subject.color}; color: ${subject.color}"></div>
+              <div class="progress-bar-fill" style="width: ${subject.percentage}%;"></div>
             </div>
-            <div style="font-size: 10px; color: var(--text-muted); margin-top: 4px; font-weight: 600; text-transform: uppercase;">
+            <div style="font-size: 10px; color: rgba(255, 255, 255, 0.5); margin-top: 4px; font-weight: 600; text-transform: uppercase;">
               ${subject.completed} / ${subject.total} Objectives
             </div>
           </div>

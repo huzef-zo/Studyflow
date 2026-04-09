@@ -128,8 +128,8 @@ const Tasks = (function() {
             <div class="flex-1 min-w-0">
               <div class="task-header-inline">
                 <div class="task-title-text" style="${task.completed ? 'text-decoration: line-through; opacity: 0.5;' : ''}">${App.escapeHtml(task.title)}</div>
-                <div class="subject-pill" style="--tag-color: ${App.hexToRgb(subjectColor)}">${App.escapeHtml(task.subject)}</div>
-                ${task.priority === 'critical' ? '<span class="badge" style="--tag-color: var(--danger-rgb); font-size: 9px;">Critical</span>' : ''}
+                <div class="subject-pill" style="--tag-color: ${App.hexToRgb(subjectColor)}; color: white; background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.1);">${App.escapeHtml(task.subject)}</div>
+                ${task.priority === 'critical' ? '<span class="badge" style="--tag-color: var(--danger-rgb); font-size: 9px; color: white;">Critical</span>' : ''}
               </div>
 
               <div class="flex items-center justify-between">
