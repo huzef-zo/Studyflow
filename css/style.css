@@ -2206,11 +2206,11 @@ body.focus-mode .bottom-nav {
   h2 { font-size: 18px; }
 
   .main-container {
-    padding: var(--spacing-sm);
+    padding: 8px;
   }
 
   .page-header {
-    margin-bottom: var(--spacing-md);
+    margin-bottom: var(--spacing-sm);
   }
 
   .stats-pill-row {
@@ -2221,11 +2221,27 @@ body.focus-mode .bottom-nav {
     padding: 8px 16px;
     font-size: 12px;
   }
+
+  .page-header .form-group {
+    margin-bottom: 0;
+    flex: 1;
+  }
 }
 
 @media (max-width: 480px) {
   .main-container {
-    padding: 12px;
+    padding: 0;
+  }
+
+  .page-header,
+  .flex.flex-wrap.items-center.justify-between.gap-md.mb-sm {
+    padding: 0 16px;
+  }
+
+  .task-card {
+    border-radius: 0;
+    border-right: 0;
+    margin-bottom: 8px;
   }
 
   .card {
@@ -2246,4 +2262,4 @@ body.focus-mode .bottom-nav {
     width: 48px;
     height: 48px;
   }
-    }
+}
