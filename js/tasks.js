@@ -124,23 +124,30 @@ const Tasks = (function() {
         <div class="task-card ${priorityClass} ${task.completed ? 'completed' : ''} animate-fade-in ${staggerClass}" data-id="${task.id}">
           <div class="swipe-hint">Swipe to complete</div>
           <div class="flex items-start gap-md">
-            <div class="task-checkbox ${task.completed ? 'checked' : ''}" data-id="${task.id}"></div>
-            <div class="flex-1">
-              <div class="flex items-center gap-md mb-xs">
+            <div class="task-checkbox ${task.completed ? 'checked' : ''}" data-id="${task.id}" style="margin-top: 4px;"></div>
+            <div class="flex-1 min-w-0">
+              <div class="task-header-inline">
+                <div class="task-title-text" style="${task.completed ? 'text-decoration: line-through; opacity: 0.5;' : ''}">${App.escapeHtml(task.title)}</div>
                 <div class="subject-pill" style="--tag-color: ${App.hexToRgb(subjectColor)}">${App.escapeHtml(task.subject)}</div>
                 ${task.priority === 'critical' ? '<span class="badge" style="--tag-color: var(--danger-rgb); font-size: 9px;">Critical</span>' : ''}
               </div>
+
               <div class="flex items-center justify-between">
-                <div class="task-title-text" style="${task.completed ? 'text-decoration: line-through; opacity: 0.5;' : ''}">${App.escapeHtml(task.title)}</div>
-                ${task.subtasks && task.subtasks.length > 0 ? `
-                  <button class="btn btn-ghost btn-icon btn-sm task-expand-btn" data-id="${task.id}" style="color: var(--text-muted); transition: transform 0.3s; ${isExpanded ? 'transform: rotate(180deg);' : ''}">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-                  </button>
-                ` : ''}
-              </div>
-              <div class="task-meta-text">
-                Target: ${Storage.formatDisplayDate(task.dueDate)}
-                ${task.dueTime ? ` • ${task.dueTime}` : ''}
+                <div class="task-meta-text">
+                  Target: ${Storage.formatDisplayDate(task.dueDate)}
+                  ${task.dueTime ? ` • ${task.dueTime}` : ''}
+                </div>
+                <div class="flex items-center gap-xs">
+                  ${task.subtasks && task.subtasks.length > 0 ? `
+                    <button class="btn btn-ghost btn-icon btn-sm task-expand-btn" data-id="${task.id}" style="color: var(--text-muted); transition: transform 0.3s; ${isExpanded ? 'transform: rotate(180deg);' : ''}">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                    </button>
+                  ` : ''}
+                  <div class="task-actions-compact">
+                    <button class="btn btn-ghost btn-icon btn-sm edit-task" data-id="${task.id}" style="color: var(--text-muted);"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+                    <button class="btn btn-ghost btn-icon btn-sm del-task" data-id="${task.id}" style="color: var(--text-muted);"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
+                  </div>
+                </div>
               </div>
 
               ${task.subtasks && task.subtasks.length > 0 ? `
@@ -159,10 +166,6 @@ const Tasks = (function() {
                   `).join('')}
                 </div>
               ` : ''}
-            </div>
-            <div class="flex gap-xs">
-               <button class="btn btn-ghost btn-icon btn-sm edit-task" data-id="${task.id}" style="color: var(--text-muted);"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
-               <button class="btn btn-ghost btn-icon btn-sm del-task" data-id="${task.id}" style="color: var(--text-muted);"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
             </div>
           </div>
         </div>
