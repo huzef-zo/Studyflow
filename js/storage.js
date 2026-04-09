@@ -590,7 +590,13 @@ const Storage = (function() {
     // Save session if it was a work session
     if (type === 'work') {
       addSession(settings.work_duration || 25, 'work', selectedTaskId);
-      nextSessionsCompleted++;
+
+      // If sessionsCompleted is missing, fallback to actual today's count
+      if (nextSessionsCompleted === undefined || nextSessionsCompleted === null) {
+        nextSessionsCompleted = getTodaySessions().length;
+      } else {
+        nextSessionsCompleted++;
+      }
 
       // Increment sub-task cycles if selected
       if (selectedTaskId && selectedSubtaskId) {
