@@ -139,7 +139,7 @@ const Timer = (function() {
       taskId: selectedTaskId
     };
     
-    Storage.addSession(sessionData.type, sessionData.duration, sessionData.taskId);
+    Storage.addSession(sessionData.duration, sessionData.type, sessionData.taskId);
     
     // Notify
     if (settings.notifications !== false && 'Notification' in window && Notification.permission === 'granted') {
@@ -172,7 +172,7 @@ const Timer = (function() {
     if (currentSessionType === 'work') {
       const stats = Storage.getStats();
       const settings = Storage.getSettings();
-      currentSessionType = (stats.sessions.today % settings.sessions_until_long_break === 0) ? 'long-break' : 'short-break';
+      currentSessionType = (stats.sessions.today % settings.sessions_until_long_break === 0) ? 'long_break' : 'short_break';
     } else {
       currentSessionType = 'work';
     }
@@ -182,7 +182,7 @@ const Timer = (function() {
   function getSessionDuration(type) {
     const settings = Storage.getSettings();
     if (type === 'work') return settings.work_duration || 25;
-    if (type === 'short-break') return settings.short_break || 5;
+    if (type === 'short_break') return settings.short_break || 5;
     return settings.long_break || 15;
   }
 
@@ -209,7 +209,7 @@ const Timer = (function() {
     elements.timerDisplay.textContent = timeStr;
     document.title = `${timeStr} - StudyFlow`;
 
-    const labelMap = { 'work': 'Deep Work', 'short-break': 'Cooldown', 'long-break': 'Deep Rest' };
+    const labelMap = { 'work': 'Deep Work', 'short_break': 'Cooldown', 'long_break': 'Deep Rest' };
     elements.timerLabel.textContent = labelMap[currentSessionType];
 
     // Progress Ring
