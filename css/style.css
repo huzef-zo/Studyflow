@@ -2001,6 +2001,7 @@ input:checked + .toggle-slider:before {
 /* Stats Carousel */
 .stats-carousel {
   display: flex;
+  justify-content: center;
   gap: 1rem;
   overflow-x: auto;
   padding-bottom: 1rem;
@@ -2191,10 +2192,74 @@ input:checked + .toggle-slider:before {
    Focus Mode (Timer running)
    ============================================ */
 
+body.focus-mode {
+  background-color: #000 !important;
+  background-image: none !important;
+  overflow: hidden;
+  padding: 0 !important;
+}
+
+body.focus-mode::before {
+  display: none;
+}
+
 body.focus-mode .sidebar,
-body.focus-mode .bottom-nav {
-  opacity: 0.3;
-  pointer-events: none;
+body.focus-mode .bottom-nav,
+body.focus-mode .page-header,
+body.focus-mode .animate-fade-in.stagger-1,
+body.focus-mode .animate-fade-in.stagger-4,
+body.focus-mode #reset-btn,
+body.focus-mode #skip-btn,
+body.focus-mode .timer-status-badge,
+body.focus-mode .timer-task-name,
+body.focus-mode .timer-ring-svg {
+  display: none !important;
+}
+
+body.focus-mode .main-container {
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
+  max-width: 100%;
+}
+
+body.focus-mode .narrow-layout {
+  max-width: 100%;
+  width: 100%;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+}
+
+body.focus-mode .timer-ring-container {
+  margin: 0;
+  width: auto;
+  height: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+body.focus-mode .timer-center {
+  position: relative;
+  top: auto;
+  left: auto;
+  transform: none;
+}
+
+body.focus-mode .timer-main-time {
+  font-size: clamp(6rem, 25vw, 15rem);
+  margin-bottom: 2rem;
+}
+
+body.focus-mode .timer-controls-fab {
+  margin-bottom: 0;
 }
 
 /* ============================================
