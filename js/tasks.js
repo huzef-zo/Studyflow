@@ -9,6 +9,7 @@ const Tasks = (function() {
   // DOM Elements
   let elements = {};
   let currentFilter = 'all';
+  let expandedTasks = new Set();
 
   /**
    * Initialize DOM element references
@@ -116,7 +117,7 @@ const Tasks = (function() {
     }).map((task, index) => {
       const priorityClass = `priority-${task.priority}`;
       const subjectColor = App.getSubjectColor(task.subject);
-      const isExpanded = false; // Internal state not persisted for simplicity in this view
+      const isExpanded = expandedTasks.has(task.id);
       const staggerClass = index < 5 ? `stagger-${index + 1}` : '';
 
       return `
@@ -129,14 +130,21 @@ const Tasks = (function() {
                 <div class="subject-pill" style="--tag-color: ${App.hexToRgb(subjectColor)}">${App.escapeHtml(task.subject)}</div>
                 ${task.priority === 'critical' ? '<span class="badge" style="--tag-color: var(--danger-rgb); font-size: 9px;">Critical</span>' : ''}
               </div>
-              <div class="task-title-text" style="${task.completed ? 'text-decoration: line-through; opacity: 0.5;' : ''}">${App.escapeHtml(task.title)}</div>
+              <div class="flex items-center justify-between">
+                <div class="task-title-text" style="${task.completed ? 'text-decoration: line-through; opacity: 0.5;' : ''}">${App.escapeHtml(task.title)}</div>
+                ${task.subtasks && task.subtasks.length > 0 ? `
+                  <button class="btn btn-ghost btn-icon btn-sm task-expand-btn" data-id="${task.id}" style="color: var(--text-muted); transition: transform 0.3s; ${isExpanded ? 'transform: rotate(180deg);' : ''}">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                  </button>
+                ` : ''}
+              </div>
               <div class="task-meta-text">
                 Target: ${Storage.formatDisplayDate(task.dueDate)}
                 ${task.dueTime ? ` • ${task.dueTime}` : ''}
               </div>
 
               ${task.subtasks && task.subtasks.length > 0 ? `
-                <div class="subtasks-container">
+                <div class="subtasks-container" style="${isExpanded ? 'display: block;' : 'display: none;'}">
                   ${task.subtasks.map(subtask => `
                     <div class="subtask-item">
                       <div class="subtask-checkbox ${subtask.isCompleted ? 'checked' : ''}"
@@ -162,6 +170,19 @@ const Tasks = (function() {
     }).join('');
 
     // Attach listeners
+    elements.taskList.querySelectorAll('.task-expand-btn').forEach(btn => {
+      btn.onclick = (e) => {
+        e.stopPropagation();
+        const id = btn.dataset.id;
+        if (expandedTasks.has(id)) {
+          expandedTasks.delete(id);
+        } else {
+          expandedTasks.add(id);
+        }
+        renderTasks();
+      };
+    });
+
     elements.taskList.querySelectorAll('.task-checkbox').forEach(cb => {
       cb.onclick = (e) => {
         e.stopPropagation();
