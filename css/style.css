@@ -12,9 +12,9 @@
   --bg-tertiary: #1E293B;
 
   /* Glass Effect */
-  --glass-bg: rgba(30, 41, 59, 0.7);
+  --glass-bg: rgba(255, 255, 255, 0.05);
   --glass-border: rgba(255, 255, 255, 0.1);
-  --glass-blur: 12px;
+  --glass-blur: 15px;
 
   /* Primary */
   --primary: #3B82F6;
@@ -47,7 +47,7 @@
 
   /* Text */
   --text-primary: #FFFFFF;
-  --text-secondary: #94A3B8;
+  --text-secondary: rgba(255, 255, 255, 0.7);
   --text-muted: #64748B;
   --text-body: #CBD5E1;
 
@@ -111,9 +111,10 @@ body::before {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
   background:
-    radial-gradient(circle at 20% 30%, rgba(59, 130, 246, 0.15) 0%, transparent 40%),
-    radial-gradient(circle at 80% 70%, rgba(139, 92, 246, 0.15) 0%, transparent 40%),
-    radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.05) 0%, transparent 40%);
+    radial-gradient(circle at 10% 20%, rgba(139, 92, 246, 0.2) 0%, transparent 40%),
+    radial-gradient(circle at 90% 80%, rgba(59, 130, 246, 0.2) 0%, transparent 40%),
+    radial-gradient(circle at 50% 50%, rgba(6, 182, 212, 0.15) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.1) 0%, transparent 30%);
   z-index: -1;
   animation: meshMove 20s ease-in-out infinite alternate;
 }
@@ -236,16 +237,34 @@ h4 {
   background: var(--glass-bg);
   backdrop-filter: blur(var(--glass-blur));
   -webkit-backdrop-filter: blur(var(--glass-blur));
-  border: 1px solid var(--glass-border);
+  border: 1px solid transparent;
+  background-clip: padding-box;
+  position: relative;
   border-radius: var(--radius-lg);
   padding: 1rem;
   box-shadow: var(--shadow-card);
   transition: var(--transition);
 }
 
+.card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), transparent, rgba(255, 255, 255, 0.1));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
 .card:hover {
   transform: translateY(-4px);
-  border-color: rgba(255, 255, 255, 0.15);
+  filter: brightness(1.2);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   box-shadow: var(--shadow-card-hover);
 }
 
@@ -720,7 +739,8 @@ h4 {
   height: 100%;
   border-radius: var(--radius-full);
   transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 0 12px currentColor;
+  background: var(--primary-gradient) !important;
+  box-shadow: 0 0 15px rgba(var(--primary-rgb), 0.6);
   position: relative;
 }
 
@@ -752,7 +772,7 @@ h4 {
 .task-checkbox.checked {
   background: var(--primary-gradient);
   border-color: transparent;
-  box-shadow: 0 0 15px var(--primary-glow);
+  box-shadow: 0 0 20px var(--primary-glow);
   animation: pulseCheckbox 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
