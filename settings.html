@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="StudyFlow - Settings">
+  <meta name="theme-color" content="#0B0F19">
+  <title>Settings - StudyFlow</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <!-- Navigation Containers -->
+  <div id="sidebar-container"></div>
+  <div id="bottom-nav-container"></div>
+
+  <!-- Main Content -->
+  <main class="main-container">
+    <!-- Page Header -->
+    <header class="page-header animate-fade-in">
+      <h1 class="glowing-text">System Settings</h1>
+      <p class="subtitle" style="font-weight: 500;">Configure your study environment</p>
+    </header>
+
+    <div class="narrow-layout">
+      <!-- Profile Section -->
+      <section class="card animate-fade-in stagger-1">
+        <div class="card-header">
+          <h3 class="card-title">Profile Configuration</h3>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Display Name</label>
+          <input type="text" class="form-input" id="display-name" placeholder="Enter operative name">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Communication ID (Email)</label>
+          <input type="email" class="form-input" id="user-email" placeholder="id@studyflow.io">
+        </div>
+      </section>
+
+      <!-- Timer Settings -->
+      <section class="card animate-fade-in stagger-2">
+        <div class="card-header">
+          <h3 class="card-title">Focus Parameters</h3>
+        </div>
+        <div class="grid grid-2">
+          <div class="form-group">
+            <label class="form-label">Deep Work (Min)</label>
+            <input type="number" class="form-input" id="work-duration" min="1" max="60">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Cooldown (Min)</label>
+            <input type="number" class="form-input" id="short-break" min="1" max="30">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Deep Rest (Min)</label>
+            <input type="number" class="form-input" id="long-break" min="1" max="60">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Cycle Interval</label>
+            <input type="number" class="form-input" id="sessions-until-long" min="2" max="10">
+          </div>
+        </div>
+      </section>
+
+      <!-- Notification Settings -->
+      <section class="card animate-fade-in stagger-3">
+        <div class="card-header">
+          <h3 class="card-title">Neural Alerts</h3>
+        </div>
+
+        <div class="flex items-center justify-between mb-md">
+          <div>
+            <div style="font-weight: 700; font-size: 0.875rem;">Audio Feedback</div>
+            <div style="font-size: 0.75rem; color: var(--text-muted);">Sound cues on mission events</div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="sound-enabled">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+
+        <div id="notification-permission-item" class="mt-lg p-md card" style="background: rgba(255,255,255,0.03); border-radius: 12px; display: none;">
+          <div class="flex items-center justify-between gap-md">
+            <p style="margin: 0; font-size: 0.75rem; font-weight: 600;" id="permission-status">System permissions required</p>
+            <button class="btn btn-primary btn-sm" id="request-permission-btn" style="border-radius: 8px;">Enable</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Subjects Section -->
+      <section class="card animate-fade-in stagger-4">
+        <div class="card-header">
+          <h3 class="card-title">Knowledge Sectors</h3>
+          <button class="btn btn-ghost btn-icon btn-sm" id="add-subject-btn"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg></button>
+        </div>
+        <div id="subjects-list" style="display: grid; gap: 8px;">
+          <!-- Populated by JS -->
+        </div>
+      </section>
+
+      <!-- Data Management -->
+      <section class="card animate-fade-in stagger-5">
+        <div class="card-header">
+          <h3 class="card-title">Data Core</h3>
+        </div>
+        <div class="grid grid-2">
+          <button class="btn btn-secondary" id="export-btn" style="border-radius: 12px;">Export</button>
+          <label class="btn btn-secondary" style="border-radius: 12px; cursor: pointer;">
+            Import
+            <input type="file" id="import-input" accept=".json" style="display: none;">
+          </label>
+        </div>
+
+        <div class="mt-lg pt-lg" style="border-top: 1px solid rgba(239, 68, 68, 0.2);">
+          <div class="flex items-center justify-between">
+            <div>
+              <div style="font-weight: 700; font-size: 0.875rem; color: var(--coral);">Purge Protocol</div>
+              <div style="font-size: 0.75rem; color: var(--text-muted);">Permanently erase all local intelligence</div>
+            </div>
+            <button class="btn btn-danger btn-sm" id="clear-data-btn" style="border-radius: 8px; background: rgba(239, 68, 68, 0.15);">Initiate Wipe</button>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- Scripts -->
+  <script src="js/storage.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    (function() {
+      'use strict';
+      const elements = {
+        displayName: document.getElementById('display-name'),
+        userEmail: document.getElementById('user-email'),
+        workDuration: document.getElementById('work-duration'),
+        shortBreak: document.getElementById('short-break'),
+        longBreak: document.getElementById('long-break'),
+        sessionsUntilLong: document.getElementById('sessions-until-long'),
+        soundEnabled: document.getElementById('sound-enabled'),
+        requestPermissionBtn: document.getElementById('request-permission-btn'),
+        permissionStatus: document.getElementById('permission-status'),
+        subjectsList: document.getElementById('subjects-list'),
+        addSubjectBtn: document.getElementById('add-subject-btn'),
+        exportBtn: document.getElementById('export-btn'),
+        importInput: document.getElementById('import-input'),
+        clearDataBtn: document.getElementById('clear-data-btn')
+      };
+
+      function loadSettings() {
+        const user = Storage.getUser();
+        const settings = Storage.getSettings();
+        elements.displayName.value = user.name || '';
+        elements.userEmail.value = user.email || '';
+        elements.workDuration.value = settings.work_duration || 25;
+        elements.shortBreak.value = settings.short_break || 5;
+        elements.longBreak.value = settings.long_break || 15;
+        elements.sessionsUntilLong.value = settings.sessions_until_long_break || 4;
+        elements.soundEnabled.checked = settings.sound !== false;
+        updatePermissionStatus();
+      }
+
+      function updatePermissionStatus() {
+        if (!('Notification' in window)) return;
+        const item = document.getElementById('notification-permission-item');
+        if (Notification.permission === 'granted') {
+          item.style.display = 'none';
+        } else {
+          item.style.display = 'block';
+          elements.permissionStatus.textContent = Notification.permission === 'denied' ? 'Permission denied by system' : 'Allow notifications for mission alerts';
+          if (Notification.permission === 'denied') elements.requestPermissionBtn.style.display = 'none';
+        }
+      }
+
+      function saveSettings() {
+        Storage.updateUserName(elements.displayName.value.trim() || 'Operative');
+        Storage.updateUserEmail(elements.userEmail.value.trim());
+        Storage.updateSetting('work_duration', parseInt(elements.workDuration.value, 10) || 25);
+        Storage.updateSetting('short_break', parseInt(elements.shortBreak.value, 10) || 5);
+        Storage.updateSetting('long_break', parseInt(elements.longBreak.value, 10) || 15);
+        Storage.updateSetting('sessions_until_long_break', parseInt(elements.sessionsUntilLong.value, 10) || 4);
+        Storage.updateSetting('sound', elements.soundEnabled.checked);
+      }
+
+      function renderSubjects() {
+        const subjects = Storage.getSubjectMasteryStats();
+        elements.subjectsList.innerHTML = subjects.map(s => `
+          <div class="card" style="padding: 12px 16px; background: rgba(255,255,255,0.02); display: flex; align-items: center; justify-content: space-between; border-radius: 12px;">
+            <div class="flex items-center gap-md">
+              <div class="glass-tag" style="--tag-color: ${App.hexToRgb(s.color)}">
+                <div style="width: 8px; height: 8px; border-radius: 50%; background: ${s.color};"></div>
+                ${App.escapeHtml(s.name)}
+              </div>
+            </div>
+            <div class="flex gap-xs">
+              <button class="btn btn-ghost btn-icon btn-sm edit-sub" data-id="${s.id}"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+              <button class="btn btn-ghost btn-icon btn-sm del-sub" data-id="${s.id}"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
+            </div>
+          </div>
+        `).join('');
+        
+        elements.subjectsList.querySelectorAll('.edit-sub').forEach(b => b.addEventListener('click', () => openSubjectModal(b.dataset.id)));
+        elements.subjectsList.querySelectorAll('.del-sub').forEach(b => b.addEventListener('click', () => deleteSubject(b.dataset.id)));
+      }
+
+      function openSubjectModal(id = null) {
+        const isEdit = !!id;
+        const s = isEdit ? Storage.getSubjectById(id) : null;
+        const content = `
+          <div class="form-group">
+            <label class="form-label">Sector Name</label>
+            <input type="text" id="sub-name" class="form-input" value="${s ? App.escapeHtml(s.name) : ''}" placeholder="e.g. Astrophysics">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Sector Color</label>
+            <input type="color" id="sub-color" class="form-input" value="${s ? s.color : '#3B82F6'}" style="height: 50px; padding: 4px;">
+          </div>
+        `;
+        const modal = App.createModal({
+          title: isEdit ? 'Modify Sector' : 'New Sector',
+          content: content,
+          footer: `<button class="btn btn-secondary" data-action="cancel">Cancel</button><button class="btn btn-primary" id="save-sub">Save</button>`
+        });
+        modal.querySelector('#save-sub').onclick = () => {
+          const name = modal.querySelector('#sub-name').value.trim();
+          const color = modal.querySelector('#sub-color').value;
+          if (name) { isEdit ? Storage.updateSubject(id, { name, color }) : Storage.addSubject(name, color); App.closeModal(); renderSubjects(); }
+        };
+        modal.querySelector('[data-action="cancel"]').onclick = () => App.closeModal();
+        App.openModal(modal);
+      }
+
+      async function deleteSubject(id) {
+        if (await App.confirm({ title: 'Delete Sector?', message: 'Objectives in this sector will persist without categorization.', confirmText: 'Delete', danger: true })) {
+          Storage.deleteSubject(id); renderSubjects();
+        }
+      }
+
+      function setupListeners() {
+        [elements.displayName, elements.userEmail, elements.workDuration, elements.shortBreak, elements.longBreak, elements.sessionsUntilLong, elements.soundEnabled].forEach(el => el.addEventListener('change', saveSettings));
+        elements.requestPermissionBtn.onclick = () => Notification.requestPermission().then(updatePermissionStatus);
+        elements.addSubjectBtn.onclick = () => openSubjectModal();
+        elements.exportBtn.onclick = () => {
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(new Blob([JSON.stringify(Storage.exportData())], { type: 'application/json' }));
+          a.download = `studyflow-core-${new Date().getTime()}.json`; a.click();
+        };
+        elements.importInput.onchange = (e) => {
+          const reader = new FileReader();
+          reader.onload = (ev) => { Storage.importData(JSON.parse(ev.target.result)); location.reload(); };
+          reader.readAsText(e.target.files[0]);
+        };
+        elements.clearDataBtn.onclick = async () => {
+          if (await App.confirm({ title: 'PURGE CORE?', message: 'All data will be permanently vaporized.', confirmText: 'PURGE', danger: true })) {
+            Storage.clearAllData(); location.reload();
+          }
+        };
+      }
+
+      function init() { loadSettings(); renderSubjects(); setupListeners(); }
+      init();
+    })();
+  </script>
+</body>
+</html>

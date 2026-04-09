@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="StudyFlow - Analytics and Progress Tracking">
+  <meta name="theme-color" content="#0B0F19">
+  <title>Analytics - StudyFlow</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <!-- Navigation Containers -->
+  <div id="sidebar-container"></div>
+  <div id="bottom-nav-container"></div>
+
+  <!-- Main Content -->
+  <main class="main-container">
+    <!-- Page Header -->
+    <header class="page-header animate-fade-in">
+      <h1 class="glowing-text">Performance Analytics</h1>
+      <p class="subtitle" style="font-weight: 500;">In-depth intelligence on your study patterns</p>
+    </header>
+
+    <div class="narrow-layout">
+      <!-- Activity Frequency Graph -->
+      <section class="card animate-fade-in stagger-1">
+        <div class="card-header">
+          <h3 class="card-title">Timeline Activity</h3>
+        </div>
+        <div class="card-body">
+          <div id="frequency-graph" style="height: 200px; width: 100%;">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+      </section>
+
+      <!-- Stats Summary -->
+      <section class="grid grid-2 animate-fade-in stagger-2">
+        <div class="stat-pill" style="border-radius: var(--radius-lg); padding: 20px; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+          <div class="stat-pill-value gradient-text" id="total-completed-tasks" style="font-size: 2.5rem; font-weight: 800;">0</div>
+          <div class="stat-pill-label">Total Missions</div>
+        </div>
+        <div class="stat-pill" style="border-radius: var(--radius-lg); padding: 20px; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+          <div class="stat-pill-value gradient-text" id="total-study-hours" style="font-size: 2.5rem; font-weight: 800;">0H</div>
+          <div class="stat-pill-label">Total Focus</div>
+        </div>
+        <div class="stat-pill" style="border-radius: var(--radius-lg); padding: 20px; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+          <div class="stat-pill-value gradient-text" id="completion-rate" style="font-size: 2.5rem; font-weight: 800;">0%</div>
+          <div class="stat-pill-label">Success Rate</div>
+        </div>
+        <div class="stat-pill" style="border-radius: var(--radius-lg); padding: 20px; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+          <div class="stat-pill-value" id="productive-day" style="font-size: 1.2rem;">-</div>
+          <div class="stat-pill-label">Peak Day</div>
+        </div>
+      </section>
+
+      <!-- Mastery Grid -->
+      <section class="card animate-fade-in stagger-3">
+        <div class="card-header">
+          <h3 class="card-title">Sector Mastery</h3>
+        </div>
+        <div id="mastery-overview" style="display: grid; gap: 1rem;">
+          <!-- Populated by JS -->
+        </div>
+      </section>
+
+      <!-- Current Objectives -->
+      <section class="card animate-fade-in stagger-4">
+        <div class="card-header">
+          <h3 class="card-title">Current Objectives</h3>
+        </div>
+        <div id="tasks-progress"></div>
+        <div id="hours-progress" class="mt-lg"></div>
+      </section>
+    </div>
+  </main>
+
+  <!-- Scripts -->
+  <script src="js/storage.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/history.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', History.init);
+  </script>
+</body>
+</html>

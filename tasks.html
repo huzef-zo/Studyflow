@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="StudyFlow - Task Manager">
+  <meta name="theme-color" content="#0B0F19">
+  <title>Tasks - StudyFlow</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    /* Tasks page - filter bar is now handled globally */
+  </style>
+</head>
+<body>
+  <!-- Navigation Containers -->
+  <div id="sidebar-container"></div>
+  <div id="bottom-nav-container"></div>
+
+  <!-- Main Content -->
+  <main class="main-container">
+    <!-- Page Header -->
+    <header class="page-header animate-fade-in">
+      <div class="flex items-center justify-between flex-wrap gap-md">
+        <div>
+          <h1 class="glowing-text">Mission Core</h1>
+          <p class="subtitle" style="font-weight: 500;">Strategize and achieve your study targets</p>
+        </div>
+        <button class="btn btn-primary" id="add-task-btn">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
+          New Objective
+        </button>
+      </div>
+    </header>
+
+    <!-- Filter Bar -->
+    <div class="flex flex-wrap items-center justify-between gap-md mb-lg animate-fade-in" style="animation-delay: 0.1s;">
+      <div class="filter-tabs" style="margin: 0;">
+        <div class="filter-tab active" data-filter="all">All Missions</div>
+        <div class="filter-tab" data-filter="pending">Active</div>
+        <div class="filter-tab" data-filter="completed">Accomplished</div>
+      </div>
+
+      <div class="flex items-center gap-sm flex-1" style="min-width: 300px;">
+        <div class="form-group mb-0 flex-1">
+          <input type="text" id="search-tasks" class="form-input glass-pill-input" placeholder="Search objectives..." style="padding: 8px 20px;">
+        </div>
+        <select id="filter-priority" class="form-input glass-pill-input" style="width: auto; padding: 8px 20px;">
+          <option value="all">All Priorities</option>
+          <option value="critical">Critical</option>
+          <option value="high">High</option>
+          <option value="medium">Medium</option>
+          <option value="low">Low</option>
+        </select>
+        <select id="filter-subject" class="form-input glass-pill-input" style="width: auto; padding: 8px 20px;">
+          <option value="all">All Sectors</option>
+          <!-- Populated by JS -->
+        </select>
+      </div>
+    </div>
+
+    <!-- Task List -->
+    <section id="task-list" class="animate-fade-in" style="animation-delay: 0.2s;">
+      <!-- Populated by JS -->
+    </section>
+  </main>
+
+  <!-- Scripts -->
+  <script src="js/storage.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/tasks.js"></script>
+  <script>
+    // Initialize tasks page
+    document.addEventListener('DOMContentLoaded', Tasks.init);
+  </script>
+</body>
+</html>

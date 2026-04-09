@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="StudyFlow - Pomodoro Timer">
+  <meta name="theme-color" content="#0B0F19">
+  <title>Timer - StudyFlow</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    /* Timer page - all styles now handled globally */
+  </style>
+</head>
+<body>
+  <!-- Navigation Containers -->
+  <div id="sidebar-container"></div>
+  <div id="bottom-nav-container"></div>
+
+  <!-- Main Content -->
+  <main class="main-container">
+    <!-- Page Header -->
+    <header class="page-header animate-fade-in">
+      <h1 class="glowing-text">Focus Sphere</h1>
+      <p class="subtitle" style="font-weight: 500;">Deep work state initialization</p>
+    </header>
+
+    <div class="narrow-layout">
+
+      <!-- Task Selection -->
+      <section class="animate-fade-in stagger-1">
+        <div class="form-group">
+          <label class="form-label" style="text-align: center;">Active Mission Selection</label>
+          <select id="timer-task" class="form-input" style="text-align: center; font-weight: 700; border-radius: 99px;">
+            <option value="">GENERAL FOCUS</option>
+            <!-- Populated by JS -->
+          </select>
+        </div>
+      </section>
+
+      <!-- Timer Ring -->
+      <section class="timer-ring-container animate-fade-in stagger-2" id="timer-container">
+        <svg class="timer-ring-svg" viewBox="0 0 300 300" style="overflow: visible;">
+          <defs>
+            <linearGradient id="timerGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#3B82F6" />
+              <stop offset="100%" stop-color="#8B5CF6" />
+            </linearGradient>
+          </defs>
+          <!-- Halo Ring -->
+          <circle cx="150" cy="150" r="155" fill="none" stroke="var(--primary)" stroke-width="1" opacity="0.05" />
+          <circle class="timer-ring-bg" cx="150" cy="150" r="140" />
+          <circle id="timer-progress" class="timer-ring-fill" cx="150" cy="150" r="140" />
+        </svg>
+        <div class="timer-center">
+          <div class="timer-status-badge" id="timer-label">Deep Work</div>
+          <div class="timer-main-time" id="timer-time">25:00</div>
+          <div class="timer-task-name" id="selected-task-display">Initializing...</div>
+        </div>
+      </section>
+
+      <!-- Controls -->
+      <section class="timer-controls-fab animate-fade-in stagger-3">
+        <button class="btn-fab-sub" id="reset-btn" aria-label="Reset Mission">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+        </button>
+        <button class="btn-fab-main" id="start-btn" aria-label="Engage Mission">
+          <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" id="play-pause-icon"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        </button>
+        <button class="btn-fab-sub" id="skip-btn" aria-label="Skip Phase">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" x2="19" y1="5" y2="19"/></svg>
+        </button>
+      </section>
+
+      <!-- Stats Carousel -->
+      <section class="animate-fade-in stagger-4">
+        <h2 style="color: white; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 1rem; text-align: center;">Mission Intelligence</h2>
+        <div class="stats-carousel">
+          <div class="carousel-card">
+            <div style="font-size: 10px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Sessions</div>
+            <div id="sessions-today" style="font-size: 1.5rem; font-weight: 800; color: white;">0</div>
+          </div>
+          <div class="carousel-card">
+            <div style="font-size: 10px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Deep Work</div>
+            <div id="total-time-today" style="font-size: 1.5rem; font-weight: 800; color: white;">0m</div>
+          </div>
+          <div class="carousel-card">
+            <div style="font-size: 10px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Streak</div>
+            <div id="streak-count" style="font-size: 1.5rem; font-weight: 800; color: white;">0</div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- Scripts -->
+  <script src="js/storage.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/timer.js"></script>
+  <script>
+    // Initialize timer page
+    document.addEventListener('DOMContentLoaded', Timer.init);
+  </script>
+</body>
+</html>

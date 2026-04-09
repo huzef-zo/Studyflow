@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="StudyFlow - Goals Tracking">
+  <meta name="theme-color" content="#0B0F19">
+  <title>Goals - StudyFlow</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    /* Goals page - all styles now handled globally */
+  </style>
+</head>
+<body>
+  <!-- Navigation Containers -->
+  <div id="sidebar-container"></div>
+  <div id="bottom-nav-container"></div>
+
+  <!-- Main Content -->
+  <main class="main-container">
+    <!-- Page Header -->
+    <header class="page-header animate-fade-in">
+      <div class="flex items-center justify-between flex-wrap gap-md">
+        <div>
+          <h1 class="glowing-text">Strategic Goals</h1>
+          <p class="subtitle" style="font-weight: 500;">Chart your path to academic mastery</p>
+        </div>
+        <button class="btn btn-secondary" id="edit-goals-btn">
+          Edit Targets
+        </button>
+      </div>
+    </header>
+
+    <!-- Calendar Strip -->
+    <section class="mb-lg animate-fade-in stagger-1">
+      <div class="calendar-strip" id="week-dates">
+        <!-- Populated by JS -->
+      </div>
+    </section>
+
+    <!-- Goals Visualization -->
+    <div class="grid animate-fade-in stagger-2" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: var(--spacing-lg);">
+      <!-- Tasks Donut -->
+      <section class="card">
+        <div class="card-header">
+          <h3 class="card-title">Mission Quota</h3>
+        </div>
+        <div class="donut-container">
+          <svg viewBox="0 0 36 36" style="width: 140px; height: 140px;">
+            <circle cx="18" cy="18" r="15.9155" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="3" />
+            <circle id="tasks-donut-fill" cx="18" cy="18" r="15.9155" fill="none" stroke="url(#goalGradient)" stroke-width="3.5" stroke-dasharray="0, 100" stroke-linecap="round" transform="rotate(-90 18 18)" style="transition: stroke-dasharray 1s ease;" />
+            <defs>
+              <linearGradient id="goalGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#3B82F6" />
+                <stop offset="100%" stop-color="#8B5CF6" />
+              </linearGradient>
+            </defs>
+          </svg>
+          <div class="donut-center">
+            <div id="tasks-percent" class="gradient-text" style="font-size: 2rem; font-weight: 800;">0%</div>
+          </div>
+        </div>
+        <div class="text-center">
+          <div style="font-size: 1.25rem; font-weight: 800; margin-bottom: 4px;">
+            <span id="tasks-goal-value" class="gradient-text">0</span> / <span id="tasks-goal-max">10</span>
+          </div>
+          <p style="color: var(--text-muted); font-weight: 600; font-size: 0.7rem; text-transform: uppercase;">Missions Completed</p>
+        </div>
+      </section>
+
+      <!-- Hours Donut -->
+      <section class="card">
+        <div class="card-header">
+          <h3 class="card-title">Focus Quota</h3>
+        </div>
+        <div class="donut-container">
+          <svg viewBox="0 0 36 36" style="width: 140px; height: 140px;">
+            <circle cx="18" cy="18" r="15.9155" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="3" />
+            <circle id="hours-donut-fill" cx="18" cy="18" r="15.9155" fill="none" stroke="url(#goalGradient)" stroke-width="3.5" stroke-dasharray="0, 100" stroke-linecap="round" transform="rotate(-90 18 18)" style="transition: stroke-dasharray 1s ease;" />
+          </svg>
+          <div class="donut-center">
+            <div id="hours-percent" class="gradient-text" style="font-size: 2rem; font-weight: 800;">0%</div>
+          </div>
+        </div>
+        <div class="text-center">
+          <div style="font-size: 1.25rem; font-weight: 800; margin-bottom: 4px;">
+            <span id="hours-goal-value" class="gradient-text">0</span> / <span id="hours-goal-max">20</span>H
+          </div>
+          <p style="color: var(--text-muted); font-weight: 600; font-size: 0.7rem; text-transform: uppercase;">Deep Work Logged</p>
+        </div>
+      </section>
+    </div>
+
+    <!-- Daily Progress Bar Chart -->
+    <section class="card mt-lg animate-fade-in stagger-3">
+      <div class="card-header">
+        <h3 class="card-title">Daily Performance</h3>
+      </div>
+      <div class="daily-bar-scroll">
+        <div class="daily-bar-container" id="daily-progress">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- Motivation -->
+    <section class="card mt-lg animate-fade-in stagger-4" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, rgba(59, 130, 246, 0.05) 100%);">
+      <div class="flex items-center gap-md">
+        <div class="stat-icon" style="background: var(--success-glow); margin: 0;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>
+        </div>
+        <div>
+          <h4 style="font-size: 1rem; margin-bottom: 2px;">Keep the momentum!</h4>
+          <p id="motivation-message" style="margin: 0; font-weight: 500;">Every completed objective is a leap toward your ultimate vision.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Scripts -->
+  <script src="js/storage.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/goals.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', Goals.init);
+  </script>
+</body>
+</html>
