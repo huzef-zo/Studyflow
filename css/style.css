@@ -347,12 +347,25 @@ h4 {
   gap: var(--spacing-md);
 }
 
+.col-span-1 { grid-column: span 1; }
+.col-span-2 { grid-column: span 2; }
+.col-span-3 { grid-column: span 3; }
+.col-span-4 { grid-column: span 4; }
+.row-span-2 { grid-row: span 2; }
+
 @media (max-width: 1024px) {
   .bento-grid { grid-template-columns: repeat(2, 1fr); }
+  .col-span-1, .col-span-2, .col-span-3, .col-span-4 { grid-column: span 1; }
+
+  /* Allow some specific spans for 2-column layout if desired,
+     but keeping it simple for now as requested */
+  .md\:col-span-2 { grid-column: span 2; }
 }
 
 @media (max-width: 640px) {
   .bento-grid { grid-template-columns: 1fr; }
+  .col-span-1, .col-span-2, .col-span-3, .col-span-4, .md\:col-span-2 { grid-column: span 1; }
+  .row-span-2 { grid-row: span 1; }
 }
 
 /* ============================================
@@ -484,12 +497,13 @@ h4 {
   align-items: center;
   gap: 4px;
   text-decoration: none;
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 600;
-  padding: 6px 12px;
+  padding: 6px 4px;
   border-radius: var(--radius-md);
   transition: var(--transition);
-  min-width: 56px;
+  min-width: 0;
+  flex: 1;
 }
 
 .bottom-nav-item svg {
@@ -1398,6 +1412,7 @@ input:checked + .toggle-slider:before {
 .stagger-3 { animation-delay: 0.15s; }
 .stagger-4 { animation-delay: 0.2s; }
 .stagger-5 { animation-delay: 0.25s; }
+.stagger-6 { animation-delay: 0.3s; }
 
 /* ============================================
    Stat Icon
@@ -1703,7 +1718,7 @@ input:checked + .toggle-slider:before {
   align-items: flex-end;
   gap: 1rem;
   padding: 2rem 0;
-  min-width: 450px;
+  min-width: 0;
 }
 
 .daily-bar-scroll {

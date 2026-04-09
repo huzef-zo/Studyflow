@@ -52,6 +52,10 @@
           <div class="stat-pill-value" id="productive-day" style="font-size: 1.2rem;">-</div>
           <div class="stat-pill-label">Peak Day</div>
         </div>
+        <div class="stat-pill" style="border-radius: var(--radius-lg); padding: 20px; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+          <div class="stat-pill-value gradient-text" id="all-time-streak" style="font-size: 2.5rem; font-weight: 800;">0</div>
+          <div class="stat-pill-label">Best Streak</div>
+        </div>
       </section>
 
       <!-- Mastery Grid -->
@@ -68,6 +72,7 @@
       <section class="card animate-fade-in stagger-4">
         <div class="card-header">
           <h3 class="card-title">Current Objectives</h3>
+          <span class="badge" style="background: var(--success-glow); color: var(--success);" id="progress-percentage">0%</span>
         </div>
         <div id="tasks-progress"></div>
         <div id="hours-progress" class="mt-lg"></div>

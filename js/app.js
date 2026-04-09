@@ -96,6 +96,8 @@ const App = (function() {
       { id: 'tasks', label: 'Tasks', icon: 'tasks', href: 'tasks.html' },
       { id: 'timer', label: 'Timer', icon: 'timer', href: 'timer.html' },
       { id: 'goals', label: 'Goals', icon: 'goals', href: 'goals.html' },
+      { id: 'history', label: 'Analytics', icon: 'history', href: 'history.html' },
+      { id: 'calendar', label: 'Calendar', icon: 'calendar', href: 'calendar.html' },
       { id: 'settings', label: 'Settings', icon: 'settings', href: 'settings.html' }
     ];
 
