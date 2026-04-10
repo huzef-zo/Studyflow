@@ -16,6 +16,7 @@ const Timer = (function() {
   let isRunning = false;
   let endTime = null;
   let selectedTaskId = null;
+  let selectedSubtaskId = null;
   
   // DOM Elements
   let elements = {};
@@ -33,6 +34,9 @@ const Timer = (function() {
       resetBtn: document.getElementById('reset-btn'),
       skipBtn: document.getElementById('skip-btn'),
       taskSelect: document.getElementById('timer-task'),
+      subtaskSelect: document.getElementById('timer-subtask'),
+      subtaskContainer: document.getElementById('subtask-select-container'),
+      subtaskTracker: document.getElementById('subtask-tracker-container'),
       taskDisplay: document.getElementById('selected-task-display'),
       playPauseIcon: document.getElementById('play-pause-icon'),
       sessionsToday: document.getElementById('sessions-today'),
@@ -61,6 +65,7 @@ const Timer = (function() {
     elements.resetBtn?.addEventListener('click', resetTimer);
     elements.skipBtn?.addEventListener('click', skipSession);
     elements.taskSelect?.addEventListener('change', handleTaskChange);
+    elements.subtaskSelect?.addEventListener('change', handleSubtaskChange);
   }
 
   /**
@@ -140,6 +145,18 @@ const Timer = (function() {
     };
     
     Storage.addSession(sessionData.duration, sessionData.type, sessionData.taskId);
+
+    // If subtask was selected and this was a work session, increment its cycles
+    if (currentSessionType === 'work' && selectedTaskId && selectedSubtaskId) {
+      const task = Storage.getTaskById(selectedTaskId);
+      const subtask = task?.subtasks?.find(s => s.id === selectedSubtaskId);
+      if (subtask) {
+        Storage.updateSubtask(selectedTaskId, selectedSubtaskId, {
+          completedCycles: (subtask.completedCycles || 0) + 1
+        });
+        updateSubtaskTracker();
+      }
+    }
     
     // Notify
     if (settings.notifications !== false && 'Notification' in window && Notification.permission === 'granted') {
@@ -193,7 +210,83 @@ const Timer = (function() {
     selectedTaskId = elements.taskSelect.value;
     const task = Storage.getTaskById(selectedTaskId);
     elements.taskDisplay.textContent = task ? task.title.toUpperCase() : 'GENERAL FOCUS';
+    populateSubtasks(selectedTaskId);
     saveTimerState();
+  }
+
+  function handleSubtaskChange() {
+    selectedSubtaskId = elements.subtaskSelect.value;
+    updateSubtaskTracker();
+    updateDisplay();
+    saveTimerState();
+  }
+
+  function populateSubtasks(taskId) {
+    if (!elements.subtaskSelect || !elements.subtaskContainer) return;
+
+    const task = Storage.getTaskById(taskId);
+    if (!task || !task.subtasks || task.subtasks.length === 0) {
+      elements.subtaskContainer.style.display = 'none';
+      elements.subtaskSelect.innerHTML = '<option value="">SELECT SUB-MISSION</option>';
+      selectedSubtaskId = null;
+      updateSubtaskTracker();
+      return;
+    }
+
+    elements.subtaskContainer.style.display = 'block';
+    elements.subtaskSelect.innerHTML = '<option value="">SELECT SUB-MISSION</option>' +
+      task.subtasks.map(s => `<option value="${s.id}" ${s.id === selectedSubtaskId ? 'selected' : ''}>${App.escapeHtml(s.title)}</option>`).join('');
+
+    // If previously selected subtask is not in the new task, reset it
+    if (selectedSubtaskId && !task.subtasks.some(s => s.id === selectedSubtaskId)) {
+      selectedSubtaskId = null;
+      elements.subtaskSelect.value = '';
+    }
+
+    updateSubtaskTracker();
+    updateDisplay();
+  }
+
+  function updateSubtaskTracker() {
+    if (!elements.subtaskTracker) return;
+
+    if (!selectedTaskId || !selectedSubtaskId) {
+      elements.subtaskTracker.innerHTML = '';
+      return;
+    }
+
+    const task = Storage.getTaskById(selectedTaskId);
+    const subtask = task?.subtasks?.find(s => s.id === selectedSubtaskId);
+
+    if (!subtask) {
+      elements.subtaskTracker.innerHTML = '';
+      return;
+    }
+
+    elements.subtaskTracker.innerHTML = `
+      <div class="subtask-cycle-tracker">
+        <button class="cycle-btn" id="dec-cycle">-</button>
+        <span>${subtask.completedCycles}/${subtask.estimatedCycles} Cycles</span>
+        <button class="cycle-btn" id="inc-cycle">+</button>
+      </div>
+    `;
+
+    // Add listeners
+    document.getElementById('inc-cycle')?.addEventListener('click', () => {
+      Storage.updateSubtask(selectedTaskId, selectedSubtaskId, {
+        completedCycles: (subtask.completedCycles || 0) + 1
+      });
+      updateSubtaskTracker();
+    });
+
+    document.getElementById('dec-cycle')?.addEventListener('click', () => {
+      if (subtask.completedCycles > 0) {
+        Storage.updateSubtask(selectedTaskId, selectedSubtaskId, {
+          completedCycles: subtask.completedCycles - 1
+        });
+        updateSubtaskTracker();
+      }
+    });
   }
 
   function populateTasks() {
@@ -205,6 +298,11 @@ const Timer = (function() {
   }
 
   function updateDisplay() {
+    // Show tracker only during work sessions if subtask is selected
+    if (elements.subtaskTracker) {
+      elements.subtaskTracker.style.display = (currentSessionType === 'work' && selectedSubtaskId) ? 'flex' : 'none';
+    }
+
     const mins = Math.floor(timeRemaining / 60);
     const secs = timeRemaining % 60;
     const timeStr = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
@@ -234,7 +332,8 @@ const Timer = (function() {
       endTime: isRunning ? endTime : null,
       state: isRunning ? 'running' : 'paused',
       timeRemaining: timeRemaining,
-      selectedTaskId: selectedTaskId
+      selectedTaskId: selectedTaskId,
+      selectedSubtaskId: selectedSubtaskId
     };
     localStorage.setItem('studyflow_timer', JSON.stringify(state));
   }
@@ -246,8 +345,21 @@ const Timer = (function() {
     const state = JSON.parse(saved);
     currentSessionType = state.type || 'work';
     selectedTaskId = state.selectedTaskId;
-    elements.taskSelect.value = selectedTaskId || '';
-    handleTaskChange();
+    selectedSubtaskId = state.selectedSubtaskId;
+
+    if (elements.taskSelect) {
+      elements.taskSelect.value = selectedTaskId || '';
+      // We don't call handleTaskChange directly to avoid redundant saveTimerState
+      const task = Storage.getTaskById(selectedTaskId);
+      if (elements.taskDisplay) {
+        elements.taskDisplay.textContent = task ? task.title.toUpperCase() : 'GENERAL FOCUS';
+      }
+      populateSubtasks(selectedTaskId);
+      if (elements.subtaskSelect) {
+        elements.subtaskSelect.value = selectedSubtaskId || '';
+      }
+      updateSubtaskTracker();
+    }
     
     if (state.state === 'running' && state.endTime > Date.now()) {
       endTime = state.endTime;
