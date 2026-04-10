@@ -258,6 +258,60 @@ const Tasks = (function() {
         deleteTask(btn.dataset.id);
       };
     });
+
+    // Swipe to complete logic
+    elements.taskList.querySelectorAll('.task-card').forEach(card => {
+      let touchStartX = 0;
+      let touchMoveX = 0;
+      const id = card.dataset.id;
+      const task = Storage.getTaskById(id);
+
+      if (task.completed) return;
+
+      card.addEventListener('touchstart', (e) => {
+        touchStartX = e.touches[0].clientX;
+      }, { passive: true });
+
+      card.addEventListener('touchmove', (e) => {
+        touchMoveX = e.touches[0].clientX;
+        const diff = touchMoveX - touchStartX;
+
+        if (diff > 0) {
+          card.style.transform = `translateX(${diff}px)`;
+          const hint = card.querySelector('.swipe-hint');
+          if (hint) {
+            hint.style.opacity = Math.min(diff / 100, 1);
+            hint.style.left = '0';
+          }
+        }
+      }, { passive: true });
+
+      card.addEventListener('touchend', () => {
+        const diff = touchMoveX - touchStartX;
+        if (diff > 100) {
+          // Trigger completion
+          card.style.transition = 'all 0.3s ease';
+          card.style.transform = 'translateX(100%)';
+          card.style.opacity = '0';
+
+          setTimeout(() => {
+            Storage.completeTask(id);
+            renderTasks();
+          }, 300);
+        } else {
+          // Reset
+          card.style.transition = 'transform 0.3s ease';
+          card.style.transform = 'translateX(0)';
+          const hint = card.querySelector('.swipe-hint');
+          if (hint) hint.style.opacity = '0';
+          setTimeout(() => {
+            card.style.transition = '';
+          }, 300);
+        }
+        touchStartX = 0;
+        touchMoveX = 0;
+      });
+    });
   }
 
   function openTaskModal(id = null) {
