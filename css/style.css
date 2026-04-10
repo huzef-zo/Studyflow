@@ -937,7 +937,7 @@ h4 {
 }
 
 .stat-pill-value { font-weight: 800; font-size: 18px; }
-.stat-pill-label { font-size: 12px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.02em; }
+.stat-pill-label { font-size: 10px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.02em; }
 
 /* ============================================
    Progress Bars
