@@ -617,7 +617,7 @@ const Storage = (function() {
     // Determine next session type
     let nextType;
     if (type === 'work') {
-      if (nextSessionsCompleted % (settings.sessions_until_long_break || 4) === 0) {
+      if (nextSessionsCompleted > 0 && nextSessionsCompleted % (settings.sessions_until_long_break || 4) === 0) {
         nextType = 'long_break';
       } else {
         nextType = 'short_break';

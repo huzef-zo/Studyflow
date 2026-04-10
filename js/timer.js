@@ -163,6 +163,9 @@ const Timer = (function() {
 
   function skipSession() {
     pauseTimer();
+    if (currentSessionType === 'work') {
+      Storage.addSession(0, 'work', selectedTaskId);
+    }
     switchSessionType();
     updateDisplay();
     saveTimerState();
@@ -172,7 +175,7 @@ const Timer = (function() {
     if (currentSessionType === 'work') {
       const stats = Storage.getStats();
       const settings = Storage.getSettings();
-      currentSessionType = (stats.sessions.today % settings.sessions_until_long_break === 0) ? 'long_break' : 'short_break';
+      currentSessionType = (stats.sessions.today > 0 && stats.sessions.today % settings.sessions_until_long_break === 0) ? 'long_break' : 'short_break';
     } else {
       currentSessionType = 'work';
     }
