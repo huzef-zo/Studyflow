@@ -163,6 +163,13 @@ const Timer = (function() {
 
   function skipSession() {
     pauseTimer();
+
+    // If skipping a work session, record it so the count increments
+    if (currentSessionType === 'work') {
+      const settings = Storage.getSettings();
+      Storage.addSession(0, 'work', selectedTaskId);
+    }
+
     switchSessionType();
     updateDisplay();
     saveTimerState();
@@ -172,7 +179,8 @@ const Timer = (function() {
     if (currentSessionType === 'work') {
       const stats = Storage.getStats();
       const settings = Storage.getSettings();
-      currentSessionType = (stats.sessions.today % settings.sessions_until_long_break === 0) ? 'long_break' : 'short_break';
+      // Use > 0 to avoid long-break on first session if count is 0 (e.g. on skip)
+      currentSessionType = (stats.sessions.today > 0 && stats.sessions.today % settings.sessions_until_long_break === 0) ? 'long_break' : 'short_break';
     } else {
       currentSessionType = 'work';
     }
