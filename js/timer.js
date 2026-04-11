@@ -17,7 +17,9 @@ const Timer = (function() {
   let endTime = null;
   let selectedTaskId = null;
   let selectedSubtaskId = null;
-  let sessionsInCycle = 0;
+  // Tracks how many Deep Work blocks have been completed in the current cycle.
+  // Resets to 0 after a Deep Rest (long_break) finishes.
+  let completedWorkInCycle = 0;
   
   // Audio Context for sounds
   let audioCtx = null;
@@ -122,7 +124,8 @@ const Timer = (function() {
       playPauseIcon: document.getElementById('play-pause-icon'),
       sessionsToday: document.getElementById('sessions-today'),
       totalTimeToday: document.getElementById('total-time-today'),
-      streakCount: document.getElementById('streak-count')
+      streakCount: document.getElementById('streak-count'),
+      cycleIndicator: document.getElementById('cycle-indicator')
     };
   }
 
@@ -203,36 +206,41 @@ const Timer = (function() {
   function tick() {
     const now = Date.now();
     timeRemaining = Math.max(0, Math.ceil((endTime - now) / 1000));
-    
+
     if (timeRemaining <= 0) {
       completeSession();
+      return; // completeSession handles display + auto-start; stop processing this tick
     }
-    
+
     updateDisplay();
     // Periodically save state to handle page refreshes
     if (timeRemaining % 5 === 0) saveTimerState();
   }
 
   /**
-   * Handle session completion
+   * Handle session completion and advance to the next phase.
+   *
+   * Cycle logic:
+   *   - Each Deep Work completion increments completedWorkInCycle.
+   *   - After a work block: if completedWorkInCycle === sessions_until_long_break → Deep Rest,
+   *     otherwise → Cooldown (short_break).
+   *   - After a Cooldown → back to Deep Work.
+   *   - After a Deep Rest → back to Deep Work AND reset completedWorkInCycle to 0
+   *     (one full session = N deep-work blocks + N-1 cooldowns + 1 deep rest is now done).
    */
   function completeSession() {
     pauseTimer();
-    
+
     const settings = Storage.getSettings();
-    const sessionData = {
-      type: currentSessionType,
-      duration: getSessionDuration(currentSessionType),
-      taskId: selectedTaskId
-    };
-    
-    Storage.addSession(sessionData.duration, sessionData.type, sessionData.taskId);
+    const justFinishedType = currentSessionType;
 
-    // If work session completed, increment cycle count
-    if (currentSessionType === 'work') {
-      sessionsInCycle++;
+    // ── 1. Record the completed phase ──────────────────────────────────────
+    Storage.addSession(getSessionDuration(justFinishedType), justFinishedType, selectedTaskId);
 
-      // If subtask was selected, increment its cycles
+    if (justFinishedType === 'work') {
+      completedWorkInCycle++;
+
+      // Increment sub-task cycles if one is selected
       if (selectedTaskId && selectedSubtaskId) {
         const task = Storage.getTaskById(selectedTaskId);
         const subtask = task?.subtasks?.find(s => s.id === selectedSubtaskId);
@@ -243,66 +251,84 @@ const Timer = (function() {
           updateSubtaskTracker();
         }
       }
-    } else if (currentSessionType === 'long_break') {
-      // Reset cycle after long break
-      sessionsInCycle = 0;
     }
-    
-    // Notify
-    if (settings.notifications !== false && 'Notification' in window && Notification.permission === 'granted') {
-      const title = currentSessionType === 'work' ? 'Phase Accomplished!' : 'Cooldown Terminated!';
-      const body = currentSessionType === 'work' ? 'Commence cooldown protocol.' : 'Initiate next study phase.';
-      new Notification(title, { body });
-    }
-    
-    // Auto-switch to next session
-    switchSessionType();
-    saveTimerState(); // Persist the new type immediately
 
-    // Play sound for the new session type
+    // ── 2. Determine next phase ─────────────────────────────────────────────
+    const cycleLength = settings.sessions_until_long_break || 4;
+
+    if (justFinishedType === 'work') {
+      // After enough deep-work blocks → deep rest; otherwise → cooldown
+      currentSessionType = (completedWorkInCycle >= cycleLength) ? 'long_break' : 'short_break';
+    } else if (justFinishedType === 'long_break') {
+      // Deep Rest finished → new cycle begins
+      completedWorkInCycle = 0;
+      currentSessionType = 'work';
+    } else {
+      // Cooldown finished → back to deep work
+      currentSessionType = 'work';
+    }
+
+    // ── 3. Set time for the next phase ─────────────────────────────────────
+    timeRemaining = getSessionDuration(currentSessionType) * 60;
+
+    // ── 4. Notify user ─────────────────────────────────────────────────────
+    if (settings.notifications !== false && 'Notification' in window && Notification.permission === 'granted') {
+      const labels = {
+        work: 'Deep Work — GO!',
+        short_break: 'Cooldown Time',
+        long_break: 'Deep Rest — Well Earned!'
+      };
+      const bodies = {
+        work: 'Focus mode engaged. Start your deep work block.',
+        short_break: 'Take a short break. You earned it.',
+        long_break: 'Great cycle! Enjoy a longer rest.'
+      };
+      new Notification(labels[currentSessionType], { body: bodies[currentSessionType] });
+    }
+
+    // ── 5. Sound cue ───────────────────────────────────────────────────────
     playTransitionSound(currentSessionType);
 
+    // ── 6. Persist & refresh UI ────────────────────────────────────────────
+    saveTimerState();
     updateStats();
     updateDisplay();
 
-    // Auto-start if enabled
-    if (currentSessionType === 'work') {
-      if (settings.auto_start_work) startTimer();
-    } else {
-      if (settings.auto_start_break) startTimer();
-    }
+    // ── 7. Auto-start the next phase if enabled ────────────────────────────
+    const shouldAutoStart = currentSessionType === 'work'
+      ? settings.auto_start_work
+      : settings.auto_start_break;
+
+    if (shouldAutoStart) startTimer();
   }
 
   function resetTimer() {
     pauseTimer();
     currentSessionType = 'work';
-    sessionsInCycle = 0;
-    timeRemaining = getSessionDuration(currentSessionType) * 60;
+    completedWorkInCycle = 0;
+    timeRemaining = getSessionDuration('work') * 60;
     updateDisplay();
     saveTimerState();
   }
 
   function skipSession() {
     pauseTimer();
-    if (currentSessionType === 'work') {
-      Storage.addSession(0, 'work', selectedTaskId);
-      sessionsInCycle++;
-    } else if (currentSessionType === 'long_break') {
-      sessionsInCycle = 0;
-    }
-    switchSessionType();
-    saveTimerState(); // Persist the new type immediately
-    updateDisplay();
-  }
+    const settings = Storage.getSettings();
+    const cycleLength = settings.sessions_until_long_break || 4;
 
-  function switchSessionType() {
     if (currentSessionType === 'work') {
-      const settings = Storage.getSettings();
-      currentSessionType = (sessionsInCycle > 0 && sessionsInCycle % settings.sessions_until_long_break === 0) ? 'long_break' : 'short_break';
+      completedWorkInCycle++;
+      currentSessionType = (completedWorkInCycle >= cycleLength) ? 'long_break' : 'short_break';
+    } else if (currentSessionType === 'long_break') {
+      completedWorkInCycle = 0;
+      currentSessionType = 'work';
     } else {
       currentSessionType = 'work';
     }
+
     timeRemaining = getSessionDuration(currentSessionType) * 60;
+    saveTimerState();
+    updateDisplay();
   }
 
   function getSessionDuration(type) {
@@ -427,6 +453,28 @@ const Timer = (function() {
     const totalTime = getSessionDuration(currentSessionType) * 60;
     const offset = CIRCUMFERENCE - (timeRemaining / totalTime * CIRCUMFERENCE);
     elements.timerProgress.style.strokeDashoffset = offset;
+
+    // Cycle dots indicator
+    if (elements.cycleIndicator) {
+      const settings = Storage.getSettings();
+      const cycleLength = settings.sessions_until_long_break || 4;
+      const dots = [];
+      for (let i = 0; i < cycleLength; i++) {
+        const isDone = i < completedWorkInCycle;
+        const isActive = currentSessionType === 'work' && i === completedWorkInCycle;
+        dots.push(
+          `<span style="
+            display:inline-block;
+            width:10px;height:10px;border-radius:50%;
+            background:${isDone ? 'var(--primary)' : (isActive ? 'var(--primary)' : 'rgba(255,255,255,0.15)')};
+            opacity:${isActive ? '0.6' : '1'};
+            border:${isActive ? '2px solid var(--primary)' : '2px solid transparent'};
+            transition:background 0.3s;
+          "></span>`
+        );
+      }
+      elements.cycleIndicator.innerHTML = dots.join('');
+    }
   }
 
   function updateStats() {
@@ -444,7 +492,7 @@ const Timer = (function() {
       timeRemaining: timeRemaining,
       selectedTaskId: selectedTaskId,
       selectedSubtaskId: selectedSubtaskId,
-      sessionsInCycle: sessionsInCycle
+      completedWorkInCycle: completedWorkInCycle
     };
     localStorage.setItem('studyflow_timer', JSON.stringify(state));
   }
@@ -457,7 +505,8 @@ const Timer = (function() {
     currentSessionType = state.type || 'work';
     selectedTaskId = state.selectedTaskId;
     selectedSubtaskId = state.selectedSubtaskId;
-    sessionsInCycle = state.sessionsInCycle || 0;
+    // Support both the old key (sessionsInCycle) and the new key for backwards compat
+    completedWorkInCycle = state.completedWorkInCycle ?? state.sessionsInCycle ?? 0;
 
     if (elements.taskSelect) {
       elements.taskSelect.value = selectedTaskId || '';
