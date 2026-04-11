@@ -118,6 +118,7 @@ const Timer = (function() {
       subtaskContainer: document.getElementById('subtask-select-container'),
       subtaskTracker: document.getElementById('subtask-tracker-container'),
       taskDisplay: document.getElementById('selected-task-display'),
+      activeMissionLabel: document.getElementById('active-mission-label'),
       playPauseIcon: document.getElementById('play-pause-icon'),
       sessionsToday: document.getElementById('sessions-today'),
       totalTimeToday: document.getElementById('total-time-today'),
@@ -314,7 +315,11 @@ const Timer = (function() {
   function handleTaskChange() {
     selectedTaskId = elements.taskSelect.value;
     const task = Storage.getTaskById(selectedTaskId);
-    elements.taskDisplay.textContent = task ? task.title.toUpperCase() : 'GENERAL FOCUS';
+    const taskName = task ? task.title : 'General';
+    elements.taskDisplay.textContent = taskName.toUpperCase();
+    if (elements.activeMissionLabel) {
+      elements.activeMissionLabel.textContent = `Focusing on: ${taskName}`;
+    }
     populateSubtasks(selectedTaskId);
     saveTimerState();
   }
@@ -458,8 +463,12 @@ const Timer = (function() {
       elements.taskSelect.value = selectedTaskId || '';
       // We don't call handleTaskChange directly to avoid redundant saveTimerState
       const task = Storage.getTaskById(selectedTaskId);
+      const taskName = task ? task.title : 'General';
       if (elements.taskDisplay) {
-        elements.taskDisplay.textContent = task ? task.title.toUpperCase() : 'GENERAL FOCUS';
+        elements.taskDisplay.textContent = taskName.toUpperCase();
+      }
+      if (elements.activeMissionLabel) {
+        elements.activeMissionLabel.textContent = `Focusing on: ${taskName}`;
       }
       populateSubtasks(selectedTaskId);
       if (elements.subtaskSelect) {
