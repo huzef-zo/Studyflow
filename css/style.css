@@ -2202,19 +2202,19 @@ input:checked + .toggle-slider:before {
 
 .timer-ring-bg {
   fill: none;
-  stroke: rgba(255, 255, 255, 0.04);
-  stroke-width: 10;
+  stroke: rgba(255, 255, 255, 0.05);
+  stroke-width: 4;
 }
 
 .timer-ring-fill {
   fill: none;
   stroke: url(#timerGradient);
-  stroke-width: 12;
+  stroke-width: 4;
   stroke-linecap: round;
   stroke-dasharray: 880;
   stroke-dashoffset: 880;
   transition: stroke-dashoffset 1s linear;
-  filter: drop-shadow(0 0 15px var(--primary-glow));
+  filter: drop-shadow(0 0 8px rgba(138, 43, 226, 0.6));
 }
 
 .timer-ring-container.active .timer-ring-fill {
@@ -2222,8 +2222,8 @@ input:checked + .toggle-slider:before {
 }
 
 @keyframes timerBreath {
-  0%, 100% { filter: drop-shadow(0 0 15px var(--primary-glow)); }
-  50% { filter: drop-shadow(0 0 25px var(--primary-glow)); }
+  0%, 100% { filter: drop-shadow(0 0 8px rgba(138, 43, 226, 0.6)); }
+  50% { filter: drop-shadow(0 0 16px rgba(138, 43, 226, 0.8)); }
 }
 
 .timer-center {
@@ -2241,6 +2241,7 @@ input:checked + .toggle-slider:before {
   line-height: 1;
   font-variant-numeric: tabular-nums;
   margin-bottom: 0.5rem;
+  text-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
 }
 
 @media (max-width: 480px) {
@@ -2272,6 +2273,20 @@ input:checked + .toggle-slider:before {
   overflow: hidden;
   text-overflow: ellipsis;
   margin-top: 4px;
+}
+
+.active-mission {
+  opacity: 0.5;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: white;
+  margin-bottom: 10px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 220px;
 }
 
 .timer-controls-fab {
@@ -2520,11 +2535,10 @@ input:checked + .toggle-slider:before {
    ============================================ */
 
 body.focus-mode {
-  background-color: #000 !important;
-  background-image: none !important;
+  background: radial-gradient(circle at center, #0a0a1a 0%, #000000 70%) !important;
   overflow: hidden;
   padding: 0 !important;
-}
+  }
 
 body.focus-mode::before {
   display: none;
@@ -2538,10 +2552,20 @@ body.focus-mode .animate-fade-in.stagger-4,
 body.focus-mode #reset-btn,
 body.focus-mode #skip-btn,
 body.focus-mode .timer-status-badge,
-body.focus-mode .timer-task-name,
-body.focus-mode .timer-ring-svg {
+body.focus-mode .timer-task-name {
   display: none !important;
-}
+  }
+  
+body.focus-mode .timer-ring-svg {
+  display: block !important;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-90deg);
+  width: min(90vw, 500px);
+  height: min(90vw, 500px);
+  pointer-events: none;
+  }
 
 body.focus-mode .main-container {
   padding: 0;
@@ -2578,14 +2602,23 @@ body.focus-mode .timer-center {
   top: auto;
   left: auto;
   transform: none;
-}
+  z-index: 1;
+  }
 
 body.focus-mode .timer-main-time {
   font-size: clamp(6rem, 25vw, 15rem);
   margin-bottom: 2rem;
   animation: timerBreathFocus 4s ease-in-out infinite;
-  text-shadow: 0 0 30px rgba(255, 255, 255, 0.1);
-}
+  text-shadow: 0 0 30px rgba(255, 255, 255, 0.2);
+  }
+  
+body.focus-mode .active-mission {
+  opacity: 0.5;
+  margin-bottom: 1.5rem;
+  font-size: 0.75rem;
+  letter-spacing: 3px;
+  max-width: 300px;
+  }
 
 @keyframes timerBreathFocus {
   0%, 100% { transform: scale(1); opacity: 1; }
@@ -2594,7 +2627,19 @@ body.focus-mode .timer-main-time {
 
 body.focus-mode .timer-controls-fab {
   margin-bottom: 0;
-}
+  }
+  
+body.focus-mode .btn-fab-main {
+  background: linear-gradient(135deg, rgba(138, 43, 226, 0.2) 0%, rgba(59, 130, 246, 0.2) 100%);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 0 30px rgba(138, 43, 226, 0.5), 0 0 60px rgba(59, 130, 246, 0.25);
+  }
+  
+body.focus-mode .btn-fab-main:hover {
+  box-shadow: 0 0 40px rgba(138, 43, 226, 0.7), 0 0 80px rgba(59, 130, 246, 0.35);
+  }
 
 /* ============================================
    Responsive Adjustments
