@@ -79,6 +79,28 @@
           </label>
         </div>
 
+        <div class="flex items-center justify-between mb-md">
+          <div>
+            <div style="font-weight: 700; font-size: 0.875rem;">Auto-start Cooldown</div>
+            <div style="font-size: 0.75rem; color: var(--text-muted);">Begin break immediately after work</div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="auto-start-break">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+
+        <div class="flex items-center justify-between mb-md">
+          <div>
+            <div style="font-weight: 700; font-size: 0.875rem;">Auto-start Deep Work</div>
+            <div style="font-size: 0.75rem; color: var(--text-muted);">Begin focus session immediately after break</div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="auto-start-work">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+
         <div id="notification-permission-item" class="mt-lg p-md card" style="background: rgba(255,255,255,0.03); border-radius: 12px; display: none;">
           <div class="flex items-center justify-between gap-md">
             <p style="margin: 0; font-size: 0.75rem; font-weight: 600;" id="permission-status">System permissions required</p>
@@ -138,6 +160,8 @@
         longBreak: document.getElementById('long-break'),
         sessionsUntilLong: document.getElementById('sessions-until-long'),
         soundEnabled: document.getElementById('sound-enabled'),
+        autoStartBreak: document.getElementById('auto-start-break'),
+        autoStartWork: document.getElementById('auto-start-work'),
         requestPermissionBtn: document.getElementById('request-permission-btn'),
         permissionStatus: document.getElementById('permission-status'),
         subjectsList: document.getElementById('subjects-list'),
@@ -157,6 +181,8 @@
         elements.longBreak.value = settings.long_break || 15;
         elements.sessionsUntilLong.value = settings.sessions_until_long_break || 4;
         elements.soundEnabled.checked = settings.sound !== false;
+        elements.autoStartBreak.checked = settings.auto_start_break !== false;
+        elements.autoStartWork.checked = settings.auto_start_work !== false;
         updatePermissionStatus();
       }
 
@@ -180,6 +206,8 @@
         Storage.updateSetting('long_break', parseInt(elements.longBreak.value, 10) || 15);
         Storage.updateSetting('sessions_until_long_break', parseInt(elements.sessionsUntilLong.value, 10) || 4);
         Storage.updateSetting('sound', elements.soundEnabled.checked);
+        Storage.updateSetting('auto_start_break', elements.autoStartBreak.checked);
+        Storage.updateSetting('auto_start_work', elements.autoStartWork.checked);
       }
 
       function renderSubjects() {
@@ -237,7 +265,7 @@
       }
 
       function setupListeners() {
-        [elements.displayName, elements.userEmail, elements.workDuration, elements.shortBreak, elements.longBreak, elements.sessionsUntilLong, elements.soundEnabled].forEach(el => el.addEventListener('change', saveSettings));
+        [elements.displayName, elements.userEmail, elements.workDuration, elements.shortBreak, elements.longBreak, elements.sessionsUntilLong, elements.soundEnabled, elements.autoStartBreak, elements.autoStartWork].forEach(el => el.addEventListener('change', saveSettings));
         elements.requestPermissionBtn.onclick = () => Notification.requestPermission().then(updatePermissionStatus);
         elements.addSubjectBtn.onclick = () => openSubjectModal();
         elements.exportBtn.onclick = () => {

@@ -46,8 +46,8 @@ const Storage = (function() {
       notifications: true,
       task_notifications: true,
       sound: true,
-      auto_start_break: false,
-      auto_start_work: false,
+      auto_start_break: true,
+      auto_start_work: true,
       work_duration: 25,
       short_break: 5,
       long_break: 15,
@@ -635,12 +635,14 @@ const Storage = (function() {
       default: nextDuration = 25 * 60;
     }
 
+    const shouldAutoStart = nextType === 'work' ? settings.auto_start_work : settings.auto_start_break;
+
     const newState = {
       type: nextType,
-      state: 'idle',
+      state: shouldAutoStart ? 'running' : 'idle',
       timeRemaining: nextDuration,
       totalTime: nextDuration,
-      endTime: null,
+      endTime: shouldAutoStart ? Date.now() + (nextDuration * 1000) : null,
       sessionsCompleted: nextSessionsCompleted,
       selectedTaskId: selectedTaskId,
       selectedSubtaskId: selectedSubtaskId,
