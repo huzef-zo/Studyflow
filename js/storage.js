@@ -583,20 +583,15 @@ const Storage = (function() {
    */
   function completeTimerSession(timerState) {
     const settings = getSettings();
-    const { type, sessionsCompleted, selectedTaskId, selectedSubtaskId } = timerState;
+    const { type, sessionsInCycle, selectedTaskId, selectedSubtaskId } = timerState;
 
-    let nextSessionsCompleted = sessionsCompleted;
+    let nextSessionsInCycle = sessionsInCycle || 0;
 
     // Save session if it was a work session
     if (type === 'work') {
       addSession(settings.work_duration || 25, 'work', selectedTaskId);
 
-      // If sessionsCompleted is missing, fallback to actual today's count
-      if (nextSessionsCompleted === undefined || nextSessionsCompleted === null) {
-        nextSessionsCompleted = getTodaySessions().length;
-      } else {
-        nextSessionsCompleted++;
-      }
+      nextSessionsInCycle++;
 
       // Increment sub-task cycles if selected
       if (selectedTaskId && selectedSubtaskId) {
@@ -607,7 +602,6 @@ const Storage = (function() {
             const newCycles = (subtask.completedCycles || 0) + 1;
             updateSubtask(selectedTaskId, selectedSubtaskId, {
               completedCycles: newCycles,
-              // Auto-complete if cycles reached? Maybe not, let user decide
             });
           }
         }
@@ -617,13 +611,19 @@ const Storage = (function() {
     // Determine next session type
     let nextType;
     if (type === 'work') {
-      if (nextSessionsCompleted > 0 && nextSessionsCompleted % (settings.sessions_until_long_break || 4) === 0) {
+      // After work, always Cooldown (short_break)
+      nextType = 'short_break';
+    } else if (type === 'short_break') {
+      // After Cooldown, check if we should do Deep Rest (long_break) or return to Work
+      if (nextSessionsInCycle > 0 && nextSessionsInCycle % (settings.sessions_until_long_break || 4) === 0) {
         nextType = 'long_break';
       } else {
-        nextType = 'short_break';
+        nextType = 'work';
       }
     } else {
+      // After Deep Rest (long_break), always return to Work and reset counter
       nextType = 'work';
+      nextSessionsInCycle = 0;
     }
 
     // Get duration for next type
@@ -643,7 +643,7 @@ const Storage = (function() {
       timeRemaining: nextDuration,
       totalTime: nextDuration,
       endTime: shouldAutoStart ? Date.now() + (nextDuration * 1000) : null,
-      sessionsCompleted: nextSessionsCompleted,
+      sessionsInCycle: nextSessionsInCycle,
       selectedTaskId: selectedTaskId,
       selectedSubtaskId: selectedSubtaskId,
       lastCompletedType: type,

@@ -17,6 +17,7 @@ const Timer = (function() {
   let endTime = null;
   let selectedTaskId = null;
   let selectedSubtaskId = null;
+  let sessionsInCycle = 0;
   
   // Audio Context for sounds
   let audioCtx = null;
@@ -24,7 +25,7 @@ const Timer = (function() {
   /**
    * Play a sci-fi transition sound
    */
-  function playTransitionSound(toWork) {
+  function playTransitionSound(type) {
     const settings = Storage.getSettings();
     if (settings.sound === false) return;
 
@@ -37,16 +38,14 @@ const Timer = (function() {
         audioCtx.resume();
       }
 
-      const oscillator = audioCtx.createOscillator();
-      const gainNode = audioCtx.createGain();
-
-      oscillator.connect(gainNode);
-      gainNode.connect(audioCtx.destination);
-
       const now = audioCtx.currentTime;
 
-      if (toWork) {
-        // Mission Start sound (rising)
+      if (type === 'work') {
+        // Mission Start sound (rising sine)
+        const oscillator = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        oscillator.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
         oscillator.type = 'sine';
         oscillator.frequency.setValueAtTime(440, now);
         oscillator.frequency.exponentialRampToValueAtTime(880, now + 0.5);
@@ -55,8 +54,12 @@ const Timer = (function() {
         gainNode.gain.linearRampToValueAtTime(0, now + 0.5);
         oscillator.start(now);
         oscillator.stop(now + 0.5);
-      } else {
-        // Cooldown sound (falling)
+      } else if (type === 'short_break') {
+        // Cooldown sound (falling square)
+        const oscillator = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        oscillator.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
         oscillator.type = 'square';
         oscillator.frequency.setValueAtTime(660, now);
         oscillator.frequency.exponentialRampToValueAtTime(330, now + 0.5);
@@ -65,6 +68,22 @@ const Timer = (function() {
         gainNode.gain.linearRampToValueAtTime(0, now + 0.5);
         oscillator.start(now);
         oscillator.stop(now + 0.5);
+      } else if (type === 'long_break') {
+        // Deep Rest sound (complex drone)
+        [440, 220, 110].forEach((freq, i) => {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.type = i % 2 === 0 ? 'sine' : 'sawtooth';
+          osc.frequency.setValueAtTime(freq, now);
+          osc.frequency.exponentialRampToValueAtTime(freq / 2, now + 1.0);
+          gain.gain.setValueAtTime(0, now);
+          gain.gain.linearRampToValueAtTime(0.05, now + 0.2);
+          gain.gain.linearRampToValueAtTime(0, now + 1.0);
+          osc.start(now);
+          osc.stop(now + 1.0);
+        });
       }
     } catch (e) {
       console.error('Audio feedback failed:', e);
@@ -85,7 +104,6 @@ const Timer = (function() {
       timerProgress: document.getElementById('timer-progress'),
       startBtn: document.getElementById('start-btn'),
       resetBtn: document.getElementById('reset-btn'),
-      skipBtn: document.getElementById('skip-btn'),
       taskSelect: document.getElementById('timer-task'),
       subtaskSelect: document.getElementById('timer-subtask'),
       subtaskContainer: document.getElementById('subtask-select-container'),
@@ -116,7 +134,6 @@ const Timer = (function() {
   function setupEventListeners() {
     elements.startBtn?.addEventListener('click', toggleTimer);
     elements.resetBtn?.addEventListener('click', resetTimer);
-    elements.skipBtn?.addEventListener('click', skipSession);
     elements.taskSelect?.addEventListener('change', handleTaskChange);
     elements.subtaskSelect?.addEventListener('change', handleSubtaskChange);
   }
@@ -199,31 +216,39 @@ const Timer = (function() {
     
     Storage.addSession(sessionData.duration, sessionData.type, sessionData.taskId);
 
-    // If subtask was selected and this was a work session, increment its cycles
-    if (currentSessionType === 'work' && selectedTaskId && selectedSubtaskId) {
-      const task = Storage.getTaskById(selectedTaskId);
-      const subtask = task?.subtasks?.find(s => s.id === selectedSubtaskId);
-      if (subtask) {
-        Storage.updateSubtask(selectedTaskId, selectedSubtaskId, {
-          completedCycles: (subtask.completedCycles || 0) + 1
-        });
-        updateSubtaskTracker();
+    // If this was a work session, increment cycle counter
+    if (currentSessionType === 'work') {
+      sessionsInCycle++;
+
+      // If subtask was selected, increment its cycles
+      if (selectedTaskId && selectedSubtaskId) {
+        const task = Storage.getTaskById(selectedTaskId);
+        const subtask = task?.subtasks?.find(s => s.id === selectedSubtaskId);
+        if (subtask) {
+          Storage.updateSubtask(selectedTaskId, selectedSubtaskId, {
+            completedCycles: (subtask.completedCycles || 0) + 1
+          });
+          updateSubtaskTracker();
+        }
       }
+    } else if (currentSessionType === 'long_break') {
+      // Reset cycle counter after deep rest
+      sessionsInCycle = 0;
     }
     
     // Notify
     if (settings.notifications !== false && 'Notification' in window && Notification.permission === 'granted') {
-      const title = currentSessionType === 'work' ? 'Phase Accomplished!' : 'Cooldown Terminated!';
+      const title = currentSessionType === 'work' ? 'Phase Accomplished!' : 'Interval Terminated!';
       const body = currentSessionType === 'work' ? 'Commence cooldown protocol.' : 'Initiate next study phase.';
       new Notification(title, { body });
     }
     
     // Auto-switch to next session
     switchSessionType();
-    saveTimerState(); // Persist the new type immediately
+    saveTimerState(); // Persist the new state immediately
 
-    // Play sound
-    playTransitionSound(currentSessionType === 'work');
+    // Play sound for the NEW session type
+    playTransitionSound(currentSessionType);
 
     updateStats();
     updateDisplay();
@@ -238,29 +263,31 @@ const Timer = (function() {
 
   function resetTimer() {
     pauseTimer();
+    sessionsInCycle = 0;
+    currentSessionType = 'work';
     timeRemaining = getSessionDuration(currentSessionType) * 60;
     updateDisplay();
     saveTimerState();
   }
 
-  function skipSession() {
-    pauseTimer();
-    if (currentSessionType === 'work') {
-      Storage.addSession(0, 'work', selectedTaskId);
-    }
-    switchSessionType();
-    saveTimerState(); // Persist the new type immediately
-    updateDisplay();
-  }
-
   function switchSessionType() {
+    const settings = Storage.getSettings();
+
     if (currentSessionType === 'work') {
-      const stats = Storage.getStats();
-      const settings = Storage.getSettings();
-      currentSessionType = (stats.sessions.today > 0 && stats.sessions.today % settings.sessions_until_long_break === 0) ? 'long_break' : 'short_break';
+      // After work, always Cooldown (short_break)
+      currentSessionType = 'short_break';
+    } else if (currentSessionType === 'short_break') {
+      // After Cooldown, check if we should do Deep Rest (long_break) or return to Work
+      if (sessionsInCycle > 0 && sessionsInCycle % (settings.sessions_until_long_break || 4) === 0) {
+        currentSessionType = 'long_break';
+      } else {
+        currentSessionType = 'work';
+      }
     } else {
+      // After Deep Rest, always return to Work
       currentSessionType = 'work';
     }
+
     timeRemaining = getSessionDuration(currentSessionType) * 60;
   }
 
@@ -398,7 +425,8 @@ const Timer = (function() {
       state: isRunning ? 'running' : 'paused',
       timeRemaining: timeRemaining,
       selectedTaskId: selectedTaskId,
-      selectedSubtaskId: selectedSubtaskId
+      selectedSubtaskId: selectedSubtaskId,
+      sessionsInCycle: sessionsInCycle
     };
     localStorage.setItem('studyflow_timer', JSON.stringify(state));
   }
@@ -411,6 +439,7 @@ const Timer = (function() {
     currentSessionType = state.type || 'work';
     selectedTaskId = state.selectedTaskId;
     selectedSubtaskId = state.selectedSubtaskId;
+    sessionsInCycle = state.sessionsInCycle || 0;
 
     if (elements.taskSelect) {
       elements.taskSelect.value = selectedTaskId || '';
