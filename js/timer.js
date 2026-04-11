@@ -18,6 +18,59 @@ const Timer = (function() {
   let selectedTaskId = null;
   let selectedSubtaskId = null;
   
+  // Audio Context for sounds
+  let audioCtx = null;
+
+  /**
+   * Play a sci-fi transition sound
+   */
+  function playTransitionSound(toWork) {
+    const settings = Storage.getSettings();
+    if (settings.sound === false) return;
+
+    try {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+
+      const oscillator = audioCtx.createOscillator();
+      const gainNode = audioCtx.createGain();
+
+      oscillator.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+
+      const now = audioCtx.currentTime;
+
+      if (toWork) {
+        // Mission Start sound (rising)
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(440, now);
+        oscillator.frequency.exponentialRampToValueAtTime(880, now + 0.5);
+        gainNode.gain.setValueAtTime(0, now);
+        gainNode.gain.linearRampToValueAtTime(0.2, now + 0.1);
+        gainNode.gain.linearRampToValueAtTime(0, now + 0.5);
+        oscillator.start(now);
+        oscillator.stop(now + 0.5);
+      } else {
+        // Cooldown sound (falling)
+        oscillator.type = 'square';
+        oscillator.frequency.setValueAtTime(660, now);
+        oscillator.frequency.exponentialRampToValueAtTime(330, now + 0.5);
+        gainNode.gain.setValueAtTime(0, now);
+        gainNode.gain.linearRampToValueAtTime(0.1, now + 0.1);
+        gainNode.gain.linearRampToValueAtTime(0, now + 0.5);
+        oscillator.start(now);
+        oscillator.stop(now + 0.5);
+      }
+    } catch (e) {
+      console.error('Audio feedback failed:', e);
+    }
+  }
+
   // DOM Elements
   let elements = {};
 
@@ -167,8 +220,20 @@ const Timer = (function() {
     
     // Auto-switch to next session
     switchSessionType();
+    saveTimerState(); // Persist the new type immediately
+
+    // Play sound
+    playTransitionSound(currentSessionType === 'work');
+
     updateStats();
     updateDisplay();
+
+    // Auto-start if enabled
+    if (currentSessionType === 'work') {
+      if (settings.auto_start_work) startTimer();
+    } else {
+      if (settings.auto_start_break) startTimer();
+    }
   }
 
   function resetTimer() {
@@ -184,8 +249,8 @@ const Timer = (function() {
       Storage.addSession(0, 'work', selectedTaskId);
     }
     switchSessionType();
+    saveTimerState(); // Persist the new type immediately
     updateDisplay();
-    saveTimerState();
   }
 
   function switchSessionType() {
