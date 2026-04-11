@@ -17,6 +17,7 @@ const Timer = (function() {
   let endTime = null;
   let selectedTaskId = null;
   let selectedSubtaskId = null;
+  let sessionsInCycle = 0;
   
   // Audio Context for sounds
   let audioCtx = null;
@@ -24,7 +25,7 @@ const Timer = (function() {
   /**
    * Play a sci-fi transition sound
    */
-  function playTransitionSound(toWork) {
+  function playTransitionSound(type) {
     const settings = Storage.getSettings();
     if (settings.sound === false) return;
 
@@ -45,8 +46,8 @@ const Timer = (function() {
 
       const now = audioCtx.currentTime;
 
-      if (toWork) {
-        // Mission Start sound (rising)
+      if (type === 'work') {
+        // Mission Start sound (rising sine)
         oscillator.type = 'sine';
         oscillator.frequency.setValueAtTime(440, now);
         oscillator.frequency.exponentialRampToValueAtTime(880, now + 0.5);
@@ -55,8 +56,8 @@ const Timer = (function() {
         gainNode.gain.linearRampToValueAtTime(0, now + 0.5);
         oscillator.start(now);
         oscillator.stop(now + 0.5);
-      } else {
-        // Cooldown sound (falling)
+      } else if (type === 'short_break') {
+        // Cooldown sound (falling square)
         oscillator.type = 'square';
         oscillator.frequency.setValueAtTime(660, now);
         oscillator.frequency.exponentialRampToValueAtTime(330, now + 0.5);
@@ -65,6 +66,33 @@ const Timer = (function() {
         gainNode.gain.linearRampToValueAtTime(0, now + 0.5);
         oscillator.start(now);
         oscillator.stop(now + 0.5);
+      } else if (type === 'long_break') {
+        // Deep Rest sound (complex drone)
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(220, now);
+        oscillator.frequency.linearRampToValueAtTime(110, now + 1.5);
+
+        // Add a second oscillator for a richer drone
+        const osc2 = audioCtx.createOscillator();
+        const gain2 = audioCtx.createGain();
+        osc2.type = 'sawtooth';
+        osc2.frequency.setValueAtTime(110, now);
+        osc2.frequency.linearRampToValueAtTime(55, now + 1.5);
+        osc2.connect(gain2);
+        gain2.connect(audioCtx.destination);
+
+        gainNode.gain.setValueAtTime(0, now);
+        gainNode.gain.linearRampToValueAtTime(0.15, now + 0.5);
+        gainNode.gain.linearRampToValueAtTime(0, now + 1.5);
+
+        gain2.gain.setValueAtTime(0, now);
+        gain2.gain.linearRampToValueAtTime(0.05, now + 0.5);
+        gain2.gain.linearRampToValueAtTime(0, now + 1.5);
+
+        oscillator.start(now);
+        oscillator.stop(now + 1.5);
+        osc2.start(now);
+        osc2.stop(now + 1.5);
       }
     } catch (e) {
       console.error('Audio feedback failed:', e);
@@ -85,7 +113,6 @@ const Timer = (function() {
       timerProgress: document.getElementById('timer-progress'),
       startBtn: document.getElementById('start-btn'),
       resetBtn: document.getElementById('reset-btn'),
-      skipBtn: document.getElementById('skip-btn'),
       taskSelect: document.getElementById('timer-task'),
       subtaskSelect: document.getElementById('timer-subtask'),
       subtaskContainer: document.getElementById('subtask-select-container'),
@@ -116,7 +143,6 @@ const Timer = (function() {
   function setupEventListeners() {
     elements.startBtn?.addEventListener('click', toggleTimer);
     elements.resetBtn?.addEventListener('click', resetTimer);
-    elements.skipBtn?.addEventListener('click', skipSession);
     elements.taskSelect?.addEventListener('change', handleTaskChange);
     elements.subtaskSelect?.addEventListener('change', handleSubtaskChange);
   }
@@ -139,6 +165,7 @@ const Timer = (function() {
     
     // UI Update
     elements.playPauseIcon.innerHTML = `<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>`;
+    elements.playPauseIcon.style.transform = 'none';
     document.body.classList.add('focus-mode');
     elements.timerContainer.classList.add('active');
     
@@ -161,7 +188,8 @@ const Timer = (function() {
     clearInterval(timerInterval);
     
     // UI Update
-    elements.playPauseIcon.innerHTML = `<polygon points="5 3 19 12 5 21 5 3"/>`;
+    elements.playPauseIcon.innerHTML = `<polygon points="6 3 20 12 6 21 6 3"/>`;
+    elements.playPauseIcon.style.transform = 'translateX(2px)';
     document.body.classList.remove('focus-mode');
     elements.timerContainer.classList.remove('active');
     
@@ -199,16 +227,24 @@ const Timer = (function() {
     
     Storage.addSession(sessionData.duration, sessionData.type, sessionData.taskId);
 
-    // If subtask was selected and this was a work session, increment its cycles
-    if (currentSessionType === 'work' && selectedTaskId && selectedSubtaskId) {
-      const task = Storage.getTaskById(selectedTaskId);
-      const subtask = task?.subtasks?.find(s => s.id === selectedSubtaskId);
-      if (subtask) {
-        Storage.updateSubtask(selectedTaskId, selectedSubtaskId, {
-          completedCycles: (subtask.completedCycles || 0) + 1
-        });
-        updateSubtaskTracker();
+    // If work session completed, increment cycle count
+    if (currentSessionType === 'work') {
+      sessionsInCycle++;
+
+      // If subtask was selected, increment its cycles
+      if (selectedTaskId && selectedSubtaskId) {
+        const task = Storage.getTaskById(selectedTaskId);
+        const subtask = task?.subtasks?.find(s => s.id === selectedSubtaskId);
+        if (subtask) {
+          Storage.updateSubtask(selectedTaskId, selectedSubtaskId, {
+            completedCycles: (subtask.completedCycles || 0) + 1
+          });
+          updateSubtaskTracker();
+        }
       }
+    } else if (currentSessionType === 'long_break') {
+      // Reset cycle after long break
+      sessionsInCycle = 0;
     }
     
     // Notify
@@ -222,8 +258,8 @@ const Timer = (function() {
     switchSessionType();
     saveTimerState(); // Persist the new type immediately
 
-    // Play sound
-    playTransitionSound(currentSessionType === 'work');
+    // Play sound for the new session type
+    playTransitionSound(currentSessionType);
 
     updateStats();
     updateDisplay();
@@ -238,6 +274,8 @@ const Timer = (function() {
 
   function resetTimer() {
     pauseTimer();
+    currentSessionType = 'work';
+    sessionsInCycle = 0;
     timeRemaining = getSessionDuration(currentSessionType) * 60;
     updateDisplay();
     saveTimerState();
@@ -247,6 +285,9 @@ const Timer = (function() {
     pauseTimer();
     if (currentSessionType === 'work') {
       Storage.addSession(0, 'work', selectedTaskId);
+      sessionsInCycle++;
+    } else if (currentSessionType === 'long_break') {
+      sessionsInCycle = 0;
     }
     switchSessionType();
     saveTimerState(); // Persist the new type immediately
@@ -255,9 +296,8 @@ const Timer = (function() {
 
   function switchSessionType() {
     if (currentSessionType === 'work') {
-      const stats = Storage.getStats();
       const settings = Storage.getSettings();
-      currentSessionType = (stats.sessions.today > 0 && stats.sessions.today % settings.sessions_until_long_break === 0) ? 'long_break' : 'short_break';
+      currentSessionType = (sessionsInCycle > 0 && sessionsInCycle % settings.sessions_until_long_break === 0) ? 'long_break' : 'short_break';
     } else {
       currentSessionType = 'work';
     }
@@ -398,7 +438,8 @@ const Timer = (function() {
       state: isRunning ? 'running' : 'paused',
       timeRemaining: timeRemaining,
       selectedTaskId: selectedTaskId,
-      selectedSubtaskId: selectedSubtaskId
+      selectedSubtaskId: selectedSubtaskId,
+      sessionsInCycle: sessionsInCycle
     };
     localStorage.setItem('studyflow_timer', JSON.stringify(state));
   }
@@ -411,6 +452,7 @@ const Timer = (function() {
     currentSessionType = state.type || 'work';
     selectedTaskId = state.selectedTaskId;
     selectedSubtaskId = state.selectedSubtaskId;
+    sessionsInCycle = state.sessionsInCycle || 0;
 
     if (elements.taskSelect) {
       elements.taskSelect.value = selectedTaskId || '';
