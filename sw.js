@@ -14,6 +14,8 @@ const ASSETS_TO_CACHE = [
   './css/style.css',
   './js/app.js',
   './js/storage.js',
+  './js/pwa-manager.js',
+  './js/pwa-config.js',
   './js/calendar.js',
   './js/goals.js',
   './js/history.js',
