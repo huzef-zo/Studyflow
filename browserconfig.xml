@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<browserconfig>
+  <msapplication>
+    <tile>
+      <square150x150logo src="https://huzef-zo.github.io/Studyflow/icon-192.png"/>
+      <TileColor>#0B0F19</TileColor>
+    </tile>
+    <notification>
+      <polling-uri src="https://huzef-zo.github.io/Studyflow/notification.xml"/>
+      <polling-uri2 src="https://huzef-zo.github.io/Studyflow/notification.xml"/>
+      <polling-uri3 src="https://huzef-zo.github.io/Studyflow/notification.xml"/>
+      <polling-uri4 src="https://huzef-zo.github.io/Studyflow/notification.xml"/>
+      <polling-uri5 src="https://huzef-zo.github.io/Studyflow/notification.xml"/>
+      <frequency>30</frequency>
+      <cycle>1</cycle>
+    </notification>
+  </msapplication>
+</browserconfig>

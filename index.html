@@ -2,19 +2,35 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="StudyFlow - Your personal study organizer">
-  <meta name="theme-color" content="#0B0F19">
-  <title>Dashboard - StudyFlow</title>
-  <link rel="stylesheet" href="css/style.css">
-
-
-  <link rel="manifest" href="manifest.json">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
+  <meta name="description" content="StudyFlow - Your personal study organizer and productivity hub">
+  <meta name="theme-color" content="#0B0F19" media="(prefers-color-scheme: dark)">
+  <meta name="color-scheme" content="dark">
+  <meta name="supported-color-schemes" content="dark">
+  
+  <!-- Standalone PWA Configuration -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="StudyFlow">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-status-bar" content="black-translucent">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  
+  <!-- Display Customization for Supported Browsers -->
+  <meta name="apple-touch-fullscreen" content="yes">
+  <meta name="web-app-capable" content="yes">
+  
+  <!-- Icons -->
+  <link rel="icon" type="image/svg+xml" href="https://huzef-zo.github.io/Studyflow/icon-192.png">
   <link rel="apple-touch-icon" href="https://huzef-zo.github.io/Studyflow/icon-192.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="https://huzef-zo.github.io/Studyflow/icon-192.png">
+  <link rel="shortcut icon" type="image/png" href="https://huzef-zo.github.io/Studyflow/icon-192.png">
+  
+  <!-- Manifest -->
+  <link rel="manifest" href="manifest.json">
+  
+  <title>Dashboard - StudyFlow</title>
+  <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
   <!-- Global SVG Gradients -->
@@ -140,7 +156,114 @@
   <script src="js/storage.js"></script>
   <script src="js/app.js"></script>
   <script>
-    // Dashboard specific code
+    // ============================================
+    // SERVICE WORKER REGISTRATION & PWA MANAGEMENT
+    // ============================================
+    (function() {
+      'use strict';
+      
+      // Register service worker for offline functionality
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('sw.js', { scope: '/' })
+            .then((registration) => {
+              console.log('[PWA] Service Worker registered:', registration);
+              
+              // Check for updates periodically
+              setInterval(() => {
+                registration.update();
+              }, 60000); // Check every 60 seconds
+              
+              // Listen for controller change (new SW activated)
+              navigator.serviceWorker.addEventListener('controllerchange', () => {
+                console.log('[PWA] Service Worker controller changed - new version available');
+                showUpdateNotification();
+              });
+            })
+            .catch((error) => {
+              console.error('[PWA] Service Worker registration failed:', error);
+            });
+        });
+      }
+      
+      // Handle install prompt
+      let deferredPrompt;
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        console.log('[PWA] Install prompt deferred');
+        // You could show an install button here
+      });
+      
+      // Detect standalone mode
+      const isStandalone = () => {
+        return window.navigator.standalone === true || 
+               window.matchMedia('(display-mode: standalone)').matches ||
+               window.matchMedia('(display-mode: fullscreen)').matches ||
+               window.matchMedia('(display-mode: minimal-ui)').matches;
+      };
+      
+      // Update UI based on standalone status
+      if (isStandalone()) {
+        document.documentElement.setAttribute('data-standalone', 'true');
+        console.log('[PWA] Running in standalone mode');
+      }
+      
+      // Handle visibility changes to optimize battery
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+          console.log('[PWA] App hidden - pausing animations');
+        } else {
+          console.log('[PWA] App visible - resuming animations');
+        }
+      });
+      
+      // Show update notification
+      function showUpdateNotification() {
+        // You can customize this based on your UI
+        console.log('[PWA] New version available - consider showing update prompt');
+      }
+      
+      // Expose PWA utilities to window
+      window.PWA = {
+        isStandalone,
+        requestInstall: () => {
+          if (deferredPrompt) {
+            deferredPrompt.prompt();
+            deferredPrompt.userChoice.then((choiceResult) => {
+              if (choiceResult.outcome === 'accepted') {
+                console.log('[PWA] User accepted install prompt');
+              } else {
+                console.log('[PWA] User dismissed install prompt');
+              }
+              deferredPrompt = null;
+            });
+          }
+        },
+        requestSync: () => {
+          if ('serviceWorker' in navigator && 'SyncManager' in window) {
+            navigator.serviceWorker.ready.then((registration) => {
+              return registration.sync.register('sync-tasks');
+            }).then(() => {
+              console.log('[PWA] Background sync registered');
+            }).catch((error) => {
+              console.error('[PWA] Background sync registration failed:', error);
+            });
+          }
+        },
+        requestNotificationPermission: () => {
+          if ('Notification' in window) {
+            Notification.requestPermission().then((permission) => {
+              console.log('[PWA] Notification permission:', permission);
+            });
+          }
+        }
+      };
+    })();
+    
+    // ============================================
+    // DASHBOARD SPECIFIC CODE
+    // ============================================
     (function() {
       'use strict';
 
