@@ -694,24 +694,11 @@ const App = (function() {
       // the timer page will see the new 'idle' state when the user navigates back.
     }
   }
-
-  /**
-   * Register Service Worker for PWA
-   */
-  function registerServiceWorker() {
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js')
-          .then(reg => console.log('Service Worker registered', reg))
-          .catch(err => console.error('Service Worker registration failed', err));
-      });
-    }
-  }
+   
 
   function init() {
     initNavigation();
     initToastContainer();
-    registerServiceWorker();
     
     // Add keyboard shortcut for closing modals
     document.addEventListener('keydown', (e) => {
