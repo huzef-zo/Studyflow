@@ -3,8 +3,8 @@
   "name": "StudyFlow Dashboard",
   "short_name": "StudyFlow",
   "description": "Your personal space-themed study organizer and productivity hub.",
-  "start_url": "/",
-  "scope": "/",
+  "start_url": "./",
+  "scope": "./",
   "display": "standalone",
   "display_override": ["window-controls-overlay", "standalone", "minimal-ui", "browser"],
   "orientation": "portrait-primary",
@@ -22,25 +22,25 @@
   ],
   "icons": [
     {
-      "src": "https://huzef-zo.github.io/Studyflow/icon-192.png",
+      "src": "./icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "https://huzef-zo.github.io/Studyflow/icon-192.png",
+      "src": "./icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "maskable"
     },
     {
-      "src": "https://huzef-zo.github.io/Studyflow/icon-512.png",
+      "src": "./icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "https://huzef-zo.github.io/Studyflow/icon-512.png",
+      "src": "./icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
@@ -51,34 +51,34 @@
       "name": "Tasks",
       "short_name": "Tasks",
       "description": "View and manage your study objectives",
-      "url": "/tasks?source=shortcut",
-      "icons": [{ "src": "https://huzef-zo.github.io/Studyflow/icon-192.png", "sizes": "192x192", "purpose": "maskable" }]
+      "url": "./tasks?source=shortcut",
+      "icons": [{ "src": "./icon-192.png", "sizes": "192x192", "purpose": "maskable" }]
     },
     {
       "name": "Timer",
       "short_name": "Timer",
       "description": "Start a focus session with Pomodoro timer",
-      "url": "/timer?source=shortcut",
-      "icons": [{ "src": "https://huzef-zo.github.io/Studyflow/icon-192.png", "sizes": "192x192", "purpose": "maskable" }]
+      "url": "./timer?source=shortcut",
+      "icons": [{ "src": "./icon-192.png", "sizes": "192x192", "purpose": "maskable" }]
     },
     {
       "name": "Goals",
       "short_name": "Goals",
       "description": "View and update your weekly goals",
-      "url": "/goals?source=shortcut",
-      "icons": [{ "src": "https://huzef-zo.github.io/Studyflow/icon-192.png", "sizes": "192x192", "purpose": "maskable" }]
+      "url": "./goals?source=shortcut",
+      "icons": [{ "src": "./icon-192.png", "sizes": "192x192", "purpose": "maskable" }]
     }
   ],
   "screenshots": [
     {
-      "src": "https://huzef-zo.github.io/Studyflow/icon-512.png",
+      "src": "./icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "form_factor": "wide",
       "label": "StudyFlow Desktop Dashboard"
     },
     {
-      "src": "https://huzef-zo.github.io/Studyflow/icon-512.png",
+      "src": "./icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "form_factor": "narrow",
@@ -96,4 +96,4 @@
       "url": "url"
     }
   }
-}
+      }
