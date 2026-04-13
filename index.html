@@ -47,8 +47,7 @@
 
   <!-- Main Content -->
   <main class="main-container">
-    <!-- Page Header -->
-    <header class="page-header animate-fade-in">
+    <!-- Page Header -->    <header class="page-header animate-fade-in">
       <h1 class="glowing-text" id="greeting">Good morning!</h1>
       <p class="subtitle" id="date-display"></p>
     </header>
@@ -97,8 +96,7 @@
           </h2>
           <a href="settings.html" class="btn btn-secondary btn-sm" style="padding: 6px 12px; font-size: 11px;">Manage Subjects</a>
         </div>
-        <div id="mastery-overview" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
-          <!-- Populated by JS -->
+        <div id="mastery-overview" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">          <!-- Populated by JS -->
         </div>
       </section>
 
@@ -147,8 +145,7 @@
         </div>
       </section>
 
-    </div>
-  </main>
+    </div>  </main>
 
   <!-- Scripts -->
   <script src="js/storage.js"></script>
@@ -164,7 +161,7 @@
       // Register service worker for offline functionality
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('sw.js', { scope: '/' })
+          navigator.serviceWorker.register('./sw.js')
             .then((registration) => {
               console.log('[PWA] Service Worker registered:', registration);
               
@@ -197,8 +194,7 @@
       // Detect standalone mode
       const isStandalone = () => {
         return window.navigator.standalone === true || 
-               window.matchMedia('(display-mode: standalone)').matches ||
-               window.matchMedia('(display-mode: fullscreen)').matches ||
+               window.matchMedia('(display-mode: standalone)').matches ||               window.matchMedia('(display-mode: fullscreen)').matches ||
                window.matchMedia('(display-mode: minimal-ui)').matches;
       };
       
@@ -247,8 +243,7 @@
               console.log('[PWA] Background sync registered');
             }).catch((error) => {
               console.error('[PWA] Background sync registration failed:', error);
-            });
-          }
+            });          }
         },
         requestNotificationPermission: () => {
           if ('Notification' in window) {
@@ -297,8 +292,7 @@
         
         const currentHours = Math.round(goals.current_hours * 10) / 10;
         document.getElementById('hours-progress').innerHTML = createGlowingProgressBar(currentHours, goals.weekly_hours, 'Focus Hours', '#8B5CF6');
-        
-        const hoursPercentage = goals.weekly_hours > 0 ? (goals.current_hours / goals.weekly_hours * 100) : 0;
+                const hoursPercentage = goals.weekly_hours > 0 ? (goals.current_hours / goals.weekly_hours * 100) : 0;
         const avgPercentage = Math.round((tasksPercentage + hoursPercentage) / 2);
         document.getElementById('progress-percentage').textContent = `${Math.min(100, avgPercentage)}%`;
       }
@@ -347,8 +341,7 @@
           return;
         }
         deadlinesEl.innerHTML = upcomingTasks.slice(0, 5).map(task => `
-          <div class="timeline-item">
-            <div class="timeline-dot" style="background: ${App.getSubjectColor(task.subject)}"></div>
+          <div class="timeline-item">            <div class="timeline-dot" style="background: ${App.getSubjectColor(task.subject)}"></div>
             <div style="font-size: 11px; font-weight: 800; color: var(--primary); text-transform: uppercase;">${Storage.formatDisplayDate(task.dueDate)}</div>
             <div style="font-size: 14px; font-weight: 600; color: white;">${App.escapeHtml(task.title)}</div>
             <div style="font-size: 11px; color: var(--text-muted);">${App.escapeHtml(task.subject)}</div>
@@ -368,55 +361,40 @@
     })();
   </script>
   <!-- TEMPORARY PWA DEBUG BOX -->
-<div id="pwa-debug" style="position:fixed;bottom:0;left:0;right:0;background:#000;color:#0f0;padding:12px;font:12px monospace;z-index:9999;max-height:40vh;overflow-y:auto;border-top:2px solid #3B82F6;"></div>
-<script>
-(async () => {
-  const d = document.getElementById('pwa-debug');
-  const log = (m) => d.innerHTML += m + '<br>';
-  log('🔍 Starting PWA check...');
-
-  // 1. Manifest
-  try {
-    const res = await fetch('manifest.json');
-    const j = await res.json();
-    log(`✅ Manifest loaded: ${j.name || '❌ No name'}`);
-    log(`📍 start_url: "${j.start_url}"`);
-    log(`🔍 scope: "${j.scope}"`);
-  } catch(e) { log(`❌ Manifest failed: ${e.message}`); }
-
-  // 2. Service Worker
-  if ('serviceWorker' in navigator) {
-    const regs = await navigator.serviceWorker.getRegistrations();
-    log(`🔌 SWs registered: ${regs.length}`);
-    regs.forEach((r, i) => {
-      log(`   [${i}] Scope: ${r.scope} | State: ${r.active?.state || 'inactive'}`);
-    });
-  } else {
-    log('❌ SW not supported in this browser');
-  }
-
-  // 3. start_url check
-  try {
-    const check = await fetch(window.location.href, {method:'HEAD'});
-    log(`🌐 start_url returns: ${check.status} ${check.statusText}`);
-  } catch(e) { log(`❌ start_url fetch failed: ${e.message}`); }
-
-  log('✅ Done. Screenshot this & share it.');
-})();
-      </script>
+  <div id="pwa-debug" style="position:fixed;bottom:0;left:0;right:0;background:#000;color:#0f0;padding:12px;font:12px monospace;z-index:9999;max-height:40vh;overflow-y:auto;border-top:2px solid #3B82F6;"></div>
   <script>
-// Force service worker registration and activation
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('./sw.js')
-    .then(reg => {
-      console.log('✅ SW registered:', reg.scope);
-      // Force immediate activation
-      if (reg.active) {
-        reg.active.postMessage({ type: 'SKIP_WAITING' });
-      }
-    })
-    .catch(err => console.error('❌ SW failed:', err));
-}
+  (async () => {
+    const d = document.getElementById('pwa-debug');
+    const log = (m) => d.innerHTML += m + '<br>';
+    log('🔍 Starting PWA check...');
+
+    // 1. Manifest
+    try {
+      const res = await fetch('manifest.json');
+      const j = await res.json();
+      log(`✅ Manifest loaded: ${j.name || '❌ No name'}`);
+      log(`📍 start_url: "${j.start_url}"`);
+      log(`🔍 scope: "${j.scope}"`);
+    } catch(e) { log(`❌ Manifest failed: ${e.message}`); }
+
+    // 2. Service Worker
+    if ('serviceWorker' in navigator) {
+      const regs = await navigator.serviceWorker.getRegistrations();
+      log(`🔌 SWs registered: ${regs.length}`);
+      regs.forEach((r, i) => {
+        log(`   [${i}] Scope: ${r.scope} | State: ${r.active?.state || 'inactive'}`);
+      });
+    } else {
+      log('❌ SW not supported in this browser');
+    }
+
+    // 3. start_url check
+    try {
+      const check = await fetch(window.location.href, {method:'HEAD'});      log(`🌐 start_url returns: ${check.status} ${check.statusText}`);
+    } catch(e) { log(`❌ start_url fetch failed: ${e.message}`); }
+
+    log('✅ Done. Screenshot this & share it.');
+  })();
   </script>
 </body>
-</html>
+  </html>
