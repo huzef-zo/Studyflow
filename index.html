@@ -419,5 +419,25 @@ if ('serviceWorker' in navigator) {
   });
 }
 </script>
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js')
+    .then(reg => {
+      console.log('✅ SW registered:', reg.scope);
+      document.getElementById('pwa-debug').innerHTML += '<br>✅ SW registered: ' + reg.scope;
+    })
+    .catch(err => {
+      console.error('❌ SW registration failed:', err);
+      document.getElementById('pwa-debug').innerHTML += '<br>❌ SW failed: ' + err.message;
+    });
+  
+  // Also check for existing registrations after a delay
+  setTimeout(async () => {
+    const regs = await navigator.serviceWorker.getRegistrations();
+    console.log('Current SWs:', regs.length);
+    document.getElementById('pwa-debug').innerHTML += '<br>🔌 Current SWs: ' + regs.length;
+  }, 2000);
+}
+</script>
 </body>
 </html>
