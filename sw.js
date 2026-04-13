@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v2';
+const CACHE_VERSION = 'v3-FINAL';
 const CACHE_NAME = `studyflow-${CACHE_VERSION}`;
 const OFFLINE_CACHE = `studyflow-offline-${CACHE_VERSION}`;
 
