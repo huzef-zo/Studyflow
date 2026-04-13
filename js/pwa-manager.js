@@ -26,47 +26,6 @@ const PWAManager = (() => {
   };
   
   // ============================================
-  // SERVICE WORKER INITIALIZATION
-  // ============================================
-  const registerServiceWorker = async () => {
-    if (!('serviceWorker' in navigator)) {
-      log('Service Worker not supported');
-      return null;
-    }
-    
-    try {
-      const registration = await navigator.serviceWorker.register(config.swPath, {
-        scope: config.scope
-      });
-      
-      log('Service Worker registered successfully', registration);
-      
-      // Setup update checking
-      setupUpdateChecking(registration);
-      
-      // Listen for controller changes
-      navigator.serviceWorker.addEventListener('controllerchange', () => {
-        log('Service Worker controller changed - new version activated');
-        emitEvent('sw-updated');
-      });
-      
-      // Listen for messages from Service Worker
-      navigator.serviceWorker.addEventListener('message', (event) => {
-        log('Message from Service Worker', event.data);
-        
-        if (event.data.type === 'BACKGROUND_SYNC') {
-          emitEvent('background-sync', event.data.data);
-        }
-      });
-      
-      return registration;
-    } catch (error) {
-      log('Service Worker registration failed', error);
-      return null;
-    }
-  };
-  
-  // ============================================
   // UPDATE CHECKING
   // ============================================
   const setupUpdateChecking = (registration) => {
@@ -338,13 +297,13 @@ const PWAManager = (() => {
     setupStandaloneDetection();
     setupVisibilityHandling();
     
-    // Register service worker
-    const swRegistration = await registerServiceWorker();
+    // NOTE: The call to registerServiceWorker has been removed
     
     log('PWA Manager initialized successfully');
     emitEvent('ready');
     
-    return swRegistration;
+    // Return undefined since no service worker registration is done
+    return undefined;
   };
   
   // ============================================
@@ -352,7 +311,6 @@ const PWAManager = (() => {
   // ============================================
   return {
     init,
-    registerServiceWorker,
     setupUpdateChecking,
     setupInstallPrompt,
     setupOfflineDetection,
