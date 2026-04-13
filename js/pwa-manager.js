@@ -14,7 +14,7 @@ const PWAManager = (() => {
   let config = {
     name: 'StudyFlow',
     swPath: 'sw.js',
-    scope: '/',
+    scope: '/Studyflow/',
     updateCheckInterval: 60000, // 60 seconds
     debug: true
   };
@@ -143,8 +143,8 @@ const PWAManager = (() => {
     if ('serviceWorker' in navigator && Notification.permission === 'granted') {
       navigator.serviceWorker.ready.then((registration) => {
         registration.showNotification(title, {
-          icon: 'https://huzef-zo.github.io/Studyflow/icon-192.png',
-          badge: 'https://huzef-zo.github.io/Studyflow/icon-192.png',
+          icon: '/Studyflow/icon-192.png',
+          badge: '/Studyflow/icon-192.png',
           ...options
         });
       });

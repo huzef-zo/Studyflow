@@ -3,8 +3,8 @@
   "name": "StudyFlow Dashboard",
   "short_name": "StudyFlow",
   "description": "Your personal space-themed study organizer and productivity hub.",
-  "start_url": "./",
-  "scope": "./",
+  "start_url": "/Studyflow/",
+  "scope": "/Studyflow/",
   "display": "standalone",
   "display_override": ["window-controls-overlay", "standalone", "minimal-ui", "browser"],
   "orientation": "portrait-primary",
@@ -22,25 +22,25 @@
   ],
   "icons": [
     {
-      "src": "./icon-192.png",
+      "src": "/Studyflow/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "./icon-192.png",
+      "src": "/Studyflow/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "maskable"
     },
     {
-      "src": "./icon-512.png",
+      "src": "/Studyflow/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "./icon-512.png",
+      "src": "/Studyflow/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
@@ -51,34 +51,34 @@
       "name": "Tasks",
       "short_name": "Tasks",
       "description": "View and manage your study objectives",
-      "url": "./tasks?source=shortcut",
-      "icons": [{ "src": "./icon-192.png", "sizes": "192x192", "purpose": "maskable" }]
+      "url": "/Studyflow/tasks?source=shortcut",
+      "icons": [{ "src": "/Studyflow/icon-192.png", "sizes": "192x192", "purpose": "maskable" }]
     },
     {
       "name": "Timer",
       "short_name": "Timer",
       "description": "Start a focus session with Pomodoro timer",
-      "url": "./timer?source=shortcut",
-      "icons": [{ "src": "./icon-192.png", "sizes": "192x192", "purpose": "maskable" }]
+      "url": "/Studyflow/timer?source=shortcut",
+      "icons": [{ "src": "/Studyflow/icon-192.png", "sizes": "192x192", "purpose": "maskable" }]
     },
     {
       "name": "Goals",
       "short_name": "Goals",
       "description": "View and update your weekly goals",
-      "url": "./goals?source=shortcut",
-      "icons": [{ "src": "./icon-192.png", "sizes": "192x192", "purpose": "maskable" }]
+      "url": "/Studyflow/goals?source=shortcut",
+      "icons": [{ "src": "/Studyflow/icon-192.png", "sizes": "192x192", "purpose": "maskable" }]
     }
   ],
   "screenshots": [
     {
-      "src": "./icon-512.png",
+      "src": "/Studyflow/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "form_factor": "wide",
       "label": "StudyFlow Desktop Dashboard"
     },
     {
-      "src": "./icon-512.png",
+      "src": "/Studyflow/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "form_factor": "narrow",
