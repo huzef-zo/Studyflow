@@ -15,7 +15,7 @@ const PWAConfig = {
   // Service Worker
   serviceWorker: {
     path: 'sw.js',
-    scope: '/Studyflow/',
+    scope: './',
     updateCheckInterval: 60000, // 60 seconds
     cacheVersioning: true
   },

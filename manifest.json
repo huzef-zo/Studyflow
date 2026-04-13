@@ -3,44 +3,33 @@
   "name": "StudyFlow Dashboard",
   "short_name": "StudyFlow",
   "description": "Your personal space-themed study organizer and productivity hub.",
-  "start_url": "/Studyflow/",
-  "scope": "/Studyflow/",
+  "start_url": "./",
+  "scope": "./",
   "display": "standalone",
-  "display_override": ["window-controls-overlay", "standalone", "minimal-ui", "browser"],
   "orientation": "portrait-primary",
-  "launch_handler": {
-    "client_mode": ["navigate-new", "auto"]
-  },
   "background_color": "#000000",
   "theme_color": "#3B82F6",
-  "handle_links": "preferred",
-  "protocol_handlers": [
-    {
-      "protocol": "web+studyflow",
-      "url": "/?protocol=%s"
-    }
-  ],
   "icons": [
     {
-      "src": "/Studyflow/icon-192.png",
+      "src": "./icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/Studyflow/icon-192.png",
+      "src": "./icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "maskable"
     },
     {
-      "src": "/Studyflow/icon-512.png",
+      "src": "./icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/Studyflow/icon-512.png",
+      "src": "./icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
@@ -51,49 +40,39 @@
       "name": "Tasks",
       "short_name": "Tasks",
       "description": "View and manage your study objectives",
-      "url": "/Studyflow/tasks?source=shortcut",
-      "icons": [{ "src": "/Studyflow/icon-192.png", "sizes": "192x192", "purpose": "maskable" }]
+      "url": "./tasks.html?source=shortcut",
+      "icons": [{ "src": "./icon-192.png", "sizes": "192x192", "purpose": "maskable" }]
     },
     {
       "name": "Timer",
       "short_name": "Timer",
       "description": "Start a focus session with Pomodoro timer",
-      "url": "/Studyflow/timer?source=shortcut",
-      "icons": [{ "src": "/Studyflow/icon-192.png", "sizes": "192x192", "purpose": "maskable" }]
+      "url": "./timer.html?source=shortcut",
+      "icons": [{ "src": "./icon-192.png", "sizes": "192x192", "purpose": "maskable" }]
     },
     {
       "name": "Goals",
       "short_name": "Goals",
       "description": "View and update your weekly goals",
-      "url": "/Studyflow/goals?source=shortcut",
-      "icons": [{ "src": "/Studyflow/icon-192.png", "sizes": "192x192", "purpose": "maskable" }]
+      "url": "./goals.html?source=shortcut",
+      "icons": [{ "src": "./icon-192.png", "sizes": "192x192", "purpose": "maskable" }]
     }
   ],
   "screenshots": [
     {
-      "src": "/Studyflow/icon-512.png",
+      "src": "./icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "form_factor": "wide",
       "label": "StudyFlow Desktop Dashboard"
     },
     {
-      "src": "/Studyflow/icon-512.png",
+      "src": "./icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "form_factor": "narrow",
       "label": "StudyFlow Mobile Dashboard"
     }
   ],
-  "categories": ["productivity", "education"],
-  "share_target": {
-    "action": "/share",
-    "method": "POST",
-    "enctype": "multipart/form-data",
-    "params": {
-      "title": "title",
-      "text": "text",
-      "url": "url"
-    }
-  }
-    }
+  "categories": ["productivity", "education"]
+}

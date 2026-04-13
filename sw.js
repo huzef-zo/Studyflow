@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v3-FINAL';
+const CACHE_VERSION = 'v3-FINAL-FIX';
 const CACHE_NAME = `studyflow-${CACHE_VERSION}`;
 const OFFLINE_CACHE = `studyflow-offline-${CACHE_VERSION}`;
 
@@ -21,7 +21,9 @@ const ASSETS_TO_CACHE = [
   './js/history.js',
   './js/tasks.js',
   './js/timer.js',
-  './manifest.json'
+  './manifest.json',
+  './icon-192.png',
+  './icon-512.png'
 ];
 
 // ============================================
