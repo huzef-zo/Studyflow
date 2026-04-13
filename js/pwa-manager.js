@@ -14,7 +14,7 @@ const PWAManager = (() => {
   let config = {
     name: 'StudyFlow',
     swPath: 'sw.js',
-    scope: '/Studyflow/',
+    scope: './',
     updateCheckInterval: 60000, // 60 seconds
     debug: true
   };
@@ -143,8 +143,8 @@ const PWAManager = (() => {
     if ('serviceWorker' in navigator && Notification.permission === 'granted') {
       navigator.serviceWorker.ready.then((registration) => {
         registration.showNotification(title, {
-          icon: '/Studyflow/icon-192.png',
-          badge: '/Studyflow/icon-192.png',
+          icon: './icon-192.png',
+          badge: './icon-192.png',
           ...options
         });
       });
