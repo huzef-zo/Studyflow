@@ -404,5 +404,19 @@
   log('✅ Done. Screenshot this & share it.');
 })();
       </script>
+  <script>
+// Force service worker registration and activation
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js')
+    .then(reg => {
+      console.log('✅ SW registered:', reg.scope);
+      // Force immediate activation
+      if (reg.active) {
+        reg.active.postMessage({ type: 'SKIP_WAITING' });
+      }
+    })
+    .catch(err => console.error('❌ SW failed:', err));
+}
+  </script>
 </body>
 </html>
