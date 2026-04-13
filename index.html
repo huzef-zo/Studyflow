@@ -360,41 +360,5 @@
       init();
     })();
   </script>
-  <!-- TEMPORARY PWA DEBUG BOX -->
-  <div id="pwa-debug" style="position:fixed;bottom:0;left:0;right:0;background:#000;color:#0f0;padding:12px;font:12px monospace;z-index:9999;max-height:40vh;overflow-y:auto;border-top:2px solid #3B82F6;"></div>
-  <script>
-  (async () => {
-    const d = document.getElementById('pwa-debug');
-    const log = (m) => d.innerHTML += m + '<br>';
-    log('🔍 Starting PWA check...');
-
-    // 1. Manifest
-    try {
-      const res = await fetch('manifest.json');
-      const j = await res.json();
-      log(`✅ Manifest loaded: ${j.name || '❌ No name'}`);
-      log(`📍 start_url: "${j.start_url}"`);
-      log(`🔍 scope: "${j.scope}"`);
-    } catch(e) { log(`❌ Manifest failed: ${e.message}`); }
-
-    // 2. Service Worker
-    if ('serviceWorker' in navigator) {
-      const regs = await navigator.serviceWorker.getRegistrations();
-      log(`🔌 SWs registered: ${regs.length}`);
-      regs.forEach((r, i) => {
-        log(`   [${i}] Scope: ${r.scope} | State: ${r.active?.state || 'inactive'}`);
-      });
-    } else {
-      log('❌ SW not supported in this browser');
-    }
-
-    // 3. start_url check
-    try {
-      const check = await fetch(window.location.href, {method:'HEAD'});      log(`🌐 start_url returns: ${check.status} ${check.statusText}`);
-    } catch(e) { log(`❌ start_url fetch failed: ${e.message}`); }
-
-    log('✅ Done. Screenshot this & share it.');
-  })();
-  </script>
-</body>
+  </body>
   </html>
