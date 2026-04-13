@@ -48,7 +48,6 @@ self.addEventListener('install', (event) => {
   // Take control immediately
   self.skipWaiting();
 });
-
 // ============================================
 // SERVICE WORKER LIFECYCLE: ACTIVATE
 // ============================================
@@ -97,8 +96,7 @@ self.addEventListener('fetch', (event) => {
     // Images and fonts: Cache-first with network fallback
     else if (/\.(png|jpg|jpeg|gif|svg|woff|woff2)$/i.test(request.url)) {
       event.respondWith(cacheFirstStrategy(request));
-    }
-    // Default: Stale-while-revalidate
+    }    // Default: Stale-while-revalidate
     else {
       event.respondWith(staleWhileRevalidateStrategy(request));
     }
@@ -147,8 +145,7 @@ function networkFirstStrategy(request, timeout = 3000) {
   });
 }
 
-/**
- * Cache-first strategy
+/** * Cache-first strategy
  * Used for assets that don't change frequently (CSS, JS, images)
  */
 function cacheFirstStrategy(request) {
@@ -197,8 +194,7 @@ function staleWhileRevalidateStrategy(request) {
           }
           return networkResponse;
         })
-        .catch((error) => {
-          console.log('[SW] Background fetch failed:', request.url, error);
+        .catch((error) => {          console.log('[SW] Background fetch failed:', request.url, error);
           return cachedResponse || getOfflineFallback(request);
         });
       
@@ -211,7 +207,9 @@ function staleWhileRevalidateStrategy(request) {
  */
 function getOfflineFallback(request) {
   if (request.destination === 'document') {
-    return caches.match('./index.html').catch(() => new Response('Offline - please check your connection', { status: 503 }));
+    // ✅ FIX #3: Use registration scope for reliable fallback path
+    return caches.match(self.registration.scope + 'index.html')
+      .catch(() => new Response('Offline - please check your connection', { status: 503 }));
   }
   
   if (request.destination === 'image') {
@@ -245,8 +243,7 @@ async function syncTasks() {
         data: { synced: true, timestamp: Date.now() }
       });
     }
-    
-    console.log('[SW] Background sync completed');
+        console.log('[SW] Background sync completed');
   } catch (error) {
     console.error('[SW] Background sync error:', error);
     throw error;
@@ -261,8 +258,9 @@ self.addEventListener('push', (event) => {
   
   const options = {
     body: event.data ? event.data.text() : 'StudyFlow notification',
-    icon: 'https://huzef-zo.github.io/Studyflow/icon-192.png',
-    badge: 'https://huzef-zo.github.io/Studyflow/icon-192.png',
+    // ✅ FIX #1: Use relative paths for icons (prevents CORS audit warnings)
+    icon: './icon-192.png',
+    badge: './icon-192.png',
     tag: 'studyflow-notification',
     requireInteraction: true,
     actions: [
@@ -286,16 +284,15 @@ self.addEventListener('notificationclick', (event) => {
   if (event.action === 'open' || !event.action) {
     event.waitUntil(
       self.clients.matchAll({ type: 'window' }).then((clientList) => {
-        // Check if app is already open
+        // ✅ FIX #2: Check for subdirectory path instead of exact '/' match
         for (const client of clientList) {
-          if (client.url === '/' && 'focus' in client) {
+          if (client.url.includes('/Studyflow/') && 'focus' in client) {
             return client.focus();
           }
         }
         
-        // Open new window if not open
-        if (self.clients.openWindow) {
-          return self.clients.openWindow('/');
+        // ✅ FIX #2: Open new window with relative path
+        if (self.clients.openWindow) {          return self.clients.openWindow('./');
         }
       })
     );
