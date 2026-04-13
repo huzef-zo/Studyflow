@@ -404,5 +404,20 @@
   log('✅ Done. Screenshot this & share it.');
 })();
 </script>
+<script>
+// CLEANUP: Unregister rogue service worker at root scope
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then(regs => {
+    regs.forEach(reg => {
+      if (reg.scope === 'https://huzef-zo.github.io/') {
+        reg.unregister().then(() => {
+          console.log('✅ Unregistered rogue SW at root scope');
+          alert('🧹 Cleaned up old service worker! Reload page now.');
+        });
+      }
+    });
+  });
+}
+</script>
 </body>
 </html>
