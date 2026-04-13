@@ -454,5 +454,31 @@ if ('serviceWorker' in navigator) {
   alert('❌ Service Worker not supported in this browser');
 }
   </script>
+  <script>
+// ☢️ NUCLEAR SW CLEANUP - Run once then remove this script
+(async () => {
+  console.log('🧨 Starting nuclear cleanup...');
+  
+  // 1. Unregister ALL service workers
+  if ('serviceWorker' in navigator) {
+    const regs = await navigator.serviceWorker.getRegistrations();
+    console.log(`Found ${regs.length} SWs to unregister`);
+    
+    await Promise.all(regs.map(reg => reg.unregister()));
+    console.log('✅ All SWs unregistered');
+  }
+  
+  // 2. Clear ALL caches
+  const cacheNames = await caches.keys();
+  await Promise.all(cacheNames.map(name => caches.delete(name)));
+  console.log('✅ All caches cleared');
+  
+  // 3. Force reload to register ONLY the correct SW
+  alert('🧹 Cleaned everything! Page will reload in 2 seconds...');
+  setTimeout(() => {
+    window.location.reload(true);
+  }, 2000);
+})();
+  </script>
   </body>
 </html>
