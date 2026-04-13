@@ -439,5 +439,20 @@ if ('serviceWorker' in navigator) {
   }, 2000);
 }
 </script>
-</body>
+<script>
+// SIMPLE SW REGISTRATION TEST
+if ('serviceWorker' in navigator) {
+  alert('🔧 Trying to register ./sw.js...');
+  navigator.serviceWorker.register('./sw.js')
+    .then(reg => {
+      alert('✅ SUCCESS! SW registered at: ' + reg.scope);
+    })
+    .catch(err => {
+      alert('❌ FAILED: ' + err.message);
+    });
+} else {
+  alert('❌ Service Worker not supported in this browser');
+}
+  </script>
+  </body>
 </html>
