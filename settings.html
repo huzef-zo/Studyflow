@@ -72,8 +72,8 @@
             <input type="number" class="form-input" id="long-break" min="1" max="60">
           </div>
           <div class="form-group" style="margin-bottom: 12px;">
-            <label class="form-label">Cycle Interval</label>
-            <input type="number" class="form-input" id="sessions-until-long" min="2" max="10">
+            <label class="form-label">Cycles per Session</label>
+            <input type="number" class="form-input" id="sessions-until-long-break" min="1" max="10">
           </div>
         </div>
       </section>
@@ -178,7 +178,7 @@
         workDuration: document.getElementById('work-duration'),
         shortBreak: document.getElementById('short-break'),
         longBreak: document.getElementById('long-break'),
-        sessionsUntilLong: document.getElementById('sessions-until-long'),
+        sessionsUntilLongBreak: document.getElementById('sessions-until-long-break'),
         soundEnabled: document.getElementById('sound-enabled'),
         autoStartBreak: document.getElementById('auto-start-break'),
         autoStartWork: document.getElementById('auto-start-work'),
@@ -200,7 +200,7 @@
         elements.workDuration.value = settings.work_duration || 25;
         elements.shortBreak.value = settings.short_break || 5;
         elements.longBreak.value = settings.long_break || 15;
-        elements.sessionsUntilLong.value = settings.sessions_until_long_break || 4;
+        elements.sessionsUntilLongBreak.value = settings.sessions_until_long_break || 4;
         elements.soundEnabled.checked = settings.sound !== false;
         elements.autoStartBreak.checked = settings.auto_start_break !== false;
         elements.autoStartWork.checked = settings.auto_start_work !== false;
@@ -222,10 +222,10 @@
       function saveSettings() {
         Storage.updateUserName(elements.displayName.value.trim() || 'Operative');
         Storage.updateUserEmail(elements.userEmail.value.trim());
-        Storage.updateSetting('work_duration', parseInt(elements.workDuration.value, 10) || 25);
-        Storage.updateSetting('short_break', parseInt(elements.shortBreak.value, 10) || 5);
-        Storage.updateSetting('long_break', parseInt(elements.longBreak.value, 10) || 15);
-        Storage.updateSetting('sessions_until_long_break', parseInt(elements.sessionsUntilLong.value, 10) || 4);
+        Storage.updateSetting('work_duration', Math.max(1, parseInt(elements.workDuration.value, 10)) || 25);
+        Storage.updateSetting('short_break', Math.max(1, parseInt(elements.shortBreak.value, 10)) || 5);
+        Storage.updateSetting('long_break', Math.max(1, parseInt(elements.longBreak.value, 10)) || 15);
+        Storage.updateSetting('sessions_until_long_break', Math.max(1, parseInt(elements.sessionsUntilLongBreak.value, 10)) || 4);
         Storage.updateSetting('sound', elements.soundEnabled.checked);
         Storage.updateSetting('auto_start_break', elements.autoStartBreak.checked);
         Storage.updateSetting('auto_start_work', elements.autoStartWork.checked);
@@ -286,7 +286,7 @@
       }
 
       function setupListeners() {
-        [elements.displayName, elements.userEmail, elements.workDuration, elements.shortBreak, elements.longBreak, elements.sessionsUntilLong, elements.soundEnabled, elements.autoStartBreak, elements.autoStartWork].forEach(el => el.addEventListener('change', saveSettings));
+        [elements.displayName, elements.userEmail, elements.workDuration, elements.shortBreak, elements.longBreak, elements.sessionsUntilLongBreak, elements.soundEnabled, elements.autoStartBreak, elements.autoStartWork].forEach(el => el.addEventListener('change', saveSettings));
 
         elements.testSoundBtn.onclick = () => {
           try {

@@ -136,6 +136,10 @@ const Timer = (function() {
     initElements();
     setupEventListeners();
     populateTasks();
+
+    // Initialize with duration from settings
+    timeRemaining = getSessionDuration('work') * 60;
+
     loadTimerState();
     updateStats();
     updateDisplay();
@@ -444,8 +448,16 @@ const Timer = (function() {
     elements.timerDisplay.textContent = timeStr;
     document.title = `${timeStr} - StudyFlow`;
 
+    const settings = Storage.getSettings();
+    const stats = Storage.getTodaySessions();
+    const totalCycles = settings.sessions_until_long_break || 4;
+
+    // Display format: Session X | Cycle Y/N
+    const sessionNum = stats.length + 1;
+    const cycleNum = Math.min(totalCycles, (currentSessionType === 'work' ? sessionsInCycle + 1 : sessionsInCycle));
+
     const labelMap = { 'work': 'Deep Work', 'short_break': 'Cooldown', 'long_break': 'Deep Rest' };
-    elements.timerLabel.textContent = labelMap[currentSessionType];
+    elements.timerLabel.textContent = `${labelMap[currentSessionType]} (S${sessionNum} | C${cycleNum}/${totalCycles})`;
 
     // Progress Ring
     const totalTime = getSessionDuration(currentSessionType) * 60;
@@ -454,7 +466,6 @@ const Timer = (function() {
 
     // Cycle dots indicator
     if (elements.cycleIndicator) {
-      const settings = Storage.getSettings();
       const cycleLength = settings.sessions_until_long_break || 4;
       const dots = [];
       for (let i = 0; i < cycleLength; i++) {

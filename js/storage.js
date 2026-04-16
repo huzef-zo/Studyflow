@@ -475,7 +475,7 @@ const Storage = (function() {
     const today = formatDate(new Date());
     return sessions.filter(s => {
       const sessionDate = formatDate(new Date(s.completedAt));
-      return sessionDate === today && s.type === 'work';
+      return sessionDate === today && s.type === 'session_complete';
     });
   }
 
@@ -484,18 +484,28 @@ const Storage = (function() {
     const weekStart = getWeekStart(new Date());
     return sessions.filter(s => {
       const sessionDate = new Date(s.completedAt);
-      return sessionDate >= weekStart && s.type === 'work';
+      return sessionDate >= weekStart && s.type === 'session_complete';
     });
   }
 
   function getTotalMinutesToday() {
-    const todaySessions = getTodaySessions();
-    return todaySessions.reduce((total, s) => total + s.duration, 0);
+    const sessions = getSessions();
+    const today = formatDate(new Date());
+    const workBlocks = sessions.filter(s => {
+      const sessionDate = formatDate(new Date(s.completedAt));
+      return sessionDate === today && s.type === 'work';
+    });
+    return workBlocks.reduce((total, s) => total + s.duration, 0);
   }
 
   function getTotalMinutesWeek() {
-    const weekSessions = getWeekSessions();
-    return weekSessions.reduce((total, s) => total + s.duration, 0);
+    const sessions = getSessions();
+    const weekStart = getWeekStart(new Date());
+    const workBlocks = sessions.filter(s => {
+      const sessionDate = new Date(s.completedAt);
+      return sessionDate >= weekStart && s.type === 'work';
+    });
+    return workBlocks.reduce((total, s) => total + s.duration, 0);
   }
 
   // ============================================
@@ -588,13 +598,23 @@ const Storage = (function() {
     let nextSessionsInCycle = sessionsInCycle || 0;
 
     // Save session if it was a work session and recording is enabled
-    if (type === 'work' && recordSession) {
-      addSession(settings.work_duration || 25, 'work', selectedTaskId);
+    if (type === 'work') {
+      if (recordSession) {
+        // Record work cycle duration
+        addSession(settings.work_duration || 25, 'work', selectedTaskId);
+      }
 
       nextSessionsInCycle++;
 
-      // Increment sub-task cycles if selected
-      if (selectedTaskId && selectedSubtaskId) {
+      // Check if session (N cycles) is complete
+      const n = settings.sessions_until_long_break || 4;
+      if (nextSessionsInCycle >= n) {
+        // Record completed session
+        addSession(0, 'session_complete', selectedTaskId);
+      }
+
+      // Increment sub-task cycles if selected and recorded
+      if (recordSession && selectedTaskId && selectedSubtaskId) {
         const task = getTaskById(selectedTaskId);
         if (task && task.subtasks) {
           const subtask = task.subtasks.find(s => s.id === selectedSubtaskId);
@@ -606,18 +626,13 @@ const Storage = (function() {
           }
         }
       }
-    } else if (type === 'work' && !recordSession) {
-      // If skipping a work session, we still might want to increment cycle if it was "completed"
-      // but usually skip means transition without counting.
-      // For now, we follow the existing timer.js logic for skip:
-      nextSessionsInCycle++;
     }
 
     // Determine next session type
     let nextType;
     if (type === 'work') {
       const cycleLength = settings.sessions_until_long_break || 4;
-      if (nextSessionsInCycle > 0 && nextSessionsInCycle >= cycleLength) {
+      if (nextSessionsInCycle >= cycleLength) {
         nextType = 'long_break';
       } else {
         nextType = 'short_break';
@@ -625,6 +640,8 @@ const Storage = (function() {
     } else if (type === 'long_break') {
       nextType = 'work';
       nextSessionsInCycle = 0;
+    } else if (type === 'short_break') {
+      nextType = 'work';
     } else {
       nextType = 'work';
     }
