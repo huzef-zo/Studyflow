@@ -19,7 +19,7 @@ const Timer = (function() {
   let selectedSubtaskId = null;
   // Tracks how many Deep Work blocks have been completed in the current cycle.
   // Resets to 0 after a Deep Rest (long_break) finishes.
-  let completedWorkInCycle = 0;
+  let sessionsInCycle = 0;
   
   // Audio Context for sounds
   let audioCtx = null;
@@ -149,6 +149,15 @@ const Timer = (function() {
     elements.resetBtn?.addEventListener('click', resetTimer);
     elements.taskSelect?.addEventListener('change', handleTaskChange);
     elements.subtaskSelect?.addEventListener('change', handleSubtaskChange);
+
+    // Sync state when returning to tab
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        loadTimerState();
+        updateDisplay();
+        updateStats();
+      }
+    });
   }
 
   /**
@@ -163,6 +172,18 @@ const Timer = (function() {
    */
   function startTimer() {
     if (isRunning) return;
+
+    // Initialize/Resume Audio Context on user gesture
+    try {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    } catch (e) {
+      console.error('Failed to initialize AudioContext:', e);
+    }
     
     isRunning = true;
     endTime = Date.now() + (timeRemaining * 1000);
@@ -219,57 +240,25 @@ const Timer = (function() {
 
   /**
    * Handle session completion and advance to the next phase.
-   *
-   * Cycle logic:
-   *   - Each Deep Work completion increments completedWorkInCycle.
-   *   - After a work block: if completedWorkInCycle === sessions_until_long_break → Deep Rest,
-   *     otherwise → Cooldown (short_break).
-   *   - After a Cooldown → back to Deep Work.
-   *   - After a Deep Rest → back to Deep Work AND reset completedWorkInCycle to 0
-   *     (one full session = N deep-work blocks + N-1 cooldowns + 1 deep rest is now done).
    */
   function completeSession() {
     pauseTimer();
 
     const settings = Storage.getSettings();
-    const justFinishedType = currentSessionType;
+    const currentState = {
+      type: currentSessionType,
+      sessionsInCycle: sessionsInCycle,
+      selectedTaskId: selectedTaskId,
+      selectedSubtaskId: selectedSubtaskId
+    };
 
-    // ── 1. Record the completed phase ──────────────────────────────────────
-    Storage.addSession(getSessionDuration(justFinishedType), justFinishedType, selectedTaskId);
+    // Use unified storage logic to determine next state
+    const nextState = Storage.completeTimerSession(currentState, true);
 
-    if (justFinishedType === 'work') {
-      completedWorkInCycle++;
-
-      // Increment sub-task cycles if one is selected
-      if (selectedTaskId && selectedSubtaskId) {
-        const task = Storage.getTaskById(selectedTaskId);
-        const subtask = task?.subtasks?.find(s => s.id === selectedSubtaskId);
-        if (subtask) {
-          Storage.updateSubtask(selectedTaskId, selectedSubtaskId, {
-            completedCycles: (subtask.completedCycles || 0) + 1
-          });
-          updateSubtaskTracker();
-        }
-      }
-    }
-
-    // ── 2. Determine next phase ─────────────────────────────────────────────
-    const cycleLength = settings.sessions_until_long_break || 4;
-
-    if (justFinishedType === 'work') {
-      // After enough deep-work blocks → deep rest; otherwise → cooldown
-      currentSessionType = (completedWorkInCycle >= cycleLength) ? 'long_break' : 'short_break';
-    } else if (justFinishedType === 'long_break') {
-      // Deep Rest finished → new cycle begins
-      completedWorkInCycle = 0;
-      currentSessionType = 'work';
-    } else {
-      // Cooldown finished → back to deep work
-      currentSessionType = 'work';
-    }
-
-    // ── 3. Set time for the next phase ─────────────────────────────────────
-    timeRemaining = getSessionDuration(currentSessionType) * 60;
+    // Sync local state
+    currentSessionType = nextState.type;
+    sessionsInCycle = nextState.sessionsInCycle;
+    timeRemaining = nextState.timeRemaining;
 
     // ── 4. Notify user ─────────────────────────────────────────────────────
     if (settings.notifications !== false && 'Notification' in window && Notification.permission === 'granted') {
@@ -289,23 +278,30 @@ const Timer = (function() {
     // ── 5. Sound cue ───────────────────────────────────────────────────────
     playTransitionSound(currentSessionType);
 
-    // ── 6. Persist & refresh UI ────────────────────────────────────────────
-    saveTimerState();
+    // ── 6. Refresh UI (completeTimerSession already persisted to Storage) ──
+    updateSubtaskTracker();
     updateStats();
     updateDisplay();
 
     // ── 7. Auto-start the next phase if enabled ────────────────────────────
-    const shouldAutoStart = currentSessionType === 'work'
-      ? settings.auto_start_work
-      : settings.auto_start_break;
+    if (nextState.state === 'running') {
+      endTime = nextState.endTime;
+      isRunning = true;
 
-    if (shouldAutoStart) startTimer();
+      // UI Update
+      elements.playPauseIcon.innerHTML = `<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>`;
+      elements.playPauseIcon.style.transform = 'none';
+      document.body.classList.add('focus-mode');
+      elements.timerContainer.classList.add('active');
+
+      timerInterval = setInterval(tick, 1000);
+    }
   }
 
   function resetTimer() {
     pauseTimer();
     currentSessionType = 'work';
-    completedWorkInCycle = 0;
+    sessionsInCycle = 0;
     timeRemaining = getSessionDuration('work') * 60;
     updateDisplay();
     saveTimerState();
@@ -313,21 +309,23 @@ const Timer = (function() {
 
   function skipSession() {
     pauseTimer();
-    const settings = Storage.getSettings();
-    const cycleLength = settings.sessions_until_long_break || 4;
 
-    if (currentSessionType === 'work') {
-      completedWorkInCycle++;
-      currentSessionType = (completedWorkInCycle >= cycleLength) ? 'long_break' : 'short_break';
-    } else if (currentSessionType === 'long_break') {
-      completedWorkInCycle = 0;
-      currentSessionType = 'work';
-    } else {
-      currentSessionType = 'work';
-    }
+    const currentState = {
+      type: currentSessionType,
+      sessionsInCycle: sessionsInCycle,
+      selectedTaskId: selectedTaskId,
+      selectedSubtaskId: selectedSubtaskId
+    };
 
-    timeRemaining = getSessionDuration(currentSessionType) * 60;
-    saveTimerState();
+    // Use unified storage logic (without recording session)
+    const nextState = Storage.completeTimerSession(currentState, false);
+
+    // Sync local state
+    currentSessionType = nextState.type;
+    sessionsInCycle = nextState.sessionsInCycle;
+    timeRemaining = nextState.timeRemaining;
+
+    updateSubtaskTracker();
     updateDisplay();
   }
 
@@ -460,8 +458,8 @@ const Timer = (function() {
       const cycleLength = settings.sessions_until_long_break || 4;
       const dots = [];
       for (let i = 0; i < cycleLength; i++) {
-        const isDone = i < completedWorkInCycle;
-        const isActive = currentSessionType === 'work' && i === completedWorkInCycle;
+        const isDone = i < sessionsInCycle;
+        const isActive = currentSessionType === 'work' && i === sessionsInCycle;
         dots.push(
           `<span style="
             display:inline-block;
@@ -492,7 +490,7 @@ const Timer = (function() {
       timeRemaining: timeRemaining,
       selectedTaskId: selectedTaskId,
       selectedSubtaskId: selectedSubtaskId,
-      completedWorkInCycle: completedWorkInCycle
+      sessionsInCycle: sessionsInCycle
     };
     localStorage.setItem('studyflow_timer', JSON.stringify(state));
   }
@@ -505,8 +503,7 @@ const Timer = (function() {
     currentSessionType = state.type || 'work';
     selectedTaskId = state.selectedTaskId;
     selectedSubtaskId = state.selectedSubtaskId;
-    // Support both the old key (sessionsInCycle) and the new key for backwards compat
-    completedWorkInCycle = state.completedWorkInCycle ?? state.sessionsInCycle ?? 0;
+    sessionsInCycle = state.sessionsInCycle ?? state.completedWorkInCycle ?? 0;
 
     if (elements.taskSelect) {
       elements.taskSelect.value = selectedTaskId || '';

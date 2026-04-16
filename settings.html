@@ -85,14 +85,17 @@
         </div>
 
         <div class="flex items-center justify-between mb-md">
-          <div>
+          <div style="flex: 1;">
             <div style="font-weight: 700; font-size: 0.875rem;">Audio Feedback</div>
             <div style="font-size: 0.75rem; color: var(--text-muted);">Sound cues on mission events</div>
           </div>
-          <label class="toggle">
-            <input type="checkbox" id="sound-enabled">
-            <span class="toggle-slider"></span>
-          </label>
+          <div class="flex items-center gap-md">
+            <button class="btn btn-secondary btn-sm" id="test-sound-btn" style="padding: 4px 12px; font-size: 10px; border-radius: 8px;">TEST</button>
+            <label class="toggle">
+              <input type="checkbox" id="sound-enabled">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
         </div>
 
         <div class="flex items-center justify-between mb-md">
@@ -179,6 +182,7 @@
         soundEnabled: document.getElementById('sound-enabled'),
         autoStartBreak: document.getElementById('auto-start-break'),
         autoStartWork: document.getElementById('auto-start-work'),
+        testSoundBtn: document.getElementById('test-sound-btn'),
         requestPermissionBtn: document.getElementById('request-permission-btn'),
         permissionStatus: document.getElementById('permission-status'),
         subjectsList: document.getElementById('subjects-list'),
@@ -283,6 +287,28 @@
 
       function setupListeners() {
         [elements.displayName, elements.userEmail, elements.workDuration, elements.shortBreak, elements.longBreak, elements.sessionsUntilLong, elements.soundEnabled, elements.autoStartBreak, elements.autoStartWork].forEach(el => el.addEventListener('change', saveSettings));
+
+        elements.testSoundBtn.onclick = () => {
+          try {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(440, ctx.currentTime);
+            gain.gain.setValueAtTime(0, ctx.currentTime);
+            gain.gain.linearRampToValueAtTime(0.2, ctx.currentTime + 0.1);
+            gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.5);
+            osc.start();
+            osc.stop(ctx.currentTime + 0.5);
+            App.showToast('Audio frequency verified', 'success');
+          } catch (e) {
+            console.error('Audio test failed:', e);
+            App.showToast('Audio system failure', 'error');
+          }
+        };
+
         elements.requestPermissionBtn.onclick = () => Notification.requestPermission().then(updatePermissionStatus);
         elements.addSubjectBtn.onclick = () => openSubjectModal();
         elements.exportBtn.onclick = () => {
