@@ -581,14 +581,14 @@ const Storage = (function() {
    * Complete a timer session and return the next state
    * Useful for both the timer page and background tasks
    */
-  function completeTimerSession(timerState) {
+  function completeTimerSession(timerState, recordSession = true) {
     const settings = getSettings();
     const { type, sessionsInCycle, selectedTaskId, selectedSubtaskId } = timerState;
 
     let nextSessionsInCycle = sessionsInCycle || 0;
 
-    // Save session if it was a work session
-    if (type === 'work') {
+    // Save session if it was a work session and recording is enabled
+    if (type === 'work' && recordSession) {
       addSession(settings.work_duration || 25, 'work', selectedTaskId);
 
       nextSessionsInCycle++;
@@ -601,18 +601,23 @@ const Storage = (function() {
           if (subtask) {
             const newCycles = (subtask.completedCycles || 0) + 1;
             updateSubtask(selectedTaskId, selectedSubtaskId, {
-              completedCycles: newCycles,
-              // Auto-complete if cycles reached? Maybe not, let user decide
+              completedCycles: newCycles
             });
           }
         }
       }
+    } else if (type === 'work' && !recordSession) {
+      // If skipping a work session, we still might want to increment cycle if it was "completed"
+      // but usually skip means transition without counting.
+      // For now, we follow the existing timer.js logic for skip:
+      nextSessionsInCycle++;
     }
 
     // Determine next session type
     let nextType;
     if (type === 'work') {
-      if (nextSessionsInCycle > 0 && nextSessionsInCycle % (settings.sessions_until_long_break || 4) === 0) {
+      const cycleLength = settings.sessions_until_long_break || 4;
+      if (nextSessionsInCycle > 0 && nextSessionsInCycle >= cycleLength) {
         nextType = 'long_break';
       } else {
         nextType = 'short_break';
