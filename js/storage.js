@@ -606,7 +606,7 @@ const Storage = (function() {
 
       nextSessionsInCycle++;
 
-      // Check if session (N cycles) is complete
+      // Check if cycle (N sessions) is complete
       const n = settings.sessions_until_long_break || 4;
       if (nextSessionsInCycle >= n) {
         // Record completed session
