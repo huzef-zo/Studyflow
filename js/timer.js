@@ -449,15 +449,15 @@ const Timer = (function() {
     document.title = `${timeStr} - StudyFlow`;
 
     const settings = Storage.getSettings();
-    const stats = Storage.getTodaySessions();
     const totalCycles = settings.sessions_until_long_break || 4;
+    const completedCycles = Storage.getTodaySessions().length;
+    const currentCycleNum = completedCycles + 1;
 
-    // Display format: Session X | Cycle Y/N
-    const sessionNum = stats.length + 1;
-    const cycleNum = Math.min(totalCycles, (currentSessionType === 'work' ? sessionsInCycle + 1 : sessionsInCycle));
+    // sessionInCycle: current work session number within cycle (1 to n)
+    const sessionInCycle = currentSessionType === 'work' ? sessionsInCycle + 1 : sessionsInCycle;
 
     const labelMap = { 'work': 'Deep Work', 'short_break': 'Cooldown', 'long_break': 'Deep Rest' };
-    elements.timerLabel.textContent = `${labelMap[currentSessionType]} (S${sessionNum} | C${cycleNum}/${totalCycles})`;
+    elements.timerLabel.textContent = `${labelMap[currentSessionType]} (Session ${sessionInCycle}/${totalCycles} • Cycle ${currentCycleNum})`;
 
     // Progress Ring
     const totalTime = getSessionDuration(currentSessionType) * 60;
@@ -514,6 +514,8 @@ const Timer = (function() {
     currentSessionType = state.type || 'work';
     selectedTaskId = state.selectedTaskId;
     selectedSubtaskId = state.selectedSubtaskId;
+
+    // sessionsInCycle: number of completed WORK sessions in current cycle (resets after long_break)
     sessionsInCycle = state.sessionsInCycle ?? state.completedWorkInCycle ?? 0;
 
     if (elements.taskSelect) {

@@ -61,17 +61,17 @@ function runTests() {
             selectedSubtaskId: null
         };
 
-        // Complete 1st work cycle
+        // Complete 1st work session
         state = Storage.completeTimerSession(state, true);
 
-        if (state.type !== 'long_break') throw new Error(`Expected long_break for N=1 after 1 cycle, got ${state.type}`);
+        if (state.type !== 'long_break') throw new Error(`Expected long_break for N=1 after 1 session, got ${state.type}`);
         if (state.sessionsInCycle !== 1) throw new Error(`Expected sessionsInCycle to be 1, got ${state.sessionsInCycle}`);
 
         const sessions = Storage.getSessions();
-        const completedSessions = sessions.filter(s => s.type === 'session_complete');
-        if (completedSessions.length !== 1) throw new Error(`Expected 1 completed session, got ${completedSessions.length}`);
+        const completedCycles = sessions.filter(s => s.type === 'session_complete');
+        if (completedCycles.length !== 1) throw new Error(`Expected 1 completed cycle, got ${completedCycles.length}`);
 
-        console.log('  Passed: N=1 transitions correctly to long_break and increments session.');
+        console.log('  Passed: N=1 transitions correctly to long_break and increments sessionsInCycle.');
     })();
 
     // Test Case B: N=2
@@ -88,33 +88,33 @@ function runTests() {
             sessionsInCycle: 0
         };
 
-        // 1st Cycle
+        // 1st Session
         state = Storage.completeTimerSession(state, true);
-        if (state.type !== 'short_break') throw new Error(`Expected short_break after 1st cycle of N=2, got ${state.type}`);
+        if (state.type !== 'short_break') throw new Error(`Expected short_break after 1st session of N=2, got ${state.type}`);
         if (state.sessionsInCycle !== 1) throw new Error(`Expected sessionsInCycle 1, got ${state.sessionsInCycle}`);
 
         let sessions = Storage.getSessions();
-        if (sessions.filter(s => s.type === 'session_complete').length !== 0) throw new Error('Session should not be complete yet');
+        if (sessions.filter(s => s.type === 'session_complete').length !== 0) throw new Error('Cycle should not be complete yet');
 
         // Transition back to work (e.g. from break)
         state.type = 'short_break'; // simulate being in break
         state = Storage.completeTimerSession(state, false); // finish break
         if (state.type !== 'work') throw new Error(`Expected transition to work after break, got ${state.type}`);
 
-        // 2nd Cycle
+        // 2nd Session
         state = Storage.completeTimerSession(state, true);
-        if (state.type !== 'long_break') throw new Error(`Expected long_break after 2nd cycle of N=2, got ${state.type}`);
+        if (state.type !== 'long_break') throw new Error(`Expected long_break after 2nd session of N=2, got ${state.type}`);
         if (state.sessionsInCycle !== 2) throw new Error(`Expected sessionsInCycle 2, got ${state.sessionsInCycle}`);
 
         sessions = Storage.getSessions();
-        if (sessions.filter(s => s.type === 'session_complete').length !== 1) throw new Error('Expected 1 completed session');
+        if (sessions.filter(s => s.type === 'session_complete').length !== 1) throw new Error('Expected 1 completed cycle');
 
-        console.log('  Passed: N=2 transitions correctly and increments session only after N cycles.');
+        console.log('  Passed: N=2 transitions correctly and completes cycle only after N sessions.');
     })();
 
-    // Test Case C: pause/skip mid-cycle
+    // Test Case C: pause/skip mid-session
     (function testSkip() {
-        console.log('Test Case C: pause/skip mid-cycle');
+        console.log('Test Case C: pause/skip mid-session');
         Storage.clearAllData();
         Storage.updateSetting('sessions_until_long_break', 2);
 
@@ -123,8 +123,8 @@ function runTests() {
             sessionsInCycle: 0
         };
 
-        // Skip 1st cycle
-        console.log('Skipping 1st cycle...');
+        // Skip 1st session
+        console.log('Skipping 1st session...');
         // Clear sessions before skip to be sure
         localStorage.setItem('studyflow_sessions', '[]');
         state = Storage.completeTimerSession(state, false);
@@ -153,7 +153,7 @@ function runTests() {
             sessionsInCycle: 0
         };
 
-        // Complete 1 cycle
+        // Complete 1 session
         state = Storage.completeTimerSession(state, true);
 
         // Mid-flow change N from 2 to 3
@@ -163,11 +163,11 @@ function runTests() {
         state.type = 'short_break';
         state = Storage.completeTimerSession(state, false);
 
-        // Complete 2nd cycle
+        // Complete 2nd session
         state = Storage.completeTimerSession(state, true);
 
         // Should be at short_break because N is now 3
-        if (state.type !== 'short_break') throw new Error(`Expected short_break after 2nd cycle with new N=3, got ${state.type}`);
+        if (state.type !== 'short_break') throw new Error(`Expected short_break after 2nd session with new N=3, got ${state.type}`);
 
         console.log('  Passed: Settings changes are respected mid-flow.');
     })();
