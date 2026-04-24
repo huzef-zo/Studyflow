@@ -57,7 +57,7 @@ const History = (function() {
       elements.totalStudyHours.textContent = Math.round(studyMinutes / 60) + 'h';
     }
     if (elements.allTimeStreak) {
-      elements.allTimeStreak.textContent = stats.streak;
+      elements.allTimeStreak.textContent = stats.bestStreak;
     }
 
     // Completion Rate

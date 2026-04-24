@@ -479,12 +479,30 @@ const Storage = (function() {
     });
   }
 
+  function getTodayWorkSessions() {
+    const sessions = getSessions();
+    const today = formatDate(new Date());
+    return sessions.filter(s => {
+      const sessionDate = formatDate(new Date(s.completedAt));
+      return sessionDate === today && s.type === 'work';
+    });
+  }
+
   function getWeekSessions() {
     const sessions = getSessions();
     const weekStart = getWeekStart(new Date());
     return sessions.filter(s => {
       const sessionDate = new Date(s.completedAt);
       return sessionDate >= weekStart && s.type === 'session_complete';
+    });
+  }
+
+  function getWeekWorkSessions() {
+    const sessions = getSessions();
+    const weekStart = getWeekStart(new Date());
+    return sessions.filter(s => {
+      const sessionDate = new Date(s.completedAt);
+      return sessionDate >= weekStart && s.type === 'work';
     });
   }
 
@@ -536,8 +554,7 @@ const Storage = (function() {
     }).length;
 
     // Calculate study hours this week
-    const weekSessions = getWeekSessions();
-    const totalMinutes = weekSessions.reduce((total, s) => total + (s.duration || 0), 0);
+    const totalMinutes = getTotalMinutesWeek();
     goals.current_hours = totalMinutes / 60;
     
     return goals;
@@ -725,13 +742,14 @@ const Storage = (function() {
     const upcomingTasks = getUpcomingTasks(7).length;
     
     // Sessions
-    const todaySessions = getTodaySessions().length;
-    const weekSessions = getWeekSessions().length;
+    const todaySessions = getTodayWorkSessions().length;
+    const weekSessions = getWeekWorkSessions().length;
     const totalMinutesToday = getTotalMinutesToday();
     const totalMinutesWeek = getTotalMinutesWeek();
     
     // Streak calculation
     const streak = calculateStreak();
+    const bestStreak = calculateBestStreak();
     
     return {
       tasks: {
@@ -750,8 +768,64 @@ const Storage = (function() {
         minutesToday: totalMinutesToday,
         minutesWeek: totalMinutesWeek
       },
-      streak: streak
+      streak: streak,
+      bestStreak: bestStreak
     };
+  }
+
+  /**
+   * Calculate best streak
+   */
+  function calculateBestStreak() {
+    const tasks = getTasks();
+    const sessions = getSessions();
+
+    // Get all dates with activity
+    const activityDates = new Set();
+
+    // Add task completion dates
+    tasks.forEach(t => {
+      if (t.completedAt) {
+        activityDates.add(formatDate(new Date(t.completedAt)));
+      }
+    });
+
+    // Add session dates (only work sessions)
+    sessions.forEach(s => {
+      if (s.type === 'work') {
+        activityDates.add(formatDate(new Date(s.completedAt)));
+      }
+    });
+
+    const sortedDates = Array.from(activityDates).sort();
+    if (sortedDates.length === 0) return 0;
+
+    let bestStreak = 0;
+    let currentStreak = 0;
+    let lastDate = null;
+
+    sortedDates.forEach(dateStr => {
+      const currentDate = new Date(dateStr);
+      currentDate.setHours(0, 0, 0, 0);
+
+      if (lastDate) {
+        const diffTime = Math.abs(currentDate - lastDate);
+        const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+
+        if (diffDays === 1) {
+          currentStreak++;
+        } else if (diffDays > 1) {
+          currentStreak = 1;
+        }
+      } else {
+        currentStreak = 1;
+      }
+
+      if (currentStreak > bestStreak) bestStreak = currentStreak;
+      lastDate = currentDate;
+    });
+
+    return bestStreak;
   }
 
   /**
@@ -771,9 +845,11 @@ const Storage = (function() {
       }
     });
     
-    // Add session dates
+    // Add session dates (only work sessions)
     sessions.forEach(s => {
-      activityDates.add(formatDate(new Date(s.completedAt)));
+      if (s.type === 'work') {
+        activityDates.add(formatDate(new Date(s.completedAt)));
+      }
     });
     
     // Calculate streak
@@ -933,7 +1009,9 @@ const Storage = (function() {
     saveSessions,
     addSession,
     getTodaySessions,
+    getTodayWorkSessions,
     getWeekSessions,
+    getWeekWorkSessions,
     getTotalMinutesToday,
     getTotalMinutesWeek,
     
@@ -956,6 +1034,7 @@ const Storage = (function() {
     // Statistics
     getStats,
     calculateStreak,
+    calculateBestStreak,
     
     // Utility functions
     generateId,
