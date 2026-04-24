@@ -54,7 +54,7 @@ const Timer = (function() {
         oscillator.frequency.setValueAtTime(440, now);
         oscillator.frequency.exponentialRampToValueAtTime(880, now + 0.5);
         gainNode.gain.setValueAtTime(0, now);
-        gainNode.gain.linearRampToValueAtTime(0.2, now + 0.1);
+        gainNode.gain.linearRampToValueAtTime(0.6, now + 0.1);
         gainNode.gain.linearRampToValueAtTime(0, now + 0.5);
         oscillator.start(now);
         oscillator.stop(now + 0.5);
@@ -64,7 +64,7 @@ const Timer = (function() {
         oscillator.frequency.setValueAtTime(660, now);
         oscillator.frequency.exponentialRampToValueAtTime(330, now + 0.5);
         gainNode.gain.setValueAtTime(0, now);
-        gainNode.gain.linearRampToValueAtTime(0.1, now + 0.1);
+        gainNode.gain.linearRampToValueAtTime(0.5, now + 0.1);
         gainNode.gain.linearRampToValueAtTime(0, now + 0.5);
         oscillator.start(now);
         oscillator.stop(now + 0.5);
@@ -84,11 +84,11 @@ const Timer = (function() {
         gain2.connect(audioCtx.destination);
 
         gainNode.gain.setValueAtTime(0, now);
-        gainNode.gain.linearRampToValueAtTime(0.15, now + 0.5);
+        gainNode.gain.linearRampToValueAtTime(0.6, now + 0.5);
         gainNode.gain.linearRampToValueAtTime(0, now + 1.5);
 
         gain2.gain.setValueAtTime(0, now);
-        gain2.gain.linearRampToValueAtTime(0.05, now + 0.5);
+        gain2.gain.linearRampToValueAtTime(0.2, now + 0.5);
         gain2.gain.linearRampToValueAtTime(0, now + 1.5);
 
         oscillator.start(now);
@@ -149,6 +149,24 @@ const Timer = (function() {
    * Setup event listeners
    */
   function setupEventListeners() {
+    // Global listener to unlock AudioContext on first interaction
+    const unlockAudio = () => {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume().then(() => {
+          console.log('AudioContext resumed successfully');
+        });
+      }
+      // Remove listeners once audio is unlocked
+      document.removeEventListener('click', unlockAudio);
+      document.removeEventListener('touchstart', unlockAudio);
+    };
+
+    document.addEventListener('click', unlockAudio);
+    document.addEventListener('touchstart', unlockAudio);
+
     elements.startBtn?.addEventListener('click', toggleTimer);
     elements.resetBtn?.addEventListener('click', resetTimer);
     elements.taskSelect?.addEventListener('change', handleTaskChange);

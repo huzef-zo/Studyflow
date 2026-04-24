@@ -414,6 +414,21 @@ h4 {
 .narrow-layout {
   max-width: 540px;
   margin: 0 auto;
+  transition: max-width 0.3s ease;
+}
+
+@media (min-width: 1024px) {
+  .narrow-layout {
+    max-width: 800px;
+  }
+
+  .calendar-layout {
+    display: grid;
+    grid-template-columns: 1.2fr 0.8fr;
+    gap: var(--spacing-lg);
+    align-items: start;
+    max-width: 1000px;
+  }
 }
 
 /* Flex Utilities */
@@ -1538,6 +1553,12 @@ input:checked + .toggle-slider:before {
 .timeline {
   position: relative;
   padding-left: 32px;
+}
+
+#day-tasks {
+  max-height: 450px;
+  overflow-y: auto;
+  padding-right: 8px;
 }
 
 .timeline::before {
