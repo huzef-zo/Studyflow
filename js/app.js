@@ -47,7 +47,7 @@ const App = (function() {
   /**
    * Render the sidebar navigation
    */
-  function renderSidebar() {
+  function renderSidebar(isCollapsed = false) {
     const currentPage = getCurrentPage();
     
     const navItems = [
@@ -61,23 +61,26 @@ const App = (function() {
     ];
 
     return `
-      <aside class="sidebar">
-        <div class="sidebar-header">
-          <a href="index.html" class="sidebar-logo">
+      <aside class="sidebar ${isCollapsed ? 'collapsed' : ''}">
+        <div class="sidebar-header" style="display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+          <a href="index.html" class="sidebar-logo" style="flex: 1; min-width: 0;">
             ${Icons.bookOpen}
-            <span>StudyFlow</span>
+            <span class="nav-item-text">StudyFlow</span>
           </a>
+          <button id="sidebar-toggle" class="btn-icon btn-ghost" title="${isCollapsed ? 'Expand' : 'Collapse'}" style="margin-right: -10px;">
+            ${isCollapsed ? Icons.chevronRight : Icons.chevronLeft}
+          </button>
         </div>
         <nav class="sidebar-nav">
           ${navItems.map(item => `
-            <a href="${item.href}" class="nav-item ${currentPage === item.id ? 'active' : ''}">
+            <a href="${item.href}" class="nav-item ${currentPage === item.id ? 'active' : ''}" title="${item.label}">
               ${Icons[item.icon]}
               <span class="nav-item-text">${item.label}</span>
             </a>
           `).join('')}
         </nav>
         <div class="sidebar-footer">
-          <div class="text-secondary text-center" style="font-size: 0.75rem;">
+          <div class="text-secondary text-center nav-item-text" style="font-size: 0.75rem;">
             All data saved locally
           </div>
         </div>
@@ -135,14 +138,56 @@ const App = (function() {
   }
 
   /**
+   * Toggle sidebar state
+   */
+  function toggleSidebar() {
+    const isCollapsed = !Storage.loadData('is_sidebar_collapsed', false);
+    Storage.saveData('is_sidebar_collapsed', isCollapsed);
+
+    initNavigation();
+
+    // Toggle body class for layout adjustment
+    if (isCollapsed) {
+      document.body.classList.add('sidebar-collapsed');
+    } else {
+      document.body.classList.remove('sidebar-collapsed');
+    }
+  }
+
+  /**
    * Initialize navigation
    */
   function initNavigation() {
     const sidebarContainer = document.getElementById('sidebar-container');
     const bottomNavContainer = document.getElementById('bottom-nav-container');
     
+    const isCollapsed = Storage.loadData('is_sidebar_collapsed', false);
+
     if (sidebarContainer) {
-      sidebarContainer.innerHTML = renderSidebar();
+      sidebarContainer.innerHTML = renderSidebar(isCollapsed);
+
+      // Sidebar toggle listener
+      const toggleBtn = sidebarContainer.querySelector('#sidebar-toggle');
+      if (toggleBtn) {
+        toggleBtn.onclick = (e) => {
+          e.preventDefault();
+          toggleSidebar();
+        };
+      }
+
+      // Auto-collapse on tab selection
+      const navItems = sidebarContainer.querySelectorAll('.nav-item');
+      navItems.forEach(item => {
+        item.onclick = () => {
+          Storage.saveData('is_sidebar_collapsed', true);
+        };
+      });
+
+      if (isCollapsed) {
+        document.body.classList.add('sidebar-collapsed');
+      } else {
+        document.body.classList.remove('sidebar-collapsed');
+      }
     }
     
     if (bottomNavContainer) {
