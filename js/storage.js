@@ -558,7 +558,8 @@ const Storage = (function() {
   // ============================================
 
   function getSettings() {
-    return loadData(KEYS.SETTINGS, DEFAULTS.settings);
+    const saved = loadData(KEYS.SETTINGS, DEFAULTS.settings);
+    return { ...DEFAULTS.settings, ...saved };
   }
 
   function saveSettings(settings) {
