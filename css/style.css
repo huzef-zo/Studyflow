@@ -184,6 +184,11 @@ body::after {
   body {
     padding-bottom: 0;
     padding-left: 280px;
+    transition: padding-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  body.sidebar-collapsed {
+    padding-left: 80px;
   }
 }
 
@@ -544,6 +549,26 @@ h4 {
   flex-direction: column;
   z-index: 1000;
   overflow-y: auto;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), padding 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sidebar.collapsed {
+  width: 80px;
+  padding: var(--spacing-lg) var(--spacing-xs);
+}
+
+.sidebar.collapsed .nav-item-text,
+.sidebar.collapsed .sidebar-footer {
+  display: none;
+}
+
+.sidebar.collapsed .sidebar-logo {
+  justify-content: center;
+}
+
+.sidebar.collapsed .nav-item {
+  justify-content: center;
+  padding: 12px;
 }
 
 /* Sidebar inner glow */
