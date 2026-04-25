@@ -20,6 +20,11 @@ function createMockElement(id) {
         id: id,
         textContent: '',
         style: {},
+        r: {
+            baseVal: {
+                value: 15.9155
+            }
+        },
         setAttribute: function(name, value) {
             this[name] = value;
         },
@@ -42,7 +47,8 @@ global.document = {
 
 global.window = {
     localStorage: localStorageMock,
-    document: global.document
+    document: global.document,
+    addEventListener: () => {}
 };
 
 // Mock Storage
@@ -112,14 +118,19 @@ function runTests() {
         const tasksDonut = elementMocks['tasks-donut-fill'];
         const hoursDonut = elementMocks['hours-donut-fill'];
 
-        // 3/10 = 30% -> offset = 100 - 30 = 70
-        if (tasksDonut.style.strokeDashoffset !== 70) {
-            throw new Error(`Expected tasks donut strokeDashoffset to be 70, got ${tasksDonut.style.strokeDashoffset}`);
+        // Circumference is approx 100
+        const circumference = 2 * Math.PI * 15.9155;
+
+        // 3/10 = 30% -> offset = circumference * 0.7
+        const expectedTasksOffset = circumference * 0.7;
+        if (Math.abs(tasksDonut['stroke-dashoffset'] - expectedTasksOffset) > 0.01) {
+            throw new Error(`Expected tasks donut strokeDashoffset to be approx ${expectedTasksOffset}, got ${tasksDonut['stroke-dashoffset']}`);
         }
 
-        // 4.6/20 = 23% -> offset = 100 - 23 = 77
-        if (hoursDonut.style.strokeDashoffset !== 77) {
-            throw new Error(`Expected hours donut strokeDashoffset to be 77, got ${hoursDonut.style.strokeDashoffset}`);
+        // 4.6/20 = 23% -> offset = circumference * 0.77
+        const expectedHoursOffset = circumference * 0.77;
+        if (Math.abs(hoursDonut['stroke-dashoffset'] - expectedHoursOffset) > 0.01) {
+            throw new Error(`Expected hours donut strokeDashoffset to be approx ${expectedHoursOffset}, got ${hoursDonut['stroke-dashoffset']}`);
         }
 
         console.log('  Passed: Donut charts updated with correct strokeDashoffset values.');
