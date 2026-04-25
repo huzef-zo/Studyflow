@@ -112,17 +112,17 @@ function runTests() {
         const tasksDonut = elementMocks['tasks-donut-fill'];
         const hoursDonut = elementMocks['hours-donut-fill'];
 
-        // 3/10 = 30%
-        if (tasksDonut['stroke-dasharray'] !== '30, 100') {
-            throw new Error(`Expected tasks donut stroke-dasharray to be '30, 100', got ${tasksDonut['stroke-dasharray']}`);
+        // 3/10 = 30% -> offset = 100 - 30 = 70
+        if (tasksDonut.style.strokeDashoffset !== 70) {
+            throw new Error(`Expected tasks donut strokeDashoffset to be 70, got ${tasksDonut.style.strokeDashoffset}`);
         }
 
-        // 4.6/20 = 23%
-        if (hoursDonut['stroke-dasharray'] !== '23, 100') {
-            throw new Error(`Expected hours donut stroke-dasharray to be '23, 100', got ${hoursDonut['stroke-dasharray']}`);
+        // 4.6/20 = 23% -> offset = 100 - 23 = 77
+        if (hoursDonut.style.strokeDashoffset !== 77) {
+            throw new Error(`Expected hours donut strokeDashoffset to be 77, got ${hoursDonut.style.strokeDashoffset}`);
         }
 
-        console.log('  Passed: Donut charts updated with correct stroke-dasharray values.');
+        console.log('  Passed: Donut charts updated with correct strokeDashoffset values.');
     })();
 
     console.log('\nGoals verification tests passed successfully!');

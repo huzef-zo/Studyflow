@@ -62,15 +62,15 @@
           <h3 class="card-title">Mission Quota</h3>
         </div>
         <div class="donut-container">
-          <svg viewBox="0 0 36 36" style="width: 140px; height: 140px;">
-            <circle cx="18" cy="18" r="15.9155" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="3" />
-            <circle id="tasks-donut-fill" cx="18" cy="18" r="15.9155" fill="none" stroke="url(#goalGradient)" stroke-width="3.5" stroke-dasharray="0, 100" stroke-linecap="round" transform="rotate(-90 18 18)" style="transition: stroke-dasharray 1s ease;" />
+          <svg viewBox="0 0 36 36" style="width: 140px; height: 140px; overflow: visible;">
             <defs>
-              <linearGradient id="goalGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <linearGradient id="goalGradientTasks" x1="0%" y1="0%" x2="100%" y2="100%">
                 <stop offset="0%" stop-color="#3B82F6" />
-                <stop offset="100%" stop-color="#8B5CF6" />
+                <stop offset="100%" stop-color="#a855f7" />
               </linearGradient>
             </defs>
+            <circle cx="18" cy="18" r="15.9155" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="3" />
+            <circle id="tasks-donut-fill" cx="18" cy="18" r="15.9155" fill="none" stroke="url(#goalGradientTasks)" stroke-width="3.5" stroke-dasharray="100" stroke-dashoffset="100" stroke-linecap="round" transform="rotate(-90 18 18)" style="transition: stroke-dashoffset 1s ease;" />
           </svg>
           <div class="donut-center">
             <div id="tasks-percent" class="gradient-text" style="font-size: 2rem; font-weight: 800;">0%</div>
@@ -90,9 +90,15 @@
           <h3 class="card-title">Focus Quota</h3>
         </div>
         <div class="donut-container">
-          <svg viewBox="0 0 36 36" style="width: 140px; height: 140px;">
+          <svg viewBox="0 0 36 36" style="width: 140px; height: 140px; overflow: visible;">
+            <defs>
+              <linearGradient id="goalGradientHours" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#3B82F6" />
+                <stop offset="100%" stop-color="#a855f7" />
+              </linearGradient>
+            </defs>
             <circle cx="18" cy="18" r="15.9155" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="3" />
-            <circle id="hours-donut-fill" cx="18" cy="18" r="15.9155" fill="none" stroke="url(#goalGradient)" stroke-width="3.5" stroke-dasharray="0, 100" stroke-linecap="round" transform="rotate(-90 18 18)" style="transition: stroke-dasharray 1s ease;" />
+            <circle id="hours-donut-fill" cx="18" cy="18" r="15.9155" fill="none" stroke="url(#goalGradientHours)" stroke-width="3.5" stroke-dasharray="100" stroke-dashoffset="100" stroke-linecap="round" transform="rotate(-90 18 18)" style="transition: stroke-dashoffset 1s ease;" />
           </svg>
           <div class="donut-center">
             <div id="hours-percent" class="gradient-text" style="font-size: 2rem; font-weight: 800;">0%</div>
