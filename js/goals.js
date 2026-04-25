@@ -16,11 +16,11 @@ const Goals = (function() {
     elements = {
       tasksGoalValue: document.getElementById('tasks-goal-value'),
       tasksGoalMax: document.getElementById('tasks-goal-max'),
-      tasksProgressBar: document.getElementById('tasks-progress-bar'),
+      tasksProgressBar: document.getElementById('tasks-donut-fill'),
       tasksPercent: document.getElementById('tasks-percent'),
       hoursGoalValue: document.getElementById('hours-goal-value'),
       hoursGoalMax: document.getElementById('hours-goal-max'),
-      hoursProgressBar: document.getElementById('hours-progress-bar'),
+      hoursProgressBar: document.getElementById('hours-donut-fill'),
       hoursPercent: document.getElementById('hours-percent'),
       weekDates: document.getElementById('week-dates'),
       dailyProgress: document.getElementById('daily-progress'),
@@ -50,15 +50,7 @@ const Goals = (function() {
       elements.tasksGoalMax.textContent = goals.weekly_tasks;
     }
     if (elements.tasksProgressBar) {
-      elements.tasksProgressBar.style.width = `${tasksPercent}%`;
-      
-      // Update color based on progress
-      elements.tasksProgressBar.classList.remove('success', 'warning', 'danger');
-      if (tasksPercent >= 100) {
-        elements.tasksProgressBar.classList.add('success');
-      } else if (tasksPercent >= 75) {
-        elements.tasksProgressBar.classList.add('success');
-      }
+      elements.tasksProgressBar.setAttribute('stroke-dasharray', `${tasksPercent}, 100`);
     }
     if (elements.tasksPercent) {
       elements.tasksPercent.textContent = `${tasksPercent}%`;
@@ -77,15 +69,7 @@ const Goals = (function() {
       elements.hoursGoalMax.textContent = goals.weekly_hours;
     }
     if (elements.hoursProgressBar) {
-      elements.hoursProgressBar.style.width = `${hoursPercent}%`;
-      
-      // Update color based on progress
-      elements.hoursProgressBar.classList.remove('success', 'warning', 'danger');
-      if (hoursPercent >= 100) {
-        elements.hoursProgressBar.classList.add('success');
-      } else if (hoursPercent >= 75) {
-        elements.hoursProgressBar.classList.add('success');
-      }
+      elements.hoursProgressBar.setAttribute('stroke-dasharray', `${hoursPercent}, 100`);
     }
     if (elements.hoursPercent) {
       elements.hoursPercent.textContent = `${hoursPercent}%`;
