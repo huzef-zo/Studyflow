@@ -15,7 +15,8 @@ global.localStorage = localStorageMock;
 global.window = {
     AudioContext: function() {},
     webkitAudioContext: function() {},
-    localStorage: localStorageMock
+    localStorage: localStorageMock,
+    addEventListener: function() {}
 };
 global.Date.now = () => 1000000000;
 

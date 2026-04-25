@@ -17,6 +17,24 @@ const Storage = (function() {
     TIMER: 'studyflow_timer'
   };
 
+  // In-memory cache to avoid redundant JSON.parse and localStorage.getItem calls
+  const cache = {};
+
+  // Sync cache with other tabs
+  window.addEventListener('storage', (e) => {
+    if (Object.values(KEYS).includes(e.key)) {
+      if (e.newValue === null) {
+        delete cache[e.key];
+      } else {
+        try {
+          cache[e.key] = JSON.parse(e.newValue);
+        } catch (err) {
+          delete cache[e.key];
+        }
+      }
+    }
+  });
+
   // Default data structures
   const DEFAULTS = {
     user: {
@@ -77,6 +95,8 @@ const Storage = (function() {
     try {
       const serialized = JSON.stringify(data);
       localStorage.setItem(key, serialized);
+      // Update cache
+      cache[key] = data;
       return true;
     } catch (error) {
       console.error('Storage save error:', error);
@@ -91,12 +111,20 @@ const Storage = (function() {
    * @returns {any} - Loaded data or default value
    */
   function loadData(key, defaultValue = null) {
+    // Return from cache if available
+    if (cache.hasOwnProperty(key)) {
+      return cache[key];
+    }
+
     try {
       const serialized = localStorage.getItem(key);
       if (serialized === null) {
         return defaultValue;
       }
-      return JSON.parse(serialized);
+      const data = JSON.parse(serialized);
+      // Store in cache
+      cache[key] = data;
+      return data;
     } catch (error) {
       console.error('Storage load error:', error);
       return defaultValue;
@@ -110,6 +138,8 @@ const Storage = (function() {
   function removeData(key) {
     try {
       localStorage.removeItem(key);
+      // Clear from cache
+      delete cache[key];
     } catch (error) {
       console.error('Storage remove error:', error);
     }
@@ -122,6 +152,8 @@ const Storage = (function() {
     Object.values(KEYS).forEach(key => {
       removeData(key);
     });
+    // Ensure cache is completely cleared
+    Object.keys(cache).forEach(key => delete cache[key]);
   }
 
   /**
@@ -194,7 +226,7 @@ const Storage = (function() {
   }
 
   function saveTasks(tasks) {
-    return saveData(KEYS.TASKS, tasks);
+    return saveData(KEYS.TASKS, [...tasks]);
   }
 
   function addTask(task) {
@@ -400,7 +432,7 @@ const Storage = (function() {
   }
 
   function saveSubjects(subjects) {
-    return saveData(KEYS.SUBJECTS, subjects);
+    return saveData(KEYS.SUBJECTS, [...subjects]);
   }
 
   function addSubject(name, color) {
@@ -453,7 +485,7 @@ const Storage = (function() {
   }
 
   function saveSessions(sessions) {
-    return saveData(KEYS.SESSIONS, sessions);
+    return saveData(KEYS.SESSIONS, [...sessions]);
   }
 
   function addSession(duration, type = 'work', taskId = null) {
@@ -598,7 +630,7 @@ const Storage = (function() {
   }
 
   function saveTimerState(state) {
-    return saveData(KEYS.TIMER, state);
+    return saveData(KEYS.TIMER, { ...state });
   }
 
   function clearTimerState() {

@@ -542,14 +542,13 @@ const Timer = (function() {
       selectedSubtaskId: selectedSubtaskId,
       sessionsInCycle: sessionsInCycle
     };
-    localStorage.setItem('studyflow_timer', JSON.stringify(state));
+    Storage.saveTimerState(state);
   }
 
   function loadTimerState() {
-    const saved = localStorage.getItem('studyflow_timer');
-    if (!saved) return;
+    const state = Storage.getTimerState();
+    if (!state) return;
     
-    const state = JSON.parse(saved);
     currentSessionType = state.type || 'work';
     selectedTaskId = state.selectedTaskId;
     selectedSubtaskId = state.selectedSubtaskId;
