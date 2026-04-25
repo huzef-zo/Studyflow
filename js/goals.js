@@ -32,6 +32,36 @@ const Goals = (function() {
   }
 
   /**
+   * Update circular progress SVG
+   *
+   * CSS Requirements:
+   * .donut-fill {
+   *   transition: stroke-dashoffset 1s ease;
+   *   stroke-linecap: round;
+   *   transform: rotate(-90deg);
+   *   transform-origin: center;
+   * }
+   *
+   * @param {HTMLElement} element - The SVG circle element
+   * @param {number} percentage - Progress percentage (0-100)
+   */
+  function updateCircle(element, percentage) {
+    if (!element) return;
+
+    // The circles have a radius of 15.9155
+    // Circumference = 2 * PI * r = 2 * 3.14159 * 15.9155 ≈ 100
+    const radius = element.r.baseVal.value;
+    const circumference = 2 * Math.PI * radius;
+
+    // Calculate offset: 0% is full circumference (empty), 100% is 0 (full)
+    const offset = circumference - (percentage / 100) * circumference;
+
+    // Apply dasharray and dashoffset
+    element.setAttribute('stroke-dasharray', circumference);
+    element.setAttribute('stroke-dashoffset', offset);
+  }
+
+  /**
    * Update goals display
    */
   function updateGoalsDisplay() {
@@ -49,9 +79,9 @@ const Goals = (function() {
     if (elements.tasksGoalMax) {
       elements.tasksGoalMax.textContent = goals.weekly_tasks;
     }
-    if (elements.tasksProgressBar) {
-      elements.tasksProgressBar.style.strokeDashoffset = 100 - tasksPercent;
-    }
+
+    updateCircle(elements.tasksProgressBar, tasksPercent);
+
     if (elements.tasksPercent) {
       elements.tasksPercent.textContent = `${tasksPercent}%`;
     }
@@ -68,9 +98,9 @@ const Goals = (function() {
     if (elements.hoursGoalMax) {
       elements.hoursGoalMax.textContent = goals.weekly_hours;
     }
-    if (elements.hoursProgressBar) {
-      elements.hoursProgressBar.style.strokeDashoffset = 100 - hoursPercent;
-    }
+
+    updateCircle(elements.hoursProgressBar, hoursPercent);
+
     if (elements.hoursPercent) {
       elements.hoursPercent.textContent = `${hoursPercent}%`;
     }
