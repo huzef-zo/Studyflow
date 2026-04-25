@@ -837,14 +837,16 @@ class CircularProgress {
     this.circle.style.strokeDashoffset = this.circumference;
   }
 
-  /**
-   * Update progress percentage
-   * @param {number} current - Current value
-   * @param {number} max - Maximum value
-   */
+/**
+ * Update progress percentage
+ * @param {number} current - Current value
+ * @param {number} max - Maximum value
+ */
   updateProgress(current, max) {
     const percentage = Math.min(100, Math.max(0, (current / max) * 100));
     const offset = this.circumference * (1 - percentage / 100);
+    
+    console.log("[v0] Progress update:", { current, max, percentage: percentage.toFixed(2) + "%", offset: offset.toFixed(2) });
     
     // Apply animation
     this.circle.classList.add('animate');
@@ -883,25 +885,35 @@ function initCircularProgress() {
   const missionCircle = document.getElementById('missionCircle');
   const focusCircle = document.getElementById('focusCircle');
   
+  console.log("[v0] Initializing circular progress...");
+  console.log("[v0] Mission circle found:", !!missionCircle);
+  console.log("[v0] Focus circle found:", !!focusCircle);
+  
   if (missionCircle) {
     missionProgress = new CircularProgress(missionCircle);
+    console.log("[v0] Mission progress initialized with circumference:", missionProgress.circumference);
     // Load saved values from localStorage
     const savedMission = localStorage.getItem('mission_current');
     if (savedMission) {
       missionState.current = parseInt(savedMission, 10);
+      console.log("[v0] Mission loaded from storage:", missionState.current);
       updateMissionUI();
     }
   }
   
   if (focusCircle) {
     focusProgress = new CircularProgress(focusCircle);
+    console.log("[v0] Focus progress initialized with circumference:", focusProgress.circumference);
     // Load saved values from localStorage
     const savedFocus = localStorage.getItem('focus_current');
     if (savedFocus) {
       focusState.current = parseFloat(savedFocus);
+      console.log("[v0] Focus loaded from storage:", focusState.current);
       updateFocusUI();
     }
   }
+  
+  console.log("[v0] Circular progress initialization complete");
 }
 
 /**
