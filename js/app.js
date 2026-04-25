@@ -809,3 +809,172 @@ document.addEventListener('DOMContentLoaded', App.init);
 
 // Make App available globally
 window.App = App;
+
+// ============================================
+// CIRCULAR PROGRESS BARS - Strategic Goals
+// ============================================
+
+/**
+ * Circular Progress Circle Calculator
+ * 
+ * Formula:
+ * - Circumference = 2 * π * radius
+ * - For r=70: C = 2 * π * 70 ≈ 439.82
+ * - stroke-dashoffset = C * (1 - percentage/100)
+ * 
+ * At 0%: offset = 439.82 (empty ring)
+ * At 100%: offset = 0 (full ring)
+ */
+
+class CircularProgress {
+  constructor(circleElement) {
+    this.circle = circleElement;
+    this.radius = parseFloat(circleElement.getAttribute('r'));
+    this.circumference = 2 * Math.PI * this.radius;
+    
+    // Set initial stroke-dasharray and offset
+    this.circle.style.strokeDasharray = this.circumference;
+    this.circle.style.strokeDashoffset = this.circumference;
+  }
+
+  /**
+   * Update progress percentage
+   * @param {number} current - Current value
+   * @param {number} max - Maximum value
+   */
+  updateProgress(current, max) {
+    const percentage = Math.min(100, Math.max(0, (current / max) * 100));
+    const offset = this.circumference * (1 - percentage / 100);
+    
+    // Apply animation
+    this.circle.classList.add('animate');
+    this.circle.style.strokeDashoffset = offset;
+    
+    return percentage;
+  }
+
+  /**
+   * Reset progress to 0%
+   */
+  reset() {
+    this.circle.style.strokeDashoffset = this.circumference;
+  }
+}
+
+// Initialize progress circles
+let missionProgress = null;
+let focusProgress = null;
+
+// State for tracking current values
+let missionState = {
+  current: 0,
+  max: 10
+};
+
+let focusState = {
+  current: 0,
+  max: 20
+};
+
+/**
+ * Initialize the circular progress bars on page load
+ */
+function initCircularProgress() {
+  const missionCircle = document.getElementById('missionCircle');
+  const focusCircle = document.getElementById('focusCircle');
+  
+  if (missionCircle) {
+    missionProgress = new CircularProgress(missionCircle);
+    // Load saved values from localStorage
+    const savedMission = localStorage.getItem('mission_current');
+    if (savedMission) {
+      missionState.current = parseInt(savedMission, 10);
+      updateMissionUI();
+    }
+  }
+  
+  if (focusCircle) {
+    focusProgress = new CircularProgress(focusCircle);
+    // Load saved values from localStorage
+    const savedFocus = localStorage.getItem('focus_current');
+    if (savedFocus) {
+      focusState.current = parseFloat(savedFocus);
+      updateFocusUI();
+    }
+  }
+}
+
+/**
+ * Increment mission counter
+ */
+function incrementMission() {
+  if (missionState.current < missionState.max) {
+    missionState.current++;
+    localStorage.setItem('mission_current', missionState.current);
+    updateMissionUI();
+  }
+}
+
+/**
+ * Increment focus hours
+ */
+function incrementFocus() {
+  if (focusState.current < focusState.max) {
+    focusState.current++;
+    localStorage.setItem('focus_current', focusState.current);
+    updateFocusUI();
+  }
+}
+
+/**
+ * Reset mission to 0
+ */
+function resetMission() {
+  missionState.current = 0;
+  localStorage.setItem('mission_current', 0);
+  updateMissionUI();
+}
+
+/**
+ * Reset focus to 0
+ */
+function resetFocus() {
+  focusState.current = 0;
+  localStorage.setItem('focus_current', 0);
+  updateFocusUI();
+}
+
+/**
+ * Update mission UI
+ */
+function updateMissionUI() {
+  if (!missionProgress) return;
+  
+  const percentage = missionProgress.updateProgress(
+    missionState.current,
+    missionState.max
+  );
+  
+  document.getElementById('missionPercent').textContent = Math.round(percentage) + '%';
+  document.getElementById('missionCurrent').textContent = missionState.current;
+}
+
+/**
+ * Update focus UI
+ */
+function updateFocusUI() {
+  if (!focusProgress) return;
+  
+  const percentage = focusProgress.updateProgress(
+    focusState.current,
+    focusState.max
+  );
+  
+  document.getElementById('focusPercent').textContent = Math.round(percentage) + '%';
+  document.getElementById('focusCurrent').textContent = focusState.current;
+}
+
+// Initialize circular progress when DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+  setTimeout(initCircularProgress, 100);
+});

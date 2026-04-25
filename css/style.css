@@ -2886,3 +2886,148 @@ body.focus-mode .btn-fab-main:hover {
 .bottom-nav-item.active svg {
   filter: drop-shadow(0 0 12px var(--primary-glow));
 }
+
+/* ============================================
+   Strategic Goals - Circular Progress Bars
+   ============================================ */
+
+.strategic-goals-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--spacing-lg);
+  margin-top: var(--spacing-md);
+}
+
+.goal-card {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-md);
+  backdrop-filter: blur(var(--glass-blur));
+  transition: var(--transition);
+}
+
+.goal-card:hover {
+  background: var(--glass-bg-hover);
+  border-color: var(--glass-border-hover);
+  box-shadow: 0 8px 32px rgba(168, 85, 247, 0.15);
+}
+
+.circular-progress-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  margin-bottom: var(--spacing-md);
+}
+
+.circular-progress {
+  width: 160px;
+  height: 160px;
+  transform: rotate(-90deg);
+}
+
+/* SVG Circle Styles */
+.progress-bg {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.1);
+  stroke-width: 8;
+}
+
+.progress-ring {
+  fill: none;
+  stroke: var(--neon-purple);
+  stroke-width: 8;
+  stroke-linecap: round;
+  stroke-dasharray: 439.82;
+  stroke-dashoffset: 439.82;
+  transition: stroke-dashoffset 0.5s ease-in-out;
+  filter: drop-shadow(0 0 8px rgba(168, 85, 247, 0.6));
+}
+
+.progress-center {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 160px;
+  height: 160px;
+}
+
+.progress-percent {
+  font-size: 2rem;
+  font-weight: 800;
+  color: white;
+  line-height: 1;
+}
+
+.progress-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 0.5rem;
+  text-align: center;
+}
+
+.goal-details {
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-sm);
+}
+
+.goal-details p {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin: 0 0 var(--spacing-sm) 0;
+}
+
+.goal-details p strong {
+  color: white;
+}
+
+.goal-details p span {
+  color: var(--primary);
+  font-weight: 700;
+}
+
+.btn-sm {
+  font-size: 0.875rem;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-md);
+}
+
+/* Animation for progress filling */
+@keyframes fillProgress {
+  from {
+    stroke-dashoffset: 439.82;
+  }
+}
+
+.progress-ring.animate {
+  animation: fillProgress 0.6s ease-out forwards;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .strategic-goals-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .circular-progress {
+    width: 140px;
+    height: 140px;
+  }
+
+  .progress-center {
+    width: 140px;
+    height: 140px;
+  }
+
+  .progress-percent {
+    font-size: 1.75rem;
+  }
+}

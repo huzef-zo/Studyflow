@@ -145,6 +145,83 @@
         </div>
       </section>
 
+      <!-- Strategic Goals Section with Circular Progress -->
+      <section class="card animate-fade-in stagger-6 col-span-3 md:col-span-2">
+        <h2 class="flex items-center gap-md mb-lg" style="color: white;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          Strategic Goals
+        </h2>
+        <div class="strategic-goals-grid">
+          <!-- Mission Quota -->
+          <div class="goal-card">
+            <div class="circular-progress-wrapper">
+              <svg class="circular-progress" width="160" height="160" viewBox="0 0 160 160">
+                <!-- Background circle -->
+                <circle 
+                  cx="80" 
+                  cy="80" 
+                  r="70"
+                  class="progress-bg"
+                />
+                <!-- Progress ring (animated) -->
+                <circle 
+                  id="missionCircle"
+                  cx="80" 
+                  cy="80" 
+                  r="70"
+                  class="progress-ring"
+                  data-max="10"
+                  data-circumference="439.82"
+                />
+              </svg>
+              <div class="progress-center">
+                <div class="progress-percent" id="missionPercent">0%</div>
+                <div class="progress-label">Mission Quota</div>
+              </div>
+            </div>
+            <div class="goal-details">
+              <p><strong>Current:</strong> <span id="missionCurrent">0</span> / 10 missions</p>
+              <button class="btn btn-primary btn-sm" onclick="incrementMission()" style="width: 100%; margin-top: 0.5rem;">+ Complete Mission</button>
+              <button class="btn btn-secondary btn-sm" onclick="resetMission()" style="width: 100%; margin-top: 0.5rem;">Reset</button>
+            </div>
+          </div>
+
+          <!-- Focus Quota -->
+          <div class="goal-card">
+            <div class="circular-progress-wrapper">
+              <svg class="circular-progress" width="160" height="160" viewBox="0 0 160 160">
+                <!-- Background circle -->
+                <circle 
+                  cx="80" 
+                  cy="80" 
+                  r="70"
+                  class="progress-bg"
+                />
+                <!-- Progress ring (animated) -->
+                <circle 
+                  id="focusCircle"
+                  cx="80" 
+                  cy="80" 
+                  r="70"
+                  class="progress-ring"
+                  data-max="20"
+                  data-circumference="439.82"
+                />
+              </svg>
+              <div class="progress-center">
+                <div class="progress-percent" id="focusPercent">0%</div>
+                <div class="progress-label">Focus Quota</div>
+              </div>
+            </div>
+            <div class="goal-details">
+              <p><strong>Current:</strong> <span id="focusCurrent">0</span> / 20 hours</p>
+              <button class="btn btn-primary btn-sm" onclick="incrementFocus()" style="width: 100%; margin-top: 0.5rem;">+ Add 1 Hour</button>
+              <button class="btn btn-secondary btn-sm" onclick="resetFocus()" style="width: 100%; margin-top: 0.5rem;">Reset</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
     </div>  </main>
 
   <!-- Scripts -->
