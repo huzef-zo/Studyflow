@@ -50,7 +50,7 @@ const Goals = (function() {
       elements.tasksGoalMax.textContent = goals.weekly_tasks;
     }
     if (elements.tasksProgressBar) {
-      elements.tasksProgressBar.setAttribute('stroke-dasharray', `${tasksPercent}, 100`);
+      elements.tasksProgressBar.style.strokeDashoffset = 100 - tasksPercent;
     }
     if (elements.tasksPercent) {
       elements.tasksPercent.textContent = `${tasksPercent}%`;
@@ -69,7 +69,7 @@ const Goals = (function() {
       elements.hoursGoalMax.textContent = goals.weekly_hours;
     }
     if (elements.hoursProgressBar) {
-      elements.hoursProgressBar.setAttribute('stroke-dasharray', `${hoursPercent}, 100`);
+      elements.hoursProgressBar.style.strokeDashoffset = 100 - hoursPercent;
     }
     if (elements.hoursPercent) {
       elements.hoursPercent.textContent = `${hoursPercent}%`;
@@ -204,9 +204,11 @@ const Goals = (function() {
                 fill="none" 
                 stroke="${avgPercent >= 100 ? 'var(--success)' : 'var(--primary)'}" 
                 stroke-width="3"
-                stroke-dasharray="${avgPercent}, 100"
+                stroke-dasharray="100"
+                stroke-dashoffset="${100 - avgPercent}"
                 stroke-linecap="round"
                 transform="rotate(-90 18 18)"
+                style="transition: stroke-dashoffset 0.5s ease;"
               />
             </svg>
             <span class="daily-progress-value">${day.isFuture ? '-' : avgPercent + '%'}</span>
