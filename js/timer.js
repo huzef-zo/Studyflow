@@ -390,11 +390,14 @@ const Timer = (function() {
     }
 
     elements.subtaskContainer.style.display = 'block';
-    elements.subtaskSelect.innerHTML = '<option value="">SELECT SUB-MISSION</option>' +
-      task.subtasks.map(s => `<option value="${s.id}" ${s.id === selectedSubtaskId ? 'selected' : ''}>${App.escapeHtml(s.title)}</option>`).join('');
+    const availableSubtasks = task.subtasks.filter(s => !s.isCompleted);
 
-    // If previously selected subtask is not in the new task, reset it
-    if (selectedSubtaskId && !task.subtasks.some(s => s.id === selectedSubtaskId)) {
+    elements.subtaskSelect.innerHTML = '<option value="">SELECT SUB-MISSION</option>' +
+      availableSubtasks
+        .map(s => `<option value="${s.id}" ${s.id === selectedSubtaskId ? 'selected' : ''}>${App.escapeHtml(s.title)}</option>`).join('');
+
+    // Reset selected subtask if it's no longer available (completed or not in task)
+    if (selectedSubtaskId && !availableSubtasks.some(s => s.id === selectedSubtaskId)) {
       selectedSubtaskId = null;
       elements.subtaskSelect.value = '';
     }
@@ -447,10 +450,28 @@ const Timer = (function() {
 
   function populateTasks() {
     const tasks = Storage.getTodayTasks().concat(Storage.getOverdueTasks());
-    const uniqueTasks = Array.from(new Set(tasks.map(t => t.id))).map(id => tasks.find(t => t.id === id));
+    const uniqueTasksMap = new Map();
+    tasks.forEach(t => {
+      if (!uniqueTasksMap.has(t.id)) {
+        uniqueTasksMap.set(t.id, t);
+      }
+    });
+
+    const availableTasks = Array.from(uniqueTasksMap.values()).filter(t => !t.completed);
     
     elements.taskSelect.innerHTML = '<option value="">GENERAL FOCUS</option>' +
-      uniqueTasks.map(t => `<option value="${t.id}">${App.escapeHtml(t.subject)}: ${App.escapeHtml(t.title)}</option>`).join('');
+      availableTasks.map(t => `<option value="${t.id}">${App.escapeHtml(t.subject)}: ${App.escapeHtml(t.title)}</option>`).join('');
+
+    // Reset selected task if it's no longer available (completed)
+    if (selectedTaskId && !availableTasks.some(t => t.id === selectedTaskId)) {
+      selectedTaskId = null;
+      elements.taskSelect.value = '';
+      elements.taskDisplay.textContent = 'GENERAL';
+      if (elements.activeMissionLabel) {
+        elements.activeMissionLabel.textContent = 'Focusing on: General';
+      }
+      populateSubtasks(null);
+    }
   }
 
   function updateDisplay() {
