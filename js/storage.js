@@ -758,6 +758,7 @@ const Storage = (function() {
     const pendingTasks = totalTasks - completedTasks;
     const todayTasks = getTasksByDate(today);
     const todayCompleted = todayTasks.filter(t => t.completed).length;
+    const todayPending = todayTasks.length - todayCompleted;
     
     // Week stats
     const weekTasks = tasks.filter(t => {
@@ -790,6 +791,7 @@ const Storage = (function() {
         pending: pendingTasks,
         today: todayTasks.length,
         todayCompleted: todayCompleted,
+        todayPending: todayPending,
         weekCompleted: weekCompleted,
         overdue: overdueTasks,
         upcoming: upcomingTasks

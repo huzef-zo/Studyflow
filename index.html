@@ -280,7 +280,7 @@
       function updateStats() {
         const stats = Storage.getStats();
         document.getElementById('stat-today').textContent = stats.tasks.today;
-        document.getElementById('stat-pending').textContent = stats.tasks.pending;
+        document.getElementById('stat-pending').textContent = stats.tasks.todayPending;
         document.getElementById('stat-week').textContent = stats.tasks.weekCompleted;
         document.getElementById('streak-count').textContent = stats.streak;
       }
