@@ -279,10 +279,10 @@
 
       function updateStats() {
         const stats = Storage.getStats();
-        document.getElementById('stat-today').textContent = stats.tasks.today;
-        document.getElementById('stat-pending').textContent = stats.tasks.todayPending;
-        document.getElementById('stat-week').textContent = stats.tasks.weekCompleted;
-        document.getElementById('streak-count').textContent = stats.streak;
+        document.getElementById('stat-today').textContent = stats.tasks.today || 0;
+        document.getElementById('stat-pending').textContent = stats.tasks.todayPending || 0;
+        document.getElementById('stat-week').textContent = stats.tasks.weekCompleted || 0;
+        document.getElementById('streak-count').textContent = stats.streak || 0;
       }
 
       function updateProgress() {
