@@ -253,6 +253,7 @@ const Storage = (function() {
       subject: task.subject || 'Other',
       repeatDays: task.repeatDays || [],
       completed: completed,
+      completedAt: completed ? new Date().toISOString() : null,
       subtasks: subtasks,
       progress: progress,
       createdAt: new Date().toISOString()
@@ -266,6 +267,7 @@ const Storage = (function() {
     const tasks = getTasks();
     const index = tasks.findIndex(t => t.id === id);
     if (index !== -1) {
+      const oldStatus = tasks[index].completed;
       const task = { ...tasks[index], ...updates };
 
       // Update progress and completion status if subtasks changed
@@ -275,6 +277,13 @@ const Storage = (function() {
         task.completed = task.subtasks.every(s => s.isCompleted);
       } else if (task.subtasks) {
         task.progress = 0;
+      }
+
+      // Handle completedAt if status changed
+      if (task.completed && !oldStatus) {
+        task.completedAt = task.completedAt || new Date().toISOString();
+      } else if (!task.completed && oldStatus) {
+        task.completedAt = null;
       }
 
       tasks[index] = task;
@@ -396,8 +405,10 @@ const Storage = (function() {
       if (t.type === 'repeating') return true;
 
       if (!t.dueDate) return false;
+
+      // Include if overdue (due before today) OR within the upcoming window
       const start = t.startDate || t.dueDate;
-      return t.dueDate >= todayStr && start <= futureStr;
+      return t.dueDate < todayStr || (t.dueDate >= todayStr && start <= futureStr);
     }).sort((a, b) => {
       if (a.type === 'repeating' && b.type !== 'repeating') return 1;
       if (a.type !== 'repeating' && b.type === 'repeating') return -1;
@@ -756,9 +767,20 @@ const Storage = (function() {
     const totalTasks = tasks.length;
     const completedTasks = tasks.filter(t => t.completed).length;
     const pendingTasks = totalTasks - completedTasks;
-    const todayTasks = getTasksByDate(today);
-    const todayCompleted = todayTasks.filter(t => t.completed).length;
-    const todayPending = todayTasks.filter(t => !t.completed).length;
+
+    // Calculate today's completed tasks (anything finished on this calendar day)
+    const todayCompleted = tasks.filter(t => {
+      if (!t.completed || !t.completedAt) return false;
+      return formatDate(new Date(t.completedAt)) === today;
+    }).length;
+
+    // Calculate today's pending tasks (due today OR overdue)
+    const overdue = getOverdueTasks();
+    const dueToday = getTasksByDate(today).filter(t => !t.completed);
+    const todayPendingIds = new Set([...overdue.map(t => t.id), ...dueToday.map(t => t.id)]);
+    const todayPending = todayPendingIds.size;
+
+    const todayTotal = todayCompleted + todayPending;
     
     // Week stats
     const weekTasks = tasks.filter(t => {
@@ -789,7 +811,7 @@ const Storage = (function() {
         total: totalTasks,
         completed: completedTasks,
         pending: pendingTasks,
-        today: todayTasks.length,
+        today: todayTotal,
         todayCompleted: todayCompleted,
         todayPending: todayPending,
         weekCompleted: weekCompleted,
