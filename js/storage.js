@@ -431,7 +431,7 @@ const Storage = (function() {
 
   function getTodayTasks() {
     const today = formatDate(new Date());
-    return getTasksByDate(today);
+    return getTasksByDate(today).filter(t => !t.completed);
   }
 
   // ============================================
@@ -780,7 +780,8 @@ const Storage = (function() {
     const todayPendingIds = new Set([...overdue.map(t => t.id), ...dueToday.map(t => t.id)]);
     const todayPending = todayPendingIds.size;
 
-    const todayTotal = todayCompleted + todayPending;
+    // "Tasks today" excludes completed tasks per user requirement
+    const todayTotal = todayPending;
     
     // Week stats
     const weekTasks = tasks.filter(t => {
