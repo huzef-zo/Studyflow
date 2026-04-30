@@ -360,6 +360,13 @@
         updateDeadlines();
       }
       init();
+
+      // Listen for task data changes and update stats in real-time
+      window.addEventListener('studyflow_taskDataChanged', () => {
+        updateStats();
+        updateMasteryOverview();
+        updateDeadlines();
+      });
     })();
   </script>
   </body>

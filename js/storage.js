@@ -20,6 +20,21 @@ const Storage = (function() {
   // In-memory cache to avoid redundant JSON.parse and localStorage.getItem calls
   const cache = {};
 
+  /**
+   * Dispatch custom event when task data changes
+   * Allows dashboard and other UI components to listen for updates
+   */
+  function notifyTaskDataChanged() {
+    try {
+      const event = new CustomEvent('studyflow_taskDataChanged', {
+        detail: { timestamp: new Date().toISOString() }
+      });
+      window.dispatchEvent(event);
+    } catch (err) {
+      console.error('Failed to dispatch task data change event:', err);
+    }
+  }
+
   // Sync cache with other tabs
   window.addEventListener('storage', (e) => {
     if (Object.values(KEYS).includes(e.key)) {
@@ -260,6 +275,7 @@ const Storage = (function() {
     };
     tasks.push(newTask);
     saveTasks(tasks);
+    notifyTaskDataChanged();
     return newTask;
   }
 
@@ -288,6 +304,7 @@ const Storage = (function() {
 
       tasks[index] = task;
       saveTasks(tasks);
+      notifyTaskDataChanged();
       return tasks[index];
     }
     return null;
@@ -332,6 +349,7 @@ const Storage = (function() {
     const tasks = getTasks();
     const filtered = tasks.filter(t => t.id !== id);
     saveTasks(filtered);
+    notifyTaskDataChanged();
     return true;
   }
 
@@ -780,8 +798,9 @@ const Storage = (function() {
     const todayPendingIds = new Set([...overdue.map(t => t.id), ...dueToday.map(t => t.id)]);
     const todayPending = todayPendingIds.size;
 
-    // "Tasks today" excludes completed tasks per user requirement
-    const todayTotal = todayPending;
+    // Calculate all tasks for today (completed + pending for this calendar day)
+    const allTodayTasks = getTasksByDate(today);
+    const todayTotal = allTodayTasks.length;
     
     // Week stats
     const weekTasks = tasks.filter(t => {

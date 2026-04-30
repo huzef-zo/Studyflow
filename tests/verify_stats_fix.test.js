@@ -14,7 +14,19 @@ const localStorageMock = {
 global.localStorage = localStorageMock;
 global.window = {
     localStorage: localStorageMock,
-    addEventListener: function() {}
+    addEventListener: function() {},
+    dispatchEvent: function(event) {
+        // Mock implementation for custom events
+        return true;
+    }
+};
+
+// Mock CustomEvent
+global.CustomEvent = class CustomEvent {
+    constructor(type, options) {
+        this.type = type;
+        this.detail = options?.detail || {};
+    }
 };
 
 // Mock App
