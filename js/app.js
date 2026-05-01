@@ -214,7 +214,7 @@ const App = (function() {
     modal.innerHTML = `
       <div class="modal">
         <div class="modal-header">
-          <h3 class="modal-title">${title}</h3>
+          <h3 class="modal-title">${escapeHtml(title)}</h3>
           <button class="modal-close" aria-label="Close modal">
             ${Icons.x}
           </button>
@@ -402,7 +402,7 @@ const App = (function() {
     toast.innerHTML = `
       <div style="display: flex; align-items: center; gap: 8px;">
         <span style="color: ${iconColorMap[type]}; display: flex;">${iconMap[type]}</span>
-        <span>${message}</span>
+        <span>${escapeHtml(message)}</span>
       </div>
     `;
     
@@ -536,12 +536,18 @@ const App = (function() {
 
   /**
    * Escape HTML to prevent XSS
+   * Robust implementation that escapes &, <, >, ", and '
    */
   function escapeHtml(text) {
     if (text === null || text === undefined) return '';
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
+    const map = {
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    };
+    return String(text).replace(/[&<>"']/g, function(m) { return map[m]; });
   }
 
   /**
@@ -655,7 +661,7 @@ const App = (function() {
         <div class="empty-state-icon">${Icons[icon] || Icons.empty}</div>
         <h4 style="color: white; font-size: 1.25rem; margin-bottom: 8px; font-weight: 600;">${escapeHtml(title)}</h4>
         <p style="color: var(--text-muted); font-size: 0.875rem; margin-bottom: 1.5rem; max-width: 250px;">${escapeHtml(text)}</p>
-        ${actionText ? `<button class="btn btn-primary" id="${actionId}">${escapeHtml(actionText)}</button>` : ''}
+        ${actionText ? `<button class="btn btn-primary" id="${escapeHtml(actionId)}">${escapeHtml(actionText)}</button>` : ''}
       </div>
     `;
   }
