@@ -792,11 +792,15 @@ const Storage = (function() {
       return formatDate(new Date(t.completedAt)) === today;
     }).length;
 
-    // Calculate today's pending tasks (due today OR overdue)
+    // Calculate TODAY count: tasks scheduled for today + overdue tasks
     const overdue = getOverdueTasks();
     const dueToday = getTasksByDate(today).filter(t => !t.completed);
-    const todayPendingIds = new Set([...overdue.map(t => t.id), ...dueToday.map(t => t.id)]);
-    const todayPending = todayPendingIds.size;
+    const todayTasksIds = new Set([...overdue.map(t => t.id), ...dueToday.map(t => t.id)]);
+    const todayTasksCount = todayTasksIds.size;
+
+    // Calculate PENDING count: all active/incomplete tasks (whether for today, another day, or overdue)
+    const allActiveTasks = tasks.filter(t => !t.completed);
+    const pendingCount = allActiveTasks.length;
 
     // Calculate all tasks for today (completed + pending for this calendar day)
     const allTodayTasks = getTasksByDate(today);
@@ -831,9 +835,9 @@ const Storage = (function() {
         total: totalTasks,
         completed: completedTasks,
         pending: pendingTasks,
-        today: todayTotal,
+        today: todayTasksCount,
         todayCompleted: todayCompleted,
-        todayPending: todayPending,
+        todayPending: pendingCount,
         weekCompleted: weekCompleted,
         overdue: overdueTasks,
         upcoming: upcomingTasks
