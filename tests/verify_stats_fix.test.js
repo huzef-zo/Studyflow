@@ -74,11 +74,11 @@ function runTests() {
 
         console.log('Stats:', JSON.stringify(stats.tasks, null, 2));
 
-        if (stats.tasks.today !== 2) {
-            throw new Error(`Expected today tasks to be 2, got ${stats.tasks.today}`);
+        if (stats.tasks.today !== 1) {
+            throw new Error(`Expected today tasks (pending only) to be 1, got ${stats.tasks.today}`);
         }
-        if (stats.tasks.todayPending !== 1) {
-            throw new Error(`Expected todayPending to be 1, got ${stats.tasks.todayPending}`);
+        if (stats.tasks.todayPending !== 2) {
+            throw new Error(`Expected todayPending (global pending) to be 2, got ${stats.tasks.todayPending}`);
         }
         if (stats.tasks.pending !== 2) {
             throw new Error(`Expected global pending to be 2, got ${stats.tasks.pending}`);
