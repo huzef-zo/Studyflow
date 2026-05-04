@@ -2888,3 +2888,39 @@ body.focus-mode .btn-fab-main:hover {
   filter: drop-shadow(0 0 12px var(--primary-glow));
 }
 
+/* ============================================
+   StudyFlow - Bug Fix Additions
+   Add these rules to the END of css/style.css
+   ============================================ */
+
+/* FIX: Focus mode layout shift on iPad/desktop
+   When the sidebar is hidden in focus mode, the body padding-left
+   remains 280px causing a blank column on the left.              */
+body.focus-mode {
+  padding-left: 0 !important;
+}
+
+/* FIX: Respect prefers-reduced-motion for background mesh animations.
+   Removes the animated gradient blobs for users who prefer less motion,
+   improving accessibility and reducing GPU usage on low-power devices. */
+@media (prefers-reduced-motion: reduce) {
+  body::before,
+  body::after {
+    animation: none !important;
+  }
+
+  .progress-bar-fill::before {
+    animation: none !important;
+  }
+
+  .glowing-text {
+    animation: none !important;
+  }
+
+  .card,
+  .stat-pill,
+  .task-card,
+  .btn {
+    transition: none !important;
+  }
+}
