@@ -761,16 +761,28 @@ const Storage = (function() {
     const tasks = getTasks();
     const subjects = getSubjects();
 
+    const subjectMetrics = {};
+    subjects.forEach(s => {
+      subjectMetrics[s.name] = { total: 0, completed: 0 };
+    });
+
+    tasks.forEach(t => {
+      if (subjectMetrics[t.subject]) {
+        subjectMetrics[t.subject].total++;
+        if (t.completed) {
+          subjectMetrics[t.subject].completed++;
+        }
+      }
+    });
+
     return subjects.map(subject => {
-      const subjectTasks = tasks.filter(t => t.subject === subject.name);
-      const total = subjectTasks.length;
-      const completed = subjectTasks.filter(t => t.completed).length;
-      const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
+      const metrics = subjectMetrics[subject.name] || { total: 0, completed: 0 };
+      const percentage = metrics.total > 0 ? Math.round((metrics.completed / metrics.total) * 100) : 0;
 
       return {
         ...subject,
-        total,
-        completed,
+        total: metrics.total,
+        completed: metrics.completed,
         percentage
       };
     });
@@ -778,63 +790,116 @@ const Storage = (function() {
 
   function getStats() {
     const tasks = getTasks();
-    const today = formatDate(new Date());
-    const weekStart = getWeekStart(new Date());
+    const sessions = getSessions();
+    const now = new Date();
+    const todayStr = formatDate(now);
+    const weekStart = getWeekStart(now);
+    const dayOfWeek = now.getDay();
     
-    // Task stats
-    const totalTasks = tasks.length;
-    const completedTasks = tasks.filter(t => t.completed).length;
-    const pendingTasks = totalTasks - completedTasks;
+    const today = new Date(now);
+    today.setHours(0, 0, 0, 0);
+    const future7Days = new Date(today);
+    future7Days.setDate(today.getDate() + 7);
+    const future7DaysStr = formatDate(future7Days);
 
-    // Calculate today's completed tasks (anything finished on this calendar day)
-    const todayCompleted = tasks.filter(t => {
-      if (!t.completed || !t.completedAt) return false;
-      return formatDate(new Date(t.completedAt)) === today;
-    }).length;
+    let totalTasks = tasks.length;
+    let completedTasks = 0;
+    let todayCompleted = 0;
+    let todayTasksCount = 0;
+    let pendingCount = 0;
+    let weekCompleted = 0;
+    let overdueTasks = 0;
+    let upcomingTasks = 0;
 
-    // Calculate TODAY count: tasks scheduled for today + overdue tasks
-    const overdue = getOverdueTasks();
-    const dueToday = getTasksByDate(today).filter(t => !t.completed);
-    const todayTasksIds = new Set([...overdue.map(t => t.id), ...dueToday.map(t => t.id)]);
-    const todayTasksCount = todayTasksIds.size;
+    tasks.forEach(t => {
+      if (t.completed) {
+        completedTasks++;
+        if (t.completedAt && formatDate(new Date(t.completedAt)) === todayStr) {
+          todayCompleted++;
+        }
+        if (t.completedAt && new Date(t.completedAt) >= weekStart) {
+          weekCompleted++;
+        }
+      } else {
+        pendingCount++;
 
-    // Calculate PENDING count: all active/incomplete tasks (whether for today, another day, or overdue)
-    const allActiveTasks = tasks.filter(t => !t.completed);
-    const pendingCount = allActiveTasks.length;
+        // Overdue logic
+        let isOverdue = false;
+        if (t.dueDate) {
+          const dueDate = new Date(t.dueDate);
+          if (dueDate < today) {
+            overdueTasks++;
+            isOverdue = true;
+          }
+        }
 
-    // Calculate all tasks for today (completed + pending for this calendar day)
-    const allTodayTasks = getTasksByDate(today);
-    const todayTotal = allTodayTasks.length;
-    
-    // Week stats
-    const weekTasks = tasks.filter(t => {
-      if (!t.completedAt) return false;
-      const completedDate = new Date(t.completedAt);
-      return completedDate >= weekStart;
+        // Today logic (scheduled for today OR overdue)
+        let isDueToday = false;
+        if (t.type === 'repeating') {
+          if (t.repeatDays && t.repeatDays.includes(dayOfWeek)) {
+            isDueToday = true;
+          }
+        } else if (t.dueDate) {
+          const start = t.startDate || t.dueDate;
+          if (todayStr >= start && todayStr <= t.dueDate) {
+            isDueToday = true;
+          }
+        }
+
+        if (isDueToday || isOverdue) {
+          todayTasksCount++;
+        }
+
+        // Upcoming (next 7 days)
+        if (t.type === 'repeating') {
+          upcomingTasks++;
+        } else if (t.dueDate) {
+          const start = t.startDate || t.dueDate;
+          if (t.dueDate < todayStr || (t.dueDate >= todayStr && start <= future7DaysStr)) {
+            upcomingTasks++;
+          }
+        }
+      }
     });
-    const weekCompleted = weekTasks.length;
-    
-    // Overdue
-    const overdueTasks = getOverdueTasks().length;
-    
-    // Upcoming (next 7 days)
-    const upcomingTasks = getUpcomingTasks(7).length;
-    
-    // Sessions
-    const todaySessions = getTodayWorkSessions().length;
-    const weekSessions = getWeekWorkSessions().length;
-    const totalMinutesToday = getTotalMinutesToday();
-    const totalMinutesWeek = getTotalMinutesWeek();
-    
-    // Streak calculation
-    const streak = calculateStreak();
-    const bestStreak = calculateBestStreak();
+
+    let todaySessions = 0;
+    let weekSessions = 0;
+    let totalMinutesToday = 0;
+    let totalMinutesWeek = 0;
+
+    const activityDates = new Set();
+
+    tasks.forEach(t => {
+      if (t.completedAt) {
+        activityDates.add(formatDate(new Date(t.completedAt)));
+      }
+    });
+
+    sessions.forEach(s => {
+      const completedAtDate = new Date(s.completedAt);
+      const sessionDateStr = formatDate(completedAtDate);
+
+      if (s.type === 'work') {
+        activityDates.add(sessionDateStr);
+        if (sessionDateStr === todayStr) {
+          todaySessions++;
+          totalMinutesToday += s.duration;
+        }
+        if (completedAtDate >= weekStart) {
+          weekSessions++;
+          totalMinutesWeek += s.duration;
+        }
+      }
+    });
+
+    const streak = calculateStreak(activityDates);
+    const bestStreak = calculateBestStreak(activityDates);
     
     return {
       tasks: {
         total: totalTasks,
         completed: completedTasks,
-        pending: pendingTasks,
+        pending: totalTasks - completedTasks,
         today: todayTasksCount,
         todayCompleted: todayCompleted,
         todayPending: pendingCount,
@@ -856,26 +921,14 @@ const Storage = (function() {
   /**
    * Calculate best streak
    */
-  function calculateBestStreak() {
-    const tasks = getTasks();
-    const sessions = getSessions();
-
-    // Get all dates with activity
-    const activityDates = new Set();
-
-    // Add task completion dates
-    tasks.forEach(t => {
-      if (t.completedAt) {
-        activityDates.add(formatDate(new Date(t.completedAt)));
-      }
-    });
-
-    // Add session dates (only work sessions)
-    sessions.forEach(s => {
-      if (s.type === 'work') {
-        activityDates.add(formatDate(new Date(s.completedAt)));
-      }
-    });
+  function calculateBestStreak(activityDates) {
+    if (!activityDates) {
+      const tasks = getTasks();
+      const sessions = getSessions();
+      activityDates = new Set();
+      tasks.forEach(t => { if (t.completedAt) activityDates.add(formatDate(new Date(t.completedAt))); });
+      sessions.forEach(s => { if (s.type === 'work') activityDates.add(formatDate(new Date(s.completedAt))); });
+    }
 
     const sortedDates = Array.from(activityDates).sort();
     if (sortedDates.length === 0) return 0;
@@ -911,26 +964,14 @@ const Storage = (function() {
   /**
    * Calculate current streak
    */
-  function calculateStreak() {
-    const tasks = getTasks();
-    const sessions = getSessions();
-    
-    // Get all dates with activity
-    const activityDates = new Set();
-    
-    // Add task completion dates
-    tasks.forEach(t => {
-      if (t.completedAt) {
-        activityDates.add(formatDate(new Date(t.completedAt)));
-      }
-    });
-    
-    // Add session dates (only work sessions)
-    sessions.forEach(s => {
-      if (s.type === 'work') {
-        activityDates.add(formatDate(new Date(s.completedAt)));
-      }
-    });
+  function calculateStreak(activityDates) {
+    if (!activityDates) {
+      const tasks = getTasks();
+      const sessions = getSessions();
+      activityDates = new Set();
+      tasks.forEach(t => { if (t.completedAt) activityDates.add(formatDate(new Date(t.completedAt))); });
+      sessions.forEach(s => { if (s.type === 'work') activityDates.add(formatDate(new Date(s.completedAt))); });
+    }
     
     // Calculate streak
     let streak = 0;
