@@ -31,16 +31,21 @@ const Timer = (function() {
    * Request Screen Wake Lock
    */
   async function requestWakeLock() {
+    const settings = Storage.getSettings();
+    if (!settings.keep_screen_on) return; // Only request if enabled in settings
+    
     if (!('wakeLock' in navigator)) return;
     if (wakeLock) return;
 
     try {
       wakeLock = await navigator.wakeLock.request('screen');
+      console.log('[v0] Wake Lock acquired');
       wakeLock.addEventListener('release', () => {
+        console.log('[v0] Wake Lock released');
         wakeLock = null;
       });
     } catch (err) {
-      console.error(`${err.name}, ${err.message}`);
+      console.error(`[v0] Wake Lock error: ${err.name}, ${err.message}`);
     }
   }
 
@@ -209,9 +214,10 @@ const Timer = (function() {
         updateDisplay();
         updateStats();
 
-        // Re-acquire wake lock if timer is running
+        // Re-acquire wake lock if timer is running and setting is enabled
         if (isRunning) {
-          requestWakeLock();
+          releaseWakeLock(); // Release any stale lock first
+          requestWakeLock(); // Request fresh lock
         }
       }
     });
