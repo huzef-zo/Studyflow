@@ -24,6 +24,36 @@ const Timer = (function() {
   // Audio Context for sounds
   let audioCtx = null;
 
+  // Screen Wake Lock
+  let wakeLock = null;
+
+  /**
+   * Request Screen Wake Lock
+   */
+  async function requestWakeLock() {
+    if (!('wakeLock' in navigator)) return;
+    if (wakeLock) return;
+
+    try {
+      wakeLock = await navigator.wakeLock.request('screen');
+      wakeLock.addEventListener('release', () => {
+        wakeLock = null;
+      });
+    } catch (err) {
+      console.error(`${err.name}, ${err.message}`);
+    }
+  }
+
+  /**
+   * Release Screen Wake Lock
+   */
+  function releaseWakeLock() {
+    if (wakeLock) {
+      wakeLock.release();
+      wakeLock = null;
+    }
+  }
+
   /**
    * Play a sci-fi transition sound
    */
@@ -178,6 +208,11 @@ const Timer = (function() {
         loadTimerState();
         updateDisplay();
         updateStats();
+
+        // Re-acquire wake lock if timer is running
+        if (isRunning) {
+          requestWakeLock();
+        }
       }
     });
   }
@@ -207,6 +242,7 @@ const Timer = (function() {
       console.error('Failed to initialize AudioContext:', e);
     }
     
+    requestWakeLock();
     isRunning = true;
     endTime = Date.now() + (timeRemaining * 1000);
     
@@ -231,6 +267,7 @@ const Timer = (function() {
   function pauseTimer() {
     if (!isRunning) return;
     
+    releaseWakeLock();
     isRunning = false;
     clearInterval(timerInterval);
     
@@ -308,6 +345,7 @@ const Timer = (function() {
     // ── 7. Auto-start the next phase if enabled ────────────────────────────
     if (nextState.state === 'running') {
       endTime = nextState.endTime;
+      requestWakeLock();
       isRunning = true;
 
       // UI Update
