@@ -81,6 +81,7 @@ const Storage = (function() {
       sound: true,
       auto_start_break: true,
       auto_start_work: true,
+      keep_screen_on: true,
       work_duration: 25,
       short_break: 5,
       long_break: 15,
