@@ -26,6 +26,9 @@ const Storage = (function() {
 
   const cache = {};
 
+  // Pending completions: taskId → { timeoutId }
+  const _pendingCompletions = {};
+
   function notifyTaskDataChanged() {
     try {
       const event = new CustomEvent('studyflow_taskDataChanged', {
@@ -400,6 +403,37 @@ const Storage = (function() {
 
   function getTodayTasks() {
     return getTasksByDate(formatDate(new Date())).filter(t => !t.completed);
+  }
+
+  /**
+   * Stage a task completion with a delay before writing to storage.
+   * Returns a cancel function. Calls onCommit when the delay expires.
+   */
+  function stageTaskCompletion(taskId, delayMs, onCommit) {
+    // Cancel any existing pending completion for this task
+    if (_pendingCompletions[taskId]) {
+      clearTimeout(_pendingCompletions[taskId].timeoutId);
+    }
+
+    const timeoutId = setTimeout(() => {
+      delete _pendingCompletions[taskId];
+      onCommit();
+    }, delayMs);
+
+    _pendingCompletions[taskId] = { timeoutId };
+
+    return function cancelCompletion() {
+      if (_pendingCompletions[taskId]) {
+        clearTimeout(_pendingCompletions[taskId].timeoutId);
+        delete _pendingCompletions[taskId];
+        return true;  // was cancelled
+      }
+      return false;   // already committed
+    };
+  }
+
+  function hasPendingCompletion(taskId) {
+    return !!_pendingCompletions[taskId];
   }
 
   // ── Subjects ────────────────────────────────────────────────────────────────
@@ -877,6 +911,7 @@ const Storage = (function() {
     getTasks, saveTasks, addTask, updateTask, deleteTask, completeTask, uncompleteTask,
     getTaskById, getTasksByDate, getTasksByStatus, getTasksBySubject, getTasksByPriority,
     getUpcomingTasks, getOverdueTasks, getTodayTasks,
+    stageTaskCompletion, hasPendingCompletion,
     addSubtask, toggleSubtask, updateSubtask,
     getSubjects, saveSubjects, addSubject, updateSubject, deleteSubject,
     getSubjectById, getSubjectByName, getSubjectMasteryStats,

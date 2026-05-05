@@ -7,6 +7,7 @@ const History = (function() {
   'use strict';
 
   let elements = {};
+  let statsPeriodDays = null;  // null = all time, number = days
 
   function initElements() {
     elements = {
@@ -25,15 +26,34 @@ const History = (function() {
 
   function init() {
     initElements();
+
+    document.querySelectorAll('[data-period]').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('[data-period]').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        statsPeriodDays = tab.dataset.period === 'all' ? null : parseInt(tab.dataset.period);
+        updateSummaryStats();
+      });
+    });
+
     updateSummaryStats();
     renderFrequencyGraph();
     updateMasteryOverview();
     updateWeeklyProgress();
   }
 
+  function getFilteredSessions() {
+    const sessions = Storage.getSessions();
+    if (!statsPeriodDays) return sessions;
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - statsPeriodDays);
+    cutoff.setHours(0, 0, 0, 0);
+    return sessions.filter(s => s.completedAt && new Date(s.completedAt) >= cutoff);
+  }
+
   function updateSummaryStats() {
     const tasks = Storage.getTasks();
-    const sessions = Storage.getSessions();
+    const sessions = getFilteredSessions();
     const stats = Storage.getStats();
 
     const completedTasksCount = tasks.filter(t => t.completed).length;

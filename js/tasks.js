@@ -177,9 +177,23 @@ const Tasks = (function() {
           renderTasks();
         } else {
           if (!task.completed) {
-            card.style.transform = 'scale(0.95)';
+            // Optimistically mark the card as completed visually
             card.style.opacity = '0.5';
-            setTimeout(() => { Storage.completeTask(id); renderTasks(); }, 300);
+            cb.classList.add('checked');
+
+            // Stage the write — give user 5 seconds to undo
+            const cancelFn = Storage.stageTaskCompletion(id, 5000, () => {
+              Storage.completeTask(id);
+              renderTasks();
+            });
+
+            App.showUndoToast('Task completed!', () => {
+              // User clicked Undo — cancel the staged write and restore the card
+              cancelFn();
+              card.style.opacity = '';
+              cb.classList.remove('checked');
+            });
+
           } else {
             Storage.uncompleteTask(id);
             renderTasks();
@@ -272,7 +286,16 @@ const Tasks = (function() {
           card.style.transition = 'all 0.3s ease';
           card.style.transform = 'translateX(100%)';
           card.style.opacity = '0';
-          setTimeout(() => { Storage.completeTask(id); renderTasks(); }, 300);
+          setTimeout(() => {
+            const cancelFn = Storage.stageTaskCompletion(id, 5000, () => {
+              Storage.completeTask(id);
+              renderTasks();
+            });
+            App.showUndoToast('Task swiped complete!', () => {
+              cancelFn();
+              renderTasks();  // re-render to restore the card
+            });
+          }, 300);
         } else {
           card.style.transition = 'transform 0.3s ease';
           card.style.transform = 'translateX(0)';
