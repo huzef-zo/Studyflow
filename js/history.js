@@ -33,6 +33,8 @@ const History = (function() {
         tab.classList.add('active');
         statsPeriodDays = tab.dataset.period === 'all' ? null : parseInt(tab.dataset.period);
         updateSummaryStats();
+        renderFrequencyGraph();
+        updateMasteryOverview();
       });
     });
 
@@ -56,15 +58,28 @@ const History = (function() {
     const sessions = getFilteredSessions();
     const stats = Storage.getStats();
 
-    const completedTasksCount = tasks.filter(t => t.completed).length;
+    const cutoff = statsPeriodDays ? new Date() : null;
+    if (cutoff) {
+      cutoff.setDate(cutoff.getDate() - statsPeriodDays);
+      cutoff.setHours(0, 0, 0, 0);
+    }
+
+    const filteredTasks = !cutoff ? tasks : tasks.filter(t => {
+      const completedAt = t.completedAt ? new Date(t.completedAt) : null;
+      const dueDate = t.dueDate ? new Date(t.dueDate) : null;
+      return (completedAt && completedAt >= cutoff) || (dueDate && dueDate >= cutoff);
+    });
+
+    const periodCompletedCount = !cutoff ? tasks.filter(t => t.completed).length : tasks.filter(t => t.completed && t.completedAt && new Date(t.completedAt) >= cutoff).length;
+
     const studyMinutes = sessions.filter(s => s.type === 'work').reduce((total, s) => total + s.duration, 0);
 
-    if (elements.totalCompletedTasks) elements.totalCompletedTasks.textContent = completedTasksCount;
+    if (elements.totalCompletedTasks) elements.totalCompletedTasks.textContent = periodCompletedCount;
     if (elements.totalStudyHours) elements.totalStudyHours.textContent = Math.round(studyMinutes / 60) + 'h';
     if (elements.allTimeStreak) elements.allTimeStreak.textContent = stats.bestStreak;
 
     if (elements.completionRate) {
-      const rate = tasks.length > 0 ? Math.round((completedTasksCount / tasks.length) * 100) : 0;
+      const rate = filteredTasks.length > 0 ? Math.round((periodCompletedCount / filteredTasks.length) * 100) : 0;
       elements.completionRate.textContent = `${rate}%`;
     }
 
@@ -146,7 +161,7 @@ const History = (function() {
   function renderFrequencyGraph() {
     if (!elements.frequencyGraph) return;
 
-    const daysCount = 30;
+    const daysCount = statsPeriodDays || 30;
     const data = getActivityData(daysCount);
     const today = new Date(); today.setHours(0, 0, 0, 0);
 
