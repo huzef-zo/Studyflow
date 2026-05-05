@@ -34,29 +34,51 @@ const Calendar = (function() {
   function getTasksForMonth(year, month) {
     const tasks = Storage.getTasks();
     const monthTasks = {};
-    const monthStart = new Date(year, month, 1);
-    const monthEnd = new Date(year, month + 1, 0);
+
+    const monthStartStr = `${year}-${String(month + 1).padStart(2, '0')}-01`;
+    const monthEndDate = new Date(year, month + 1, 0);
+    const monthEndStr = Storage.formatDate(monthEndDate);
+
+    for (let day = 1; day <= monthEndDate.getDate(); day++) {
+      const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      monthTasks[dateStr] = [];
+    }
+
+    const monthPrefix = `${year}-${String(month + 1).padStart(2, '0')}-`;
 
     tasks.forEach(task => {
       if (task.type === 'repeating') {
-        for (let d = new Date(monthStart); d <= monthEnd; d.setDate(d.getDate() + 1)) {
-          const dateStr = Storage.formatDate(d);
-          if (task.repeatDays && task.repeatDays.includes(d.getDay())) {
-            if (!monthTasks[dateStr]) monthTasks[dateStr] = [];
-            monthTasks[dateStr].push(task);
+        if (!task.repeatDays || task.repeatDays.length === 0) return;
+        task.repeatDays.forEach(targetDay => {
+          const firstDate = new Date(year, month, 1);
+          const firstDayOfMonth = firstDate.getDay();
+          let offset = targetDay - firstDayOfMonth;
+          if (offset < 0) offset += 7;
+          for (let day = 1 + offset; day <= monthEndDate.getDate(); day += 7) {
+            const dateStr = monthPrefix + String(day).padStart(2, '0');
+            if (monthTasks[dateStr]) monthTasks[dateStr].push(task);
           }
-        }
+        });
       } else if (task.dueDate) {
-        const startDateStr = task.startDate || task.dueDate;
-        for (let d = new Date(monthStart); d <= monthEnd; d.setDate(d.getDate() + 1)) {
-          const dateStr = Storage.formatDate(d);
-          if (dateStr >= startDateStr && dateStr <= task.dueDate) {
-            if (!monthTasks[dateStr]) monthTasks[dateStr] = [];
-            monthTasks[dateStr].push(task);
-          }
+        const taskStart = task.startDate || task.dueDate;
+        const taskEnd = task.dueDate;
+
+        if (task.startDate && task.dueDate && task.startDate > task.dueDate) return;
+        if (taskEnd < monthStartStr || taskStart > monthEndStr) return;
+
+        const clampedStart = taskStart > monthStartStr ? taskStart : monthStartStr;
+        const clampedEnd = taskEnd < monthEndStr ? taskEnd : monthEndStr;
+
+        const startDay = parseInt(clampedStart.split('-')[2], 10);
+        const endDay = parseInt(clampedEnd.split('-')[2], 10);
+
+        for (let day = startDay; day <= endDay; day++) {
+          const dateStr = monthPrefix + String(day).padStart(2, '0');
+          if (monthTasks[dateStr]) monthTasks[dateStr].push(task);
         }
       }
     });
+
     return monthTasks;
   }
 
