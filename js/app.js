@@ -415,6 +415,12 @@ const App = (function() {
 
   function init() {
     initNavigation();
+
+    // Prune old session data once per browser session to keep localStorage lean
+    if (typeof Storage !== 'undefined' && Storage.pruneSessions) {
+      Storage.pruneSessions(365);
+    }
+
     initToastContainer();
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && activeModal) closeModal(activeModal);

@@ -467,17 +467,57 @@ const Storage = (function() {
     return getSessions().filter(s => new Date(s.completedAt) >= weekStart && s.type === 'work');
   }
 
+  /**
+   * Return sessions on or after the given date string (YYYY-MM-DD).
+   * More efficient than filtering getSessions() inline everywhere.
+   */
+  function getSessionsSince(dateStr) {
+    return getSessions().filter(s => {
+      if (!s.completedAt) return false;
+      return formatDate(new Date(s.completedAt)) >= dateStr;
+    });
+  }
+
+  /**
+   * Prune sessions older than `keepDays` days (default 365).
+   * Runs at most once per browser session via sessionStorage guard.
+   * Returns the number of entries removed.
+   */
+  function pruneSessions(keepDays = 365) {
+    const PRUNE_GUARD_KEY = 'studyflow_sessions_pruned';
+    if (sessionStorage.getItem(PRUNE_GUARD_KEY)) return 0;
+    sessionStorage.setItem(PRUNE_GUARD_KEY, '1');
+
+    const sessions = getSessions();
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - keepDays);
+    cutoff.setHours(0, 0, 0, 0);
+
+    const kept = sessions.filter(s => {
+      if (!s.completedAt) return false;  // drop malformed entries
+      return new Date(s.completedAt) >= cutoff;
+    });
+
+    const removed = sessions.length - kept.length;
+    if (removed > 0) {
+      saveSessions(kept);
+      console.log(`[StudyFlow] Pruned ${removed} old session records.`);
+    }
+    return removed;
+  }
+
   function getTotalMinutesToday() {
     const today = formatDate(new Date());
-    return getSessions()
+    return getSessionsSince(today)
       .filter(s => formatDate(new Date(s.completedAt)) === today && s.type === 'work')
       .reduce((total, s) => total + s.duration, 0);
   }
 
   function getTotalMinutesWeek() {
     const weekStart = getWeekStart(new Date());
-    return getSessions()
-      .filter(s => new Date(s.completedAt) >= weekStart && s.type === 'work')
+    const weekStartStr = formatDate(weekStart);
+    return getSessionsSince(weekStartStr)
+      .filter(s => s.type === 'work')
       .reduce((total, s) => total + s.duration, 0);
   }
 
@@ -622,10 +662,20 @@ const Storage = (function() {
 
   function getStats() {
     const tasks = getTasks();
-    const sessions = getSessions();
     const now = new Date();
     const todayStr = formatDate(now);
     const weekStart = getWeekStart(now);
+
+    // Recent sessions (last 8 days) for weekly/daily stat counters
+    const eightDaysAgo = new Date(now);
+    eightDaysAgo.setDate(eightDaysAgo.getDate() - 8);
+    const recentSessions = getSessionsSince(formatDate(eightDaysAgo));
+
+    // All sessions within streak window (365 days) for streak calculation
+    const yearAgo = new Date(now);
+    yearAgo.setFullYear(yearAgo.getFullYear() - 1);
+    const streakSessions = getSessionsSince(formatDate(yearAgo));
+
     const dayOfWeek = now.getDay();
     const today = new Date(now);
     today.setHours(0, 0, 0, 0);
@@ -675,13 +725,18 @@ const Storage = (function() {
 
     tasks.forEach(t => { if (t.completedAt) activityDates.add(formatDate(new Date(t.completedAt))); });
 
-    sessions.forEach(s => {
+    recentSessions.forEach(s => {
       const completedAtDate = new Date(s.completedAt);
       const sessionDateStr = formatDate(completedAtDate);
       if (s.type === 'work') {
-        activityDates.add(sessionDateStr);
         if (sessionDateStr === todayStr) { todaySessions++; totalMinutesToday += s.duration; }
         if (completedAtDate >= weekStart) { weekSessions++; totalMinutesWeek += s.duration; }
+      }
+    });
+
+    streakSessions.forEach(s => {
+      if (s.type === 'work') {
+        activityDates.add(formatDate(new Date(s.completedAt)));
       }
     });
 
@@ -828,6 +883,7 @@ const Storage = (function() {
     getSessions, saveSessions, addSession,
     getTodaySessions, getTodayWorkSessions, getWeekSessions, getWeekWorkSessions,
     getTotalMinutesToday, getTotalMinutesWeek,
+    getSessionsSince, pruneSessions,
     getGoals, saveGoals, updateGoals,
     getSettings, saveSettings, updateSetting,
     getTimerState, saveTimerState, clearTimerState, completeTimerSession,
