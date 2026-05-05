@@ -98,9 +98,12 @@ const History = (function() {
 
   function getActivityData(daysCount) {
     const tasks = Storage.getTasks();
-    const sessions = Storage.getSessions();
-    const activityData = {};
     const today = new Date(); today.setHours(0, 0, 0, 0);
+    const cutoffDate = new Date(today);
+    cutoffDate.setDate(cutoffDate.getDate() - daysCount);
+    const sessions = Storage.getSessionsSince(Storage.formatDate(cutoffDate));
+
+    const activityData = {};
     for (let i = 0; i < daysCount; i++) {
       const date = new Date(today); date.setDate(date.getDate() - i);
       activityData[Storage.formatDate(date)] = 0;
