@@ -1,6 +1,7 @@
-const CACHE_VERSION = 'v3-FINAL-FIX';
-const CACHE_NAME = `studyflow-${CACHE_VERSION}`;
-const OFFLINE_CACHE = `studyflow-offline-${CACHE_VERSION}`;
+importScripts('./version.js');
+
+const CACHE_NAME = `studyflow-${APP_VERSION}`;
+const OFFLINE_CACHE = `studyflow-offline-${APP_VERSION}`;
 
 const ASSETS_TO_CACHE = [
   './',
@@ -11,16 +12,16 @@ const ASSETS_TO_CACHE = [
   './settings.html',
   './tasks.html',
   './timer.html',
-  './css/style.css',
-  './js/app.js',
-  './js/storage.js',
-  './js/pwa-manager.js',
-  './js/pwa-config.js',
-  './js/calendar.js',
-  './js/goals.js',
-  './js/history.js',
-  './js/tasks.js',
-  './js/timer.js',
+  `./css/style.css?v=${APP_VERSION}`,
+  `./js/app.js?v=${APP_VERSION}`,
+  `./js/storage.js?v=${APP_VERSION}`,
+  `./js/pwa-manager.js?v=${APP_VERSION}`,
+  `./js/pwa-config.js?v=${APP_VERSION}`,
+  `./js/calendar.js?v=${APP_VERSION}`,
+  `./js/goals.js?v=${APP_VERSION}`,
+  `./js/history.js?v=${APP_VERSION}`,
+  `./js/tasks.js?v=${APP_VERSION}`,
+  `./js/timer.js?v=${APP_VERSION}`,
   './manifest.json',
   './icon-192.png',
   './icon-512.png'
@@ -50,6 +51,7 @@ self.addEventListener('install', (event) => {
   // Take control immediately
   self.skipWaiting();
 });
+
 // ============================================
 // SERVICE WORKER LIFECYCLE: ACTIVATE
 // ============================================
@@ -92,7 +94,7 @@ self.addEventListener('fetch', (event) => {
       event.respondWith(networkFirstStrategy(request, 3000));
     }
     // CSS and JS: Cache-first (versioned)
-    else if (request.url.endsWith('.css') || request.url.endsWith('.js')) {
+    else if (request.url.endsWith('.css') || request.url.endsWith('.js') || request.url.includes('.css?v=') || request.url.includes('.js?v=')) {
       event.respondWith(cacheFirstStrategy(request));
     }
     // Images and fonts: Cache-first with network fallback
