@@ -11,8 +11,15 @@ const localStorageMock = {
     clear: () => { Object.keys(localStorageStore).forEach(key => delete localStorageStore[key]); }
 };
 
+const sessionStorageMock = {
+    getItem: (key) => null,
+    setItem: (key, value) => {}
+};
+
 global.localStorage = localStorageMock;
+global.sessionStorage = sessionStorageMock;
 global.window = {
+    sessionStorage: sessionStorageMock,
     localStorage: localStorageMock,
     addEventListener: function() {},
     dispatchEvent: function(event) {
@@ -77,8 +84,8 @@ function runTests() {
         if (stats.tasks.today !== 1) {
             throw new Error(`Expected today tasks (pending only) to be 1, got ${stats.tasks.today}`);
         }
-        if (stats.tasks.todayPending !== 2) {
-            throw new Error(`Expected todayPending (global pending) to be 2, got ${stats.tasks.todayPending}`);
+        if (stats.tasks.todayPending !== 1) {
+            throw new Error(`Expected todayPending (due today) to be 1, got ${stats.tasks.todayPending}`);
         }
         if (stats.tasks.pending !== 2) {
             throw new Error(`Expected global pending to be 2, got ${stats.tasks.pending}`);

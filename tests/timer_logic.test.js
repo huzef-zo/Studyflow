@@ -11,8 +11,15 @@ const localStorageMock = {
     clear: () => { Object.keys(localStorageStore).forEach(key => delete localStorageStore[key]); }
 };
 
+const sessionStorageMock = {
+    getItem: (key) => null,
+    setItem: (key, value) => {}
+};
+
 global.localStorage = localStorageMock;
+global.sessionStorage = sessionStorageMock;
 global.window = {
+    sessionStorage: sessionStorageMock,
     AudioContext: function() {},
     webkitAudioContext: function() {},
     localStorage: localStorageMock,

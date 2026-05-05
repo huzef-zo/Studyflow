@@ -86,22 +86,27 @@ const Tasks = (function() {
       return;
     }
 
+    const todayStr = Storage.formatDate(new Date());
+
     elements.taskList.innerHTML = tasks.sort((a, b) => {
-      if (a.completed !== b.completed) return a.completed ? 1 : -1;
+      const aDone = a.type === 'repeating' ? Storage.isRepeatingTaskCompletedOnDate(a.id, todayStr) : a.completed;
+      const bDone = b.type === 'repeating' ? Storage.isRepeatingTaskCompletedOnDate(b.id, todayStr) : b.completed;
+      if (aDone !== bDone) return aDone ? 1 : -1;
       return new Date(a.dueDate) - new Date(b.dueDate);
     }).map((task, index) => {
+      const isDone = task.type === 'repeating' ? Storage.isRepeatingTaskCompletedOnDate(task.id, todayStr) : task.completed;
       const priorityClass = `priority-${task.priority}`;
       const subjectColor = App.getSubjectColor(task.subject);
       const isExpanded = expandedTasks.has(task.id);
       const staggerClass = index < 5 ? `stagger-${index + 1}` : '';
       return `
-        <div class="task-card ${priorityClass} ${task.completed ? 'completed' : ''} animate-fade-in ${staggerClass}" data-id="${task.id}">
+        <div class="task-card ${priorityClass} ${isDone ? 'completed' : ''} animate-fade-in ${staggerClass}" data-id="${task.id}">
           <div class="swipe-hint">Swipe to complete</div>
           <div class="flex items-start gap-md">
-            <div class="task-checkbox ${task.completed ? 'checked' : ''}" data-id="${task.id}" style="margin-top:4px;"></div>
+            <div class="task-checkbox ${isDone ? 'checked' : ''}" data-id="${task.id}" style="margin-top:4px;"></div>
             <div class="flex-1 min-w-0">
               <div class="task-header-inline">
-                <div class="task-title-text" style="${task.completed ? 'text-decoration:line-through;opacity:0.5;' : ''}">${App.escapeHtml(task.title)}</div>
+                <div class="task-title-text" style="${isDone ? 'text-decoration:line-through;opacity:0.5;' : ''}">${App.escapeHtml(task.title)}</div>
                 <div class="subject-pill" style="--tag-color:${App.hexToRgb(subjectColor)};color:white;background:rgba(255,255,255,0.05);border-color:rgba(255,255,255,0.1);">${App.escapeHtml(task.subject)}</div>
                 ${task.priority === 'critical' ? '<span class="badge" style="--tag-color:var(--danger-rgb);font-size:9px;color:white;">Critical</span>' : ''}
               </div>
@@ -164,13 +169,21 @@ const Tasks = (function() {
         const id = cb.dataset.id;
         const task = Storage.getTaskById(id);
         const card = cb.closest('.task-card');
-        if (!task.completed) {
-          card.style.transform = 'scale(0.95)';
-          card.style.opacity = '0.5';
-          setTimeout(() => { Storage.completeTask(id); renderTasks(); }, 300);
-        } else {
-          Storage.uncompleteTask(id);
+
+        if (task.type === 'repeating') {
+          const isCurrentlyDone = Storage.isRepeatingTaskCompletedOnDate(id, todayStr);
+          Storage.setRepeatingTaskCompletedOnDate(id, todayStr, !isCurrentlyDone);
+          if (!isCurrentlyDone) App.showToast('Task completed for today!', 'success');
           renderTasks();
+        } else {
+          if (!task.completed) {
+            card.style.transform = 'scale(0.95)';
+            card.style.opacity = '0.5';
+            setTimeout(() => { Storage.completeTask(id); renderTasks(); }, 300);
+          } else {
+            Storage.uncompleteTask(id);
+            renderTasks();
+          }
         }
       };
     });
