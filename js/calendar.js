@@ -134,15 +134,16 @@ const Calendar = (function() {
 
     elements.dayTasks.innerHTML = tasks.map(task => {
       const subjectColor = App.getSubjectColor(task.subject);
+      const isDone = task.type === 'repeating' ? task.completedOnDate : task.completed;
       return `
-        <div class="task-card priority-${task.priority} ${task.completed ? 'completed' : ''}" data-id="${task.id}" style="--priority-color:${App.hexToRgb(subjectColor)};">
+        <div class="task-card priority-${task.priority} ${isDone ? 'completed' : ''}" data-id="${task.id}" style="--priority-color:${App.hexToRgb(subjectColor)};">
           <div class="flex items-start gap-md w-full">
-            <div class="task-checkbox ${task.completed ? 'checked' : ''}" data-id="${task.id}"></div>
+            <div class="task-checkbox ${isDone ? 'checked' : ''}" data-id="${task.id}"></div>
             <div class="flex-1">
               <div class="flex items-center gap-md mb-xs">
                 <div class="subject-pill" style="--tag-color:${App.hexToRgb(subjectColor)}">${App.escapeHtml(task.subject)}</div>
               </div>
-              <div class="task-title-text" style="${task.completed ? 'text-decoration:line-through;opacity:0.5;' : ''}">${App.escapeHtml(task.title)}</div>
+              <div class="task-title-text" style="${isDone ? 'text-decoration:line-through;opacity:0.5;' : ''}">${App.escapeHtml(task.title)}</div>
               <div class="task-meta-text">${task.dueTime ? `Time: ${task.dueTime}` : 'All Day'}</div>
             </div>
           </div>
@@ -155,8 +156,16 @@ const Calendar = (function() {
         e.stopPropagation();
         const id = cb.dataset.id;
         const task = Storage.getTaskById(id);
-        task.completed ? Storage.uncompleteTask(id) : Storage.completeTask(id);
-        if (!task.completed) App.showToast('Task completed!', 'success');
+
+        if (task.type === 'repeating') {
+          // Use per-day tracking for repeating tasks
+          const isCurrentlyDone = Storage.isRepeatingTaskCompletedOnDate(id, selectedDate);
+          Storage.setRepeatingTaskCompletedOnDate(id, selectedDate, !isCurrentlyDone);
+          if (!isCurrentlyDone) App.showToast('Task completed!', 'success');
+        } else {
+          task.completed ? Storage.uncompleteTask(id) : Storage.completeTask(id);
+          if (!task.completed) App.showToast('Task completed!', 'success');
+        }
         renderCalendar();
         renderSelectedDayTasks();
       };

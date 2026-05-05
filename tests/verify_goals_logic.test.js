@@ -11,7 +11,13 @@ const localStorageMock = {
     clear: () => { Object.keys(localStorageStore).forEach(key => delete localStorageStore[key]); }
 };
 
+const sessionStorageMock = {
+    getItem: (key) => null,
+    setItem: (key, value) => {}
+};
+
 global.localStorage = localStorageMock;
+global.sessionStorage = sessionStorageMock;
 
 // Mock DOM
 const elementMocks = {};
@@ -46,6 +52,7 @@ global.document = {
 };
 
 global.window = {
+    sessionStorage: sessionStorageMock,
     localStorage: localStorageMock,
     document: global.document,
     addEventListener: () => {}

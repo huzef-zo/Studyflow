@@ -13,7 +13,7 @@ const localStorageMock = {
 // Track dispatched events
 let dispatchedEvents = [];
 
-global.window = {
+global.sessionStorage = { getItem: () => null, setItem: () => {} }; global.localStorage = localStorageMock; global.window = { sessionStorage: { getItem: () => null, setItem: () => {} },
     localStorage: localStorageMock,
     addEventListener: function() {},
     dispatchEvent: function(event) {

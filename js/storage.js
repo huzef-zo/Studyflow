@@ -20,7 +20,8 @@ const Storage = (function() {
     GOALS: 'studyflow_goals',
     SETTINGS: 'studyflow_settings',
     TIMER: 'studyflow_timer',
-    SIDEBAR: 'is_sidebar_collapsed'   // FIX 1: was a raw string in app.js, now tracked in cache
+    SIDEBAR: 'is_sidebar_collapsed',   // FIX 1: was a raw string in app.js, now tracked in cache
+    REPEATING_COMPLETIONS: 'studyflow_repeating_completions'
   };
 
   const cache = {};
@@ -84,7 +85,8 @@ const Storage = (function() {
       short_break: 5,
       long_break: 15,
       sessions_until_long_break: 4
-    }
+    },
+    repeatingCompletions: {}
   };
 
   function getWeekStart(date) {
@@ -150,6 +152,7 @@ const Storage = (function() {
       sessions: getSessions(),
       goals: getGoals(),
       settings: getSettings(),
+      repeatingCompletions: getRepeatingCompletions(),
       exported_at: new Date().toISOString(),
       version: '1.0.0'
     };
@@ -163,11 +166,51 @@ const Storage = (function() {
       if (data.sessions) saveData(KEYS.SESSIONS, data.sessions);
       if (data.goals) saveData(KEYS.GOALS, data.goals);
       if (data.settings) saveData(KEYS.SETTINGS, data.settings);
+      if (data.repeatingCompletions) saveRepeatingCompletions(data.repeatingCompletions);
       return true;
     } catch (error) {
       console.error('Import error:', error);
       return false;
     }
+  }
+
+  function getRepeatingCompletions() {
+    return loadData(KEYS.REPEATING_COMPLETIONS, DEFAULTS.repeatingCompletions);
+  }
+
+  function saveRepeatingCompletions(completions) {
+    return saveData(KEYS.REPEATING_COMPLETIONS, completions);
+  }
+
+  function isRepeatingTaskCompletedOnDate(taskId, dateStr) {
+    const completions = getRepeatingCompletions();
+    return completions[`${taskId}_${dateStr}`] === true;
+  }
+
+  function setRepeatingTaskCompletedOnDate(taskId, dateStr, completed) {
+    const completions = getRepeatingCompletions();
+    const key = `${taskId}_${dateStr}`;
+    if (completed) {
+      completions[key] = true;
+    } else {
+      delete completions[key];
+    }
+    saveRepeatingCompletions(completions);
+    notifyTaskDataChanged();
+  }
+
+  function pruneRepeatingCompletions() {
+    const completions = getRepeatingCompletions();
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - 90);
+    const cutoffStr = formatDate(cutoff);
+    const pruned = {};
+    Object.keys(completions).forEach(key => {
+      // key format: "taskId_YYYY-MM-DD"
+      const dateStr = key.slice(-10);
+      if (dateStr >= cutoffStr) pruned[key] = completions[key];
+    });
+    saveRepeatingCompletions(pruned);
   }
 
   // ── User ────────────────────────────────────────────────────────────────────
@@ -299,6 +342,7 @@ const Storage = (function() {
     const tasks = getTasks();
     const date = new Date(dateStr);
     const dayOfWeek = date.getDay();
+
     return tasks.filter(t => {
       if (t.type === 'repeating') {
         return t.repeatDays && t.repeatDays.includes(dayOfWeek);
@@ -306,6 +350,15 @@ const Storage = (function() {
       if (!t.dueDate) return false;
       const start = t.startDate || t.dueDate;
       return dateStr >= start && dateStr <= t.dueDate;
+    }).map(t => {
+      if (t.type === 'repeating') {
+        return {
+          ...t,
+          completedOnDate: isRepeatingTaskCompletedOnDate(t.id, dateStr),
+          _dateContext: dateStr   // which date this instance is for
+        };
+      }
+      return t;
     });
   }
 
@@ -443,6 +496,12 @@ const Storage = (function() {
       goals.current_tasks = 0;
       goals.current_hours = 0;
       saveGoals(goals);           // write the reset so next read from cache is clean
+    }
+
+    // Prune old repeating completions once per session
+    if (!sessionStorage.getItem('repeating_completions_pruned')) {
+      pruneRepeatingCompletions();
+      sessionStorage.setItem('repeating_completions_pruned', 'true');
     }
 
     // Dynamically recalculate from source of truth
@@ -629,6 +688,12 @@ const Storage = (function() {
     const streak = calculateStreak(activityDates);
     const bestStreak = calculateBestStreak(activityDates);
 
+    // Count repeating task completions for today
+    const completions = getRepeatingCompletions();
+    Object.keys(completions).forEach(key => {
+      if (key.endsWith(`_${todayStr}`)) todayCompleted++;
+    });
+
     return {
       tasks: {
         total: tasks.length,
@@ -768,7 +833,9 @@ const Storage = (function() {
     getTimerState, saveTimerState, clearTimerState, completeTimerSession,
     getStats, calculateStreak, calculateBestStreak,
     generateId, formatDate, formatDisplayDate, getRelativeDays, getDaysUntil,
-    getWeekNumber, isToday, getWeekStart
+    getWeekNumber, isToday, getWeekStart,
+    getRepeatingCompletions, saveRepeatingCompletions, isRepeatingTaskCompletedOnDate,
+    setRepeatingTaskCompletedOnDate, pruneRepeatingCompletions
   };
 })();
 
