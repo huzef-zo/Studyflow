@@ -252,6 +252,79 @@ const App = (function() {
     }, duration);
   }
 
+  /**
+   * Show a toast with an Undo button.
+   * @param {string} message - Toast message
+   * @param {Function} onUndo - Called if user clicks Undo before timeout
+   * @param {number} duration - Ms before auto-dismiss (default 5000)
+   */
+  function showUndoToast(message, onUndo, duration = 5000) {
+    initToastContainer();
+
+    const toast = document.createElement('div');
+    toast.className = 'toast toast-success';
+    toast.style.cssText = `
+      background-color: var(--bg-secondary);
+      border: 1px solid var(--success);
+      border-radius: var(--radius-md);
+      padding: 12px 16px;
+      color: var(--text-primary);
+      font-size: 0.875rem;
+      box-shadow: var(--shadow-lg);
+      animation: slideUp 0.3s ease;
+      pointer-events: auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      min-width: 240px;
+    `;
+
+    toast.innerHTML = `
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="color:var(--success);display:flex;">${Icons.check}</span>
+        <span>${escapeHtml(message)}</span>
+      </div>
+      <button class="undo-btn" style="
+        background: rgba(255,255,255,0.1);
+        border: 1px solid rgba(255,255,255,0.2);
+        border-radius: 6px;
+        color: white;
+        font-size: 12px;
+        font-weight: 700;
+        padding: 4px 10px;
+        cursor: pointer;
+        white-space: nowrap;
+        font-family: inherit;
+      ">UNDO</button>
+    `;
+
+    toastContainer.appendChild(toast);
+
+    let dismissed = false;
+
+    const dismiss = () => {
+      if (dismissed) return;
+      dismissed = true;
+      toast.style.opacity = '0';
+      toast.style.transform = 'translateY(10px)';
+      toast.style.transition = 'all 0.3s ease';
+      setTimeout(() => { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 300);
+    };
+
+    // Auto-dismiss after duration
+    const autoTimer = setTimeout(dismiss, duration);
+
+    // Undo button
+    toast.querySelector('.undo-btn').addEventListener('click', () => {
+      clearTimeout(autoTimer);
+      dismiss();
+      onUndo();
+    });
+
+    return dismiss;  // caller can force-dismiss
+  }
+
   // ── Utilities ─────────────────────────────────────────────────────────────
 
   function debounce(func, wait) {
@@ -434,7 +507,7 @@ const App = (function() {
   return {
     Icons, getIcon, init, initNavigation, getCurrentPage,
     createModal, openModal, closeModal, confirm, alert,
-    showToast,
+    showToast, showUndoToast,
     debounce, formatDuration, formatNumber, getPriorityClass, getPriorityLabel,
     getRepeatDaysLabel, createDeadlineBadge, createDateRangeBadge,
     escapeHtml, getSubjectColor, hexToRgb,
