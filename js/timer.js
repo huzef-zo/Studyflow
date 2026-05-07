@@ -1,9 +1,12 @@
 /**
  * StudyFlow - Pomodoro Timer Module
- * FIXES:
- * 1. Keyboard shortcuts: Space = start/pause, R = reset, S = skip (was documented, never coded)
- * 2. document.title reset on pagehide/visibilitychange so the countdown doesn't
- *    persist as the tab title when the user navigates away.
+ * ADDED: Screen Wake Lock — keeps the display on while the timer is running.
+ *        Automatically released when the timer is paused, reset, or the page
+ *        is hidden. Re-acquired when the page becomes visible again if the
+ *        timer is still running (handles phone lock/unlock mid-session).
+ *
+ * Browser support: Chrome 84+, Edge 84+, Safari 16.4+, Firefox (flag only).
+ * Falls back silently on unsupported browsers — timer still works normally.
  */
 
 const Timer = (function() {
@@ -20,6 +23,51 @@ const Timer = (function() {
   let selectedSubtaskId = null;
   let sessionsInCycle = 0;
 
+  // ── Wake Lock ────────────────────────────────────────────────────────────────
+  let wakeLock = null;
+
+  async function requestWakeLock() {
+    if (!('wakeLock' in navigator)) return;
+    if (wakeLock && !wakeLock.released) return;
+    try {
+      wakeLock = await navigator.wakeLock.request('screen');
+      wakeLock.addEventListener('release', () => { wakeLock = null; updateWakeLockIndicator(); });
+      console.log('[WakeLock] Screen lock acquired');
+    } catch (err) {
+      console.warn('[WakeLock] Could not acquire:', err.message);
+      wakeLock = null;
+    }
+    updateWakeLockIndicator();
+  }
+
+  async function releaseWakeLock() {
+    if (!wakeLock || wakeLock.released) { wakeLock = null; return; }
+    try {
+      await wakeLock.release();
+      console.log('[WakeLock] Screen lock released');
+    } catch (err) {
+      console.warn('[WakeLock] Error releasing:', err.message);
+    } finally {
+      wakeLock = null;
+      updateWakeLockIndicator();
+    }
+  }
+
+  function updateWakeLockIndicator() {
+    const el = document.getElementById('wake-lock-indicator');
+    if (!el) return;
+    if (!('wakeLock' in navigator)) {
+      el.textContent = 'Screen lock not supported';
+      el.style.opacity = '0.4';
+      return;
+    }
+    const active = !!(wakeLock && !wakeLock.released);
+    el.textContent = active ? '⬤ Screen on' : '⬤ Screen auto-off';
+    el.style.color = active ? 'var(--success)' : 'var(--text-muted)';
+    el.style.opacity = active ? '1' : '0.5';
+  }
+
+  // ── Audio ─────────────────────────────────────────────────────────────────────
   let audioCtx = null;
 
   function playTransitionSound(type) {
@@ -28,51 +76,43 @@ const Timer = (function() {
     try {
       if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       if (audioCtx.state === 'suspended') audioCtx.resume();
-
-      const oscillator = audioCtx.createOscillator();
-      const gainNode = audioCtx.createGain();
-      oscillator.connect(gainNode);
-      gainNode.connect(audioCtx.destination);
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain); gain.connect(audioCtx.destination);
       const now = audioCtx.currentTime;
-
       if (type === 'work') {
-        oscillator.type = 'sine';
-        oscillator.frequency.setValueAtTime(440, now);
-        oscillator.frequency.exponentialRampToValueAtTime(880, now + 0.5);
-        gainNode.gain.setValueAtTime(0, now);
-        gainNode.gain.linearRampToValueAtTime(0.6, now + 0.1);
-        gainNode.gain.linearRampToValueAtTime(0, now + 0.5);
-        oscillator.start(now); oscillator.stop(now + 0.5);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(440, now);
+        osc.frequency.exponentialRampToValueAtTime(880, now + 0.5);
+        gain.gain.setValueAtTime(0, now);
+        gain.gain.linearRampToValueAtTime(0.6, now + 0.1);
+        gain.gain.linearRampToValueAtTime(0, now + 0.5);
+        osc.start(now); osc.stop(now + 0.5);
       } else if (type === 'short_break') {
-        oscillator.type = 'square';
-        oscillator.frequency.setValueAtTime(660, now);
-        oscillator.frequency.exponentialRampToValueAtTime(330, now + 0.5);
-        gainNode.gain.setValueAtTime(0, now);
-        gainNode.gain.linearRampToValueAtTime(0.5, now + 0.1);
-        gainNode.gain.linearRampToValueAtTime(0, now + 0.5);
-        oscillator.start(now); oscillator.stop(now + 0.5);
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(660, now);
+        osc.frequency.exponentialRampToValueAtTime(330, now + 0.5);
+        gain.gain.setValueAtTime(0, now);
+        gain.gain.linearRampToValueAtTime(0.5, now + 0.1);
+        gain.gain.linearRampToValueAtTime(0, now + 0.5);
+        osc.start(now); osc.stop(now + 0.5);
       } else if (type === 'long_break') {
-        oscillator.type = 'sine';
-        oscillator.frequency.setValueAtTime(220, now);
-        oscillator.frequency.linearRampToValueAtTime(110, now + 1.5);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(220, now);
+        osc.frequency.linearRampToValueAtTime(110, now + 1.5);
         const osc2 = audioCtx.createOscillator();
         const gain2 = audioCtx.createGain();
         osc2.type = 'sawtooth';
-        osc2.frequency.setValueAtTime(110, now);
-        osc2.frequency.linearRampToValueAtTime(55, now + 1.5);
+        osc2.frequency.setValueAtTime(110, now); osc2.frequency.linearRampToValueAtTime(55, now + 1.5);
         osc2.connect(gain2); gain2.connect(audioCtx.destination);
-        gainNode.gain.setValueAtTime(0, now);
-        gainNode.gain.linearRampToValueAtTime(0.6, now + 0.5);
-        gainNode.gain.linearRampToValueAtTime(0, now + 1.5);
-        gain2.gain.setValueAtTime(0, now);
-        gain2.gain.linearRampToValueAtTime(0.2, now + 0.5);
-        gain2.gain.linearRampToValueAtTime(0, now + 1.5);
-        oscillator.start(now); oscillator.stop(now + 1.5);
-        osc2.start(now); osc2.stop(now + 1.5);
+        gain.gain.setValueAtTime(0, now); gain.gain.linearRampToValueAtTime(0.6, now + 0.5); gain.gain.linearRampToValueAtTime(0, now + 1.5);
+        gain2.gain.setValueAtTime(0, now); gain2.gain.linearRampToValueAtTime(0.2, now + 0.5); gain2.gain.linearRampToValueAtTime(0, now + 1.5);
+        osc.start(now); osc.stop(now + 1.5); osc2.start(now); osc2.stop(now + 1.5);
       }
     } catch (e) { console.error('Audio feedback failed:', e); }
   }
 
+  // ── DOM ───────────────────────────────────────────────────────────────────────
   let elements = {};
 
   function initElements() {
@@ -105,10 +145,10 @@ const Timer = (function() {
     loadTimerState();
     updateStats();
     updateDisplay();
+    updateWakeLockIndicator();
   }
 
   function setupEventListeners() {
-    // Unlock AudioContext on first interaction
     const unlockAudio = () => {
       if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -123,71 +163,73 @@ const Timer = (function() {
     elements.taskSelect?.addEventListener('change', handleTaskChange);
     elements.subtaskSelect?.addEventListener('change', handleSubtaskChange);
 
-    // FIX: Keyboard shortcuts — Space, R, S (documented in README but never implemented)
+    // Keyboard shortcuts
     document.addEventListener('keydown', (e) => {
-      // Don't fire when user is typing in an input/select
       if (['INPUT', 'SELECT', 'TEXTAREA'].includes(e.target.tagName)) return;
-
-      if (e.code === 'Space') {
-        e.preventDefault();
-        toggleTimer();
-      } else if (e.code === 'KeyR') {
-        e.preventDefault();
-        resetTimer();
-      } else if (e.code === 'KeyS') {
-        e.preventDefault();
-        skipSession();
-      }
+      if (e.code === 'Space') { e.preventDefault(); toggleTimer(); }
+      else if (e.code === 'KeyR') { e.preventDefault(); resetTimer(); }
+      else if (e.code === 'KeyS') { e.preventDefault(); skipSession(); }
     });
 
-    // FIX: Reset document.title when leaving the timer page
+    // Visibility change: re-acquire wake lock when returning to the page
+    // (OS releases the lock whenever the page is hidden — tab switch, phone lock, etc.)
     document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'hidden') {
-        // Restore page title so other tabs don't show the countdown
-        document.title = 'Timer - StudyFlow';
-      } else {
-        // Back on the page — sync state from storage (in case timer ran in background)
+      if (document.visibilityState === 'visible') {
+        if (isRunning) requestWakeLock();   // re-acquire if still running
         loadTimerState();
         updateDisplay();
         updateStats();
+      } else {
+        releaseWakeLock();                  // explicit release on hide
+        document.title = 'Timer - StudyFlow';
       }
     });
 
-    // Also reset on actual page navigation
     window.addEventListener('pagehide', () => {
+      releaseWakeLock();
       document.title = 'Timer - StudyFlow';
     });
   }
 
+  // ── Timer controls ────────────────────────────────────────────────────────────
+
   function toggleTimer() { isRunning ? pauseTimer() : startTimer(); }
 
-  function startTimer() {
+  async function startTimer() {
     if (isRunning) return;
     try {
       if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       if (audioCtx.state === 'suspended') audioCtx.resume();
-    } catch (e) { console.error('Failed to initialize AudioContext:', e); }
+    } catch (e) { console.error('Failed to init AudioContext:', e); }
 
     isRunning = true;
     endTime = Date.now() + (timeRemaining * 1000);
+
     elements.playPauseIcon.innerHTML = `<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>`;
     elements.playPauseIcon.style.transform = 'none';
     document.body.classList.add('focus-mode');
     elements.timerContainer.classList.add('active');
     timerInterval = setInterval(tick, 1000);
     saveTimerState();
+
+    // Must be called after user gesture for the API to allow it
+    await requestWakeLock();
+
     if ('Notification' in window && Notification.permission === 'default') Notification.requestPermission();
   }
 
-  function pauseTimer() {
+  async function pauseTimer() {
     if (!isRunning) return;
     isRunning = false;
     clearInterval(timerInterval);
+
     elements.playPauseIcon.innerHTML = `<polygon points="6 3 20 12 6 21 6 3"/>`;
     elements.playPauseIcon.style.transform = 'translateX(2px)';
     document.body.classList.remove('focus-mode');
     elements.timerContainer.classList.remove('active');
     saveTimerState();
+
+    await releaseWakeLock();
   }
 
   function tick() {
@@ -197,13 +239,12 @@ const Timer = (function() {
     if (timeRemaining % 5 === 0) saveTimerState();
   }
 
-  function completeSession() {
+  async function completeSession() {
+    await releaseWakeLock();
     pauseTimer();
+
     const nextState = Storage.completeTimerSession({
-      type: currentSessionType,
-      sessionsInCycle,
-      selectedTaskId,
-      selectedSubtaskId
+      type: currentSessionType, sessionsInCycle, selectedTaskId, selectedSubtaskId
     }, true);
 
     currentSessionType = nextState.type;
@@ -213,7 +254,7 @@ const Timer = (function() {
     const settings = Storage.getSettings();
     if (settings.notifications !== false && 'Notification' in window && Notification.permission === 'granted') {
       const labels = { work: 'Deep Work — GO!', short_break: 'Cooldown Time', long_break: 'Deep Rest — Well Earned!' };
-      const bodies = { work: 'Focus mode engaged. Start your deep work block.', short_break: 'Take a short break. You earned it.', long_break: 'Great cycle! Enjoy a longer rest.' };
+      const bodies = { work: 'Focus mode engaged.', short_break: 'Take a short break. You earned it.', long_break: 'Great cycle! Enjoy a longer rest.' };
       new Notification(labels[currentSessionType], { body: bodies[currentSessionType] });
     }
 
@@ -230,11 +271,12 @@ const Timer = (function() {
       document.body.classList.add('focus-mode');
       elements.timerContainer.classList.add('active');
       timerInterval = setInterval(tick, 1000);
+      await requestWakeLock();
     }
   }
 
-  function resetTimer() {
-    pauseTimer();
+  async function resetTimer() {
+    await pauseTimer();
     currentSessionType = 'work';
     sessionsInCycle = 0;
     timeRemaining = getSessionDuration('work') * 60;
@@ -245,10 +287,7 @@ const Timer = (function() {
   function skipSession() {
     pauseTimer();
     const nextState = Storage.completeTimerSession({
-      type: currentSessionType,
-      sessionsInCycle,
-      selectedTaskId,
-      selectedSubtaskId
+      type: currentSessionType, sessionsInCycle, selectedTaskId, selectedSubtaskId
     }, false);
     currentSessionType = nextState.type;
     sessionsInCycle = nextState.sessionsInCycle;
@@ -288,19 +327,16 @@ const Timer = (function() {
       elements.subtaskContainer.style.display = 'none';
       elements.subtaskSelect.innerHTML = '<option value="">SELECT SUB-MISSION</option>';
       selectedSubtaskId = null;
-      updateSubtaskTracker();
-      return;
+      updateSubtaskTracker(); return;
     }
     elements.subtaskContainer.style.display = 'block';
-    const availableSubtasks = task.subtasks.filter(s => !s.isCompleted);
+    const available = task.subtasks.filter(s => !s.isCompleted);
     elements.subtaskSelect.innerHTML = '<option value="">SELECT SUB-MISSION</option>' +
-      availableSubtasks.map(s => `<option value="${s.id}" ${s.id === selectedSubtaskId ? 'selected' : ''}>${App.escapeHtml(s.title)}</option>`).join('');
-    if (selectedSubtaskId && !availableSubtasks.some(s => s.id === selectedSubtaskId)) {
-      selectedSubtaskId = null;
-      elements.subtaskSelect.value = '';
+      available.map(s => `<option value="${s.id}" ${s.id === selectedSubtaskId ? 'selected' : ''}>${App.escapeHtml(s.title)}</option>`).join('');
+    if (selectedSubtaskId && !available.some(s => s.id === selectedSubtaskId)) {
+      selectedSubtaskId = null; elements.subtaskSelect.value = '';
     }
-    updateSubtaskTracker();
-    updateDisplay();
+    updateSubtaskTracker(); updateDisplay();
   }
 
   function updateSubtaskTracker() {
@@ -314,8 +350,7 @@ const Timer = (function() {
         <button class="cycle-btn" id="dec-cycle">-</button>
         <span>${subtask.completedCycles}/${subtask.estimatedCycles} Cycles</span>
         <button class="cycle-btn" id="inc-cycle">+</button>
-      </div>
-    `;
+      </div>`;
     document.getElementById('inc-cycle')?.addEventListener('click', () => {
       Storage.updateSubtask(selectedTaskId, selectedSubtaskId, { completedCycles: (subtask.completedCycles || 0) + 1 });
       updateSubtaskTracker();
@@ -330,14 +365,13 @@ const Timer = (function() {
 
   function populateTasks() {
     const tasks = Storage.getTodayTasks().concat(Storage.getOverdueTasks());
-    const uniqueTasksMap = new Map();
-    tasks.forEach(t => { if (!uniqueTasksMap.has(t.id)) uniqueTasksMap.set(t.id, t); });
-    const availableTasks = Array.from(uniqueTasksMap.values()).filter(t => !t.completed);
+    const map = new Map();
+    tasks.forEach(t => { if (!map.has(t.id)) map.set(t.id, t); });
+    const available = Array.from(map.values()).filter(t => !t.completed);
     elements.taskSelect.innerHTML = '<option value="">GENERAL FOCUS</option>' +
-      availableTasks.map(t => `<option value="${t.id}">${App.escapeHtml(t.subject)}: ${App.escapeHtml(t.title)}</option>`).join('');
-    if (selectedTaskId && !availableTasks.some(t => t.id === selectedTaskId)) {
-      selectedTaskId = null;
-      elements.taskSelect.value = '';
+      available.map(t => `<option value="${t.id}">${App.escapeHtml(t.subject)}: ${App.escapeHtml(t.title)}</option>`).join('');
+    if (selectedTaskId && !available.some(t => t.id === selectedTaskId)) {
+      selectedTaskId = null; elements.taskSelect.value = '';
       elements.taskDisplay.textContent = 'GENERAL';
       if (elements.activeMissionLabel) elements.activeMissionLabel.textContent = 'Focusing on: General';
       populateSubtasks(null);
@@ -350,12 +384,9 @@ const Timer = (function() {
     }
     const mins = Math.floor(timeRemaining / 60);
     const secs = timeRemaining % 60;
-    const timeStr = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    const timeStr = `${mins.toString().padStart(2,'0')}:${secs.toString().padStart(2,'0')}`;
     elements.timerDisplay.textContent = timeStr;
-    // FIX: Only update document.title if the page is visible — avoids stale tab titles
-    if (document.visibilityState === 'visible') {
-      document.title = `${timeStr} - StudyFlow`;
-    }
+    if (document.visibilityState === 'visible') document.title = `${timeStr} - StudyFlow`;
 
     const settings = Storage.getSettings();
     const totalCycles = settings.sessions_until_long_break || 4;
@@ -372,7 +403,7 @@ const Timer = (function() {
       elements.cycleIndicator.innerHTML = Array.from({ length: cycleLength }, (_, i) => {
         const isDone = i < sessionsInCycle;
         const isActive = currentSessionType === 'work' && i === sessionsInCycle;
-        return `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${isDone ? 'var(--primary)' : (isActive ? 'var(--primary)' : 'rgba(255,255,255,0.15)')};opacity:${isActive ? '0.6' : '1'};border:${isActive ? '2px solid var(--primary)' : '2px solid transparent'};transition:background 0.3s;"></span>`;
+        return `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${isDone?'var(--primary)':(isActive?'var(--primary)':'rgba(255,255,255,0.15)')};opacity:${isActive?'0.6':'1'};border:${isActive?'2px solid var(--primary)':'2px solid transparent'};transition:background 0.3s;"></span>`;
       }).join('');
     }
   }
@@ -389,10 +420,7 @@ const Timer = (function() {
       type: currentSessionType,
       endTime: isRunning ? endTime : null,
       state: isRunning ? 'running' : 'paused',
-      timeRemaining,
-      selectedTaskId,
-      selectedSubtaskId,
-      sessionsInCycle
+      timeRemaining, selectedTaskId, selectedSubtaskId, sessionsInCycle
     });
   }
 
