@@ -95,15 +95,15 @@ const Tasks = (function() {
       return new Date(a.dueDate) - new Date(b.dueDate);
     }).map((task, index) => {
       const isDone = task.type === 'repeating' ? Storage.isRepeatingTaskCompletedOnDate(task.id, todayStr) : task.completed;
-      const priorityClass = `priority-${task.priority}`;
+      const priorityClass = `priority-${App.escapeHtml(task.priority)}`;
       const subjectColor = App.getSubjectColor(task.subject);
       const isExpanded = expandedTasks.has(task.id);
       const staggerClass = index < 5 ? `stagger-${index + 1}` : '';
       return `
-        <div class="task-card ${priorityClass} ${isDone ? 'completed' : ''} animate-fade-in ${staggerClass}" data-id="${task.id}">
+        <div class="task-card ${priorityClass} ${isDone ? 'completed' : ''} animate-fade-in ${staggerClass}" data-id="${App.escapeHtml(task.id)}">
           <div class="swipe-hint">Swipe to complete</div>
           <div class="flex items-start gap-md">
-            <div class="task-checkbox ${isDone ? 'checked' : ''}" data-id="${task.id}" style="margin-top:4px;"></div>
+            <div class="task-checkbox ${isDone ? 'checked' : ''}" data-id="${App.escapeHtml(task.id)}" style="margin-top:4px;"></div>
             <div class="flex-1 min-w-0">
               <div class="task-header-inline">
                 <div class="task-title-text" style="${isDone ? 'text-decoration:line-through;opacity:0.5;' : ''}">${App.escapeHtml(task.title)}</div>
@@ -113,19 +113,19 @@ const Tasks = (function() {
               <div class="flex items-center justify-between">
                 <div class="task-meta-text">
                   Target: ${Storage.formatDisplayDate(task.dueDate)}
-                  ${task.dueTime ? ` • ${task.dueTime}` : ''}
+                  ${task.dueTime ? ` • ${App.escapeHtml(task.dueTime)}` : ''}
                 </div>
                 <div class="flex items-center gap-xs">
                   ${task.subtasks && task.subtasks.length > 0 ? `
-                    <button class="btn btn-ghost btn-icon btn-sm task-expand-btn" data-id="${task.id}" style="color:var(--text-muted);transition:transform 0.3s;${isExpanded ? 'transform:rotate(180deg);' : ''}">
+                    <button class="btn btn-ghost btn-icon btn-sm task-expand-btn" data-id="${App.escapeHtml(task.id)}" style="color:var(--text-muted);transition:transform 0.3s;${isExpanded ? 'transform:rotate(180deg);' : ''}">
                       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
                     </button>
                   ` : ''}
                   <div class="task-actions-compact">
-                    <button class="btn btn-ghost btn-icon btn-sm edit-task" data-id="${task.id}" style="color:var(--text-muted);">
+                    <button class="btn btn-ghost btn-icon btn-sm edit-task" data-id="${App.escapeHtml(task.id)}" style="color:var(--text-muted);">
                       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                     </button>
-                    <button class="btn btn-ghost btn-icon btn-sm del-task" data-id="${task.id}" style="color:var(--text-muted);">
+                    <button class="btn btn-ghost btn-icon btn-sm del-task" data-id="${App.escapeHtml(task.id)}" style="color:var(--text-muted);">
                       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                     </button>
                   </div>
@@ -135,12 +135,12 @@ const Tasks = (function() {
                 <div class="subtasks-container" style="${isExpanded ? 'display:block;' : 'display:none;'}">
                   ${task.subtasks.map(subtask => `
                     <div class="subtask-item">
-                      <div class="subtask-checkbox ${subtask.isCompleted ? 'checked' : ''}" data-task-id="${task.id}" data-subtask-id="${subtask.id}"></div>
+                      <div class="subtask-checkbox ${subtask.isCompleted ? 'checked' : ''}" data-task-id="${App.escapeHtml(task.id)}" data-subtask-id="${App.escapeHtml(subtask.id)}"></div>
                       <div class="subtask-title ${subtask.isCompleted ? 'completed' : ''}">${App.escapeHtml(subtask.title)}</div>
                       <div class="subtask-cycle-tracker">
-                        <button class="cycle-btn dec-cycle" data-task-id="${task.id}" data-subtask-id="${subtask.id}">-</button>
+                        <button class="cycle-btn dec-cycle" data-task-id="${App.escapeHtml(task.id)}" data-subtask-id="${App.escapeHtml(subtask.id)}">-</button>
                         <span>${subtask.completedCycles}/${subtask.estimatedCycles}</span>
-                        <button class="cycle-btn inc-cycle" data-task-id="${task.id}" data-subtask-id="${subtask.id}">+</button>
+                        <button class="cycle-btn inc-cycle" data-task-id="${App.escapeHtml(task.id)}" data-subtask-id="${App.escapeHtml(subtask.id)}">+</button>
                       </div>
                     </div>
                   `).join('')}
@@ -341,11 +341,11 @@ const Tasks = (function() {
         <div class="grid-2">
           <div class="form-group">
             <label class="form-label">Target Date</label>
-            <input type="date" name="dueDate" class="form-input" value="${task ? task.dueDate : Storage.formatDate(new Date())}" required>
+            <input type="date" name="dueDate" class="form-input" value="${task ? App.escapeHtml(task.dueDate) : Storage.formatDate(new Date())}" required>
           </div>
           <div class="form-group">
             <label class="form-label">Target Time (Optional)</label>
-            <input type="time" name="dueTime" class="form-input" value="${task ? task.dueTime || '' : ''}">
+            <input type="time" name="dueTime" class="form-input" value="${task ? App.escapeHtml(task.dueTime || '') : ''}">
           </div>
         </div>
         <div id="subtasks-editor">

@@ -332,7 +332,7 @@ const Timer = (function() {
     elements.subtaskContainer.style.display = 'block';
     const available = task.subtasks.filter(s => !s.isCompleted);
     elements.subtaskSelect.innerHTML = '<option value="">SELECT SUB-MISSION</option>' +
-      available.map(s => `<option value="${s.id}" ${s.id === selectedSubtaskId ? 'selected' : ''}>${App.escapeHtml(s.title)}</option>`).join('');
+      available.map(s => `<option value="${App.escapeHtml(s.id)}" ${s.id === selectedSubtaskId ? 'selected' : ''}>${App.escapeHtml(s.title)}</option>`).join('');
     if (selectedSubtaskId && !available.some(s => s.id === selectedSubtaskId)) {
       selectedSubtaskId = null; elements.subtaskSelect.value = '';
     }
@@ -369,7 +369,7 @@ const Timer = (function() {
     tasks.forEach(t => { if (!map.has(t.id)) map.set(t.id, t); });
     const available = Array.from(map.values()).filter(t => !t.completed);
     elements.taskSelect.innerHTML = '<option value="">GENERAL FOCUS</option>' +
-      available.map(t => `<option value="${t.id}">${App.escapeHtml(t.subject)}: ${App.escapeHtml(t.title)}</option>`).join('');
+      available.map(t => `<option value="${App.escapeHtml(t.id)}">${App.escapeHtml(t.subject)}: ${App.escapeHtml(t.title)}</option>`).join('');
     if (selectedTaskId && !available.some(t => t.id === selectedTaskId)) {
       selectedTaskId = null; elements.taskSelect.value = '';
       elements.taskDisplay.textContent = 'GENERAL';

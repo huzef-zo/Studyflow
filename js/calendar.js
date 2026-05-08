@@ -158,15 +158,15 @@ const Calendar = (function() {
       const subjectColor = App.getSubjectColor(task.subject);
       const isDone = task.type === 'repeating' ? task.completedOnDate : task.completed;
       return `
-        <div class="task-card priority-${task.priority} ${isDone ? 'completed' : ''}" data-id="${task.id}" style="--priority-color:${App.hexToRgb(subjectColor)};">
+        <div class="task-card priority-${App.escapeHtml(task.priority)} ${isDone ? 'completed' : ''}" data-id="${App.escapeHtml(task.id)}" style="--priority-color:${App.hexToRgb(subjectColor)};">
           <div class="flex items-start gap-md w-full">
-            <div class="task-checkbox ${isDone ? 'checked' : ''}" data-id="${task.id}"></div>
+            <div class="task-checkbox ${isDone ? 'checked' : ''}" data-id="${App.escapeHtml(task.id)}"></div>
             <div class="flex-1">
               <div class="flex items-center gap-md mb-xs">
                 <div class="subject-pill" style="--tag-color:${App.hexToRgb(subjectColor)}">${App.escapeHtml(task.subject)}</div>
               </div>
               <div class="task-title-text" style="${isDone ? 'text-decoration:line-through;opacity:0.5;' : ''}">${App.escapeHtml(task.title)}</div>
-              <div class="task-meta-text">${task.dueTime ? `Time: ${task.dueTime}` : 'All Day'}</div>
+              <div class="task-meta-text">${task.dueTime ? `Time: ${App.escapeHtml(task.dueTime)}` : 'All Day'}</div>
             </div>
           </div>
         </div>
