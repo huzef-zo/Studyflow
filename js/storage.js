@@ -506,9 +506,11 @@ const Storage = (function() {
    * More efficient than filtering getSessions() inline everywhere.
    */
   function getSessionsSince(dateStr) {
+    const threshold = new Date(dateStr).getTime();
     return getSessions().filter(s => {
       if (!s.completedAt) return false;
-      return formatDate(new Date(s.completedAt)) >= dateStr;
+      // Faster numeric comparison instead of string formatting in loop
+      return new Date(s.completedAt).getTime() >= threshold;
     });
   }
 
@@ -696,23 +698,16 @@ const Storage = (function() {
 
   function getStats() {
     const tasks = getTasks();
+    const sessions = getSessions();
     const now = new Date();
     const todayStr = formatDate(now);
     const weekStart = getWeekStart(now);
-
-    // Recent sessions (last 8 days) for weekly/daily stat counters
-    const eightDaysAgo = new Date(now);
-    eightDaysAgo.setDate(eightDaysAgo.getDate() - 8);
-    const recentSessions = getSessionsSince(formatDate(eightDaysAgo));
-
-    // All sessions within streak window (365 days) for streak calculation
-    const yearAgo = new Date(now);
-    yearAgo.setFullYear(yearAgo.getFullYear() - 1);
-    const streakSessions = getSessionsSince(formatDate(yearAgo));
+    const weekStartTime = weekStart.getTime();
 
     const dayOfWeek = now.getDay();
     const today = new Date(now);
     today.setHours(0, 0, 0, 0);
+    const todayTime = today.getTime();
     const future7Days = new Date(today);
     future7Days.setDate(today.getDate() + 7);
     const future7DaysStr = formatDate(future7Days);
@@ -725,11 +720,18 @@ const Storage = (function() {
     let overdueTasks = 0;
     let upcomingTasks = 0;
 
+    const activityDates = new Set();
+
     tasks.forEach(t => {
       if (t.completed) {
         completedTasks++;
-        if (t.completedAt && formatDate(new Date(t.completedAt)) === todayStr) todayCompleted++;
-        if (t.completedAt && new Date(t.completedAt) >= weekStart) weekCompleted++;
+        if (t.completedAt) {
+          const compDate = new Date(t.completedAt);
+          const compDateStr = formatDate(compDate);
+          if (compDateStr === todayStr) todayCompleted++;
+          if (compDate.getTime() >= weekStartTime) weekCompleted++;
+          activityDates.add(compDateStr);
+        }
       } else {
         pendingCount++;
         let isOverdue = false;
@@ -755,22 +757,24 @@ const Storage = (function() {
     });
 
     let todaySessions = 0, weekSessions = 0, totalMinutesToday = 0, totalMinutesWeek = 0;
-    const activityDates = new Set();
 
-    tasks.forEach(t => { if (t.completedAt) activityDates.add(formatDate(new Date(t.completedAt))); });
+    // Single pass over sessions for all metric calculations
+    sessions.forEach(s => {
+      if (!s.completedAt) return;
+      const compDate = new Date(s.completedAt);
+      const compTime = compDate.getTime();
+      const compDateStr = formatDate(compDate);
 
-    recentSessions.forEach(s => {
-      const completedAtDate = new Date(s.completedAt);
-      const sessionDateStr = formatDate(completedAtDate);
       if (s.type === 'work') {
-        if (sessionDateStr === todayStr) { todaySessions++; totalMinutesToday += s.duration; }
-        if (completedAtDate >= weekStart) { weekSessions++; totalMinutesWeek += s.duration; }
-      }
-    });
-
-    streakSessions.forEach(s => {
-      if (s.type === 'work') {
-        activityDates.add(formatDate(new Date(s.completedAt)));
+        activityDates.add(compDateStr);
+        if (compDateStr === todayStr) {
+          todaySessions++;
+          totalMinutesToday += s.duration;
+        }
+        if (compTime >= weekStartTime) {
+          weekSessions++;
+          totalMinutesWeek += s.duration;
+        }
       }
     });
 
@@ -864,11 +868,12 @@ const Storage = (function() {
   }
 
   function formatDate(date) {
-    const d = new Date(date);
+    const d = (date instanceof Date) ? date : new Date(date);
     const year = d.getFullYear();
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
+    const m = d.getMonth() + 1;
+    const day = d.getDate();
+    // Faster string concatenation for padding
+    return year + '-' + (m < 10 ? '0' + m : m) + '-' + (day < 10 ? '0' + day : day);
   }
 
   function formatDisplayDate(dateStr) {
