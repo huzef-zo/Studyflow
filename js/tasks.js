@@ -24,6 +24,37 @@ const Tasks = (function() {
     };
   }
 
+  function setupEventListeners() {
+    elements.filterTabs.forEach(tab => {
+      tab.onclick = () => {
+        elements.filterTabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        currentFilter = tab.dataset.filter;
+        renderTasks();
+      };
+    });
+
+    if (elements.addTaskBtn) {
+      elements.addTaskBtn.onclick = () => openTaskModal();
+    }
+
+    if (elements.searchInput) {
+      elements.searchInput.oninput = App.debounce(() => renderTasks(), 300);
+    }
+
+    if (elements.priorityFilter) {
+      elements.priorityFilter.onchange = () => renderTasks();
+    }
+
+    if (elements.subjectFilter) {
+      elements.subjectFilter.onchange = () => renderTasks();
+    }
+
+    window.addEventListener('studyflow_taskDataChanged', () => {
+      renderTasks();
+    });
+  }
+
   async function init() {
     initElements();
     setupEventListeners();
