@@ -2,6 +2,7 @@
  * StudyFlow - Task Manager Module
  * FIX: Swipe vs scroll conflict — added Y-delta threshold so diagonal scrolls
  *      don't accidentally trigger task completion swipe.
+ * ENHANCED: Added subtask progress tracking, milestone notifications, and auto-complete logic
  */
 
 const Tasks = (function() {
@@ -10,6 +11,7 @@ const Tasks = (function() {
   let elements = {};
   let currentFilter = 'all';
   let expandedTasks = new Set();
+  let subtaskUnsubscribe = null;
 
   function initElements() {
     elements = {
@@ -25,6 +27,7 @@ const Tasks = (function() {
   async function init() {
     initElements();
     setupEventListeners();
+    setupSubtaskCallbacks();
 
     elements.taskList.innerHTML = `
       <div class="skeleton" style="height:100px;border-radius:20px;margin-bottom:1rem;"></div>
@@ -35,19 +38,44 @@ const Tasks = (function() {
     renderTasks();
   }
 
-  function setupEventListeners() {
-    elements.addTaskBtn?.addEventListener('click', () => openTaskModal());
-    elements.filterTabs.forEach(tab => {
-      tab.addEventListener('click', () => {
-        elements.filterTabs.forEach(t => t.classList.remove('active'));
-        tab.classList.add('active');
-        currentFilter = tab.dataset.filter;
-        renderTasks();
-      });
+  function setupSubtaskCallbacks() {
+    // Listen for subtask completions and provide feedback
+    subtaskUnsubscribe = Storage.onSubtaskCompleted(({ taskId, subtask, task, progress }) => {
+      console.log('[v0] Subtask completed:', subtask.title, `Progress: ${progress.percentage}%`);
+      
+      // Show milestone notifications at key percentages
+      const milestone = SubtaskUtils.getMilestoneMessage(progress.percentage);
+      if (milestone) {
+        showMilestoneNotification(milestone, progress.percentage);
+      }
+      
+      // Show completion toast with progress
+      if (progress.isFullyComplete) {
+        App.showToast(`All sub-missions complete! Objective "${App.escapeHtml(task.title)}" is done!`, 'success', 4000);
+      } else {
+        App.showToast(`Sub-mission complete: ${progress.completed}/${progress.total}`, 'success', 2500);
+      }
     });
-    elements.searchInput?.addEventListener('input', renderTasks);
-    elements.priorityFilter?.addEventListener('change', renderTasks);
-    elements.subjectFilter?.addEventListener('change', renderTasks);
+  }
+
+  function showMilestoneNotification(message, percentage) {
+    // Create milestone badge animation
+    const existing = document.querySelector('.progress-milestone');
+    if (existing) existing.remove();
+    
+    const milestone = document.createElement('div');
+    milestone.className = 'progress-milestone';
+    milestone.innerHTML = `
+      <div style="display:flex;align-items:center;gap:8px;justify-content:center;">
+        <span style="font-size:18px;">🎉</span>
+        <span>${App.escapeHtml(message)}</span>
+      </div>
+    `;
+    document.body.appendChild(milestone);
+    
+    setTimeout(() => {
+      if (milestone.parentNode) milestone.parentNode.removeChild(milestone);
+    }, 3200);
   }
 
   function renderTasks() {
@@ -117,6 +145,7 @@ const Tasks = (function() {
                 </div>
                 <div class="flex items-center gap-xs">
                   ${task.subtasks && task.subtasks.length > 0 ? `
+                    ${SubtaskUtils.buildProgressIndicator(task)}
                     <button class="btn btn-ghost btn-icon btn-sm task-expand-btn" data-id="${App.escapeHtml(task.id)}" style="color:var(--text-muted);transition:transform 0.3s;${isExpanded ? 'transform:rotate(180deg);' : ''}">
                       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
                     </button>
@@ -206,8 +235,24 @@ const Tasks = (function() {
     elements.taskList.querySelectorAll('.subtask-checkbox').forEach(cb => {
       cb.onclick = (e) => {
         e.stopPropagation();
-        Storage.toggleSubtask(cb.dataset.taskId, cb.dataset.subtaskId, !cb.classList.contains('checked'));
-        renderTasks();
+        const isCompleting = !cb.classList.contains('checked');
+        const taskId = cb.dataset.taskId;
+        const subtaskId = cb.dataset.subtaskId;
+        const subtaskItem = cb.closest('.subtask-item');
+        
+        if (isCompleting) {
+          // Add animation before completion
+          cb.classList.add('animating');
+          if (subtaskItem) subtaskItem.classList.add('completing');
+        }
+        
+        // Toggle the subtask via storage (triggers callbacks)
+        Storage.toggleSubtask(taskId, subtaskId, isCompleting);
+        
+        // Re-render after a brief delay to show animation
+        setTimeout(() => {
+          renderTasks();
+        }, 300);
       };
     });
 

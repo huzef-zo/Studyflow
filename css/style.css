@@ -1179,6 +1179,147 @@ h4 {
 }
 
 /* ============================================
+   Subtask Progress Indicators
+   ============================================ */
+
+.progress-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  transition: var(--transition);
+  min-width: 80px;
+}
+
+.progress-badge:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.progress-text {
+  white-space: nowrap;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.progress-bar {
+  width: 40px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary), var(--secondary));
+  border-radius: 2px;
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.progress-badge.progress-empty .progress-fill { width: 0%; }
+.progress-badge.progress-low .progress-fill { width: 25%; }
+.progress-badge.progress-medium .progress-fill { width: 50%; }
+.progress-badge.progress-high .progress-fill { width: 75%; }
+.progress-badge.progress-full .progress-fill { width: 100%; }
+
+/* ============================================
+   Subtask Completion Animations
+   ============================================ */
+
+@keyframes subtask-complete-pulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 0 0 8px rgba(16, 185, 129, 0.3);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+  }
+}
+
+@keyframes checkmark-draw {
+  0% {
+    stroke-dashoffset: 45;
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+}
+
+@keyframes subtask-fade-complete {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0.5;
+    transform: translateX(4px);
+  }
+}
+
+.subtask-complete-pulse {
+  animation: subtask-complete-pulse 0.6s ease-out 1;
+}
+
+.subtask-item.completing {
+  animation: subtask-fade-complete 0.3s ease-out forwards;
+}
+
+.subtask-checkbox.animating {
+  animation: subtask-complete-pulse 0.5s ease-out 1;
+}
+
+/* Progress milestone badge */
+.progress-milestone {
+  position: fixed;
+  bottom: 100px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 12px 20px;
+  background: linear-gradient(135deg, var(--secondary), var(--primary));
+  border-radius: var(--radius-md);
+  color: white;
+  font-weight: 700;
+  font-size: 14px;
+  box-shadow: 0 8px 32px rgba(168, 85, 247, 0.4);
+  animation: slideUp 0.4s ease-out, slideDown 0.4s ease-out 2.6s forwards;
+  pointer-events: none;
+  z-index: 1000;
+  text-align: center;
+  max-width: 240px;
+}
+
+/* Enhanced subtask checkbox animation */
+.subtask-checkbox.checked::after {
+  content: "✓";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(1);
+  color: white;
+  font-weight: bold;
+  font-size: 12px;
+  animation: checkmark-draw 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* ============================================
    Task Cards
    ============================================ */
 

@@ -301,6 +301,27 @@ const Storage = (function() {
     return updateTask(taskId, { subtasks });
   }
 
+  // Subtask completion callbacks for reactive updates
+  const _subtaskCallbacks = [];
+
+  function onSubtaskCompleted(callback) {
+    _subtaskCallbacks.push(callback);
+    return () => {
+      const idx = _subtaskCallbacks.indexOf(callback);
+      if (idx !== -1) _subtaskCallbacks.splice(idx, 1);
+    };
+  }
+
+  function _notifySubtaskCompleted(taskId, subtask, task, progress) {
+    try {
+      _subtaskCallbacks.forEach(cb => {
+        cb({ taskId, subtask, task, progress });
+      });
+    } catch (err) {
+      console.error('Error in subtask completion callback:', err);
+    }
+  }
+
   function toggleSubtask(taskId, subtaskId, isCompleted) {
     return updateSubtask(taskId, subtaskId, { isCompleted });
   }
@@ -308,8 +329,23 @@ const Storage = (function() {
   function updateSubtask(taskId, subtaskId, updates) {
     const task = getTaskById(taskId);
     if (!task || !task.subtasks) return null;
+    
     const subtasks = task.subtasks.map(s => s.id === subtaskId ? { ...s, ...updates } : s);
-    return updateTask(taskId, { subtasks });
+    const result = updateTask(taskId, { subtasks });
+    
+    // Trigger callbacks if subtask was completed
+    if (updates.isCompleted) {
+      const completedSubtask = subtasks.find(s => s.id === subtaskId);
+      const newProgress = SubtaskUtils && SubtaskUtils.calculateProgress(result);
+      _notifySubtaskCompleted(taskId, completedSubtask, result, newProgress);
+      
+      // Auto-complete parent task if all subtasks are complete
+      if (SubtaskUtils && SubtaskUtils.shouldAutoCompleteParent(result)) {
+        updateTask(taskId, { completed: true, completedAt: new Date().toISOString() });
+      }
+    }
+    
+    return result;
   }
 
   function deleteTask(id) {
@@ -931,7 +967,8 @@ const Storage = (function() {
     generateId, formatDate, formatDisplayDate, getRelativeDays, getDaysUntil,
     getWeekNumber, isToday, getWeekStart,
     getRepeatingCompletions, saveRepeatingCompletions, isRepeatingTaskCompletedOnDate,
-    setRepeatingTaskCompletedOnDate, pruneRepeatingCompletions
+    setRepeatingTaskCompletedOnDate, pruneRepeatingCompletions,
+    onSubtaskCompleted, _notifySubtaskCompleted
   };
 })();
 
