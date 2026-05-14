@@ -44,35 +44,47 @@ const History = (function() {
     updateWeeklyProgress();
   }
 
+  function getCutoffDate() {
+    if (!statsPeriodDays) return null;
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - (statsPeriodDays - 1));
+    cutoff.setHours(0, 0, 0, 0);
+    return cutoff;
+  }
+
   function getFilteredSessions() {
     const sessions = Storage.getSessions();
-    if (!statsPeriodDays) return sessions;
-    const cutoff = new Date();
-    cutoff.setDate(cutoff.getDate() - statsPeriodDays);
-    cutoff.setHours(0, 0, 0, 0);
+    const cutoff = getCutoffDate();
+    if (!cutoff) return sessions;
     return sessions.filter(s => s.completedAt && new Date(s.completedAt) >= cutoff);
   }
 
-  function updateSummaryStats() {
+  function getFilteredTasks() {
     const tasks = Storage.getTasks();
-    const sessions = getFilteredSessions();
-    const stats = Storage.getStats();
-
-    const cutoff = statsPeriodDays ? new Date() : null;
-    if (cutoff) {
-      cutoff.setDate(cutoff.getDate() - statsPeriodDays);
-      cutoff.setHours(0, 0, 0, 0);
-    }
-
-    const filteredTasks = !cutoff ? tasks : tasks.filter(t => {
+    const cutoff = getCutoffDate();
+    if (!cutoff) return tasks;
+    return tasks.filter(t => {
       const completedAt = t.completedAt ? new Date(t.completedAt) : null;
       const dueDate = t.dueDate ? new Date(t.dueDate) : null;
       return (completedAt && completedAt >= cutoff) || (dueDate && dueDate >= cutoff);
     });
+  }
 
-    const periodCompletedCount = !cutoff ? tasks.filter(t => t.completed).length : tasks.filter(t => t.completed && t.completedAt && new Date(t.completedAt) >= cutoff).length;
+  function getCompletedTasksInPeriod() {
+    const tasks = Storage.getTasks();
+    const cutoff = getCutoffDate();
+    if (!cutoff) return tasks.filter(t => t.completed);
+    return tasks.filter(t => t.completed && t.completedAt && new Date(t.completedAt) >= cutoff);
+  }
 
-    const studyMinutes = sessions.filter(s => s.type === 'work').reduce((total, s) => total + s.duration, 0);
+  function updateSummaryStats() {
+    const filteredTasks = getFilteredTasks();
+    const completedTasksInPeriod = getCompletedTasksInPeriod();
+    const filteredSessions = getFilteredSessions();
+    const stats = Storage.getStats();
+
+    const periodCompletedCount = completedTasksInPeriod.length;
+    const studyMinutes = filteredSessions.filter(s => s.type === 'work').reduce((total, s) => total + s.duration, 0);
 
     if (elements.totalCompletedTasks) elements.totalCompletedTasks.textContent = periodCompletedCount;
     if (elements.totalStudyHours) elements.totalStudyHours.textContent = Math.round(studyMinutes / 60) + 'h';
@@ -85,11 +97,19 @@ const History = (function() {
 
     if (elements.productiveDay) {
       const dayActivity = [0, 0, 0, 0, 0, 0, 0];
-      sessions.forEach(s => {
+      // Include focus sessions (weighted by 15-min intervals)
+      filteredSessions.forEach(s => {
         if (s.type === 'work' && s.completedAt) {
-          dayActivity[new Date(s.completedAt).getDay()] += s.duration;
+          dayActivity[new Date(s.completedAt).getDay()] += Math.max(1, Math.round(s.duration / 15));
         }
       });
+      // Include task completions (weighted as 1 unit)
+      completedTasksInPeriod.forEach(t => {
+        if (t.completedAt) {
+          dayActivity[new Date(t.completedAt).getDay()] += 1;
+        }
+      });
+
       let maxDay = 0, maxVal = -1;
       dayActivity.forEach((val, day) => { if (val > maxVal) { maxVal = val; maxDay = day; } });
       const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
