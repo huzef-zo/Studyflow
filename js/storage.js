@@ -225,7 +225,7 @@ const Storage = (function() {
 
   // ── Tasks ───────────────────────────────────────────────────────────────────
 
-  function getTasks() { return loadData(KEYS.TASKS, DEFAULTS.tasks); }
+  function getTasks() { return [...loadData(KEYS.TASKS, DEFAULTS.tasks)]; }
   function saveTasks(tasks) { return saveData(KEYS.TASKS, [...tasks]); }
 
   function addTask(task) {
@@ -438,7 +438,13 @@ const Storage = (function() {
   }
 
   function getTodayTasks() {
-    return getTasksByDate(formatDate(new Date())).filter(t => !t.completed);
+    const todayStr = formatDate(new Date());
+    return getTasksByDate(todayStr).filter(t => {
+      if (t.type === 'repeating') {
+        return !isRepeatingTaskCompletedOnDate(t.id, todayStr);
+      }
+      return !t.completed;
+    });
   }
 
   /**
@@ -474,7 +480,7 @@ const Storage = (function() {
 
   // ── Subjects ────────────────────────────────────────────────────────────────
 
-  function getSubjects() { return loadData(KEYS.SUBJECTS, DEFAULTS.subjects); }
+  function getSubjects() { return [...loadData(KEYS.SUBJECTS, DEFAULTS.subjects)]; }
   function saveSubjects(subjects) { return saveData(KEYS.SUBJECTS, [...subjects]); }
 
   function addSubject(name, color) {
@@ -506,7 +512,7 @@ const Storage = (function() {
 
   // ── Sessions ────────────────────────────────────────────────────────────────
 
-  function getSessions() { return loadData(KEYS.SESSIONS, DEFAULTS.sessions); }
+  function getSessions() { return [...loadData(KEYS.SESSIONS, DEFAULTS.sessions)]; }
   function saveSessions(sessions) { return saveData(KEYS.SESSIONS, [...sessions]); }
 
   function addSession(duration, type = 'work', taskId = null) {
@@ -750,8 +756,9 @@ const Storage = (function() {
 
     let completedTasks = 0;
     let todayCompleted = 0;
-    let todayTasksCount = 0;   // pending tasks scheduled for today
-    let pendingCount = 0;      // all uncompleted tasks (global)
+    let todayTotalCount = 0;    // total tasks scheduled for today (comp + pending)
+    let todayPendingCount = 0;  // unfinished tasks scheduled for today
+    let pendingCount = 0;       // all uncompleted tasks (global)
     let weekCompleted = 0;
     let overdueTasks = 0;
     let upcomingTasks = 0;
@@ -760,54 +767,61 @@ const Storage = (function() {
     const completions = getRepeatingCompletions();
 
     tasks.forEach(t => {
+      const isRepeating = t.type === 'repeating';
+      const isCompletedToday = isRepeating
+        ? (completions[`${t.id}_${todayStr}`] === true)
+        : (t.completed && t.completedAt && formatDate(new Date(t.completedAt)) === todayStr);
+
+      // Check if task is scheduled for today or overdue
+      let isScheduledForToday = false;
+      let isOverdue = false;
+
+      if (isRepeating) {
+        if (t.repeatDays && t.repeatDays.includes(dayOfWeek)) isScheduledForToday = true;
+      } else {
+        if (t.dueDate) {
+          const dueDate = new Date(t.dueDate);
+          const start = t.startDate || t.dueDate;
+          if (todayStr >= start && todayStr <= t.dueDate) isScheduledForToday = true;
+          if (dueDate < today && !t.completed) isOverdue = true;
+        }
+      }
+
+      if (isScheduledForToday || isOverdue) {
+        todayTotalCount++;
+        if (!isCompletedToday && (isRepeating || !t.completed)) {
+          todayPendingCount++;
+        }
+      }
+
       if (t.completed) {
         completedTasks++;
         if (t.completedAt) {
           const compDate = new Date(t.completedAt);
           const compDateStr = formatDate(compDate);
-          if (compDateStr === todayStr) todayCompleted++;
           if (compDate.getTime() >= weekStartTime) weekCompleted++;
           activityDates.add(compDateStr);
         }
       } else {
-        // Check if this is a repeating task completed today
-        let isRepeatingCompletedToday = false;
-        if (t.type === 'repeating') {
-          const completionKey = `${t.id}_${todayStr}`;
-          isRepeatingCompletedToday = completions[completionKey] === true;
-        }
-
-        // Only count as pending if not completed today
-        if (!isRepeatingCompletedToday) {
+        // Only count in global pending if not completed for today (if repeating)
+        if (!isCompletedToday) {
           pendingCount++;
-        } else {
-          // Repeating task completed today - count as completion for today
-          todayCompleted++;
-          activityDates.add(todayStr);
         }
 
-        // Process task scheduling only if not completed today
-        if (!isRepeatingCompletedToday) {
-          let isOverdue = false;
-          if (t.dueDate) {
-            const dueDate = new Date(t.dueDate);
-            if (dueDate < today) { overdueTasks++; isOverdue = true; }
-          }
-          let isDueToday = false;
-          if (t.type === 'repeating') {
-            if (t.repeatDays && t.repeatDays.includes(dayOfWeek)) isDueToday = true;
-          } else if (t.dueDate) {
-            const start = t.startDate || t.dueDate;
-            if (todayStr >= start && todayStr <= t.dueDate) isDueToday = true;
-          }
-          if (isDueToday || isOverdue) todayTasksCount++;
-          if (t.type === 'repeating') {
-            upcomingTasks++;
-          } else if (t.dueDate) {
-            const start = t.startDate || t.dueDate;
-            if (t.dueDate < todayStr || (t.dueDate >= todayStr && start <= future7DaysStr)) upcomingTasks++;
-          }
+        if (isOverdue) overdueTasks++;
+
+        // Upcoming (next 7 days)
+        if (isRepeating) {
+          upcomingTasks++;
+        } else if (t.dueDate) {
+          const start = t.startDate || t.dueDate;
+          if (t.dueDate < todayStr || (t.dueDate >= todayStr && start <= future7DaysStr)) upcomingTasks++;
         }
+      }
+
+      if (isCompletedToday) {
+        todayCompleted++;
+        activityDates.add(todayStr);
       }
     });
 
@@ -841,9 +855,9 @@ const Storage = (function() {
         total: tasks.length,
         completed: completedTasks,
         pending: pendingCount,
-        today: todayTasksCount,
+        today: todayTotalCount,
         todayCompleted,
-        todayPending: todayTasksCount,   // tasks due today that are not completed
+        todayPending: todayPendingCount,
         weekCompleted,
         overdue: overdueTasks,
         upcoming: upcomingTasks
