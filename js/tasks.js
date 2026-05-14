@@ -121,8 +121,15 @@ const Tasks = (function() {
       });
     }
 
-    if (currentFilter === 'pending') tasks = tasks.filter(t => !t.completed);
-    if (currentFilter === 'completed') tasks = tasks.filter(t => t.completed);
+    const todayStr = Storage.formatDate(new Date());
+    if (currentFilter === 'pending') tasks = tasks.filter(t => {
+      if (t.type === 'repeating') return !Storage.isRepeatingTaskCompletedOnDate(t.id, todayStr);
+      return !t.completed;
+    });
+    if (currentFilter === 'completed') tasks = tasks.filter(t => {
+      if (t.type === 'repeating') return Storage.isRepeatingTaskCompletedOnDate(t.id, todayStr);
+      return t.completed;
+    });
 
     const searchTerm = elements.searchInput?.value.toLowerCase();
     if (searchTerm) tasks = tasks.filter(t => t.title.toLowerCase().includes(searchTerm) || t.subject.toLowerCase().includes(searchTerm));
@@ -144,8 +151,6 @@ const Tasks = (function() {
       document.getElementById('empty-add-btn')?.addEventListener('click', () => openTaskModal());
       return;
     }
-
-    const todayStr = Storage.formatDate(new Date());
 
     elements.taskList.innerHTML = tasks.sort((a, b) => {
       const aDone = a.type === 'repeating' ? Storage.isRepeatingTaskCompletedOnDate(a.id, todayStr) : a.completed;
