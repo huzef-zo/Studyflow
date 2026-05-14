@@ -757,6 +757,7 @@ const Storage = (function() {
     let upcomingTasks = 0;
 
     const activityDates = new Set();
+    const completions = getRepeatingCompletions();
 
     tasks.forEach(t => {
       if (t.completed) {
@@ -769,25 +770,43 @@ const Storage = (function() {
           activityDates.add(compDateStr);
         }
       } else {
-        pendingCount++;
-        let isOverdue = false;
-        if (t.dueDate) {
-          const dueDate = new Date(t.dueDate);
-          if (dueDate < today) { overdueTasks++; isOverdue = true; }
-        }
-        let isDueToday = false;
+        // Check if this is a repeating task completed today
+        let isRepeatingCompletedToday = false;
         if (t.type === 'repeating') {
-          if (t.repeatDays && t.repeatDays.includes(dayOfWeek)) isDueToday = true;
-        } else if (t.dueDate) {
-          const start = t.startDate || t.dueDate;
-          if (todayStr >= start && todayStr <= t.dueDate) isDueToday = true;
+          const completionKey = `${t.id}_${todayStr}`;
+          isRepeatingCompletedToday = completions[completionKey] === true;
         }
-        if (isDueToday || isOverdue) todayTasksCount++;
-        if (t.type === 'repeating') {
-          upcomingTasks++;
-        } else if (t.dueDate) {
-          const start = t.startDate || t.dueDate;
-          if (t.dueDate < todayStr || (t.dueDate >= todayStr && start <= future7DaysStr)) upcomingTasks++;
+
+        // Only count as pending if not completed today
+        if (!isRepeatingCompletedToday) {
+          pendingCount++;
+        } else {
+          // Repeating task completed today - count as completion for today
+          todayCompleted++;
+          activityDates.add(todayStr);
+        }
+
+        // Process task scheduling only if not completed today
+        if (!isRepeatingCompletedToday) {
+          let isOverdue = false;
+          if (t.dueDate) {
+            const dueDate = new Date(t.dueDate);
+            if (dueDate < today) { overdueTasks++; isOverdue = true; }
+          }
+          let isDueToday = false;
+          if (t.type === 'repeating') {
+            if (t.repeatDays && t.repeatDays.includes(dayOfWeek)) isDueToday = true;
+          } else if (t.dueDate) {
+            const start = t.startDate || t.dueDate;
+            if (todayStr >= start && todayStr <= t.dueDate) isDueToday = true;
+          }
+          if (isDueToday || isOverdue) todayTasksCount++;
+          if (t.type === 'repeating') {
+            upcomingTasks++;
+          } else if (t.dueDate) {
+            const start = t.startDate || t.dueDate;
+            if (t.dueDate < todayStr || (t.dueDate >= todayStr && start <= future7DaysStr)) upcomingTasks++;
+          }
         }
       }
     });
@@ -816,12 +835,6 @@ const Storage = (function() {
 
     const streak = calculateStreak(activityDates);
     const bestStreak = calculateBestStreak(activityDates);
-
-    // Count repeating task completions for today
-    const completions = getRepeatingCompletions();
-    Object.keys(completions).forEach(key => {
-      if (key.endsWith(`_${todayStr}`)) todayCompleted++;
-    });
 
     return {
       tasks: {
