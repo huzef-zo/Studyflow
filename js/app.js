@@ -197,10 +197,11 @@ const App = (function() {
   function confirm(options) {
     return new Promise((resolve) => {
       const { title, message, confirmText = 'Confirm', cancelText = 'Cancel', danger = false } = options;
+      // SECURITY: Ensure all user-provided strings are escaped to prevent XSS
       const modal = createModal({
         id: 'confirm-modal', title,
-        content: `<p style="margin:0;color:var(--text-secondary);">${message}</p>`,
-        footer: `<button class="btn btn-secondary" data-action="cancel">${cancelText}</button><button class="btn ${danger ? 'btn-danger' : 'btn-primary'}" data-action="confirm">${confirmText}</button>`,
+        content: `<p style="margin:0;color:var(--text-secondary);">${escapeHtml(message)}</p>`,
+        footer: `<button class="btn btn-secondary" data-action="cancel">${escapeHtml(cancelText)}</button><button class="btn ${danger ? 'btn-danger' : 'btn-primary'}" data-action="confirm">${escapeHtml(confirmText)}</button>`,
         onClose: () => resolve(false)
       });
       modal.querySelector('[data-action="cancel"]').addEventListener('click', () => { closeModal(modal); resolve(false); });
@@ -212,10 +213,11 @@ const App = (function() {
   function alert(options) {
     return new Promise((resolve) => {
       const { title, message, buttonText = 'OK' } = options;
+      // SECURITY: Ensure all user-provided strings are escaped to prevent XSS
       const modal = createModal({
         id: 'alert-modal', title,
-        content: `<p style="margin:0;color:var(--text-secondary);">${message}</p>`,
-        footer: `<button class="btn btn-primary" data-action="ok">${buttonText}</button>`,
+        content: `<p style="margin:0;color:var(--text-secondary);">${escapeHtml(message)}</p>`,
+        footer: `<button class="btn btn-primary" data-action="ok">${escapeHtml(buttonText)}</button>`,
         onClose: () => resolve()
       });
       modal.querySelector('[data-action="ok"]').addEventListener('click', () => { closeModal(modal); resolve(); });
@@ -406,10 +408,11 @@ const App = (function() {
 
   function createProgressBar(current, max, label, showPercentage = true) {
     const percentage = max > 0 ? Math.min(100, Math.round((current / max) * 100)) : 0;
+    // SECURITY: Escape label to prevent XSS from dynamic progress labels
     return `
       <div class="progress-wrapper">
         <div class="progress-header">
-          <span class="progress-label">${label}</span>
+          <span class="progress-label">${escapeHtml(label)}</span>
           <span class="progress-value">${current} / ${max}${showPercentage ? ` (${percentage}%)` : ''}</span>
         </div>
         <div class="progress-bar-bg">
