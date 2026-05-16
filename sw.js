@@ -16,6 +16,7 @@ const ASSETS_TO_CACHE = [
   `./js/app.js?v=${APP_VERSION}`,
   `./js/storage.js?v=${APP_VERSION}`,
   `./js/pwa-manager.js?v=${APP_VERSION}`,
+  `./js/subtask-utils.js?v=${APP_VERSION}`,
   `./js/pwa-config.js?v=${APP_VERSION}`,
   `./js/calendar.js?v=${APP_VERSION}`,
   `./js/goals.js?v=${APP_VERSION}`,

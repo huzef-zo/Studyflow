@@ -41,6 +41,16 @@ const Storage = (function() {
   }
 
   window.addEventListener('storage', (e) => {
+    if (e.key === 'studyflow_cleared_at') {
+      // Full reset — clear cache and cancel all pending completion timers
+      Object.keys(cache).forEach(k => delete cache[k]);
+      Object.keys(_pendingCompletions).forEach(id => {
+        clearTimeout(_pendingCompletions[id].timeoutId);
+        delete _pendingCompletions[id];
+      });
+      window.location.reload();
+      return;
+    }
     if (Object.values(KEYS).includes(e.key)) {
       if (e.newValue === null) {
         delete cache[e.key];
@@ -109,6 +119,17 @@ const Storage = (function() {
       return true;
     } catch (error) {
       console.error('Storage save error:', error);
+      // Revert cache to what is actually stored — do not let cache drift from localStorage
+      try {
+        const stored = localStorage.getItem(key);
+        cache[key] = stored ? JSON.parse(stored) : undefined;
+      } catch (e) { /* ignore parse errors */ }
+      // Notify the app so it can show a user-visible warning
+      if (error.name === 'QuotaExceededError' || error.code === 22) {
+        try {
+          window.dispatchEvent(new CustomEvent('studyflow_storageQuotaExceeded', { detail: { key } }));
+        } catch (e) { /* ignore */ }
+      }
       return false;
     }
   }
@@ -145,6 +166,10 @@ const Storage = (function() {
       removeData(key);
     });
     Object.keys(cache).forEach(key => delete cache[key]);
+    localStorage.setItem('studyflow_cleared_at', Date.now().toString());
+    if (typeof window !== 'undefined' && window.location && window.location.reload) {
+      window.location.reload();
+    }
   }
 
   function exportData() {
@@ -163,13 +188,23 @@ const Storage = (function() {
 
   function importData(data) {
     try {
-      if (data.user) saveData(KEYS.USER, data.user);
-      if (data.tasks) saveData(KEYS.TASKS, data.tasks);
-      if (data.subjects) saveData(KEYS.SUBJECTS, data.subjects);
-      if (data.sessions) saveData(KEYS.SESSIONS, data.sessions);
-      if (data.goals) saveData(KEYS.GOALS, data.goals);
-      if (data.settings) saveData(KEYS.SETTINGS, data.settings);
-      if (data.repeatingCompletions) saveRepeatingCompletions(data.repeatingCompletions);
+      if (!data || typeof data !== 'object' || Array.isArray(data)) return false;
+
+      if (data.user && typeof data.user === 'object' && !Array.isArray(data.user)) {
+        saveData(KEYS.USER, { ...DEFAULTS.user, ...data.user });
+      }
+      if (Array.isArray(data.tasks)) saveData(KEYS.TASKS, data.tasks);
+      if (Array.isArray(data.subjects)) saveData(KEYS.SUBJECTS, data.subjects);
+      if (Array.isArray(data.sessions)) saveData(KEYS.SESSIONS, data.sessions);
+      if (data.goals && typeof data.goals === 'object' && !Array.isArray(data.goals)) {
+        saveData(KEYS.GOALS, data.goals);
+      }
+      if (data.settings && typeof data.settings === 'object' && !Array.isArray(data.settings)) {
+        saveData(KEYS.SETTINGS, data.settings);
+      }
+      if (data.repeatingCompletions && typeof data.repeatingCompletions === 'object') {
+        saveRepeatingCompletions(data.repeatingCompletions);
+      }
       return true;
     } catch (error) {
       console.error('Import error:', error);
@@ -654,12 +689,17 @@ const Storage = (function() {
 
   function completeTimerSession(timerState, recordSession = true) {
     const settings = getSettings();
-    const { type, sessionsInCycle, selectedTaskId, selectedSubtaskId } = timerState;
+    const { type, sessionsInCycle, selectedTaskId, selectedSubtaskId, timeRemaining } = timerState;
     let nextSessionsInCycle = sessionsInCycle || 0;
 
     if (type === 'work') {
       if (recordSession) {
-        addSession(settings.work_duration || 25, 'work', selectedTaskId);
+        const configuredSeconds = settings.work_duration * 60;
+        const elapsed = timeRemaining !== undefined
+          ? configuredSeconds - timeRemaining
+          : configuredSeconds;
+        const actualMinutes = Math.max(1, Math.round(elapsed / 60));
+        addSession(actualMinutes, 'work', selectedTaskId);
       }
       nextSessionsInCycle++;
       const n = settings.sessions_until_long_break || 4;
@@ -927,7 +967,11 @@ const Storage = (function() {
   // ── Utilities ────────────────────────────────────────────────────────────────
 
   function generateId() {
-    return 'id_' + Date.now().toString(36) + '_' + Math.random().toString(36).substr(2, 9);
+    if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+      return 'id_' + crypto.randomUUID();
+    }
+    // Fallback for environments without crypto.randomUUID
+    return 'id_' + Date.now().toString(36) + '_' + Math.random().toString(36).substring(2, 11) + '_' + (generateId._counter = (generateId._counter || 0) + 1);
   }
 
   function formatDate(date) {

@@ -90,7 +90,10 @@
   <script src="js/tasks.js?v=v2025-05-03-01"></script>
   <script>
     // Initialize tasks page
-    document.addEventListener('DOMContentLoaded', Tasks.init);
+    document.addEventListener('DOMContentLoaded', () => {
+      PWAManager.init();
+      Tasks.init();
+    });
   </script>
 </body>
 </html>

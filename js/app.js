@@ -492,6 +492,11 @@ const App = (function() {
   function init() {
     initNavigation();
 
+    // Handle storage quota exceeded
+    window.addEventListener('studyflow_storageQuotaExceeded', (e) => {
+      showToast('Storage full! Data may not be saved. Clear history to free space.', 'error', 10000);
+    });
+
     // Prune old session data once per browser session to keep localStorage lean
     if (typeof Storage !== 'undefined' && Storage.pruneSessions) {
       Storage.pruneSessions(365);

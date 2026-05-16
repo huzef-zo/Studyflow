@@ -151,116 +151,11 @@
 
   <!-- Scripts -->
   <script src="js/storage.js?v=v2025-05-03-01"></script>
+  <script src="js/subtask-utils.js?v=v2025-05-03-01"></script>
   <script src="js/pwa-manager.js?v=v2025-05-03-01"></script>
   <script src="js/app.js?v=v2025-05-03-01"></script>
   
-  <!-- Debug & Testing Utilities for Active Tasks Fix -->
-  <script src="js/debug-active-tasks.js"></script>
-  <script src="tests/test-active-tasks-fix.js"></script>
-  
   <script>
-    // ============================================
-    // SERVICE WORKER REGISTRATION & PWA MANAGEMENT
-    // ============================================
-    (function() {
-      'use strict';
-      
-      // Register service worker for offline functionality
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('./sw.js')
-            .then((registration) => {
-              console.log('[PWA] Service Worker registered:', registration);
-              
-              // Check for updates periodically
-              setInterval(() => {
-                registration.update();
-              }, 60000); // Check every 60 seconds
-              
-              // Listen for controller change (new SW activated)
-              navigator.serviceWorker.addEventListener('controllerchange', () => {
-                console.log('[PWA] Service Worker controller changed - new version available');
-                showUpdateNotification();
-              });
-            })
-            .catch((error) => {
-              console.error('[PWA] Service Worker registration failed:', error);
-            });
-        });
-      }
-      
-      // Handle install prompt
-      let deferredPrompt;
-      window.addEventListener('beforeinstallprompt', (e) => {
-        e.preventDefault();
-        deferredPrompt = e;
-        console.log('[PWA] Install prompt deferred');
-        // You could show an install button here
-      });
-      
-      // Detect standalone mode
-      const isStandalone = () => {
-        return window.navigator.standalone === true || 
-               window.matchMedia('(display-mode: standalone)').matches ||               window.matchMedia('(display-mode: fullscreen)').matches ||
-               window.matchMedia('(display-mode: minimal-ui)').matches;
-      };
-      
-      // Update UI based on standalone status
-      if (isStandalone()) {
-        document.documentElement.setAttribute('data-standalone', 'true');
-        console.log('[PWA] Running in standalone mode');
-      }
-      
-      // Handle visibility changes to optimize battery
-      document.addEventListener('visibilitychange', () => {
-        if (document.hidden) {
-          console.log('[PWA] App hidden - pausing animations');
-        } else {
-          console.log('[PWA] App visible - resuming animations');
-        }
-      });
-      
-      // Show update notification
-      function showUpdateNotification() {
-        // You can customize this based on your UI
-        console.log('[PWA] New version available - consider showing update prompt');
-      }
-      
-      // Expose PWA utilities to window
-      window.PWA = {
-        isStandalone,
-        requestInstall: () => {
-          if (deferredPrompt) {
-            deferredPrompt.prompt();
-            deferredPrompt.userChoice.then((choiceResult) => {
-              if (choiceResult.outcome === 'accepted') {
-                console.log('[PWA] User accepted install prompt');
-              } else {
-                console.log('[PWA] User dismissed install prompt');
-              }
-              deferredPrompt = null;
-            });
-          }
-        },
-        requestSync: () => {
-          if ('serviceWorker' in navigator && 'SyncManager' in window) {
-            navigator.serviceWorker.ready.then((registration) => {
-              return registration.sync.register('sync-tasks');
-            }).then(() => {
-              console.log('[PWA] Background sync registered');
-            }).catch((error) => {
-              console.error('[PWA] Background sync registration failed:', error);
-            });          }
-        },
-        requestNotificationPermission: () => {
-          if ('Notification' in window) {
-            Notification.requestPermission().then((permission) => {
-              console.log('[PWA] Notification permission:', permission);
-            });
-          }
-        }
-      };
-    })();
     
     // ============================================
     // DASHBOARD SPECIFIC CODE
@@ -357,6 +252,7 @@
       }
 
       function init() {
+        PWAManager.init();
         updateGreeting();
         updateDateDisplay();
         updateStats();

@@ -297,7 +297,33 @@ const PWAManager = (() => {
     setupStandaloneDetection();
     setupVisibilityHandling();
     
-    // NOTE: The call to registerServiceWorker has been removed
+    // Register service worker for offline functionality
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register(config.swPath, { scope: config.scope })
+          .then((registration) => {
+            log('Service Worker registered', registration);
+            setupUpdateChecking(registration);
+
+            // Listen for controller change (new SW activated)
+            navigator.serviceWorker.addEventListener('controllerchange', () => {
+              log('Service Worker controller changed - new version available');
+              emitEvent('update-available');
+            });
+          })
+          .catch((error) => {
+            log('Service Worker registration failed', error);
+          });
+      });
+    }
+
+    // Expose PWA utilities to window for backward compatibility
+    window.PWA = {
+      isStandalone: isStandaloneMode,
+      requestInstall: promptInstall,
+      requestSync: requestBackgroundSync,
+      requestNotificationPermission: requestNotificationPermission
+    };
     
     log('PWA Manager initialized successfully');
     emitEvent('ready');

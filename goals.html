@@ -141,11 +141,15 @@
 
   <!-- Scripts -->
   <script src="js/storage.js?v=v2025-05-03-01"></script>
+  <script src="js/subtask-utils.js?v=v2025-05-03-01"></script>
   <script src="js/pwa-manager.js?v=v2025-05-03-01"></script>
   <script src="js/app.js?v=v2025-05-03-01"></script>
   <script src="js/goals.js?v=v2025-05-03-01"></script>
   <script>
-    document.addEventListener('DOMContentLoaded', Goals.init);
+    document.addEventListener('DOMContentLoaded', () => {
+      PWAManager.init();
+      Goals.init();
+    });
   </script>
 </body>
 </html>
