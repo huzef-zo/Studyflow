@@ -1,0 +1,36 @@
+127.0.0.1 - - [15/May/2026 21:25:30] "GET /settings.html HTTP/1.1" 200 -
+127.0.0.1 - - [15/May/2026 21:25:30] "GET /css/style.css?v=v2025-05-03-01 HTTP/1.1" 200 -
+127.0.0.1 - - [15/May/2026 21:25:30] "GET /js/storage.js?v=v2025-05-03-01 HTTP/1.1" 200 -
+127.0.0.1 - - [15/May/2026 21:25:30] "GET /js/app.js?v=v2025-05-03-01 HTTP/1.1" 200 -
+127.0.0.1 - - [15/May/2026 21:25:30] "GET /js/pwa-manager.js?v=v2025-05-03-01 HTTP/1.1" 200 -
+127.0.0.1 - - [15/May/2026 21:25:37] "GET /history.html HTTP/1.1" 200 -
+127.0.0.1 - - [15/May/2026 21:25:37] "GET /js/history.js?v=v2025-05-03-01 HTTP/1.1" 200 -
+127.0.0.1 - - [15/May/2026 21:32:19] "GET /index.html HTTP/1.1" 200 -
+127.0.0.1 - - [15/May/2026 21:32:19] code 404, message File not found
+127.0.0.1 - - [15/May/2026 21:32:19] "GET /js/app.js?v=v2025-05-03-01 HTTP/1.1" 200 -
+127.0.0.1 - - [15/May/2026 21:32:19] "GET /css/style.css?v=v2025-05-03-01 HTTP/1.1" 200 -
+127.0.0.1 - - [15/May/2026 21:32:19] "GET /tests/test-active-tasks-fix.js HTTP/1.1" 404 -
+127.0.0.1 - - [15/May/2026 21:32:19] "GET /js/pwa-manager.js?v=v2025-05-03-01 HTTP/1.1" 200 -
+127.0.0.1 - - [15/May/2026 21:32:19] "GET /js/storage.js?v=v2025-05-03-01 HTTP/1.1" 200 -
+127.0.0.1 - - [15/May/2026 21:32:19] code 404, message File not found
+127.0.0.1 - - [15/May/2026 21:32:19] "GET /js/debug-active-tasks.js HTTP/1.1" 404 -
+127.0.0.1 - - [15/May/2026 21:32:19] "GET /sw.js HTTP/1.1" 200 -
+127.0.0.1 - - [15/May/2026 21:32:19] "GET /version.js HTTP/1.1" 200 -
+127.0.0.1 - - [15/May/2026 21:32:20] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [15/May/2026 21:32:20] "GET /goals.html HTTP/1.1" 200 -
+127.0.0.1 - - [15/May/2026 21:32:20] "GET /history.html HTTP/1.1" 200 -
+127.0.0.1 - - [15/May/2026 21:32:20] "GET /calendar.html HTTP/1.1" 200 -
+127.0.0.1 - - [15/May/2026 21:32:20] "GET /settings.html HTTP/1.1" 200 -
+127.0.0.1 - - [15/May/2026 21:32:20] "GET /tasks.html HTTP/1.1" 200 -
+127.0.0.1 - - [15/May/2026 21:32:20] "GET /timer.html HTTP/1.1" 200 -
+127.0.0.1 - - [15/May/2026 21:32:20] "GET /js/pwa-config.js?v=v2025-05-03-01 HTTP/1.1" 200 -
+127.0.0.1 - - [15/May/2026 21:32:20] "GET /js/calendar.js?v=v2025-05-03-01 HTTP/1.1" 200 -
+127.0.0.1 - - [15/May/2026 21:32:20] "GET /js/goals.js?v=v2025-05-03-01 HTTP/1.1" 200 -
+127.0.0.1 - - [15/May/2026 21:32:20] "GET /js/history.js?v=v2025-05-03-01 HTTP/1.1" 200 -
+127.0.0.1 - - [15/May/2026 21:32:20] "GET /js/tasks.js?v=v2025-05-03-01 HTTP/1.1" 200 -
+127.0.0.1 - - [15/May/2026 21:32:20] "GET /js/timer.js?v=v2025-05-03-01 HTTP/1.1" 200 -
+127.0.0.1 - - [15/May/2026 21:32:20] "GET /manifest.json HTTP/1.1" 200 -
+127.0.0.1 - - [15/May/2026 21:32:20] code 404, message File not found
+127.0.0.1 - - [15/May/2026 21:32:20] "GET /icon-512.png HTTP/1.1" 404 -
+127.0.0.1 - - [15/May/2026 21:32:20] code 404, message File not found
+127.0.0.1 - - [15/May/2026 21:32:20] "GET /icon-192.png HTTP/1.1" 404 -
