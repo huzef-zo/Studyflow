@@ -109,11 +109,15 @@
 
   <!-- Scripts -->
   <script src="js/storage.js?v=v2025-05-03-01"></script>
+  <script src="js/subtask-utils.js?v=v2025-05-03-01"></script>
   <script src="js/pwa-manager.js?v=v2025-05-03-01"></script>
   <script src="js/app.js?v=v2025-05-03-01"></script>
   <script src="js/history.js?v=v2025-05-03-01"></script>
   <script>
-    document.addEventListener('DOMContentLoaded', History.init);
+    document.addEventListener('DOMContentLoaded', () => {
+      PWAManager.init();
+      History.init();
+    });
   </script>
 </body>
 </html>

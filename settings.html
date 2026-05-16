@@ -136,6 +136,7 @@
   </main>
 
   <script src="js/storage.js?v=v2025-05-03-01"></script>
+  <script src="js/subtask-utils.js?v=v2025-05-03-01"></script>
   <script src="js/pwa-manager.js?v=v2025-05-03-01"></script>
   <script src="js/app.js?v=v2025-05-03-01"></script>
   <script>
@@ -341,7 +342,12 @@
         };
       }
 
-      function init() { loadSettings(); renderSubjects(); setupListeners(); }
+      function init() {
+        PWAManager.init();
+        loadSettings();
+        renderSubjects();
+        setupListeners();
+      }
       init();
     })();
   </script>
