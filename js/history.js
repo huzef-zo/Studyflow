@@ -62,19 +62,83 @@ const History = (function() {
   function getFilteredTasks() {
     const tasks = Storage.getTasks();
     const cutoff = getCutoffDate();
-    if (!cutoff) return tasks;
-    return tasks.filter(t => {
-      const completedAt = t.completedAt ? new Date(t.completedAt) : null;
-      const dueDate = t.dueDate ? new Date(t.dueDate) : null;
-      return (completedAt && completedAt >= cutoff) || (dueDate && dueDate >= cutoff);
+    if (!cutoff) {
+      // For "All Time", we need a reference start date for repeating tasks
+      const user = Storage.getUser();
+      const start = user && user.created_at ? new Date(user.created_at) : new Date();
+      start.setHours(0, 0, 0, 0);
+      return expandTaskOccurrences(tasks, start, new Date());
+    }
+    const today = new Date();
+    return expandTaskOccurrences(tasks, cutoff, today);
+  }
+
+  /**
+   * Expands repeating tasks into individual occurrences for the given period.
+   */
+  function expandTaskOccurrences(tasks, startDate, endDate) {
+    const occurrences = [];
+    const startStr = Storage.formatDate(startDate);
+    const endStr = Storage.formatDate(endDate);
+
+    tasks.forEach(t => {
+      if (t.type !== 'repeating') {
+        const completedAt = t.completedAt ? Storage.formatDate(new Date(t.completedAt)) : null;
+        const dueDate = t.dueDate;
+
+        // Include if completed in period OR due in period (and not completed before)
+        const completedInPeriod = completedAt && completedAt >= startStr && completedAt <= endStr;
+        const dueInPeriod = dueDate && dueDate >= startStr && dueDate <= endStr;
+
+        if (completedInPeriod || dueInPeriod) {
+          occurrences.push(t);
+        }
+      } else {
+        // Repeating task: find all scheduled days in period
+        const cur = new Date(startDate);
+        cur.setHours(0, 0, 0, 0);
+        const end = new Date(endDate);
+        end.setHours(0, 0, 0, 0);
+
+        while (cur <= end) {
+          const dayOfWeek = cur.getDay();
+          if (t.repeatDays && t.repeatDays.includes(dayOfWeek)) {
+            occurrences.push({
+              ...t,
+              _occurrenceDate: Storage.formatDate(cur)
+            });
+          }
+          cur.setDate(cur.getDate() + 1);
+        }
+      }
     });
+    return occurrences;
   }
 
   function getCompletedTasksInPeriod() {
     const tasks = Storage.getTasks();
     const cutoff = getCutoffDate();
-    if (!cutoff) return tasks.filter(t => t.completed);
-    return tasks.filter(t => t.completed && t.completedAt && new Date(t.completedAt) >= cutoff);
+    const cutoffStr = cutoff ? Storage.formatDate(cutoff) : null;
+
+    // One-time tasks
+    const completedOneTime = tasks.filter(t => {
+      if (t.type === 'repeating') return false;
+      if (!t.completed) return false;
+      if (!cutoff) return true;
+      return t.completedAt && new Date(t.completedAt) >= cutoff;
+    }).map(t => ({ ...t, _date: t.completedAt }));
+
+    // Repeating tasks
+    const completedRepeating = [];
+    const repeatingCompletions = Storage.getRepeatingCompletions();
+    Object.keys(repeatingCompletions).forEach(key => {
+      const dateStr = key.slice(-10);
+      if (!cutoffStr || dateStr >= cutoffStr) {
+        completedRepeating.push({ _date: dateStr });
+      }
+    });
+
+    return [...completedOneTime, ...completedRepeating];
   }
 
   function updateSummaryStats() {
@@ -103,10 +167,11 @@ const History = (function() {
           dayActivity[new Date(s.completedAt).getDay()] += Math.max(1, Math.round(s.duration / 15));
         }
       });
+
       // Include task completions (weighted as 1 unit)
       completedTasksInPeriod.forEach(t => {
-        if (t.completedAt) {
-          dayActivity[new Date(t.completedAt).getDay()] += 1;
+        if (t._date) {
+          dayActivity[new Date(t._date).getDay()] += 1;
         }
       });
 
@@ -164,11 +229,20 @@ const History = (function() {
       activityData[Storage.formatDate(date)] = 0;
     }
     tasks.forEach(t => {
-      if (t.completed && t.completedAt) {
+      if (t.type !== 'repeating' && t.completed && t.completedAt) {
         const dateStr = Storage.formatDate(new Date(t.completedAt));
         if (activityData.hasOwnProperty(dateStr)) activityData[dateStr] += 1;
       }
     });
+
+    const repeatingCompletions = Storage.getRepeatingCompletions();
+    Object.keys(repeatingCompletions).forEach(key => {
+      const dateStr = key.slice(-10);
+      if (activityData.hasOwnProperty(dateStr)) {
+        activityData[dateStr] += 1;
+      }
+    });
+
     sessions.forEach(s => {
       if (s.type === 'work' && s.completedAt) {
         const dateStr = Storage.formatDate(new Date(s.completedAt));
@@ -181,7 +255,20 @@ const History = (function() {
   function renderFrequencyGraph() {
     if (!elements.frequencyGraph) return;
 
-    const daysCount = statsPeriodDays || 30;
+    let daysCount = statsPeriodDays || 30;
+
+    if (!statsPeriodDays) {
+      const user = Storage.getUser();
+      if (user && user.created_at) {
+        const createdDate = new Date(user.created_at);
+        createdDate.setHours(0, 0, 0, 0);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const diffTime = Math.abs(today - createdDate);
+        daysCount = Math.max(7, Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1);
+      }
+    }
+
     const data = getActivityData(daysCount);
     const today = new Date(); today.setHours(0, 0, 0, 0);
 
