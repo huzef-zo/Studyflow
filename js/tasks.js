@@ -412,6 +412,27 @@ const Tasks = (function() {
           <label class="form-label">Objective Title</label>
           <input type="text" name="title" class="form-input" value="${task ? App.escapeHtml(task.title) : ''}" required>
         </div>
+        <div class="form-group">
+          <label class="form-label">Task Type</label>
+          <div class="task-type-selector">
+            <label class="task-type-option">
+              <span class="task-type-label">One-time</span>
+              <input type="radio" name="type" value="one-time" ${!task || task.type === 'one-time' ? 'checked' : ''}>
+              <span class="radio-circle"></span>
+            </label>
+            <label class="task-type-option">
+              <span class="task-type-label">Repeating</span>
+              <input type="radio" name="type" value="repeating" ${task && task.type === 'repeating' ? 'checked' : ''}>
+              <span class="radio-circle"></span>
+            </label>
+            <label class="task-type-option">
+              <span class="task-type-label">Date Range</span>
+              <input type="radio" name="type" value="date-range" ${task && task.type === 'date-range' ? 'checked' : ''}>
+              <span class="radio-circle"></span>
+            </label>
+          </div>
+        </div>
+        <div id="date-inputs-container"></div>
         <div class="grid-2">
           <div class="form-group">
             <label class="form-label">Sector</label>
@@ -427,16 +448,6 @@ const Tasks = (function() {
               <option value="high" ${task && task.priority === 'high' ? 'selected' : ''}>High</option>
               <option value="critical" ${task && task.priority === 'critical' ? 'selected' : ''}>Critical</option>
             </select>
-          </div>
-        </div>
-        <div class="grid-2">
-          <div class="form-group">
-            <label class="form-label">Target Date</label>
-            <input type="date" name="dueDate" class="form-input" value="${task ? App.escapeHtml(task.dueDate) : Storage.formatDate(new Date())}" required>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Target Time (Optional)</label>
-            <input type="time" name="dueTime" class="form-input" value="${task ? App.escapeHtml(task.dueTime || '') : ''}">
           </div>
         </div>
         <div id="subtasks-editor">
@@ -483,6 +494,8 @@ const Tasks = (function() {
     modal.querySelector('#save-task').onclick = () => {
       const form = modal.querySelector('#task-form');
       const data = App.getFormData(form);
+      const type = form.querySelector('input[name="type"]:checked').value;
+
       const subtaskInputs = modal.querySelectorAll('.subtask-input');
       const cycleInputs = modal.querySelectorAll('.subtask-cycles');
       const subtasks = [];
@@ -498,13 +511,90 @@ const Tasks = (function() {
           });
         }
       });
-      data.subtasks = subtasks;
-      if (data.title) {
-        isEdit ? Storage.updateTask(id, data) : Storage.addTask(data);
+
+      const repeatDays = type === 'repeating'
+        ? Array.from(modal.querySelectorAll('.day-toggle.active')).map(el => parseInt(el.dataset.day))
+        : [];
+
+      if (type === 'repeating' && repeatDays.length === 0) {
+        App.showToast('Please select at least one day for repeating task', 'error');
+        return;
+      }
+
+      const taskData = {
+        title: data.title.trim(),
+        type,
+        subject: data.subject,
+        priority: data.priority,
+        dueTime: data.dueTime || null,
+        subtasks,
+        repeatDays,
+        startDate: type === 'date-range' ? (data.startDate || data.dueDate) : (type === 'one-time' ? data.dueDate : null),
+        dueDate: type === 'repeating' ? null : (data.dueDate || data.startDate)
+      };
+
+      if (taskData.title) {
+        isEdit ? Storage.updateTask(id, taskData) : Storage.addTask(taskData);
         App.closeModal();
         renderTasks();
       }
     };
+
+    const dateContainer = modal.querySelector('#date-inputs-container');
+
+    function updateDateInputs(type) {
+      if (type === 'repeating') {
+        const days = ['S','M','T','W','T','F','S'];
+        const repeatDays = task && task.repeatDays ? task.repeatDays : [new Date().getDay()];
+        dateContainer.innerHTML = `
+          <div class="form-group">
+            <label class="form-label">Repeat On:</label>
+            <div class="repeat-days-grid">
+              ${days.map((day, i) => `<div class="day-toggle ${repeatDays.includes(i) ? 'active' : ''}" data-day="${i}">${day}</div>`).join('')}
+            </div>
+            <button type="button" class="btn btn-ghost btn-sm mt-sm" id="select-every-day">Select Every Day</button>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Target Time (Optional)</label>
+            <input type="time" name="dueTime" class="form-input" value="${task ? App.escapeHtml(task.dueTime || '') : ''}">
+          </div>
+        `;
+        dateContainer.querySelectorAll('.day-toggle').forEach(el => el.addEventListener('click', () => el.classList.toggle('active')));
+        dateContainer.querySelector('#select-every-day').addEventListener('click', () => dateContainer.querySelectorAll('.day-toggle').forEach(el => el.classList.add('active')));
+      } else if (type === 'date-range') {
+        dateContainer.innerHTML = `
+          <div class="grid-2">
+            <div class="form-group">
+              <label class="form-label">Start Date</label>
+              <input type="date" name="startDate" class="form-input" value="${task ? App.escapeHtml(task.startDate || task.dueDate) : Storage.formatDate(new Date())}" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Due Date</label>
+              <input type="date" name="dueDate" class="form-input" value="${task ? App.escapeHtml(task.dueDate) : Storage.formatDate(new Date())}" required>
+            </div>
+          </div>
+        `;
+      } else {
+        dateContainer.innerHTML = `
+          <div class="grid-2">
+            <div class="form-group">
+              <label class="form-label">Target Date</label>
+              <input type="date" name="dueDate" class="form-input" value="${task ? App.escapeHtml(task.dueDate) : Storage.formatDate(new Date())}" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Target Time (Optional)</label>
+              <input type="time" name="dueTime" class="form-input" value="${task ? App.escapeHtml(task.dueTime || '') : ''}">
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    modal.querySelectorAll('input[name="type"]').forEach(radio => {
+      radio.addEventListener('change', (e) => updateDateInputs(e.target.value));
+    });
+
+    updateDateInputs(task ? task.type : 'one-time');
 
     modal.querySelector('[data-action="cancel"]').onclick = () => App.closeModal();
     App.openModal(modal);
