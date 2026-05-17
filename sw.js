@@ -23,9 +23,7 @@ const ASSETS_TO_CACHE = [
   `./js/history.js?v=${APP_VERSION}`,
   `./js/tasks.js?v=${APP_VERSION}`,
   `./js/timer.js?v=${APP_VERSION}`,
-  './manifest.json',
-  './icon-192.png',
-  './icon-512.png'
+  './manifest.json'
 ];
 
 // ============================================
@@ -264,8 +262,8 @@ self.addEventListener('push', (event) => {
   const options = {
     body: event.data ? event.data.text() : 'StudyFlow notification',
     // ✅ FIX #1: Use relative paths for icons (prevents CORS audit warnings)
-    icon: './icon-192.png',
-    badge: './icon-192.png',
+    // icon: './icon-192.png',
+    // badge: './icon-192.png',
     tag: 'studyflow-notification',
     requireInteraction: true,
     actions: [
