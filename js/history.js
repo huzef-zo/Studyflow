@@ -75,11 +75,16 @@ const History = (function() {
 
   /**
    * Expands repeating tasks into individual occurrences for the given period.
+   * OPTIMIZATION: Uses a single-pass date loop and a day-of-week lookup for repeating tasks.
+   * This reduces complexity from O(Tasks * Days) to O(Days + Total Occurrences).
    */
   function expandTaskOccurrences(tasks, startDate, endDate) {
     const occurrences = [];
     const startStr = Storage.formatDate(startDate);
     const endStr = Storage.formatDate(endDate);
+
+    // Group repeating tasks by day of week for faster lookup
+    const repeatingByDay = [[], [], [], [], [], [], []]; // 0=Sun, 1=Mon...
 
     tasks.forEach(t => {
       if (t.type !== 'repeating') {
@@ -93,25 +98,34 @@ const History = (function() {
         if (completedInPeriod || dueInPeriod) {
           occurrences.push(t);
         }
-      } else {
-        // Repeating task: find all scheduled days in period
-        const cur = new Date(startDate);
-        cur.setHours(0, 0, 0, 0);
-        const end = new Date(endDate);
-        end.setHours(0, 0, 0, 0);
-
-        while (cur <= end) {
-          const dayOfWeek = cur.getDay();
-          if (t.repeatDays && t.repeatDays.includes(dayOfWeek)) {
-            occurrences.push({
-              ...t,
-              _occurrenceDate: Storage.formatDate(cur)
-            });
-          }
-          cur.setDate(cur.getDate() + 1);
-        }
+      } else if (t.repeatDays && t.repeatDays.length > 0) {
+        t.repeatDays.forEach(day => {
+          if (day >= 0 && day <= 6) repeatingByDay[day].push(t);
+        });
       }
     });
+
+    // Single pass through the date range to expand repeating tasks
+    const cur = new Date(startDate);
+    cur.setHours(0, 0, 0, 0);
+    const end = new Date(endDate);
+    end.setHours(0, 0, 0, 0);
+
+    while (cur <= end) {
+      const dayOfWeek = cur.getDay();
+      const scheduledTasks = repeatingByDay[dayOfWeek];
+      if (scheduledTasks.length > 0) {
+        const dateStr = Storage.formatDate(cur);
+        scheduledTasks.forEach(t => {
+          occurrences.push({
+            ...t,
+            _occurrenceDate: dateStr
+          });
+        });
+      }
+      cur.setDate(cur.getDate() + 1);
+    }
+
     return occurrences;
   }
 
