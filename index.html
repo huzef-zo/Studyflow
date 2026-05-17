@@ -242,13 +242,22 @@
           deadlinesEl.innerHTML = '<div class="empty-state" style="padding: 1rem;"><p class="text-secondary text-center">Clear timeline</p></div>';
           return;
         }
-        deadlinesEl.innerHTML = upcomingTasks.slice(0, 5).map(task => `
-          <div class="timeline-item">            <div class="timeline-dot" style="background: ${App.getSubjectColor(task.subject)}"></div>
-            <div style="font-size: 11px; font-weight: 800; color: var(--primary); text-transform: uppercase;">${Storage.formatDisplayDate(task.dueDate)}</div>
-            <div style="font-size: 14px; font-weight: 600; color: white;">${App.escapeHtml(task.title)}</div>
-            <div style="font-size: 11px; color: var(--text-muted);">${App.escapeHtml(task.subject)}</div>
-          </div>
-        `).join('');
+        deadlinesEl.innerHTML = upcomingTasks.slice(0, 5).map(task => {
+          const isOverdue = !task.completed && task.dueDate && Storage.isDateOverdue(task.dueDate);
+          return `
+            <div class="timeline-item ${isOverdue ? 'overdue' : ''}">
+              <div class="timeline-dot" style="background: ${App.getSubjectColor(task.subject)}"></div>
+              <div class="flex items-center justify-between">
+                <div style="font-size: 11px; font-weight: 800; color: ${isOverdue ? 'var(--danger)' : 'var(--primary)'}; text-transform: uppercase;">
+                  ${Storage.formatDisplayDate(task.dueDate)}
+                </div>
+                ${isOverdue ? '<span class="badge" style="background:rgba(239,68,68,0.2);color:var(--danger);font-size:9px;padding:2px 6px;">MISSED</span>' : ''}
+              </div>
+              <div style="font-size: 14px; font-weight: 600; color: white;">${App.escapeHtml(task.title)}</div>
+              <div style="font-size: 11px; color: var(--text-muted);">${App.escapeHtml(task.subject)}</div>
+            </div>
+          `;
+        }).join('');
       }
 
       function init() {

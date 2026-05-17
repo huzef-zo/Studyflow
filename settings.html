@@ -69,6 +69,23 @@
       <!-- Notifications -->
       <section class="card animate-fade-in stagger-3">
         <div class="card-header"><h3 class="card-title">Neural Alerts</h3></div>
+
+        <div class="flex items-center justify-between mb-md">
+          <div style="flex:1;">
+            <div style="font-weight:700;font-size:0.875rem;">System Notifications</div>
+            <div style="font-size:0.75rem;color:var(--text-muted);">Push alerts for session transitions</div>
+          </div>
+          <label class="toggle"><input type="checkbox" id="notifications-enabled"><span class="toggle-slider"></span></label>
+        </div>
+
+        <div class="flex items-center justify-between mb-md">
+          <div style="flex:1;">
+            <div style="font-weight:700;font-size:0.875rem;">Task Reminders</div>
+            <div style="font-size:0.75rem;color:var(--text-muted);">Alerts when objectives reach target time</div>
+          </div>
+          <label class="toggle"><input type="checkbox" id="task-notifications-enabled"><span class="toggle-slider"></span></label>
+        </div>
+
         <div class="flex items-center justify-between mb-md">
           <div style="flex:1;">
             <div style="font-weight:700;font-size:0.875rem;">Audio Feedback</div>
@@ -79,6 +96,7 @@
             <label class="toggle"><input type="checkbox" id="sound-enabled"><span class="toggle-slider"></span></label>
           </div>
         </div>
+
         <div class="flex items-center justify-between mb-md">
           <div>
             <div style="font-weight:700;font-size:0.875rem;">Auto-start Cooldown</div>
@@ -86,6 +104,7 @@
           </div>
           <label class="toggle"><input type="checkbox" id="auto-start-break"><span class="toggle-slider"></span></label>
         </div>
+
         <div class="flex items-center justify-between mb-md">
           <div>
             <div style="font-weight:700;font-size:0.875rem;">Auto-start Deep Work</div>
@@ -93,9 +112,13 @@
           </div>
           <label class="toggle"><input type="checkbox" id="auto-start-work"><span class="toggle-slider"></span></label>
         </div>
+
         <div id="notification-permission-item" class="mt-lg p-md card" style="background:rgba(255,255,255,0.03);border-radius:12px;display:none;">
           <div class="flex items-center justify-between gap-md">
-            <p style="margin:0;font-size:0.75rem;font-weight:600;" id="permission-status">System permissions required</p>
+            <div style="flex:1;">
+              <p style="margin:0;font-size:0.75rem;font-weight:600;" id="permission-status">System permissions required</p>
+              <p style="margin:4px 0 0 0;font-size:0.65rem;color:var(--text-muted);display:none;" id="permission-hint">Check browser settings if blocked.</p>
+            </div>
             <button class="btn btn-primary btn-sm" id="request-permission-btn" style="border-radius:8px;">Enable</button>
           </div>
         </div>
@@ -149,6 +172,8 @@
         shortBreak: document.getElementById('short-break'),
         longBreak: document.getElementById('long-break'),
         sessionsUntilLongBreak: document.getElementById('sessions-until-long-break'),
+        notificationsEnabled: document.getElementById('notifications-enabled'),
+        taskNotificationsEnabled: document.getElementById('task-notifications-enabled'),
         soundEnabled: document.getElementById('sound-enabled'),
         autoStartBreak: document.getElementById('auto-start-break'),
         autoStartWork: document.getElementById('auto-start-work'),
@@ -171,6 +196,8 @@
         elements.shortBreak.value = settings.short_break || 5;
         elements.longBreak.value = settings.long_break || 15;
         elements.sessionsUntilLongBreak.value = settings.sessions_until_long_break || 4;
+        elements.notificationsEnabled.checked = settings.notifications !== false;
+        elements.taskNotificationsEnabled.checked = settings.task_notifications !== false;
         elements.soundEnabled.checked = settings.sound !== false;
         elements.autoStartBreak.checked = settings.auto_start_break !== false;
         elements.autoStartWork.checked = settings.auto_start_work !== false;
@@ -184,10 +211,12 @@
           item.style.display = 'none';
         } else {
           item.style.display = 'block';
-          elements.permissionStatus.textContent = Notification.permission === 'denied'
+          const isDenied = Notification.permission === 'denied';
+          elements.permissionStatus.textContent = isDenied
             ? 'Permission denied by system'
             : 'Allow notifications for mission alerts';
-          if (Notification.permission === 'denied') elements.requestPermissionBtn.style.display = 'none';
+          document.getElementById('permission-hint').style.display = isDenied ? 'block' : 'none';
+          if (isDenied) elements.requestPermissionBtn.style.display = 'none';
         }
       }
 
@@ -198,6 +227,8 @@
         Storage.updateSetting('short_break', Math.max(1, parseInt(elements.shortBreak.value, 10)) || 5);
         Storage.updateSetting('long_break', Math.max(1, parseInt(elements.longBreak.value, 10)) || 15);
         Storage.updateSetting('sessions_until_long_break', Math.max(1, parseInt(elements.sessionsUntilLongBreak.value, 10)) || 4);
+        Storage.updateSetting('notifications', elements.notificationsEnabled.checked);
+        Storage.updateSetting('task_notifications', elements.taskNotificationsEnabled.checked);
         Storage.updateSetting('sound', elements.soundEnabled.checked);
         Storage.updateSetting('auto_start_break', elements.autoStartBreak.checked);
         Storage.updateSetting('auto_start_work', elements.autoStartWork.checked);
@@ -267,7 +298,8 @@
 
       function setupListeners() {
         [elements.displayName, elements.userEmail, elements.workDuration, elements.shortBreak,
-         elements.longBreak, elements.sessionsUntilLongBreak, elements.soundEnabled,
+         elements.longBreak, elements.sessionsUntilLongBreak, elements.notificationsEnabled,
+         elements.taskNotificationsEnabled, elements.soundEnabled,
          elements.autoStartBreak, elements.autoStartWork
         ].forEach(el => el.addEventListener('change', saveSettings));
 
@@ -290,7 +322,13 @@
           }
         };
 
-        elements.requestPermissionBtn.onclick = () => Notification.requestPermission().then(updatePermissionStatus);
+        elements.requestPermissionBtn.onclick = () => {
+          if (typeof PWAManager !== 'undefined' && PWAManager.requestNotificationPermission) {
+            PWAManager.requestNotificationPermission().then(updatePermissionStatus);
+          } else {
+            Notification.requestPermission().then(updatePermissionStatus);
+          }
+        };
         elements.addSubjectBtn.onclick = () => openSubjectModal();
 
         elements.exportBtn.onclick = () => {

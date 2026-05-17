@@ -128,27 +128,52 @@ const PWAManager = (() => {
       return true;
     }
     
-    if (Notification.permission !== 'denied') {
+    try {
       const permission = await Notification.requestPermission();
       const granted = permission === 'granted';
       log('Notification permission requested', { granted });
+
+      // Notify components that permission state changed
+      emitEvent('permission-changed', { permission });
+
       return granted;
+    } catch (error) {
+      log('Error requesting notification permission', error);
+      return false;
     }
-    
-    log('Notification permission denied');
-    return false;
   };
   
   const sendNotification = (title, options = {}) => {
-    if ('serviceWorker' in navigator && Notification.permission === 'granted') {
-      navigator.serviceWorker.ready.then((registration) => {
-        registration.showNotification(title, {
-          // icon: './icon-192.png',
-          // badge: './icon-192.png',
-          ...options
-        });
-      });
+    if (!('Notification' in window) || Notification.permission !== 'granted') {
+      return false;
     }
+
+    // Check application-level settings if Storage is available
+    if (typeof Storage !== 'undefined') {
+      const settings = Storage.getSettings();
+      // If notifications are globally disabled in settings, don't send
+      if (settings.notifications === false) return false;
+    }
+
+    const notificationOptions = {
+      icon: './icon-192.png',
+      badge: './icon-192.png',
+      ...options
+    };
+
+    // Try Service Worker first for better background support
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.ready.then((registration) => {
+        registration.showNotification(title, notificationOptions);
+      }).catch(() => {
+        // Fallback to standard Notification API
+        new Notification(title, notificationOptions);
+      });
+    } else {
+      // Fallback for environments without Service Worker support
+      new Notification(title, notificationOptions);
+    }
+    return true;
   };
   
   // ============================================

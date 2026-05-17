@@ -464,11 +464,10 @@ const Storage = (function() {
 
   function getOverdueTasks() {
     const tasks = getTasks();
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const todayStr = formatDate(new Date());
     return tasks.filter(t => {
       if (t.completed || !t.dueDate) return false;
-      return new Date(t.dueDate) < today;
+      return t.dueDate < todayStr;
     }).sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
   }
 
@@ -820,10 +819,9 @@ const Storage = (function() {
         if (t.repeatDays && t.repeatDays.includes(dayOfWeek)) isScheduledForToday = true;
       } else {
         if (t.dueDate) {
-          const dueDate = new Date(t.dueDate);
           const start = t.startDate || t.dueDate;
           if (todayStr >= start && todayStr <= t.dueDate) isScheduledForToday = true;
-          if (dueDate < today && !t.completed) isOverdue = true;
+          if (t.dueDate < todayStr && !t.completed) isOverdue = true;
         }
       }
 
@@ -1016,6 +1014,11 @@ const Storage = (function() {
 
   function isToday(dateStr) { return formatDate(new Date()) === formatDate(new Date(dateStr)); }
 
+  function isDateOverdue(dateStr) {
+    if (!dateStr) return false;
+    return dateStr < formatDate(new Date());
+  }
+
   return {
     KEYS, DEFAULTS,
     saveData, loadData, removeData, clearAllData, exportData, importData,
@@ -1036,7 +1039,7 @@ const Storage = (function() {
     getTimerState, saveTimerState, clearTimerState, completeTimerSession,
     getStats, calculateStreak, calculateBestStreak,
     generateId, formatDate, formatDisplayDate, getRelativeDays, getDaysUntil,
-    getWeekNumber, isToday, getWeekStart,
+    getWeekNumber, isToday, isDateOverdue, getWeekStart,
     getRepeatingCompletions, saveRepeatingCompletions, isRepeatingTaskCompletedOnDate,
     setRepeatingTaskCompletedOnDate, pruneRepeatingCompletions,
     onSubtaskCompleted, _notifySubtaskCompleted
