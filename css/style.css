@@ -3041,6 +3041,12 @@ body.focus-mode {
   padding-left: 0 !important;
 }
 
+/* Accessibility: High-contrast focus indicator for keyboard navigation */
+:focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 3px;
+}
+
 /* FIX: Respect prefers-reduced-motion for background mesh animations.
    Removes the animated gradient blobs for users who prefer less motion,
    improving accessibility and reducing GPU usage on low-power devices. */

@@ -167,7 +167,7 @@ const Tasks = (function() {
         <div class="task-card ${priorityClass} ${isDone ? 'completed' : ''} animate-fade-in ${staggerClass}" data-id="${App.escapeHtml(task.id)}">
           <div class="swipe-hint">Swipe to complete</div>
           <div class="flex items-start gap-md">
-            <div class="task-checkbox ${isDone ? 'checked' : ''}" data-id="${App.escapeHtml(task.id)}" style="margin-top:4px;"></div>
+            <div class="task-checkbox ${isDone ? 'checked' : ''}" data-id="${App.escapeHtml(task.id)}" style="margin-top:4px;" tabindex="0" role="checkbox" aria-checked="${isDone}" aria-label="${isDone ? 'Mark as incomplete' : 'Mark as complete'}: ${App.escapeHtml(task.title)}"></div>
             <div class="flex-1 min-w-0">
               <div class="task-header-inline">
                 <div class="task-title-text" style="${isDone ? 'text-decoration:line-through;opacity:0.5;' : ''}">${App.escapeHtml(task.title)}</div>
@@ -182,15 +182,15 @@ const Tasks = (function() {
                 <div class="flex items-center gap-xs">
                   ${task.subtasks && task.subtasks.length > 0 ? `
                     ${SubtaskUtils.buildProgressIndicator(task)}
-                    <button class="btn btn-ghost btn-icon btn-sm task-expand-btn" data-id="${App.escapeHtml(task.id)}" style="color:var(--text-muted);transition:transform 0.3s;${isExpanded ? 'transform:rotate(180deg);' : ''}">
+                    <button class="btn btn-ghost btn-icon btn-sm task-expand-btn" data-id="${App.escapeHtml(task.id)}" style="color:var(--text-muted);transition:transform 0.3s;${isExpanded ? 'transform:rotate(180deg);' : ''}" aria-label="${isExpanded ? 'Collapse sub-missions' : 'Expand sub-missions'}" aria-expanded="${isExpanded}">
                       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
                     </button>
                   ` : ''}
                   <div class="task-actions-compact">
-                    <button class="btn btn-ghost btn-icon btn-sm edit-task" data-id="${App.escapeHtml(task.id)}" style="color:var(--text-muted);">
+                    <button class="btn btn-ghost btn-icon btn-sm edit-task" data-id="${App.escapeHtml(task.id)}" style="color:var(--text-muted);" aria-label="Edit objective: ${App.escapeHtml(task.title)}">
                       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                     </button>
-                    <button class="btn btn-ghost btn-icon btn-sm del-task" data-id="${App.escapeHtml(task.id)}" style="color:var(--text-muted);">
+                    <button class="btn btn-ghost btn-icon btn-sm del-task" data-id="${App.escapeHtml(task.id)}" style="color:var(--text-muted);" aria-label="Delete objective: ${App.escapeHtml(task.title)}">
                       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                     </button>
                   </div>
@@ -200,7 +200,7 @@ const Tasks = (function() {
                 <div class="subtasks-container" style="${isExpanded ? 'display:block;' : 'display:none;'}">
                   ${task.subtasks.map(subtask => `
                     <div class="subtask-item">
-                      <div class="subtask-checkbox ${subtask.isCompleted ? 'checked' : ''}" data-task-id="${App.escapeHtml(task.id)}" data-subtask-id="${App.escapeHtml(subtask.id)}"></div>
+                      <div class="subtask-checkbox ${subtask.isCompleted ? 'checked' : ''}" data-task-id="${App.escapeHtml(task.id)}" data-subtask-id="${App.escapeHtml(subtask.id)}" tabindex="0" role="checkbox" aria-checked="${subtask.isCompleted}" aria-label="${subtask.isCompleted ? 'Mark as incomplete' : 'Mark as complete'}: ${App.escapeHtml(subtask.title)}"></div>
                       <div class="subtask-title ${subtask.isCompleted ? 'completed' : ''}">${App.escapeHtml(subtask.title)}</div>
                       <div class="subtask-cycle-tracker">
                         <button class="cycle-btn dec-cycle" data-task-id="${App.escapeHtml(task.id)}" data-subtask-id="${App.escapeHtml(subtask.id)}">-</button>
@@ -229,11 +229,14 @@ const Tasks = (function() {
 
     // ── Checkboxes ──────────────────────────────────────────────────────────
     elements.taskList.querySelectorAll('.task-checkbox').forEach(cb => {
-      cb.onclick = (e) => {
+      const toggleFn = (e) => {
         e.stopPropagation();
         const id = cb.dataset.id;
         const task = Storage.getTaskById(id);
         const card = cb.closest('.task-card');
+
+        if (e.type === 'keydown' && e.key !== 'Enter' && e.key !== ' ') return;
+        if (e.type === 'keydown') e.preventDefault();
 
         if (task.type === 'repeating') {
           const isCurrentlyDone = Storage.isRepeatingTaskCompletedOnDate(id, todayStr);
@@ -265,12 +268,17 @@ const Tasks = (function() {
           }
         }
       };
+      cb.onclick = toggleFn;
+      cb.onkeydown = toggleFn;
     });
 
     // ── Subtask checkboxes ──────────────────────────────────────────────────
     elements.taskList.querySelectorAll('.subtask-checkbox').forEach(cb => {
-      cb.onclick = (e) => {
+      const toggleFn = (e) => {
         e.stopPropagation();
+        if (e.type === 'keydown' && e.key !== 'Enter' && e.key !== ' ') return;
+        if (e.type === 'keydown') e.preventDefault();
+
         const isCompleting = !cb.classList.contains('checked');
         const taskId = cb.dataset.taskId;
         const subtaskId = cb.dataset.subtaskId;
@@ -290,6 +298,8 @@ const Tasks = (function() {
           renderTasks();
         }, 300);
       };
+      cb.onclick = toggleFn;
+      cb.onkeydown = toggleFn;
     });
 
     // ── Cycle buttons ───────────────────────────────────────────────────────
