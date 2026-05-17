@@ -455,7 +455,17 @@ const App = (function() {
 
   function showTaskNotification(task) {
     const body = `It's time for: ${task.title}`;
-    if ('Notification' in window && Notification.permission === 'granted') new Notification('Task Due Now', { body });
+
+    // Check application settings
+    const settings = Storage.getSettings();
+    if (settings.task_notifications !== false) {
+      if (typeof PWAManager !== 'undefined' && PWAManager.sendNotification) {
+        PWAManager.sendNotification('Task Due Now', { body });
+      } else if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification('Task Due Now', { body });
+      }
+    }
+
     showToast(body, 'info', 10000);
   }
 
@@ -484,7 +494,16 @@ const App = (function() {
       const completedType = timerState.type;
       const body = completedType === 'work' ? 'Great job! Time for a break.' : 'Ready to get back to work?';
       const title = completedType === 'work' ? 'Work Session Complete!' : 'Break Finished!';
-      if ('Notification' in window && Notification.permission === 'granted') new Notification(title, { body });
+
+      const settings = Storage.getSettings();
+      if (settings.notifications !== false) {
+        if (typeof PWAManager !== 'undefined' && PWAManager.sendNotification) {
+          PWAManager.sendNotification(title, { body });
+        } else if ('Notification' in window && Notification.permission === 'granted') {
+          new Notification(title, { body });
+        }
+      }
+
       showToast(body, 'success', 10000);
     }, 200);
   }

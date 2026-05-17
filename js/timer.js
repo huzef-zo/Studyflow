@@ -215,7 +215,12 @@ const Timer = (function() {
     // Must be called after user gesture for the API to allow it
     await requestWakeLock();
 
-    if ('Notification' in window && Notification.permission === 'default') Notification.requestPermission();
+    // Request permission if not already granted/denied
+    if (typeof PWAManager !== 'undefined' && PWAManager.requestNotificationPermission) {
+      PWAManager.requestNotificationPermission();
+    } else if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
   }
 
   async function pauseTimer() {
@@ -252,10 +257,15 @@ const Timer = (function() {
     timeRemaining = nextState.timeRemaining;
 
     const settings = Storage.getSettings();
-    if (settings.notifications !== false && 'Notification' in window && Notification.permission === 'granted') {
+    if (settings.notifications !== false) {
       const labels = { work: 'Deep Work — GO!', short_break: 'Cooldown Time', long_break: 'Deep Rest — Well Earned!' };
       const bodies = { work: 'Focus mode engaged.', short_break: 'Take a short break. You earned it.', long_break: 'Great cycle! Enjoy a longer rest.' };
-      new Notification(labels[currentSessionType], { body: bodies[currentSessionType] });
+
+      if (typeof PWAManager !== 'undefined' && PWAManager.sendNotification) {
+        PWAManager.sendNotification(labels[currentSessionType], { body: bodies[currentSessionType] });
+      } else if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification(labels[currentSessionType], { body: bodies[currentSessionType] });
+      }
     }
 
     playTransitionSound(currentSessionType);
