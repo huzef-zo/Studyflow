@@ -414,23 +414,11 @@ const Tasks = (function() {
         </div>
         <div class="form-group">
           <label class="form-label">Task Type</label>
-          <div class="task-type-selector">
-            <label class="task-type-option">
-              <span class="task-type-label">One-time</span>
-              <input type="radio" name="type" value="one-time" ${!task || task.type === 'one-time' ? 'checked' : ''}>
-              <span class="radio-circle"></span>
-            </label>
-            <label class="task-type-option">
-              <span class="task-type-label">Repeating</span>
-              <input type="radio" name="type" value="repeating" ${task && task.type === 'repeating' ? 'checked' : ''}>
-              <span class="radio-circle"></span>
-            </label>
-            <label class="task-type-option">
-              <span class="task-type-label">Date Range</span>
-              <input type="radio" name="type" value="date-range" ${task && task.type === 'date-range' ? 'checked' : ''}>
-              <span class="radio-circle"></span>
-            </label>
-          </div>
+          <select name="type" class="form-select">
+            <option value="one-time" ${!task || task.type === 'one-time' ? 'selected' : ''}>One-time</option>
+            <option value="repeating" ${task && task.type === 'repeating' ? 'selected' : ''}>Repeating</option>
+            <option value="date-range" ${task && task.type === 'date-range' ? 'selected' : ''}>Date Range</option>
+          </select>
         </div>
         <div id="date-inputs-container"></div>
         <div class="grid-2">
@@ -494,7 +482,7 @@ const Tasks = (function() {
     modal.querySelector('#save-task').onclick = () => {
       const form = modal.querySelector('#task-form');
       const data = App.getFormData(form);
-      const type = form.querySelector('input[name="type"]:checked').value;
+      const type = form.querySelector('select[name="type"]').value;
 
       const subtaskInputs = modal.querySelectorAll('.subtask-input');
       const cycleInputs = modal.querySelectorAll('.subtask-cycles');
@@ -590,8 +578,8 @@ const Tasks = (function() {
       }
     }
 
-    modal.querySelectorAll('input[name="type"]').forEach(radio => {
-      radio.addEventListener('change', (e) => updateDateInputs(e.target.value));
+    modal.querySelector('select[name="type"]').addEventListener('change', (e) => {
+      updateDateInputs(e.target.value);
     });
 
     updateDateInputs(task ? task.type : 'one-time');

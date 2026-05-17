@@ -204,11 +204,11 @@ const Calendar = (function() {
         </div>
         <div class="form-group">
           <label class="form-label">Task Type</label>
-          <div class="task-type-selector">
-            <label class="task-type-option"><span class="task-type-label">Repeating Task</span><input type="radio" name="type" value="repeating"><span class="radio-circle"></span></label>
-            <label class="task-type-option"><span class="task-type-label">One-time Task</span><input type="radio" name="type" value="one-time" checked><span class="radio-circle"></span></label>
-            <label class="task-type-option"><span class="task-type-label">Date Range Task</span><input type="radio" name="type" value="date-range"><span class="radio-circle"></span></label>
-          </div>
+          <select name="type" class="form-select" id="cal-task-type">
+            <option value="one-time" selected>One-time Task</option>
+            <option value="repeating">Repeating Task</option>
+            <option value="date-range">Date Range Task</option>
+          </select>
         </div>
         <div id="cal-date-inputs-container"></div>
         <div class="grid grid-2">
@@ -268,13 +268,13 @@ const Calendar = (function() {
       }
     }
 
-    modal.querySelectorAll('input[name="type"]').forEach(radio => radio.addEventListener('change', (e) => updateDateInputs(e.target.value)));
+    modal.querySelector('select[name="type"]').addEventListener('change', (e) => updateDateInputs(e.target.value));
     updateDateInputs('one-time');
 
     form.addEventListener('submit', (e) => {
       e.preventDefault();
       const data = App.getFormData(form);
-      const type = form.querySelector('input[name="type"]:checked').value;
+      const type = form.querySelector('select[name="type"]').value;
       if (!data.title.trim()) { App.showToast('Please enter a task title', 'error'); return; }
       let repeatDays = [];
       if (type === 'repeating') {
