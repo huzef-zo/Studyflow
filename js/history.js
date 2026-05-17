@@ -174,25 +174,47 @@ const History = (function() {
     }
 
     if (elements.productiveDay) {
-      const dayActivity = [0, 0, 0, 0, 0, 0, 0];
-      // Include focus sessions (weighted by 15-min intervals)
+      const isWeekly = statsPeriodDays === 7;
+      const activity = {}; // Key: day index (0-6) for weekly, date string for others
+
+      // Aggregate focus sessions (weighted by 15-min intervals)
       filteredSessions.forEach(s => {
         if (s.type === 'work' && s.completedAt) {
-          dayActivity[new Date(s.completedAt).getDay()] += Math.max(1, Math.round(s.duration / 15));
+          const key = isWeekly ? new Date(s.completedAt).getDay() : Storage.formatDate(new Date(s.completedAt));
+          activity[key] = (activity[key] || 0) + Math.max(1, Math.round(s.duration / 15));
         }
       });
 
-      // Include task completions (weighted as 1 unit)
+      // Aggregate task completions (weighted as 1 unit)
       completedTasksInPeriod.forEach(t => {
         if (t._date) {
-          dayActivity[new Date(t._date).getDay()] += 1;
+          const key = isWeekly ? new Date(t._date).getDay() : Storage.formatDate(new Date(t._date));
+          activity[key] = (activity[key] || 0) + 1;
         }
       });
 
-      let maxDay = 0, maxVal = -1;
-      dayActivity.forEach((val, day) => { if (val > maxVal) { maxVal = val; maxDay = day; } });
-      const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-      elements.productiveDay.textContent = maxVal > 0 ? dayNames[maxDay] : 'N/A';
+      let peakKey = null, maxVal = -1;
+      Object.keys(activity).forEach(key => {
+        if (activity[key] > maxVal) {
+          maxVal = activity[key];
+          peakKey = key;
+        }
+      });
+
+      if (maxVal > 0 && peakKey !== null) {
+        if (isWeekly) {
+          const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+          elements.productiveDay.textContent = dayNames[peakKey];
+        } else {
+          const date = new Date(peakKey + 'T00:00:00');
+          const options = statsPeriodDays === 30
+            ? { month: 'short', day: 'numeric' }
+            : { month: 'short', day: 'numeric', year: 'numeric' };
+          elements.productiveDay.textContent = date.toLocaleDateString('en-US', options);
+        }
+      } else {
+        elements.productiveDay.textContent = 'N/A';
+      }
     }
   }
 
