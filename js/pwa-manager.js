@@ -143,8 +143,8 @@ const PWAManager = (() => {
     if ('serviceWorker' in navigator && Notification.permission === 'granted') {
       navigator.serviceWorker.ready.then((registration) => {
         registration.showNotification(title, {
-          icon: './icon-192.png',
-          badge: './icon-192.png',
+          // icon: './icon-192.png',
+          // badge: './icon-192.png',
           ...options
         });
       });
