@@ -203,7 +203,7 @@
         const percentage = max > 0 ? Math.min(100, Math.round((current / max) * 100)) : 0;
         return `
           <div class="progress-header">
-            <span class="progress-label">${label}</span>
+            <span class="progress-label">${App.escapeHtml(label)}</span>
             <span class="progress-percent" style="color: #FFFFFF;">${current} / ${max}</span>
           </div>
           <div class="progress-bar-bg">
