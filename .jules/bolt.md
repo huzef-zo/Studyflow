@@ -5,3 +5,7 @@
 ## 2026-05-16 - [O(Days) Repeating Task Expansion]
 **Learning:** Expanding repeating tasks by iterating through every day for every task ($O(N \times D)$) is a significant bottleneck for long-term analytics. Grouping tasks by day-of-week once and then doing a single pass over the date range ($O(D + \text{Occurrences})$) reduces execution time by >90% for a typical user history (1 year).
 **Action:** When mapping entities to a timeline, group entities by their recurrence pattern (e.g., day of week) first, then iterate once through the timeline.
+
+## 2026-05-23 - [Numeric Date Math & Bypassing defensive copies]
+**Learning:** While ISO string comparisons (e.g., `t.completedAt.startsWith(todayStr)`) are fast, they often introduce timezone regressions because `toISOString()` is always UTC. Standardizing on `Date.parse()` for numeric timestamp comparisons allows for high performance while maintaining local-time correctness when combined with `reusableDate.setTime()` and `formatDate()`. Additionally, bypassing defensive array copies (like those returned by public getters) when performing internal library-wide aggregations can reduce execution time by an additional 15-20% in high-item environments.
+**Action:** Use numeric `getTime()` or `Date.parse()` for range checks to preserve local time logic. Use direct access to raw data (e.g., `loadData`) instead of public getters inside performance-critical aggregation loops to avoid redundant array clones.

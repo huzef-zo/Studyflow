@@ -850,8 +850,8 @@ const Storage = (function() {
   }
 
   function getStats() {
-    const tasks = getTasks();
-    const sessions = getSessions();
+    const tasks = loadData(KEYS.TASKS, DEFAULTS.tasks);
+    const sessions = loadData(KEYS.SESSIONS, DEFAULTS.sessions);
     const now = new Date();
     const todayStr = formatDate(now);
     const weekStart = getWeekStart(now);
@@ -860,30 +860,26 @@ const Storage = (function() {
     const dayOfWeek = now.getDay();
     const today = new Date(now);
     today.setHours(0, 0, 0, 0);
-    const todayTime = today.getTime();
-    const future7Days = new Date(today);
-    future7Days.setDate(today.getDate() + 7);
-    const future7DaysStr = formatDate(future7Days);
+    const todayStartTime = today.getTime();
+    const todayEndTime = todayStartTime + 86400000;
+    const future7DaysStr = formatDate(new Date(todayStartTime + 7 * 86400000));
+    const activityCutoff = todayStartTime - (366 * 86400000);
 
-    let completedTasks = 0;
-    let todayCompleted = 0;
-    let todayTotalCount = 0;    // total tasks scheduled for today (comp + pending)
-    let todayPendingCount = 0;  // unfinished tasks scheduled for today
-    let pendingCount = 0;       // all uncompleted tasks (global)
-    let weekCompleted = 0;
-    let overdueTasks = 0;
-    let upcomingTasks = 0;
+    let completedTasks = 0, todayCompleted = 0, todayTotalCount = 0, todayPendingCount = 0;
+    let pendingCount = 0, weekCompleted = 0, overdueTasks = 0, upcomingTasks = 0;
 
     const activityDates = new Set();
     const completions = getRepeatingCompletions();
+    const reusableDate = new Date();
 
     tasks.forEach(t => {
       const isRepeating = t.type === 'repeating';
+      const compTime = t.completedAt ? (typeof t.completedAt === 'number' ? t.completedAt : Date.parse(t.completedAt)) : 0;
+
       const isCompletedToday = isRepeating
         ? (completions[`${t.id}_${todayStr}`] === true)
-        : (t.completed && t.completedAt && formatDate(new Date(t.completedAt)) === todayStr);
+        : (t.completed && compTime >= todayStartTime && compTime < todayEndTime);
 
-      // Check if task is scheduled for today or overdue
       let isScheduledForToday = false;
       let isOverdue = false;
 
@@ -899,28 +895,21 @@ const Storage = (function() {
 
       if (isScheduledForToday || isOverdue) {
         todayTotalCount++;
-        if (!isCompletedToday && (isRepeating || !t.completed)) {
-          todayPendingCount++;
-        }
+        if (!isCompletedToday && (isRepeating || !t.completed)) todayPendingCount++;
       }
 
       if (t.completed) {
         completedTasks++;
-        if (t.completedAt) {
-          const compDate = new Date(t.completedAt);
-          const compDateStr = formatDate(compDate);
-          if (compDate.getTime() >= weekStartTime) weekCompleted++;
-          activityDates.add(compDateStr);
+        if (compTime > 0) {
+          if (compTime >= weekStartTime) weekCompleted++;
+          if (compTime >= activityCutoff) {
+            reusableDate.setTime(compTime);
+            activityDates.add(formatDate(reusableDate));
+          }
         }
       } else {
-        // Only count in global pending if not completed for today (if repeating)
-        if (!isCompletedToday) {
-          pendingCount++;
-        }
-
+        if (!isCompletedToday) pendingCount++;
         if (isOverdue) overdueTasks++;
-
-        // Upcoming (next 7 days)
         if (isRepeating) {
           upcomingTasks++;
         } else if (t.dueDate) {
@@ -928,7 +917,6 @@ const Storage = (function() {
           if (t.dueDate < todayStr || (t.dueDate >= todayStr && start <= future7DaysStr)) upcomingTasks++;
         }
       }
-
       if (isCompletedToday) {
         todayCompleted++;
         activityDates.add(todayStr);
@@ -936,17 +924,17 @@ const Storage = (function() {
     });
 
     let todaySessions = 0, weekSessions = 0, totalMinutesToday = 0, totalMinutesWeek = 0;
-
-    // Single pass over sessions for all metric calculations
     sessions.forEach(s => {
       if (!s.completedAt) return;
-      const compDate = new Date(s.completedAt);
-      const compTime = compDate.getTime();
-      const compDateStr = formatDate(compDate);
+      const compTime = typeof s.completedAt === 'number' ? s.completedAt : Date.parse(s.completedAt);
+      if (isNaN(compTime)) return;
 
       if (s.type === 'work') {
-        activityDates.add(compDateStr);
-        if (compDateStr === todayStr) {
+        if (compTime >= activityCutoff) {
+          reusableDate.setTime(compTime);
+          activityDates.add(formatDate(reusableDate));
+        }
+        if (compTime >= todayStartTime && compTime < todayEndTime) {
           todaySessions++;
           totalMinutesToday += s.duration;
         }
@@ -980,25 +968,48 @@ const Storage = (function() {
 
   function calculateBestStreak(activityDates) {
     if (!activityDates) {
-      const tasks = getTasks(); const sessions = getSessions();
+      const tasks = loadData(KEYS.TASKS, DEFAULTS.tasks);
+      const sessions = loadData(KEYS.SESSIONS, DEFAULTS.sessions);
       activityDates = new Set();
-      tasks.forEach(t => { if (t.completedAt) activityDates.add(formatDate(new Date(t.completedAt))); });
-      sessions.forEach(s => { if (s.type === 'work') activityDates.add(formatDate(new Date(s.completedAt))); });
+      const reusableDate = new Date();
+      tasks.forEach(t => {
+        if (t.completedAt) {
+          const compTime = typeof t.completedAt === 'number' ? t.completedAt : Date.parse(t.completedAt);
+          if (!isNaN(compTime)) {
+            reusableDate.setTime(compTime);
+            activityDates.add(formatDate(reusableDate));
+          }
+        }
+      });
+      sessions.forEach(s => {
+        if (s.type === 'work' && s.completedAt) {
+          const compTime = typeof s.completedAt === 'number' ? s.completedAt : Date.parse(s.completedAt);
+          if (!isNaN(compTime)) {
+            reusableDate.setTime(compTime);
+            activityDates.add(formatDate(reusableDate));
+          }
+        }
+      });
     }
     const sortedDates = Array.from(activityDates).sort();
     if (sortedDates.length === 0) return 0;
-    let bestStreak = 0, currentStreak = 0, lastDate = null;
+    let bestStreak = 0, currentStreak = 0, lastTime = null;
+    const MS_PER_DAY = 1000 * 60 * 60 * 24;
+
+    const streakReusableDate = new Date();
     sortedDates.forEach(dateStr => {
-      const currentDate = new Date(dateStr);
-      currentDate.setHours(0, 0, 0, 0);
-      if (lastDate) {
-        const diffDays = Math.round(Math.abs(currentDate - lastDate) / (1000 * 60 * 60 * 24));
+      const parts = dateStr.split('-');
+      streakReusableDate.setFullYear(parts[0], parts[1] - 1, parts[2]);
+      streakReusableDate.setHours(0, 0, 0, 0);
+      const currentTime = streakReusableDate.getTime();
+      if (lastTime) {
+        const diffDays = Math.round((currentTime - lastTime) / MS_PER_DAY);
         currentStreak = diffDays === 1 ? currentStreak + 1 : 1;
       } else {
         currentStreak = 1;
       }
       if (currentStreak > bestStreak) bestStreak = currentStreak;
-      lastDate = currentDate;
+      lastTime = currentTime;
     });
     return bestStreak;
   }
@@ -1010,24 +1021,40 @@ const Storage = (function() {
    */
   function calculateStreak(activityDates) {
     if (!activityDates) {
-      const tasks = getTasks(); const sessions = getSessions();
+      const tasks = loadData(KEYS.TASKS, DEFAULTS.tasks);
+      const sessions = loadData(KEYS.SESSIONS, DEFAULTS.sessions);
       activityDates = new Set();
-      tasks.forEach(t => { if (t.completedAt) activityDates.add(formatDate(new Date(t.completedAt))); });
-      sessions.forEach(s => { if (s.type === 'work') activityDates.add(formatDate(new Date(s.completedAt))); });
+      const reusableDate = new Date();
+      tasks.forEach(t => {
+        if (t.completedAt) {
+          const compTime = typeof t.completedAt === 'number' ? t.completedAt : Date.parse(t.completedAt);
+          if (!isNaN(compTime)) {
+            reusableDate.setTime(compTime);
+            activityDates.add(formatDate(reusableDate));
+          }
+        }
+      });
+      sessions.forEach(s => {
+        if (s.type === 'work' && s.completedAt) {
+          const compTime = typeof s.completedAt === 'number' ? s.completedAt : Date.parse(s.completedAt);
+          if (!isNaN(compTime)) {
+            reusableDate.setTime(compTime);
+            activityDates.add(formatDate(reusableDate));
+          }
+        }
+      });
     }
     let streak = 0;
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const checkDate = new Date();
+    checkDate.setHours(0, 0, 0, 0);
+
     for (let i = 0; i < 365; i++) {
-      const checkDate = new Date(today);
-      checkDate.setDate(checkDate.getDate() - i);
       const dateStr = formatDate(checkDate);
       if (activityDates.has(dateStr)) {
         streak++;
+        // Move back one day by modifying the existing Date instance
+        checkDate.setDate(checkDate.getDate() - 1);
       } else {
-        // FIX: break immediately — today included. No special case for i===0.
-        // This means if today has no activity yet, streak shows yesterday's count (correct).
-        // The streak resets if any day (including today) is missed.
         break;
       }
     }
@@ -1045,12 +1072,12 @@ const Storage = (function() {
   }
 
   function formatDate(date) {
+    // Avoid re-instantiating if already a Date; reuse object if possible in high-perf loops
     const d = (date instanceof Date) ? date : new Date(date);
-    const year = d.getFullYear();
     const m = d.getMonth() + 1;
     const day = d.getDate();
-    // Faster string concatenation for padding
-    return year + '-' + (m < 10 ? '0' + m : m) + '-' + (day < 10 ? '0' + day : day);
+    // Use year directly, and fast conditional padding
+    return d.getFullYear() + '-' + (m < 10 ? '0' + m : m) + '-' + (day < 10 ? '0' + day : day);
   }
 
   function formatDisplayDate(dateStr) {
