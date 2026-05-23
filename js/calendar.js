@@ -117,7 +117,8 @@ const Calendar = (function() {
           return `<div class="calendar-task-dot" style="background-color:${App.escapeHtml(color)};"></div>`;
         }).join('')}</div>`;
       }
-      html += `<div class="${classes}" data-date="${dateStr}"><span class="calendar-day-number">${day}</span>${indicatorsHtml}</div>`;
+      const ariaLabel = `${day} ${MONTH_NAMES[month]} ${year}${isToday ? ', Today' : ''}${tasks.length > 0 ? `, ${tasks.length} missions` : ''}`;
+      html += `<div class="${classes}" data-date="${dateStr}" tabindex="0" role="button" aria-label="${ariaLabel}"><span class="calendar-day-number">${day}</span>${indicatorsHtml}</div>`;
     }
 
     const remainingCells = 42 - (startingDay + totalDays);
@@ -127,7 +128,14 @@ const Calendar = (function() {
 
     elements.calendarGrid.innerHTML = html;
     elements.calendarGrid.querySelectorAll('.calendar-day:not(.other-month)').forEach(dayEl => {
-      dayEl.addEventListener('click', () => handleDayClick(dayEl.dataset.date));
+      const clickHandler = () => handleDayClick(dayEl.dataset.date);
+      dayEl.addEventListener('click', clickHandler);
+      dayEl.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          clickHandler();
+        }
+      });
     });
   }
 
@@ -156,11 +164,11 @@ const Calendar = (function() {
 
     elements.dayTasks.innerHTML = tasks.map(task => {
       const subjectColor = App.getSubjectColor(task.subject);
-      const isDone = task.type === 'repeating' ? task.completedOnDate : task.completed;
+      const isDone = task.type === 'repeating' ? Storage.isRepeatingTaskCompletedOnDate(task.id, selectedDate) : task.completed;
       return `
         <div class="task-card priority-${App.escapeHtml(task.priority)} ${isDone ? 'completed' : ''}" data-id="${App.escapeHtml(task.id)}" style="--priority-color:${App.hexToRgb(subjectColor)};">
           <div class="flex items-start gap-md w-full">
-            <div class="task-checkbox ${isDone ? 'checked' : ''}" data-id="${App.escapeHtml(task.id)}"></div>
+            <div class="task-checkbox ${isDone ? 'checked' : ''}" data-id="${App.escapeHtml(task.id)}" tabindex="0" role="checkbox" aria-checked="${isDone}" aria-label="${isDone ? 'Mark as incomplete' : 'Mark as complete'}: ${App.escapeHtml(task.title)}"></div>
             <div class="flex-1">
               <div class="flex items-center gap-md mb-xs">
                 <div class="subject-pill" style="--tag-color:${App.hexToRgb(subjectColor)}">${App.escapeHtml(task.subject)}</div>
@@ -174,8 +182,11 @@ const Calendar = (function() {
     }).join('');
 
     elements.dayTasks.querySelectorAll('.task-checkbox').forEach(cb => {
-      cb.onclick = (e) => {
+      const toggleFn = (e) => {
         e.stopPropagation();
+        if (e.type === 'keydown' && e.key !== 'Enter' && e.key !== ' ') return;
+        if (e.type === 'keydown') e.preventDefault();
+
         const id = cb.dataset.id;
         const task = Storage.getTaskById(id);
 
@@ -191,6 +202,8 @@ const Calendar = (function() {
         renderCalendar();
         renderSelectedDayTasks();
       };
+      cb.onclick = toggleFn;
+      cb.onkeydown = toggleFn;
     });
   }
 
