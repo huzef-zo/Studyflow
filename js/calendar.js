@@ -114,7 +114,7 @@ const Calendar = (function() {
       if (tasks.length > 0) {
         indicatorsHtml = `<div class="calendar-day-indicators">${tasks.slice(0,3).map(t => {
           const color = t.completed ? 'var(--success)' : App.getSubjectColor(t.subject);
-          return `<div class="calendar-task-dot" style="background-color:${color};"></div>`;
+          return `<div class="calendar-task-dot" style="background-color:${App.escapeHtml(color)};"></div>`;
         }).join('')}</div>`;
       }
       html += `<div class="${classes}" data-date="${dateStr}"><span class="calendar-day-number">${day}</span>${indicatorsHtml}</div>`;

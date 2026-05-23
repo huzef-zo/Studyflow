@@ -190,20 +190,92 @@ const Storage = (function() {
     try {
       if (!data || typeof data !== 'object' || Array.isArray(data)) return false;
 
+      // SECURITY: Explicitly pick and validate known properties to prevent malicious object property injection
+      // and ensure data integrity from untrusted JSON backups.
+
       if (data.user && typeof data.user === 'object' && !Array.isArray(data.user)) {
-        saveData(KEYS.USER, { ...DEFAULTS.user, ...data.user });
+        const safeUser = { ...DEFAULTS.user };
+        if ('name' in data.user) safeUser.name = String(data.user.name);
+        if ('email' in data.user) safeUser.email = String(data.user.email);
+        if ('created_at' in data.user) safeUser.created_at = String(data.user.created_at);
+        saveData(KEYS.USER, safeUser);
       }
-      if (Array.isArray(data.tasks)) saveData(KEYS.TASKS, data.tasks);
-      if (Array.isArray(data.subjects)) saveData(KEYS.SUBJECTS, data.subjects);
-      if (Array.isArray(data.sessions)) saveData(KEYS.SESSIONS, data.sessions);
+
+      if (Array.isArray(data.subjects)) {
+        const safeSubjects = data.subjects.map(s => ({
+          id: String(s.id || generateId()),
+          name: String(s.name || 'Unnamed Subject'),
+          color: String(s.color || '#2563EB'),
+          createdAt: String(s.createdAt || new Date().toISOString())
+        }));
+        saveData(KEYS.SUBJECTS, safeSubjects);
+      }
+
+      if (Array.isArray(data.tasks)) {
+        const safeTasks = data.tasks.map(t => ({
+          id: String(t.id || generateId()),
+          title: String(t.title || 'Untitled Task'),
+          type: String(t.type || 'one-time'),
+          startDate: t.startDate ? String(t.startDate) : null,
+          dueDate: t.dueDate ? String(t.dueDate) : null,
+          dueTime: t.dueTime ? String(t.dueTime) : null,
+          priority: String(t.priority || 'medium'),
+          subject: String(t.subject || 'Other'),
+          repeatDays: Array.isArray(t.repeatDays) ? t.repeatDays.map(Number) : [],
+          completed: Boolean(t.completed),
+          completedAt: t.completedAt ? String(t.completedAt) : null,
+          subtasks: Array.isArray(t.subtasks) ? t.subtasks.map(st => ({
+            id: String(st.id || generateId()),
+            title: String(st.title || 'Untitled Subtask'),
+            isCompleted: Boolean(st.isCompleted),
+            estimatedCycles: Number(st.estimatedCycles || 1),
+            completedCycles: Number(st.completedCycles || 0)
+          })) : [],
+          progress: Number(t.progress || 0),
+          createdAt: String(t.createdAt || new Date().toISOString())
+        }));
+        saveData(KEYS.TASKS, safeTasks);
+      }
+
+      if (Array.isArray(data.sessions)) {
+        const safeSessions = data.sessions.map(s => ({
+          id: String(s.id || generateId()),
+          duration: Number(s.duration || 0),
+          type: String(s.type || 'work'),
+          taskId: s.taskId ? String(s.taskId) : null,
+          completedAt: String(s.completedAt || new Date().toISOString())
+        }));
+        saveData(KEYS.SESSIONS, safeSessions);
+      }
+
       if (data.goals && typeof data.goals === 'object' && !Array.isArray(data.goals)) {
-        saveData(KEYS.GOALS, data.goals);
+        // Goals are mostly numeric/string, simple spread is still risky but here we pick main ones
+        const safeGoals = { ...DEFAULTS.goals };
+        ['weekly_tasks', 'weekly_hours', 'daily_tasks', 'daily_hours', 'current_tasks', 'current_hours'].forEach(key => {
+          if (key in data.goals) safeGoals[key] = Number(data.goals[key]);
+        });
+        if (data.goals.week_start) safeGoals.week_start = String(data.goals.week_start);
+        saveData(KEYS.GOALS, safeGoals);
       }
+
       if (data.settings && typeof data.settings === 'object' && !Array.isArray(data.settings)) {
-        saveData(KEYS.SETTINGS, data.settings);
+        const safeSettings = { ...DEFAULTS.settings };
+        Object.keys(DEFAULTS.settings).forEach(key => {
+          if (key in data.settings) {
+            if (typeof DEFAULTS.settings[key] === 'boolean') safeSettings[key] = Boolean(data.settings[key]);
+            else if (typeof DEFAULTS.settings[key] === 'number') safeSettings[key] = Number(data.settings[key]);
+            else safeSettings[key] = data.settings[key];
+          }
+        });
+        saveData(KEYS.SETTINGS, safeSettings);
       }
+
       if (data.repeatingCompletions && typeof data.repeatingCompletions === 'object') {
-        saveRepeatingCompletions(data.repeatingCompletions);
+        const safeRC = {};
+        Object.keys(data.repeatingCompletions).forEach(k => {
+          if (data.repeatingCompletions[k] === true) safeRC[String(k)] = true;
+        });
+        saveRepeatingCompletions(safeRC);
       }
       return true;
     } catch (error) {

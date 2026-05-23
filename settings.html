@@ -240,7 +240,7 @@
           <div class="card" style="padding:12px 16px;background:rgba(255,255,255,0.02);display:flex;align-items:center;justify-content:space-between;border-radius:12px;">
             <div class="flex items-center gap-md">
               <div class="glass-tag" style="--tag-color:${App.hexToRgb(s.color)}">
-                <div style="width:8px;height:8px;border-radius:50%;background:${s.color};"></div>
+                <div style="width:8px;height:8px;border-radius:50%;background:${App.escapeHtml(s.color)};"></div>
                 ${App.escapeHtml(s.name)}
               </div>
             </div>
