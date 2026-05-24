@@ -21,7 +21,20 @@ const Storage = (function() {
     SETTINGS: 'studyflow_settings',
     TIMER: 'studyflow_timer',
     SIDEBAR: 'is_sidebar_collapsed',   // FIX 1: was a raw string in app.js, now tracked in cache
-    REPEATING_COMPLETIONS: 'studyflow_repeating_completions'
+    REPEATING_COMPLETIONS: 'studyflow_repeating_completions',
+    FLASHCARDS: 'studyflow_flashcards',
+    DECKS: 'studyflow_decks',
+    REVIEW_LOGS: 'studyflow_review_logs',
+    ACHIEVEMENTS: 'studyflow_achievements',
+    XP_STATE: 'studyflow_xp',
+    STUDY_BLOCKS: 'studyflow_study_blocks',
+    STUDY_WINDOWS: 'studyflow_study_windows',
+    EXAMS: 'studyflow_exams',
+    HABITS: 'studyflow_habits',
+    NOTES: 'studyflow_notes',
+    TIME_BLOCKS: 'studyflow_time_blocks',
+    REFLECTIONS: 'studyflow_reflections',
+    THEME: 'studyflow_theme'
   };
 
   const cache = {};
@@ -84,8 +97,11 @@ const Storage = (function() {
       weekly_hours: 20,
       daily_tasks: 2,
       daily_hours: 3,
+      weekend_daily_tasks: 1,
+      weekend_daily_hours: 1.5,
       current_tasks: 0,
       current_hours: 0,
+      freezeCount: 1,
       week_start: getWeekStart(new Date()).toISOString()
     },
     settings: {
@@ -99,7 +115,36 @@ const Storage = (function() {
       long_break: 15,
       sessions_until_long_break: 4
     },
-    repeatingCompletions: {}
+    repeatingCompletions: {},
+    flashcards: [],
+    decks: [],
+    reviewLogs: [],
+    achievements: [],
+    studyBlocks: [],
+    exams: [],
+    habits: [],
+    notes: [],
+    timeBlocks: [],
+    reflections: [],
+    theme: 'default',
+    studyWindows: [
+      { id: 'sw_1', dayOfWeek: 1, startTime: '09:00', endTime: '12:00', label: 'Morning Study' },
+      { id: 'sw_2', dayOfWeek: 1, startTime: '14:00', endTime: '17:00', label: 'Afternoon Study' },
+      { id: 'sw_3', dayOfWeek: 2, startTime: '09:00', endTime: '12:00', label: 'Morning Study' },
+      { id: 'sw_4', dayOfWeek: 2, startTime: '14:00', endTime: '17:00', label: 'Afternoon Study' },
+      { id: 'sw_5', dayOfWeek: 3, startTime: '09:00', endTime: '12:00', label: 'Morning Study' },
+      { id: 'sw_6', dayOfWeek: 3, startTime: '14:00', endTime: '17:00', label: 'Afternoon Study' },
+      { id: 'sw_7', dayOfWeek: 4, startTime: '09:00', endTime: '12:00', label: 'Morning Study' },
+      { id: 'sw_8', dayOfWeek: 4, startTime: '14:00', endTime: '17:00', label: 'Afternoon Study' },
+      { id: 'sw_9', dayOfWeek: 5, startTime: '09:00', endTime: '12:00', label: 'Morning Study' },
+      { id: 'sw_10', dayOfWeek: 5, startTime: '14:00', endTime: '17:00', label: 'Afternoon Study' }
+    ],
+    xpState: {
+      totalXP: 0,
+      currentLevel: 1,
+      currentRank: 'Novice',
+      history: []
+    }
   };
 
   function getWeekStart(date) {
@@ -232,6 +277,7 @@ const Storage = (function() {
             completedCycles: Number(st.completedCycles || 0)
           })) : [],
           progress: Number(t.progress || 0),
+          sortOrder: Number(t.sortOrder || 0),
           createdAt: String(t.createdAt || new Date().toISOString())
         }));
         saveData(KEYS.TASKS, safeTasks);
@@ -251,7 +297,7 @@ const Storage = (function() {
       if (data.goals && typeof data.goals === 'object' && !Array.isArray(data.goals)) {
         // Goals are mostly numeric/string, simple spread is still risky but here we pick main ones
         const safeGoals = { ...DEFAULTS.goals };
-        ['weekly_tasks', 'weekly_hours', 'daily_tasks', 'daily_hours', 'current_tasks', 'current_hours'].forEach(key => {
+        ['weekly_tasks', 'weekly_hours', 'daily_tasks', 'daily_hours', 'weekend_daily_tasks', 'weekend_daily_hours', 'current_tasks', 'current_hours'].forEach(key => {
           if (key in data.goals) safeGoals[key] = Number(data.goals[key]);
         });
         if (data.goals.week_start) safeGoals.week_start = String(data.goals.week_start);
@@ -277,6 +323,114 @@ const Storage = (function() {
         });
         saveRepeatingCompletions(safeRC);
       }
+
+      if (data.xpState && typeof data.xpState === 'object' && !Array.isArray(data.xpState)) {
+        const safeXP = { ...DEFAULTS.xpState };
+        if ('totalXP' in data.xpState) safeXP.totalXP = Number(data.xpState.totalXP);
+        if ('currentLevel' in data.xpState) safeXP.currentLevel = Number(data.xpState.currentLevel);
+        if ('currentRank' in data.xpState) safeXP.currentRank = String(data.xpState.currentRank);
+        if (Array.isArray(data.xpState.history)) {
+          safeXP.history = data.xpState.history.map(h => ({
+            date: String(h.date),
+            xpGained: Number(h.xpGained),
+            source: String(h.source)
+          }));
+        }
+        saveData(KEYS.XP_STATE, safeXP);
+      }
+
+      if (Array.isArray(data.achievements)) {
+        const safeAchievements = data.achievements.map(a => ({
+          id: String(a.id || generateId()),
+          type: String(a.type),
+          condition: Number(a.condition),
+          unlockedAt: a.unlockedAt ? String(a.unlockedAt) : null,
+          icon: String(a.icon)
+        }));
+        saveData(KEYS.ACHIEVEMENTS, safeAchievements);
+      }
+
+      if (Array.isArray(data.habits)) {
+        const safeHabits = data.habits.map(h => ({
+          id: String(h.id || generateId()),
+          title: String(h.title || 'Untitled Habit'),
+          icon: String(h.icon || '🎯'),
+          streak: Number(h.streak || 0),
+          lastCompleted: h.lastCompleted ? String(h.lastCompleted) : null,
+          createdAt: String(h.createdAt || new Date().toISOString())
+        }));
+        saveData(KEYS.HABITS, safeHabits);
+      }
+
+      if (Array.isArray(data.exams)) {
+        const safeExams = data.exams.map(e => ({
+          id: String(e.id || generateId()),
+          title: String(e.title || 'Untitled Exam'),
+          examDate: String(e.examDate),
+          subject: String(e.subject || 'Other'),
+          weight: Number(e.weight || 3),
+          revisionStartDate: String(e.revisionStartDate),
+          notes: String(e.notes || ''),
+          createdAt: String(e.createdAt || new Date().toISOString())
+        }));
+        saveData(KEYS.EXAMS, safeExams);
+      }
+
+      if (Array.isArray(data.notes)) {
+        const safeNotes = data.notes.map(n => ({
+          id: String(n.id || generateId()),
+          title: String(n.title || 'Untitled Note'),
+          content: String(n.content || ''),
+          subject: String(n.subject || 'Other'),
+          createdAt: String(n.createdAt || new Date().toISOString()),
+          updatedAt: String(n.updatedAt || new Date().toISOString())
+        }));
+        saveData(KEYS.NOTES, safeNotes);
+      }
+
+      if (Array.isArray(data.decks)) {
+        const safeDecks = data.decks.map(d => ({
+          id: String(d.id || generateId()),
+          subjectId: String(d.subjectId),
+          createdAt: String(d.createdAt || new Date().toISOString())
+        }));
+        saveData(KEYS.DECKS, safeDecks);
+      }
+
+      if (Array.isArray(data.flashcards)) {
+        const safeCards = data.flashcards.map(c => ({
+          id: String(c.id || generateId()),
+          deckId: String(c.deckId),
+          front: String(c.front || ''),
+          back: String(c.back || ''),
+          easeFactor: Number(c.easeFactor || 2.5),
+          interval: Number(c.interval || 0),
+          repetitions: Number(c.repetitions || 0),
+          nextReview: String(c.nextReview || formatDate(new Date())),
+          createdAt: String(c.createdAt || new Date().toISOString())
+        }));
+        saveData(KEYS.FLASHCARDS, safeCards);
+      }
+
+      if (Array.isArray(data.reviewLogs)) {
+        const safeLogs = data.reviewLogs.map(l => ({
+          id: String(l.id || generateId()),
+          cardId: String(l.cardId),
+          rating: Number(l.rating),
+          timestamp: String(l.timestamp || new Date().toISOString())
+        }));
+        saveData(KEYS.REVIEW_LOGS, safeLogs);
+      }
+
+      if (Array.isArray(data.reflections)) {
+        const safeReflections = data.reflections.map(r => ({
+          date: String(r.date),
+          text: String(r.text),
+          timestamp: String(r.timestamp || new Date().toISOString())
+        }));
+        saveData(KEYS.REFLECTIONS, safeReflections);
+      }
+
       return true;
     } catch (error) {
       console.error('Import error:', error);
@@ -301,6 +455,13 @@ const Storage = (function() {
     const completions = getRepeatingCompletions();
     const key = `${taskId}_${dateStr}`;
     if (completed) {
+      if (completions[key] !== true) {
+        const task = getTaskById(taskId);
+        if (task && typeof Achievements !== 'undefined') {
+          const xpAwards = { low: 10, medium: 25, high: 50, critical: 100 };
+          Achievements.awardXP(xpAwards[task.priority] || 25, 'Repeating Task Completed');
+        }
+      }
       completions[key] = true;
     } else {
       delete completions[key];
@@ -359,6 +520,7 @@ const Storage = (function() {
       completedAt: completed ? new Date().toISOString() : null,
       subtasks: subtasks,
       progress: progress,
+      sortOrder: tasks.length,
       createdAt: new Date().toISOString()
     };
     tasks.push(newTask);
@@ -464,11 +626,19 @@ const Storage = (function() {
 
   function completeTask(id) {
     const task = getTaskById(id);
-    if (task && task.subtasks && task.subtasks.length > 0) {
-      const updatedSubtasks = task.subtasks.map(s => ({ ...s, isCompleted: true }));
-      return updateTask(id, { completed: true, completedAt: new Date().toISOString(), subtasks: updatedSubtasks });
+    if (task && !task.completed) {
+      const xpAwards = { low: 10, medium: 25, high: 50, critical: 100 };
+      if (typeof Achievements !== 'undefined') {
+        Achievements.awardXP(xpAwards[task.priority] || 25, 'Task Completed');
+      }
+
+      if (task.subtasks && task.subtasks.length > 0) {
+        const updatedSubtasks = task.subtasks.map(s => ({ ...s, isCompleted: true }));
+        return updateTask(id, { completed: true, completedAt: new Date().toISOString(), subtasks: updatedSubtasks });
+      }
+      return updateTask(id, { completed: true, completedAt: new Date().toISOString() });
     }
-    return updateTask(id, { completed: true, completedAt: new Date().toISOString() });
+    return null;
   }
 
   function uncompleteTask(id) {
@@ -545,12 +715,19 @@ const Storage = (function() {
 
   function getTodayTasks() {
     const todayStr = formatDate(new Date());
-    return getTasksByDate(todayStr).filter(t => {
+    const tasks = getTasksByDate(todayStr).filter(t => {
       if (t.type === 'repeating') {
         return !isRepeatingTaskCompletedOnDate(t.id, todayStr);
       }
       return !t.completed;
     });
+    const overdue = getOverdueTasks().map(t => ({ ...t, _isOverdue: true }));
+    // Combine and deduplicate if a task is both today and overdue (though usually they aren't)
+    const combined = [...tasks];
+    overdue.forEach(ot => {
+      if (!combined.some(t => t.id === ot.id)) combined.push(ot);
+    });
+    return combined;
   }
 
   /**
@@ -621,9 +798,16 @@ const Storage = (function() {
   function getSessions() { return [...loadData(KEYS.SESSIONS, DEFAULTS.sessions)]; }
   function saveSessions(sessions) { return saveData(KEYS.SESSIONS, [...sessions]); }
 
-  function addSession(duration, type = 'work', taskId = null) {
+  function addSession(duration, type = 'work', taskId = null, notes = '') {
     const sessions = getSessions();
-    const newSession = { id: generateId(), duration, type, taskId, completedAt: new Date().toISOString() };
+    const newSession = {
+      id: generateId(),
+      duration,
+      type,
+      taskId,
+      notes,
+      completedAt: new Date().toISOString()
+    };
     sessions.push(newSession);
     saveSessions(sessions);
     return newSession;
@@ -719,6 +903,7 @@ const Storage = (function() {
       goals.week_start = weekStartStr;
       goals.current_tasks = 0;
       goals.current_hours = 0;
+      goals.freezeCount = DEFAULTS.goals.freezeCount || 1;
       saveGoals(goals);           // write the reset so next read from cache is clean
     }
 
@@ -752,13 +937,90 @@ const Storage = (function() {
     return saveSettings(settings);
   }
 
+  // ── Spaced Repetition (SRS) ──────────────────────────────────────────────────
+
+  function getFlashcards() { return [...loadData(KEYS.FLASHCARDS, DEFAULTS.flashcards)]; }
+  function saveFlashcards(cards) { return saveData(KEYS.FLASHCARDS, [...cards]); }
+
+  function getDecks() { return [...loadData(KEYS.DECKS, DEFAULTS.decks)]; }
+  function saveDecks(decks) { return saveData(KEYS.DECKS, [...decks]); }
+
+  function getReviewLogs() { return [...loadData(KEYS.REVIEW_LOGS, DEFAULTS.reviewLogs)]; }
+  function saveReviewLogs(logs) { return saveData(KEYS.REVIEW_LOGS, [...logs]); }
+
+  function addFlashcard(card) {
+    const cards = getFlashcards();
+    const newCard = {
+      id: 'fc_' + generateId(),
+      deckId: card.deckId,
+      front: card.front || '',
+      back: card.back || '',
+      easeFactor: 2.5,
+      interval: 0,
+      repetitions: 0,
+      nextReview: formatDate(new Date()),
+      createdAt: new Date().toISOString()
+    };
+    cards.push(newCard);
+    saveFlashcards(cards);
+    return newCard;
+  }
+
+  function updateFlashcard(id, updates) {
+    const cards = getFlashcards();
+    const idx = cards.findIndex(c => c.id === id);
+    if (idx !== -1) {
+      cards[idx] = { ...cards[idx], ...updates };
+      saveFlashcards(cards);
+      return cards[idx];
+    }
+    return null;
+  }
+
+  function deleteFlashcard(id) {
+    const cards = getFlashcards();
+    saveFlashcards(cards.filter(c => c.id !== id));
+    return true;
+  }
+
+  function getDeckBySubject(subjectId) {
+    let decks = getDecks();
+    let deck = decks.find(d => d.subjectId === subjectId);
+    if (!deck) {
+      deck = {
+        id: 'deck_' + generateId(),
+        subjectId: subjectId,
+        createdAt: new Date().toISOString()
+      };
+      decks.push(deck);
+      saveDecks(decks);
+    }
+    return deck;
+  }
+
+  function addReviewLog(cardId, rating) {
+    const logs = getReviewLogs();
+    const log = {
+      id: generateId(),
+      cardId,
+      rating,
+      timestamp: new Date().toISOString()
+    };
+    logs.push(log);
+    saveReviewLogs(logs);
+    if (typeof Achievements !== 'undefined') {
+      Achievements.awardXP(5, 'Flashcard Reviewed');
+    }
+    return log;
+  }
+
   // ── Timer persistence ────────────────────────────────────────────────────────
 
   function getTimerState() { return loadData(KEYS.TIMER, null); }
   function saveTimerState(state) { return saveData(KEYS.TIMER, { ...state }); }
   function clearTimerState() { return removeData(KEYS.TIMER); }
 
-  function completeTimerSession(timerState, recordSession = true) {
+  function completeTimerSession(timerState, recordSession = true, notes = '') {
     const settings = getSettings();
     const { type, sessionsInCycle, selectedTaskId, selectedSubtaskId, timeRemaining } = timerState;
     let nextSessionsInCycle = sessionsInCycle || 0;
@@ -770,7 +1032,10 @@ const Storage = (function() {
           ? configuredSeconds - timeRemaining
           : configuredSeconds;
         const actualMinutes = Math.max(1, Math.round(elapsed / 60));
-        addSession(actualMinutes, 'work', selectedTaskId);
+        addSession(actualMinutes, 'work', selectedTaskId, notes);
+        if (typeof Achievements !== 'undefined') {
+          Achievements.awardXP(actualMinutes, 'Focus Session');
+        }
       }
       nextSessionsInCycle++;
       const n = settings.sessions_until_long_break || 4;
@@ -1044,6 +1309,13 @@ const Storage = (function() {
         }
       });
     }
+
+    const goals = loadData(KEYS.GOALS, DEFAULTS.goals);
+    let currentFreezeCount = goals.freezeCount || 0;
+    const weekStart = new Date(goals.week_start);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
     let streak = 0;
     const checkDate = new Date();
     checkDate.setHours(0, 0, 0, 0);
@@ -1052,11 +1324,19 @@ const Storage = (function() {
       const dateStr = formatDate(checkDate);
       if (activityDates.has(dateStr)) {
         streak++;
-        // Move back one day by modifying the existing Date instance
-        checkDate.setDate(checkDate.getDate() - 1);
       } else {
-        break;
+        // Only apply freeze if it's within the current week and we have freezes left
+        if (checkDate >= weekStart && checkDate <= today && currentFreezeCount > 0) {
+          currentFreezeCount--;
+          // Update storage so it stays decremented
+          updateGoals({ freezeCount: currentFreezeCount });
+          // Don't increment streak, but also don't break it
+        } else {
+          break;
+        }
       }
+      // Move back one day by modifying the existing Date instance
+      checkDate.setDate(checkDate.getDate() - 1);
     }
     return streak;
   }
@@ -1141,7 +1421,9 @@ const Storage = (function() {
     getWeekNumber, isToday, isDateOverdue, getWeekStart,
     getRepeatingCompletions, saveRepeatingCompletions, isRepeatingTaskCompletedOnDate,
     setRepeatingTaskCompletedOnDate, pruneRepeatingCompletions,
-    onSubtaskCompleted, _notifySubtaskCompleted
+    onSubtaskCompleted, _notifySubtaskCompleted,
+    getFlashcards, saveFlashcards, getDecks, saveDecks, getReviewLogs, saveReviewLogs,
+    addFlashcard, updateFlashcard, deleteFlashcard, getDeckBySubject, addReviewLog
   };
 })();
 

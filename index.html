@@ -52,6 +52,27 @@
       <p class="subtitle" id="date-display"></p>
     </header>
 
+    <!-- XP Progress Widget -->
+    <section class="xp-widget animate-fade-in stagger-0-5" style="margin-bottom: 2rem;">
+      <div class="card" style="padding: 1rem 1.5rem; background: rgba(var(--primary-rgb), 0.05); border-color: rgba(var(--primary-rgb), 0.2);">
+        <div class="flex items-center justify-between mb-xs">
+          <div class="flex items-center gap-sm">
+            <div id="xp-rank-icon" style="font-size: 1.25rem;">🛡️</div>
+            <div>
+              <div id="xp-rank-name" style="font-weight: 800; font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--primary);">Novice</div>
+              <div style="font-size: 0.75rem; color: var(--text-muted);">Level <span id="xp-level">1</span></div>
+            </div>
+          </div>
+          <div style="text-align: right;">
+            <div id="xp-value-display" style="font-weight: 700; font-size: 0.875rem; color: white;">0 / 100 XP</div>
+          </div>
+        </div>
+        <div class="progress-bar-bg" style="height: 8px; background: rgba(255,255,255,0.05);">
+          <div id="xp-progress-fill" class="progress-bar-fill" style="width: 0%; background: var(--primary);"></div>
+        </div>
+      </div>
+    </section>
+
     <!-- Stats Row (Glowing Pills) -->
     <section class="stats-pill-row animate-fade-in stagger-1">
       <div class="stat-pill glowing-pill">
@@ -127,6 +148,31 @@
         <div id="hours-progress" class="progress-container" style="margin-top: var(--spacing-md);"></div>
       </section>
 
+      <!-- Today's Plan (Scheduler) -->
+      <section class="card animate-fade-in stagger-4 col-span-3 md:col-span-2">
+        <h2 class="flex items-center gap-md mb-lg" style="color: white;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M12 18h.01"/><path d="M16 18h.01"/></svg>
+          Today's Optimized Plan
+        </h2>
+        <div id="today-plan-list" class="flex flex-col gap-sm">
+          <!-- Populated by Scheduler -->
+        </div>
+      </section>
+
+      <!-- Daily Reflection (Dashboard) -->
+      <section id="reflection-card" class="card animate-fade-in stagger-4-5 col-span-3" style="display:none; background: linear-gradient(135deg, rgba(var(--primary-rgb), 0.1) 0%, rgba(var(--neon-purple-rgb), 0.1) 100%);">
+        <div class="flex items-center justify-between mb-md">
+          <h2 class="flex items-center gap-md" style="color: white; margin: 0;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+            Daily Reflection
+          </h2>
+          <button class="btn btn-ghost btn-sm" onclick="this.closest('#reflection-card').style.display='none'">Dismiss</button>
+        </div>
+        <p class="text-secondary mb-md">Take a moment to record your tactical progress and neural state.</p>
+        <textarea id="reflection-input" class="form-input mb-md" placeholder="How was your progress today? What could be optimized?" style="height:80px;"></textarea>
+        <button class="btn btn-primary" id="save-reflection-btn">Save Reflection</button>
+      </section>
+
       <!-- Quick Actions -->
       <section class="card animate-fade-in stagger-5">
         <h2 class="flex items-center gap-md mb-lg" style="color: white;">
@@ -153,6 +199,8 @@
   <script src="js/storage.js?v=v2025-05-03-02"></script>
   <script src="js/subtask-utils.js?v=v2025-05-03-02"></script>
   <script src="js/pwa-manager.js?v=v2025-05-03-02"></script>
+  <script src="js/achievements.js?v=v2025-05-03-02"></script>
+  <script src="js/scheduler.js?v=v2025-05-03-02"></script>
   <script src="js/app.js?v=v2025-05-03-02"></script>
   
   <script>
@@ -235,6 +283,65 @@
         `).join('');
       }
 
+      function updateXPWidget() {
+        const xpState = Storage.loadData(Storage.KEYS.XP_STATE, Storage.DEFAULTS.xpState);
+        const level = Achievements.calculateLevel(xpState.totalXP);
+        const rank = Achievements.getRank(xpState.totalXP);
+
+        const currentLevelXP = Achievements.getXPForLevel(level);
+        const nextLevelXP = Achievements.getXPForLevel(level + 1);
+        const xpInLevel = xpState.totalXP - currentLevelXP;
+        const xpRequired = nextLevelXP - currentLevelXP;
+        const percentage = Math.min(100, Math.round((xpInLevel / xpRequired) * 100));
+
+        document.getElementById('xp-level').textContent = level;
+        document.getElementById('xp-rank-name').textContent = rank.title;
+        document.getElementById('xp-rank-name').style.color = rank.color;
+        document.getElementById('xp-value-display').textContent = `${xpState.totalXP} / ${nextLevelXP} XP`;
+        document.getElementById('xp-progress-fill').style.width = `${percentage}%`;
+        document.getElementById('xp-progress-fill').style.background = rank.color;
+
+        const rankIcons = {
+          'Novice': '🛡️',
+          'Apprentice': '⚔️',
+          'Scholar': '📜',
+          'Sage': '✨',
+          'Archmage': '🔮',
+          'Transcendent': '💎'
+        };
+        document.getElementById('xp-rank-icon').textContent = rankIcons[rank.title] || '🛡️';
+      }
+
+      function updateTodayPlan() {
+        const plan = Scheduler.generatePlan();
+        const planList = document.getElementById('today-plan-list');
+
+        if (plan.length === 0) {
+          planList.innerHTML = '<p class="text-secondary text-center py-md">No sessions scheduled for today. Rest and recover!</p>';
+          return;
+        }
+
+        planList.innerHTML = plan.map(block => {
+          let icon = '🎯';
+          if (block.type === 'srs') icon = '🃏';
+          if (block.type === 'subject_review') icon = '📖';
+
+          const href = block.taskId ? `timer.html?taskId=${block.taskId}` : 'timer.html';
+
+          return `
+            <a href="${href}" class="flex items-center gap-md p-sm hover-bg" style="text-decoration:none;border-radius:12px;border:1px solid rgba(255,255,255,0.05);background:rgba(255,255,255,0.02);">
+              <div style="font-size: 0.75rem; font-weight: 800; color: var(--primary); min-width: 80px;">${block.startTime} - ${block.endTime}</div>
+              <div style="font-size: 1.25rem;">${icon}</div>
+              <div class="flex-1">
+                <div style="font-size: 0.875rem; font-weight: 700; color: white;">${App.escapeHtml(block.label)}</div>
+                <div style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">${App.escapeHtml(block.subject || 'General')}</div>
+              </div>
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-muted);"><polyline points="9 18 15 12 9 6"/></svg>
+            </a>
+          `;
+        }).join('');
+      }
+
       function updateDeadlines() {
         const deadlinesEl = document.getElementById('deadlines-list');
         const upcomingTasks = Storage.getUpcomingTasks(7);
@@ -268,7 +375,37 @@
         updateProgress();
         updateMasteryOverview();
         updateDeadlines();
+        updateXPWidget();
+        updateTodayPlan();
+        checkReflectionStatus();
+        Achievements.init();
       }
+
+      function checkReflectionStatus() {
+        const now = new Date();
+        if (now.getHours() >= 21) {
+          const todayStr = Storage.formatDate(now);
+          const reflections = Storage.loadData(Storage.KEYS.REFLECTIONS, []);
+          if (!reflections.some(r => r.date === todayStr)) {
+            document.getElementById('reflection-card').style.display = 'block';
+          }
+        }
+      }
+
+      document.getElementById('save-reflection-btn')?.addEventListener('click', () => {
+        const text = document.getElementById('reflection-input').value.trim();
+        if (text) {
+          const reflections = Storage.loadData(Storage.KEYS.REFLECTIONS, []);
+          reflections.push({
+            date: Storage.formatDate(new Date()),
+            text: text,
+            timestamp: new Date().toISOString()
+          });
+          Storage.saveData(Storage.KEYS.REFLECTIONS, reflections);
+          App.showToast('Reflection stored in history', 'success');
+          document.getElementById('reflection-card').style.display = 'none';
+        }
+      });
       init();
 
       // Listen for task data changes and update stats in real-time
@@ -276,6 +413,8 @@
         updateStats();
         updateMasteryOverview();
         updateDeadlines();
+        updateXPWidget();
+        updateTodayPlan();
       });
     })();
   </script>

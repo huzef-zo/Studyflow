@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
+  <meta name="description" content="StudyFlow - Knowledge vault for study notes">
+  <meta name="theme-color" content="#0B0F19" media="(prefers-color-scheme: dark)">
+  <meta name="color-scheme" content="dark">
+
+  <!-- Standalone PWA Configuration -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="StudyFlow">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-touch-fullscreen" content="yes">
+
+  <link rel="icon" type="image/png" href="./icon-192.png">
+  <link rel="apple-touch-icon" href="./icon-192.png">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="msapplication-config" href="browserconfig.xml">
+  <meta name="msapplication-TileColor" content="#3B82F6">
+
+  <title>Notes - StudyFlow</title>
+  <link rel="stylesheet" href="css/style.css?v=v2025-05-03-02">
+  <style>
+    .notes-layout {
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      gap: var(--spacing-lg);
+      height: calc(100vh - 180px);
+    }
+
+    @media (max-width: 768px) {
+      .notes-layout {
+        grid-template-columns: 1fr;
+        height: auto;
+      }
+    }
+
+    .notes-sidebar {
+      background: rgba(255, 255, 255, 0.02);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .notes-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: var(--spacing-md);
+    }
+
+    .note-item {
+      padding: var(--spacing-md);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 1px solid transparent;
+      margin-bottom: var(--spacing-sm);
+    }
+
+    .note-item:hover {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .note-item.active {
+      background: var(--primary-glow);
+      border-color: var(--primary);
+    }
+
+    .note-editor {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-md);
+    }
+
+    .note-content-area {
+      flex: 1;
+      min-height: 400px;
+      font-family: inherit;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+  <div id="sidebar-container"></div>
+  <div id="bottom-nav-container"></div>
+
+  <main class="main-container">
+    <header class="page-header animate-fade-in">
+      <div class="flex items-center justify-between flex-wrap gap-md">
+        <div>
+          <h1 class="glowing-text">Knowledge Vault</h1>
+          <p class="subtitle">Secure storage for academic intelligence</p>
+        </div>
+        <button class="btn btn-primary" id="new-note-btn">
+          + New Entry
+        </button>
+      </div>
+    </header>
+
+    <div class="notes-layout animate-fade-in stagger-1">
+      <aside class="notes-sidebar">
+        <div class="p-md" style="border-bottom: 1px solid var(--border);">
+          <input type="text" id="search-notes" class="form-input" placeholder="Search vault...">
+        </div>
+        <div class="notes-list" id="notes-list">
+          <!-- Populated by JS -->
+        </div>
+      </aside>
+
+      <section class="note-editor" id="note-editor" style="display: none;">
+        <div class="flex items-center justify-between gap-md">
+          <input type="text" id="note-title" class="form-input" style="font-size: 1.5rem; font-weight: 800; border: none; background: none; padding-left: 0;" placeholder="Note Title">
+          <div class="flex items-center gap-sm">
+            <select id="note-subject" class="form-input" style="width: auto;"></select>
+            <button class="btn btn-danger btn-sm" id="delete-note-btn">Delete</button>
+            <button class="btn btn-primary" id="save-note-btn">Save</button>
+          </div>
+        </div>
+        <textarea id="note-content" class="form-input note-content-area" placeholder="Begin transmission... (Markdown supported)"></textarea>
+      </section>
+
+      <div id="empty-editor-state" class="flex-1 flex items-center justify-center card" style="background: rgba(255,255,255,0.01);">
+        <div class="text-center">
+          <div style="font-size: 3rem; color: var(--text-muted); margin-bottom: 1rem;">📑</div>
+          <h3 style="color: var(--text-muted);">Select or create an entry</h3>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="js/storage.js?v=v2025-05-03-02"></script>
+  <script src="js/subtask-utils.js?v=v2025-05-03-02"></script>
+  <script src="js/pwa-manager.js?v=v2025-05-03-02"></script>
+  <script src="js/app.js?v=v2025-05-03-02"></script>
+  <script src="js/notes.js?v=v2025-05-03-02"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      PWAManager.init();
+      Notes.init();
+    });
+  </script>
+</body>
+</html>

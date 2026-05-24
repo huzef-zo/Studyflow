@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
+  <meta name="description" content="StudyFlow - Spaced Repetition System (SRS) for effective learning">
+  <meta name="theme-color" content="#0B0F19" media="(prefers-color-scheme: dark)">
+  <meta name="color-scheme" content="dark">
+
+  <!-- Standalone PWA Configuration -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="StudyFlow">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-touch-fullscreen" content="yes">
+
+  <!-- Icons and Manifest -->
+  <link rel="icon" type="image/png" href="./icon-192.png">
+  <link rel="apple-touch-icon" href="./icon-192.png">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="msapplication-config" href="browserconfig.xml">
+  <meta name="msapplication-TileColor" content="#3B82F6">
+
+  <title>Flashcards - StudyFlow</title>
+  <link rel="stylesheet" href="css/style.css?v=v2025-05-03-02">
+  <style>
+    /* Flashcard Specific Styles */
+    .deck-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: var(--spacing-lg);
+    }
+
+    .deck-card {
+      position: relative;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .deck-card:hover {
+      transform: translateY(-4px);
+    }
+
+    /* Study Mode */
+    .study-container {
+      max-width: 600px;
+      margin: 0 auto;
+      perspective: 1000px;
+    }
+
+    .flashcard {
+      width: 100%;
+      height: 350px;
+      position: relative;
+      transition: transform 0.6s;
+      transform-style: preserve-3d;
+      cursor: pointer;
+    }
+
+    .flashcard.flipped {
+      transform: rotateY(180deg);
+    }
+
+    .card-face {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 2rem;
+      border-radius: var(--radius-xl);
+      background: var(--glass-bg);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .card-back {
+      transform: rotateY(180deg);
+    }
+
+    .rating-buttons {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-top: 2rem;
+    }
+
+    .rating-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      padding: 12px 8px;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+
+    .progress-bar-thin {
+      height: 4px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-bottom: 1rem;
+    }
+
+    .progress-fill-thin {
+      height: 100%;
+      background: var(--primary);
+      transition: width 0.3s ease;
+    }
+  </style>
+</head>
+<body>
+  <div id="sidebar-container"></div>
+  <div id="bottom-nav-container"></div>
+
+  <main class="main-container">
+    <header class="page-header animate-fade-in">
+      <div class="flex items-center justify-between flex-wrap gap-md">
+        <div>
+          <h1 class="glowing-text" id="view-title">Knowledge Decks</h1>
+          <p class="subtitle" id="view-subtitle">Spaced repetition for long-term retention</p>
+        </div>
+        <div class="flex items-center gap-sm">
+          <button class="btn btn-secondary btn-sm" id="import-csv-btn">Import</button>
+          <button class="btn btn-primary" id="add-card-btn">
+            + New Card
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Deck Overview -->
+    <section id="deck-view" class="animate-fade-in stagger-1">
+      <div class="deck-grid" id="deck-list">
+        <!-- Populated by JS -->
+      </div>
+    </section>
+
+    <!-- Study Mode (Hidden by default) -->
+    <section id="study-view" style="display: none;" class="animate-fade-in">
+      <div class="flex items-center justify-between mb-lg">
+        <button class="btn btn-ghost btn-icon" id="exit-study-btn">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" x2="5" y1="12" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        </button>
+        <div id="study-progress-text" style="font-weight: 700; font-size: 0.875rem;">Card 1 of 10</div>
+        <div style="width: 40px;"></div>
+      </div>
+
+      <div class="study-container">
+        <div class="progress-bar-thin">
+          <div class="progress-fill-thin" id="study-progress-bar" style="width: 0%;"></div>
+        </div>
+
+        <div class="flashcard" id="current-card">
+          <div class="card-face card-front">
+            <div id="card-front-text" style="font-size: 1.25rem; font-weight: 600;"></div>
+          </div>
+          <div class="card-face card-back">
+            <div id="card-back-text" style="font-size: 1.25rem; font-weight: 600;"></div>
+          </div>
+        </div>
+
+        <div id="flip-hint" class="text-center mt-lg text-secondary" style="font-size: 0.875rem; font-weight: 500;">
+          Tap card to reveal answer
+        </div>
+
+        <div class="rating-buttons" id="rating-controls" style="display: none;">
+          <button class="btn btn-secondary rating-btn" data-rating="0" style="border-bottom: 3px solid #ef4444;">
+            <span>Again</span>
+          </button>
+          <button class="btn btn-secondary rating-btn" data-rating="1" style="border-bottom: 3px solid #f97316;">
+            <span>Hard</span>
+          </button>
+          <button class="btn btn-secondary rating-btn" data-rating="2" style="border-bottom: 3px solid #3b82f6;">
+            <span>Good</span>
+          </button>
+          <button class="btn btn-secondary rating-btn" data-rating="3" style="border-bottom: 3px solid #22c55e;">
+            <span>Easy</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Session Summary (Hidden by default) -->
+    <section id="summary-view" style="display: none;" class="animate-fade-in text-center">
+      <div class="card" style="max-width: 500px; margin: 2rem auto;">
+        <div class="stat-icon icon-glow-success" style="margin: 0 auto 1.5rem; background: var(--success-glow); color: var(--success);">
+          <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <h2 class="mb-sm">Session Complete!</h2>
+        <p class="text-secondary mb-lg">You've mastered more knowledge today.</p>
+
+        <div class="grid-3 mb-xl">
+          <div>
+            <div id="summary-reviewed" style="font-size: 1.5rem; font-weight: 800;">0</div>
+            <div style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">Reviewed</div>
+          </div>
+          <div>
+            <div id="summary-ease" style="font-size: 1.5rem; font-weight: 800;">0</div>
+            <div style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">Avg Ease</div>
+          </div>
+          <div>
+            <div id="summary-xp" style="font-size: 1.5rem; font-weight: 800;">0</div>
+            <div style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">XP Gained</div>
+          </div>
+        </div>
+
+        <button class="btn btn-primary w-full" id="finish-summary-btn">Back to Decks</button>
+      </div>
+    </section>
+  </main>
+
+  <!-- Scripts -->
+  <script src="js/storage.js?v=v2025-05-03-02"></script>
+  <script src="js/subtask-utils.js?v=v2025-05-03-02"></script>
+  <script src="js/pwa-manager.js?v=v2025-05-03-02"></script>
+  <script src="js/app.js?v=v2025-05-03-02"></script>
+  <script src="js/flashcards.js?v=v2025-05-03-02"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      PWAManager.init();
+      Flashcards.init();
+    });
+  </script>
+</body>
+</html>
