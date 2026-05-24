@@ -3154,37 +3154,68 @@ body.focus-mode {
   overflow: hidden;
 }
 
-.ambient-timer {
-  font-size: 120px;
-  font-weight: 800;
-  font-family: monospace;
-  margin-bottom: 2rem;
-  z-index: 2;
-  text-shadow: 0 0 30px var(--primary-glow);
-}
-
 .ambient-label {
+  position: absolute;
+  top: 15%;
   font-size: 1.5rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.2em;
   color: var(--primary);
-  margin-bottom: 1rem;
   z-index: 2;
 }
 
-.ambient-quote {
-  position: absolute;
-  bottom: 10%;
-  left: 0;
-  width: 100%;
-  font-size: 1.25rem;
-  font-style: italic;
-  color: var(--text-secondary);
-  max-width: 100%;
-  text-align: center;
-  padding: 0 2rem;
-  z-index: 2;
+body.ambient-mode .timer-ring-container {
+  z-index: 2001;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  margin: 0;
+  width: min(90vw, 500px);
+  height: min(90vw, 500px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+body.ambient-mode .timer-ring-svg {
+  position: absolute !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) rotate(-90deg) !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+body.ambient-mode .timer-center {
+  position: absolute !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  margin: 0 !important;
+  display: flex !important;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+body.ambient-mode .timer-main-time {
+  font-size: clamp(4rem, 15vw, 8rem) !important;
+  margin: 0 !important;
+  animation: none !important;
+}
+
+body.ambient-mode .page-header,
+body.ambient-mode .narrow-layout > section:not(.timer-ring-container),
+body.ambient-mode #sidebar-container,
+body.ambient-mode #bottom-nav-container,
+body.ambient-mode .timer-status-badge,
+body.ambient-mode .active-mission,
+body.ambient-mode .timer-task-name,
+body.ambient-mode #cycle-indicator,
+body.ambient-mode .timer-controls-fab {
+  display: none !important;
 }
 
 .ambient-breathing {

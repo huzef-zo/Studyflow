@@ -469,6 +469,8 @@ const Timer = (function() {
 
   function toggleAmbientMode() {
     isAmbientMode = !isAmbientMode;
+    document.body.classList.toggle('ambient-mode', isAmbientMode);
+
     if (isAmbientMode) {
       if (document.documentElement.requestFullscreen) {
         document.documentElement.requestFullscreen().catch(() => {});
@@ -487,7 +489,6 @@ const Timer = (function() {
   }
 
   function renderAmbientOverlay() {
-    const quote = quotes[Math.floor(Math.random() * quotes.length)];
     const labelMap = { work: 'Deep Work', short_break: 'Cooldown', long_break: 'Deep Rest' };
 
     const overlay = document.createElement('div');
@@ -498,8 +499,6 @@ const Timer = (function() {
       </button>
       <div class="ambient-breathing"></div>
       <div class="ambient-label" id="ambient-label">${labelMap[currentSessionType]}</div>
-      <div class="ambient-timer" id="ambient-timer">00:00</div>
-      <div class="ambient-quote">${quote}</div>
     `;
 
     overlay.querySelector('.ambient-close').onclick = toggleAmbientMode;
@@ -515,9 +514,6 @@ const Timer = (function() {
     const secs = timeRemaining % 60;
     const timeStr = `${mins.toString().padStart(2,'0')}:${secs.toString().padStart(2,'0')}`;
     elements.timerDisplay.textContent = timeStr;
-
-    const ambientTimer = document.getElementById('ambient-timer');
-    if (ambientTimer) ambientTimer.textContent = timeStr;
 
     const ambientLabel = document.getElementById('ambient-label');
     if (ambientLabel) {
