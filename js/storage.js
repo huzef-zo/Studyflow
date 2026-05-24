@@ -226,6 +226,19 @@ const Storage = (function() {
       goals: getGoals(),
       settings: getSettings(),
       repeatingCompletions: getRepeatingCompletions(),
+      flashcards: getFlashcards(),
+      decks: getDecks(),
+      reviewLogs: getReviewLogs(),
+      achievements: getAchievements(),
+      xpState: getXPState(),
+      studyBlocks: getStudyBlocks(),
+      studyWindows: getStudyWindows(),
+      exams: getExams(),
+      habits: getHabits(),
+      notes: getNotes(),
+      timeBlocks: getTimeBlocks(),
+      reflections: getReflections(),
+      theme: getTheme(),
       exported_at: new Date().toISOString(),
       version: '1.0.0'
     };
@@ -351,14 +364,23 @@ const Storage = (function() {
       }
 
       if (Array.isArray(data.habits)) {
-        const safeHabits = data.habits.map(h => ({
-          id: String(h.id || generateId()),
-          title: String(h.title || 'Untitled Habit'),
-          icon: String(h.icon || '🎯'),
-          streak: Number(h.streak || 0),
-          lastCompleted: h.lastCompleted ? String(h.lastCompleted) : null,
-          createdAt: String(h.createdAt || new Date().toISOString())
-        }));
+        const safeHabits = data.habits.map(h => {
+          const habit = {
+            id: String(h.id || generateId()),
+            title: String(h.title || 'Untitled Habit'),
+            icon: String(h.icon || '🎯'),
+            streak: Number(h.streak || 0),
+            lastCompleted: h.lastCompleted ? String(h.lastCompleted) : null,
+            createdAt: String(h.createdAt || new Date().toISOString()),
+            completions: {}
+          };
+          if (h.completions && typeof h.completions === 'object') {
+            Object.keys(h.completions).forEach(k => {
+              if (h.completions[k] === true) habit.completions[String(k)] = true;
+            });
+          }
+          return habit;
+        });
         saveData(KEYS.HABITS, safeHabits);
       }
 
@@ -431,6 +453,46 @@ const Storage = (function() {
         saveData(KEYS.REFLECTIONS, safeReflections);
       }
 
+      if (Array.isArray(data.studyBlocks)) {
+        const safeSB = data.studyBlocks.map(b => ({
+          id: String(b.id || generateId()),
+          title: String(b.title || 'Untitled Block'),
+          startTime: String(b.startTime),
+          endTime: String(b.endTime),
+          dayOfWeek: Number(b.dayOfWeek),
+          subject: String(b.subject || 'Other'),
+          createdAt: String(b.createdAt || new Date().toISOString())
+        }));
+        saveData(KEYS.STUDY_BLOCKS, safeSB);
+      }
+
+      if (Array.isArray(data.studyWindows)) {
+        const safeSW = data.studyWindows.map(w => ({
+          id: String(w.id || generateId()),
+          dayOfWeek: Number(w.dayOfWeek),
+          startTime: String(w.startTime),
+          endTime: String(w.endTime),
+          label: String(w.label || 'Study Session')
+        }));
+        saveData(KEYS.STUDY_WINDOWS, safeSW);
+      }
+
+      if (Array.isArray(data.timeBlocks)) {
+        const safeTB = data.timeBlocks.map(b => ({
+          id: String(b.id || generateId()),
+          date: String(b.date),
+          startTime: String(b.startTime),
+          endTime: String(b.endTime),
+          label: String(b.label || 'Time Block'),
+          createdAt: String(b.createdAt || new Date().toISOString())
+        }));
+        saveData(KEYS.TIME_BLOCKS, safeTB);
+      }
+
+      if (data.theme && typeof data.theme === 'string') {
+        saveData(KEYS.THEME, data.theme);
+      }
+
       return true;
     } catch (error) {
       console.error('Import error:', error);
@@ -490,6 +552,16 @@ const Storage = (function() {
   function saveUser(user) { return saveData(KEYS.USER, user); }
   function updateUserName(name) { const u = getUser(); u.name = name; return saveUser(u); }
   function updateUserEmail(email) { const u = getUser(); u.email = email; return saveUser(u); }
+  function getAchievements() { return [...loadData(KEYS.ACHIEVEMENTS, DEFAULTS.achievements)]; }
+  function getXPState() { return { ...loadData(KEYS.XP_STATE, DEFAULTS.xpState) }; }
+  function getStudyBlocks() { return [...loadData(KEYS.STUDY_BLOCKS, DEFAULTS.studyBlocks)]; }
+  function getStudyWindows() { return [...loadData(KEYS.STUDY_WINDOWS, DEFAULTS.studyWindows)]; }
+  function getExams() { return [...loadData(KEYS.EXAMS, DEFAULTS.exams)]; }
+  function getHabits() { return [...loadData(KEYS.HABITS, DEFAULTS.habits)]; }
+  function getNotes() { return [...loadData(KEYS.NOTES, DEFAULTS.notes)]; }
+  function getTimeBlocks() { return [...loadData(KEYS.TIME_BLOCKS, DEFAULTS.timeBlocks)]; }
+  function getReflections() { return [...loadData(KEYS.REFLECTIONS, DEFAULTS.reflections)]; }
+  function getTheme() { return loadData(KEYS.THEME, DEFAULTS.theme); }
 
   // ── Tasks ───────────────────────────────────────────────────────────────────
 
@@ -1417,6 +1489,8 @@ const Storage = (function() {
     getSettings, saveSettings, updateSetting,
     getTimerState, saveTimerState, clearTimerState, completeTimerSession,
     getStats, calculateStreak, calculateBestStreak,
+    getAchievements, getXPState, getStudyBlocks, getStudyWindows, getExams,
+    getHabits, getNotes, getTimeBlocks, getReflections, getTheme,
     generateId, formatDate, formatDisplayDate, getRelativeDays, getDaysUntil,
     getWeekNumber, isToday, isDateOverdue, getWeekStart,
     getRepeatingCompletions, saveRepeatingCompletions, isRepeatingTaskCompletedOnDate,
