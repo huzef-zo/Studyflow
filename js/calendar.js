@@ -23,7 +23,8 @@ const Calendar = (function() {
       nextMonthBtn: document.getElementById('next-month'),
       todayBtn: document.getElementById('today-btn'),
       selectedDateTitle: document.getElementById('selected-date-title'),
-      dayTasks: document.getElementById('day-tasks')
+      dayTasks: document.getElementById('day-tasks'),
+      dayTimeline: document.getElementById('day-timeline')
     };
   }
 
@@ -149,11 +150,14 @@ const Calendar = (function() {
     if (!selectedDate) {
       elements.selectedDateTitle.textContent = 'Select a date';
       elements.dayTasks.innerHTML = App.createEmptyStateHtml({ title: 'Select a Date', text: 'Choose a date from the calendar to view scheduled missions.', icon: 'calendar', padding: '2rem' });
+      if (elements.dayTimeline) elements.dayTimeline.innerHTML = '';
       return;
     }
 
     const date = new Date(selectedDate);
     elements.selectedDateTitle.textContent = date.toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric', year:'numeric' });
+
+    renderDayTimeline(selectedDate);
 
     const tasks = getTasksForDate(selectedDate);
     if (tasks.length === 0) {
@@ -322,6 +326,45 @@ const Calendar = (function() {
 
   function prevMonth() { currentDate.setMonth(currentDate.getMonth() - 1); renderCalendar(); }
   function nextMonth() { currentDate.setMonth(currentDate.getMonth() + 1); renderCalendar(); }
+
+  function renderDayTimeline(dateStr) {
+    if (!elements.dayTimeline) return;
+
+    const timeBlocks = Storage.loadData(Storage.KEYS.TIME_BLOCKS, Storage.DEFAULTS.timeBlocks || [])
+      .filter(b => b.date === dateStr);
+
+    let html = '<div style="position:relative;height:480px;background:rgba(255,255,255,0.02);border-radius:12px;overflow-y:auto;overflow-x:hidden;border:1px solid var(--border);">';
+
+    // Draw hour lines
+    for (let i = 0; i < 24; i++) {
+      html += `<div style="position:absolute;top:${i * 40}px;left:0;width:100%;height:1px;background:rgba(255,255,255,0.05);display:flex;align-items:center;">
+        <span style="font-size:9px;color:rgba(255,255,255,0.2);padding-left:4px;">${i.toString().padStart(2, '0')}:00</span>
+      </div>`;
+    }
+
+    // Draw blocks
+    timeBlocks.forEach(block => {
+      const startParts = block.startTime.split(':');
+      const endParts = block.endTime.split(':');
+      const startTop = (parseInt(startParts[0]) * 60 + parseInt(startParts[1])) / 60 * 40;
+      const endTop = (parseInt(endParts[0]) * 60 + parseInt(endParts[1])) / 60 * 40;
+      const height = Math.max(20, endTop - startTop);
+
+      html += `
+        <div class="card" style="position:absolute;top:${startTop}px;left:50px;width:calc(100% - 60px);height:${height}px;background:var(--primary-glow);border-left:3px solid var(--primary);padding:4px 8px;font-size:11px;overflow:hidden;margin:0;">
+          <div style="font-weight:700;color:white;">${App.escapeHtml(block.label)}</div>
+          <div style="font-size:9px;opacity:0.7;color:white;">${block.startTime} - ${block.endTime}</div>
+        </div>
+      `;
+    });
+
+    if (timeBlocks.length === 0) {
+      html += '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-muted);font-size:0.75rem;">No time blocks for this day</div>';
+    }
+
+    html += '</div>';
+    elements.dayTimeline.innerHTML = html;
+  }
 
   function goToToday() {
     currentDate = new Date();

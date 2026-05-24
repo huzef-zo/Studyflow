@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
+  <meta name="description" content="StudyFlow - Exam countdown and battle preparation">
+  <meta name="theme-color" content="#0B0F19" media="(prefers-color-scheme: dark)">
+  <meta name="color-scheme" content="dark">
+
+  <!-- Standalone PWA Configuration -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="StudyFlow">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-touch-fullscreen" content="yes">
+
+  <link rel="icon" type="image/png" href="./icon-192.png">
+  <link rel="apple-touch-icon" href="./icon-192.png">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="msapplication-config" href="browserconfig.xml">
+  <meta name="msapplication-TileColor" content="#3B82F6">
+
+  <title>Exams - StudyFlow</title>
+  <link rel="stylesheet" href="css/style.css?v=v2025-05-03-02">
+  <style>
+    .exam-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: var(--spacing-lg);
+    }
+
+    .exam-card {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .exam-countdown {
+      font-size: 2.5rem;
+      font-weight: 800;
+      margin-bottom: 0.5rem;
+    }
+
+    .exam-status-bar {
+      height: 4px;
+      width: 100%;
+      position: absolute;
+      bottom: 0;
+      left: 0;
+    }
+
+    /* Battle Prep Overlay */
+    .battle-prep-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle at center, #1a0505 0%, #0B0F19 100%);
+      z-index: 3000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      transition: all 0.5s ease;
+    }
+
+    .battle-timer {
+      font-size: 150px;
+      font-weight: 900;
+      text-shadow: 0 0 40px rgba(239, 68, 68, 0.5);
+      color: #ef4444;
+      font-family: monospace;
+    }
+
+    .battle-title {
+      font-size: 2rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.3em;
+      margin-bottom: 2rem;
+    }
+  </style>
+</head>
+<body>
+  <div id="sidebar-container"></div>
+  <div id="bottom-nav-container"></div>
+
+  <main class="main-container">
+    <header class="page-header animate-fade-in">
+      <div class="flex items-center justify-between flex-wrap gap-md">
+        <div>
+          <h1 class="glowing-text">Battle Readiness</h1>
+          <p class="subtitle">Tactical countdown to examination events</p>
+        </div>
+        <button class="btn btn-primary" id="add-exam-btn">
+          + Add Exam
+        </button>
+      </div>
+    </header>
+
+    <section id="exam-view" class="animate-fade-in stagger-1">
+      <div class="exam-grid" id="exam-list">
+        <!-- Populated by JS -->
+      </div>
+    </section>
+  </main>
+
+  <script src="js/storage.js?v=v2025-05-03-02"></script>
+  <script src="js/subtask-utils.js?v=v2025-05-03-02"></script>
+  <script src="js/pwa-manager.js?v=v2025-05-03-02"></script>
+  <script src="js/app.js?v=v2025-05-03-02"></script>
+  <script src="js/exams.js?v=v2025-05-03-02"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      PWAManager.init();
+      Exams.init();
+    });
+  </script>
+</body>
+</html>

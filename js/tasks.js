@@ -155,7 +155,12 @@ const Tasks = (function() {
     elements.taskList.innerHTML = tasks.sort((a, b) => {
       const aDone = a.type === 'repeating' ? Storage.isRepeatingTaskCompletedOnDate(a.id, todayStr) : a.completed;
       const bDone = b.type === 'repeating' ? Storage.isRepeatingTaskCompletedOnDate(b.id, todayStr) : b.completed;
+
+      // Sort priority: 1. Completion status, 2. sortOrder, 3. Overdue status, 4. Due date
       if (aDone !== bDone) return aDone ? 1 : -1;
+      if ((a.sortOrder || 0) !== (b.sortOrder || 0)) return (a.sortOrder || 0) - (b.sortOrder || 0);
+      if (a._isOverdue && !b._isOverdue) return -1;
+      if (!a._isOverdue && b._isOverdue) return 1;
       return new Date(a.dueDate) - new Date(b.dueDate);
     }).map((task, index) => {
       const isDone = task.type === 'repeating' ? Storage.isRepeatingTaskCompletedOnDate(task.id, todayStr) : task.completed;
@@ -164,7 +169,7 @@ const Tasks = (function() {
       const isExpanded = expandedTasks.has(task.id);
       const staggerClass = index < 5 ? `stagger-${index + 1}` : '';
       return `
-        <div class="task-card ${priorityClass} ${isDone ? 'completed' : ''} animate-fade-in ${staggerClass}" data-id="${App.escapeHtml(task.id)}">
+        <div class="task-card ${priorityClass} ${isDone ? 'completed' : ''} animate-fade-in ${staggerClass}" data-id="${App.escapeHtml(task.id)}" draggable="${!isDone}">
           <div class="swipe-hint">Swipe to complete</div>
           <div class="flex items-start gap-md">
             <div class="task-checkbox ${isDone ? 'checked' : ''}" data-id="${App.escapeHtml(task.id)}" style="margin-top:4px;" tabindex="0" role="checkbox" aria-checked="${isDone}" aria-label="${isDone ? 'Mark as incomplete' : 'Mark as complete'}: ${App.escapeHtml(task.title)}"></div>
@@ -172,6 +177,7 @@ const Tasks = (function() {
               <div class="task-header-inline">
                 <div class="task-title-text" style="${isDone ? 'text-decoration:line-through;opacity:0.5;' : ''}">${App.escapeHtml(task.title)}</div>
                 <div class="subject-pill" style="--tag-color:${App.hexToRgb(subjectColor)};color:white;background:rgba(255,255,255,0.05);border-color:rgba(255,255,255,0.1);">${App.escapeHtml(task.subject)}</div>
+                ${task._isOverdue ? '<span class="overdue-badge">OVERDUE</span>' : ''}
                 ${task.priority === 'critical' ? '<span class="badge" style="--tag-color:var(--danger-rgb);font-size:9px;color:white;">Critical</span>' : ''}
               </div>
               <div class="flex items-center justify-between">
@@ -331,6 +337,57 @@ const Tasks = (function() {
     });
     elements.taskList.querySelectorAll('.del-task').forEach(btn => {
       btn.onclick = (e) => { e.stopPropagation(); deleteTask(btn.dataset.id); };
+    });
+
+    // ── Drag and Drop Reordering ────────────────────────────────────────────
+    elements.taskList.querySelectorAll('.task-card[draggable="true"]').forEach(card => {
+      card.addEventListener('dragstart', (e) => {
+        card.classList.add('dragging');
+        e.dataTransfer.setData('text/plain', card.dataset.id);
+        e.dataTransfer.effectAllowed = 'move';
+      });
+
+      card.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        const dragging = elements.taskList.querySelector('.dragging');
+        if (dragging && dragging !== card) {
+          card.classList.add('drag-over');
+        }
+      });
+
+      card.addEventListener('dragleave', () => {
+        card.classList.remove('drag-over');
+      });
+
+      card.addEventListener('dragend', () => {
+        card.classList.remove('dragging');
+        elements.taskList.querySelectorAll('.task-card').forEach(c => c.classList.remove('drag-over'));
+      });
+
+      card.addEventListener('drop', (e) => {
+        e.preventDefault();
+        card.classList.remove('drag-over');
+        const draggedId = e.dataTransfer.getData('text/plain');
+        const targetId = card.dataset.id;
+
+        if (draggedId === targetId) return;
+
+        const tasks = Storage.getTasks();
+        const draggedIndex = tasks.findIndex(t => t.id === draggedId);
+        const targetIndex = tasks.findIndex(t => t.id === targetId);
+
+        if (draggedIndex !== -1 && targetIndex !== -1) {
+          const [draggedTask] = tasks.splice(draggedIndex, 1);
+          tasks.splice(targetIndex, 0, draggedTask);
+
+          // Re-assign sortOrder based on new array positions
+          tasks.forEach((t, i) => t.sortOrder = i);
+
+          Storage.saveTasks(tasks);
+          renderTasks();
+        }
+      });
     });
 
     // ── Swipe to complete (mobile) ──────────────────────────────────────────

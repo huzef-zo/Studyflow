@@ -22,6 +22,8 @@ const Goals = (function() {
       hoursGoalMax: document.getElementById('hours-goal-max'),
       hoursProgressBar: document.getElementById('hours-donut-fill'),
       hoursPercent: document.getElementById('hours-percent'),
+      streakCount: document.getElementById('streak-count'),
+      freezeCount: document.getElementById('freeze-count'),
       weekDates: document.getElementById('week-dates'),
       dailyProgress: document.getElementById('daily-progress'),
       editGoalsBtn: document.getElementById('edit-goals-btn'),
@@ -104,6 +106,13 @@ const Goals = (function() {
     if (elements.hoursPercent) {
       elements.hoursPercent.textContent = `${hoursPercent}%`;
     }
+
+    if (elements.streakCount) {
+      elements.streakCount.textContent = stats.streak;
+    }
+    if (elements.freezeCount) {
+      elements.freezeCount.textContent = goals.freezeCount || 0;
+    }
   }
 
   /**
@@ -182,14 +191,17 @@ const Goals = (function() {
     });
     
     // Use goals from storage
-    const dailyTaskTarget = goals.daily_tasks;
-    const dailyMinuteTarget = goals.daily_hours * 60;
     const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     
     let html = '';
     Object.keys(dailyData).forEach((dateStr, index) => {
       const day = dailyData[dateStr];
-      
+      const d = new Date(dateStr + 'T00:00:00');
+      const isWeekend = d.getDay() === 0 || d.getDay() === 6;
+
+      const dailyTaskTarget = isWeekend ? goals.weekend_daily_tasks : goals.daily_tasks;
+      const dailyMinuteTarget = (isWeekend ? goals.weekend_daily_hours : goals.daily_hours) * 60;
+
       // Task progress
       const taskPercent = dailyTaskTarget > 0 
         ? Math.min(100, (day.tasks / dailyTaskTarget) * 100) 
@@ -313,6 +325,32 @@ const Goals = (function() {
                  value="${goals.daily_hours}"
                  required>
         </div>
+
+        <h4 class="mb-sm mt-md">Weekend Goals</h4>
+        <div class="form-group">
+          <label class="form-label" for="weekend-daily-tasks">Weekend Task Goal</label>
+          <input type="number"
+                 class="form-input"
+                 id="weekend-daily-tasks"
+                 name="weekend_daily_tasks"
+                 min="1"
+                 max="50"
+                 value="${goals.weekend_daily_tasks || 1}"
+                 required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="weekend-daily-hours">Weekend Study Hours Goal</label>
+          <input type="number"
+                 class="form-input"
+                 id="weekend-daily-hours"
+                 name="weekend_daily_hours"
+                 min="1"
+                 max="24"
+                 step="0.5"
+                 value="${goals.weekend_daily_hours || 1.5}"
+                 required>
+        </div>
       </form>
     `;
     
@@ -335,7 +373,9 @@ const Goals = (function() {
         weekly_tasks: parseInt(data.weekly_tasks, 10),
         weekly_hours: parseFloat(data.weekly_hours),
         daily_tasks: parseInt(data.daily_tasks, 10),
-        daily_hours: parseFloat(data.daily_hours)
+        daily_hours: parseFloat(data.daily_hours),
+        weekend_daily_tasks: parseInt(data.weekend_daily_tasks, 10),
+        weekend_daily_hours: parseFloat(data.weekend_daily_hours)
       });
       
       App.showToast('Goals updated!', 'success');

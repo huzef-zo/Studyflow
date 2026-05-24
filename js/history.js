@@ -20,7 +20,8 @@ const History = (function() {
       masteryOverview: document.getElementById('mastery-overview'),
       tasksProgress: document.getElementById('tasks-progress'),
       hoursProgress: document.getElementById('hours-progress'),
-      progressPercentage: document.getElementById('progress-percentage')
+      progressPercentage: document.getElementById('progress-percentage'),
+      reflectionsLog: document.getElementById('reflections-log')
     };
   }
 
@@ -42,6 +43,7 @@ const History = (function() {
     renderFrequencyGraph();
     updateMasteryOverview();
     updateWeeklyProgress();
+    renderReflections();
   }
 
   function getCutoffDate() {
@@ -262,12 +264,12 @@ const History = (function() {
     const activityData = {};
     for (let i = 0; i < daysCount; i++) {
       const date = new Date(today); date.setDate(date.getDate() - i);
-      activityData[Storage.formatDate(date)] = 0;
+      activityData[Storage.formatDate(date)] = { count: 0, notes: [] };
     }
     tasks.forEach(t => {
       if (t.type !== 'repeating' && t.completed && t.completedAt) {
         const dateStr = Storage.formatDate(new Date(t.completedAt));
-        if (activityData.hasOwnProperty(dateStr)) activityData[dateStr] += 1;
+        if (activityData.hasOwnProperty(dateStr)) activityData[dateStr].count += 1;
       }
     });
 
@@ -275,17 +277,41 @@ const History = (function() {
     Object.keys(repeatingCompletions).forEach(key => {
       const dateStr = key.slice(-10);
       if (activityData.hasOwnProperty(dateStr)) {
-        activityData[dateStr] += 1;
+        activityData[dateStr].count += 1;
       }
     });
 
     sessions.forEach(s => {
       if (s.type === 'work' && s.completedAt) {
         const dateStr = Storage.formatDate(new Date(s.completedAt));
-        if (activityData.hasOwnProperty(dateStr)) activityData[dateStr] += Math.max(1, Math.round(s.duration / 15));
+        if (activityData.hasOwnProperty(dateStr)) {
+          activityData[dateStr].count += Math.max(1, Math.round(s.duration / 15));
+          if (s.notes) activityData[dateStr].notes.push(s.notes);
+        }
       }
     });
     return activityData;
+  }
+
+  function renderReflections() {
+    if (!elements.reflectionsLog) return;
+    const reflections = Storage.loadData(Storage.KEYS.REFLECTIONS, Storage.DEFAULTS.reflections || []);
+
+    if (reflections.length === 0) {
+      elements.reflectionsLog.innerHTML = '<p class="text-secondary text-center">No tactical reflections recorded yet.</p>';
+      return;
+    }
+
+    elements.reflectionsLog.innerHTML = reflections.sort((a, b) => new Date(b.date) - new Date(a.date)).map(r => `
+      <div class="card" style="padding: 1rem; background: rgba(255,255,255,0.02);">
+        <div style="font-size: 0.75rem; font-weight: 800; color: var(--primary); text-transform: uppercase; margin-bottom: 0.5rem;">
+          ${Storage.formatDisplayDate(r.date)}
+        </div>
+        <div style="font-size: 0.875rem; color: white; line-height: 1.5;">
+          ${App.escapeHtml(r.text)}
+        </div>
+      </div>
+    `).join('');
   }
 
   function renderFrequencyGraph() {
@@ -312,9 +338,10 @@ const History = (function() {
     const days = [];
     for (let i = daysCount - 1; i >= 0; i--) {
       const date = new Date(today); date.setDate(today.getDate() - i);
-      const count = data[Storage.formatDate(date)] || 0;
+      const dayData = data[Storage.formatDate(date)] || { count: 0, notes: [] };
+      const count = dayData.count;
       if (count > maxCount) maxCount = count;
-      days.push({ date, count });
+      days.push({ date, count, notes: dayData.notes });
     }
 
     // FIX 5: Guard against empty or all-zero data — prevents crash on first launch
@@ -333,7 +360,8 @@ const History = (function() {
       x: paddingX + (i * (chartWidth / (daysCount - 1))),
       y: height - paddingY - (day.count / maxCount * chartHeight),
       count: day.count,
-      date: day.date
+      date: day.date,
+      notes: day.notes
     }));
 
     // Build smoothed line path
@@ -362,7 +390,10 @@ const History = (function() {
           <line x1="${paddingX}" y1="${height-paddingY}" x2="${width-paddingX}" y2="${height-paddingY}" class="graph-grid-line"/>
           <path d="${areaPath}" fill="url(#areaGradient)" class="graph-area-enhanced"/>
           <path d="${linePath}" class="graph-line" fill="none" stroke="var(--primary)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-          ${points.map(p => `<circle cx="${p.x}" cy="${p.y}" r="4" class="graph-dot"><title>${p.count} activities on ${p.date.toLocaleDateString()}</title></circle>`).join('')}
+          ${points.map(p => {
+            const notesStr = p.notes && p.notes.length > 0 ? `\n\nNotes:\n- ${p.notes.join('\n- ')}` : '';
+            return `<circle cx="${p.x}" cy="${p.y}" r="4" class="graph-dot"><title>${p.count} activities on ${p.date.toLocaleDateString()}${App.escapeHtml(notesStr)}</title></circle>`;
+          }).join('')}
         </svg>
         <div class="graph-labels-x">
           ${days.filter((_, i) => i % 5 === 0 || i === daysCount - 1).map(day => {

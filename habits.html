@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
+  <meta name="description" content="StudyFlow - Habit tracker for consistent study routines">
+  <meta name="theme-color" content="#0B0F19" media="(prefers-color-scheme: dark)">
+  <meta name="color-scheme" content="dark">
+
+  <!-- Standalone PWA Configuration -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="StudyFlow">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-touch-fullscreen" content="yes">
+
+  <link rel="icon" type="image/png" href="./icon-192.png">
+  <link rel="apple-touch-icon" href="./icon-192.png">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="msapplication-config" href="browserconfig.xml">
+  <meta name="msapplication-TileColor" content="#3B82F6">
+
+  <title>Habits - StudyFlow</title>
+  <link rel="stylesheet" href="css/style.css?v=v2025-05-03-02">
+  <style>
+    .habit-grid {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-md);
+    }
+
+    .habit-card {
+      padding: 1.25rem;
+    }
+
+    .habit-row {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-md);
+    }
+
+    .habit-days {
+      display: flex;
+      gap: 6px;
+      margin-left: auto;
+    }
+
+    .habit-day {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.65rem;
+      font-weight: 800;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .habit-day.completed {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: white;
+      box-shadow: 0 0 10px var(--primary-glow);
+    }
+
+    .habit-day.today {
+      border-color: var(--primary);
+      border-width: 2px;
+    }
+  </style>
+</head>
+<body>
+  <div id="sidebar-container"></div>
+  <div id="bottom-nav-container"></div>
+
+  <main class="main-container">
+    <header class="page-header animate-fade-in">
+      <div class="flex items-center justify-between flex-wrap gap-md">
+        <div>
+          <h1 class="glowing-text">Habit Protocols</h1>
+          <p class="subtitle">Neural reinforcement via daily consistency</p>
+        </div>
+        <button class="btn btn-primary" id="add-habit-btn">
+          + Add Habit
+        </button>
+      </div>
+    </header>
+
+    <section id="habit-view" class="animate-fade-in stagger-1">
+      <div class="habit-grid" id="habit-list">
+        <!-- Populated by JS -->
+      </div>
+    </section>
+  </main>
+
+  <script src="js/storage.js?v=v2025-05-03-02"></script>
+  <script src="js/subtask-utils.js?v=v2025-05-03-02"></script>
+  <script src="js/pwa-manager.js?v=v2025-05-03-02"></script>
+  <script src="js/app.js?v=v2025-05-03-02"></script>
+  <script src="js/achievements.js?v=v2025-05-03-02"></script>
+  <script src="js/habits.js?v=v2025-05-03-02"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      PWAManager.init();
+      Habits.init();
+    });
+  </script>
+</body>
+</html>

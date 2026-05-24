@@ -49,6 +49,10 @@ const App = (function() {
       { id: 'tasks', label: 'Tasks', icon: 'tasks', href: 'tasks.html' },
       { id: 'calendar', label: 'Calendar', icon: 'calendar', href: 'calendar.html' },
       { id: 'timer', label: 'Timer', icon: 'timer', href: 'timer.html' },
+      { id: 'flashcards', label: 'Flashcards', icon: 'bookOpen', href: 'flashcards.html' },
+      { id: 'habits', label: 'Habits', icon: 'target', href: 'habits.html' },
+      { id: 'exams', label: 'Exams', icon: 'award', href: 'exams.html' },
+      { id: 'notes', label: 'Notes', icon: 'edit', href: 'notes.html' },
       { id: 'goals', label: 'Goals', icon: 'goals', href: 'goals.html' },
       { id: 'history', label: 'Analytics', icon: 'history', href: 'history.html' },
       { id: 'settings', label: 'Settings', icon: 'settings', href: 'settings.html' }
@@ -85,10 +89,9 @@ const App = (function() {
       { id: 'dashboard', label: 'Home', icon: 'home', href: 'index.html' },
       { id: 'tasks', label: 'Tasks', icon: 'tasks', href: 'tasks.html' },
       { id: 'timer', label: 'Timer', icon: 'timer', href: 'timer.html' },
-      { id: 'goals', label: 'Goals', icon: 'goals', href: 'goals.html' },
-      { id: 'history', label: 'Analytics', icon: 'history', href: 'history.html' },
-      { id: 'calendar', label: 'Calendar', icon: 'calendar', href: 'calendar.html' },
-      { id: 'settings', label: 'Settings', icon: 'settings', href: 'settings.html' }
+      { id: 'flashcards', label: 'Cards', icon: 'bookOpen', href: 'flashcards.html' },
+      { id: 'habits', label: 'Habits', icon: 'target', href: 'habits.html' },
+      { id: 'calendar', label: 'Calendar', icon: 'calendar', href: 'calendar.html' }
     ];
     return `
       <nav class="bottom-nav">
@@ -109,6 +112,9 @@ const App = (function() {
       'index.html': 'dashboard', '': 'dashboard',
       'tasks.html': 'tasks', 'calendar.html': 'calendar',
       'timer.html': 'timer', 'goals.html': 'goals',
+      'flashcards.html': 'flashcards',
+      'habits.html': 'habits', 'exams.html': 'exams',
+      'notes.html': 'notes',
       'history.html': 'history', 'settings.html': 'settings'
     };
     return pageMap[filename] || 'dashboard';
@@ -379,6 +385,29 @@ const App = (function() {
     return String(text).replace(/[&<>"']/g, m => map[m]);
   }
 
+  function setupGlobalShortcuts() {
+    document.addEventListener('keydown', (e) => {
+      if (['INPUT', 'SELECT', 'TEXTAREA'].includes(e.target.tagName)) return;
+
+      // Ctrl/Meta + K: Command Palette (Search Tasks as fallback)
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        const searchInput = document.getElementById('search-tasks');
+        if (searchInput) {
+          searchInput.focus();
+        } else {
+          window.location.href = 'tasks.html';
+        }
+      }
+
+      // Quick Nav
+      if (e.altKey) {
+        const navMap = { '1': 'index.html', '2': 'tasks.html', '3': 'calendar.html', '4': 'timer.html', '5': 'flashcards.html' };
+        if (navMap[e.key]) window.location.href = navMap[e.key];
+      }
+    });
+  }
+
   function getSubjectColor(subjectName) {
     const subject = Storage.getSubjectByName(subjectName);
     return subject ? subject.color : '#6B7280';
@@ -456,6 +485,13 @@ const App = (function() {
   function showTaskNotification(task) {
     const body = `It's time for: ${task.title}`;
 
+    // Visual feedback on Dashboard
+    const pendingPill = document.getElementById('stat-pending')?.closest('.stat-pill');
+    if (pendingPill) {
+      pendingPill.classList.add('flash-pulse');
+      setTimeout(() => pendingPill.classList.remove('flash-pulse'), 10000);
+    }
+
     // Check application settings
     const settings = Storage.getSettings();
     if (settings.task_notifications !== false) {
@@ -508,8 +544,26 @@ const App = (function() {
     }, 200);
   }
 
+  const THEMES = {
+    default: { primary: '#3B82F6', secondary: '#8B5CF6' },
+    emerald: { primary: '#10B981', secondary: '#3B82F6' },
+    coral: { primary: '#F43F5E', secondary: '#F97316' },
+    amber: { primary: '#F59E0B', secondary: '#D97706' }
+  };
+
+  function applyTheme(themeName) {
+    const theme = THEMES[themeName] || THEMES.default;
+    document.documentElement.style.setProperty('--primary', theme.primary);
+    document.documentElement.style.setProperty('--secondary', theme.secondary);
+    // You'd also update the RGB variables if they exist in CSS
+  }
+
   function init() {
+    const savedTheme = Storage.loadData(Storage.KEYS.THEME, 'default');
+    applyTheme(savedTheme);
+
     initNavigation();
+    setupGlobalShortcuts();
 
     // Handle storage quota exceeded
     window.addEventListener('studyflow_storageQuotaExceeded', (e) => {
@@ -533,6 +587,7 @@ const App = (function() {
 
   return {
     Icons, getIcon, init, initNavigation, getCurrentPage,
+    applyTheme, THEMES,
     createModal, openModal, closeModal, confirm, alert,
     showToast, showUndoToast,
     debounce, formatDuration, formatNumber, getPriorityClass, getPriorityLabel,
