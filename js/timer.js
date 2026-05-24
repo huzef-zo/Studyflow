@@ -178,8 +178,7 @@ const Timer = (function() {
       totalTimeToday: document.getElementById('total-time-today'),
       streakCount: document.getElementById('streak-count'),
       cycleIndicator: document.getElementById('cycle-indicator'),
-      sessionNotes: document.getElementById('session-notes'),
-      ambientBtn: document.getElementById('ambient-btn')
+      sessionNotes: document.getElementById('session-notes')
     };
   }
 
@@ -206,7 +205,6 @@ const Timer = (function() {
 
     elements.startBtn?.addEventListener('click', toggleTimer);
     elements.resetBtn?.addEventListener('click', resetTimer);
-    elements.ambientBtn?.addEventListener('click', toggleAmbientMode);
     elements.taskSelect?.addEventListener('change', handleTaskChange);
     elements.subtaskSelect?.addEventListener('change', handleSubtaskChange);
 
@@ -216,8 +214,6 @@ const Timer = (function() {
       if (e.code === 'Space') { e.preventDefault(); toggleTimer(); }
       else if (e.code === 'KeyR') { e.preventDefault(); resetTimer(); }
       else if (e.code === 'KeyS') { e.preventDefault(); skipSession(); }
-      else if (e.code === 'KeyF') { e.preventDefault(); toggleAmbientMode(); }
-      else if (e.code === 'Escape' && isAmbientMode) { toggleAmbientMode(); }
     });
 
     // Visibility change: re-acquire wake lock when returning to the page
@@ -443,69 +439,6 @@ const Timer = (function() {
     }
   }
 
-  let isAmbientMode = false;
-  const quotes = [
-    "Focus is the art of knowing what to ignore.",
-    "Don't stop until you're proud.",
-    "Work hard in silence, let success be your noise.",
-    "The secret of getting ahead is getting started.",
-    "It always seems impossible until it's done.",
-    "Your limit is only your imagination.",
-    "Push yourself, because no one else is going to do it for you.",
-    "Success doesn't just find you. You have to go out and get it.",
-    "The harder you work for something, the greater you'll feel when you achieve it.",
-    "Dream bigger. Do bigger.",
-    "Don't stop when you're tired. Stop when you're done.",
-    "Wake up with determination. Go to bed with satisfaction.",
-    "Do something today that your future self will thank you for.",
-    "Little things make big days.",
-    "It’s going to be hard, but hard does not mean impossible.",
-    "Don’t wait for opportunity. Create it.",
-    "Sometimes we're tested not to show our weaknesses, but to discover our strengths.",
-    "The key to success is to focus on goals, not obstacles.",
-    "Dream it. Wish it. Do it.",
-    "Great things never come from comfort zones."
-  ];
-
-  function toggleAmbientMode() {
-    isAmbientMode = !isAmbientMode;
-    document.body.classList.toggle('ambient-mode', isAmbientMode);
-
-    if (isAmbientMode) {
-      if (document.documentElement.requestFullscreen) {
-        document.documentElement.requestFullscreen().catch(() => {});
-      }
-      renderAmbientOverlay();
-    } else {
-      if (document.fullscreenElement) {
-        document.exitFullscreen().catch(() => {});
-      }
-      const overlay = document.querySelector('.ambient-overlay');
-      if (overlay) {
-        overlay.style.opacity = '0';
-        setTimeout(() => overlay.remove(), 500);
-      }
-    }
-  }
-
-  function renderAmbientOverlay() {
-    const labelMap = { work: 'Deep Work', short_break: 'Cooldown', long_break: 'Deep Rest' };
-
-    const overlay = document.createElement('div');
-    overlay.className = 'ambient-overlay';
-    overlay.innerHTML = `
-      <button class="ambient-close" aria-label="Exit Ambient Mode">
-        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" x2="6" y1="6" y2="18"/><line x1="6" x2="18" y1="6" y2="18"/></svg>
-      </button>
-      <div class="ambient-breathing"></div>
-      <div class="ambient-label" id="ambient-label">${labelMap[currentSessionType]}</div>
-    `;
-
-    overlay.querySelector('.ambient-close').onclick = toggleAmbientMode;
-    document.body.appendChild(overlay);
-    updateDisplay();
-  }
-
   function updateDisplay() {
     if (elements.subtaskTracker) {
       elements.subtaskTracker.style.display = (currentSessionType === 'work' && selectedSubtaskId) ? 'flex' : 'none';
@@ -514,12 +447,6 @@ const Timer = (function() {
     const secs = timeRemaining % 60;
     const timeStr = `${mins.toString().padStart(2,'0')}:${secs.toString().padStart(2,'0')}`;
     elements.timerDisplay.textContent = timeStr;
-
-    const ambientLabel = document.getElementById('ambient-label');
-    if (ambientLabel) {
-      const labelMap = { work: 'Deep Work', short_break: 'Cooldown', long_break: 'Deep Rest' };
-      ambientLabel.textContent = labelMap[currentSessionType];
-    }
 
     if (document.visibilityState === 'visible') document.title = `${timeStr} - StudyFlow`;
 
