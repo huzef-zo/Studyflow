@@ -113,7 +113,8 @@ const Storage = (function() {
       work_duration: 25,
       short_break: 5,
       long_break: 15,
-      sessions_until_long_break: 4
+      sessions_until_long_break: 4,
+      pinned_nav_items: ['timer', 'calendar']
     },
     repeatingCompletions: {},
     flashcards: [],

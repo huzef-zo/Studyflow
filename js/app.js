@@ -30,6 +30,8 @@ const App = (function() {
     rotateCcw: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>`,
     chevronLeft: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>`,
     chevronRight: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>`,
+    grid: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg>`,
+    pin: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="15" x2="10" y1="4" y2="9"/><path d="M9 15l-4.5 4.5"/><path d="M15.5 13l2.5 2.5a2 2 0 0 1 0 2.8l-2.2 2.2a2 2 0 0 1-2.8 0l-2.5-2.5"/><path d="M15 4l5 5"/></svg>`,
     download: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>`,
     upload: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>`,
     alertCircle: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>`,
@@ -85,14 +87,34 @@ const App = (function() {
 
   function renderBottomNav() {
     const currentPage = getCurrentPage();
+    const settings = Storage.getSettings();
+    const pinnedIds = settings.pinned_nav_items || ['timer', 'calendar'];
+
+    const allItems = {
+      dashboard: { id: 'dashboard', label: 'Home', icon: 'home', href: 'index.html' },
+      tasks: { id: 'tasks', label: 'Tasks', icon: 'tasks', href: 'tasks.html' },
+      timer: { id: 'timer', label: 'Timer', icon: 'timer', href: 'timer.html' },
+      flashcards: { id: 'flashcards', label: 'Cards', icon: 'bookOpen', href: 'flashcards.html' },
+      habits: { id: 'habits', label: 'Habits', icon: 'target', href: 'habits.html' },
+      calendar: { id: 'calendar', label: 'Calendar', icon: 'calendar', href: 'calendar.html' },
+      exams: { id: 'exams', label: 'Exams', icon: 'award', href: 'exams.html' },
+      notes: { id: 'notes', label: 'Vault', icon: 'edit', href: 'notes.html' },
+      goals: { id: 'goals', label: 'Goals', icon: 'goals', href: 'goals.html' },
+      history: { id: 'history', label: 'Stats', icon: 'history', href: 'history.html' },
+      settings: { id: 'settings', label: 'Settings', icon: 'settings', href: 'settings.html' }
+    };
+
     const navItems = [
-      { id: 'dashboard', label: 'Home', icon: 'home', href: 'index.html' },
-      { id: 'tasks', label: 'Tasks', icon: 'tasks', href: 'tasks.html' },
-      { id: 'timer', label: 'Timer', icon: 'timer', href: 'timer.html' },
-      { id: 'flashcards', label: 'Cards', icon: 'bookOpen', href: 'flashcards.html' },
-      { id: 'habits', label: 'Habits', icon: 'target', href: 'habits.html' },
-      { id: 'calendar', label: 'Calendar', icon: 'calendar', href: 'calendar.html' }
+      allItems.dashboard,
+      allItems.tasks
     ];
+
+    pinnedIds.forEach(id => {
+      if (allItems[id]) navItems.push(allItems[id]);
+    });
+
+    const isMoreActive = !navItems.some(item => item.id === currentPage);
+
     return `
       <nav class="bottom-nav">
         ${navItems.map(item => `
@@ -101,6 +123,10 @@ const App = (function() {
             <span>${item.label}</span>
           </a>
         `).join('')}
+        <button id="more-nav-btn" class="bottom-nav-item ${isMoreActive ? 'active' : ''}" style="background:none;border:none;font-family:inherit;cursor:pointer;">
+          ${Icons.grid}
+          <span>More</span>
+        </button>
       </nav>
     `;
   }
@@ -140,7 +166,87 @@ const App = (function() {
       });
       document.body.classList.toggle('sidebar-collapsed', isCollapsed);
     }
-    if (bottomNavContainer) bottomNavContainer.innerHTML = renderBottomNav();
+    if (bottomNavContainer) {
+      bottomNavContainer.innerHTML = renderBottomNav();
+      const moreBtn = bottomNavContainer.querySelector('#more-nav-btn');
+      if (moreBtn) moreBtn.onclick = (e) => { e.preventDefault(); openMoreMenu(); };
+    }
+  }
+
+  function openMoreMenu() {
+    const settings = Storage.getSettings();
+    const pinnedIds = settings.pinned_nav_items || ['timer', 'calendar'];
+    const currentPage = getCurrentPage();
+
+    const menuItems = [
+      { id: 'timer', label: 'Timer', icon: 'timer', href: 'timer.html' },
+      { id: 'calendar', label: 'Calendar', icon: 'calendar', href: 'calendar.html' },
+      { id: 'flashcards', label: 'Flashcards', icon: 'bookOpen', href: 'flashcards.html' },
+      { id: 'habits', label: 'Habits', icon: 'target', href: 'habits.html' },
+      { id: 'exams', label: 'Exams', icon: 'award', href: 'exams.html' },
+      { id: 'notes', label: 'Knowledge Vault', icon: 'edit', href: 'notes.html' },
+      { id: 'goals', label: 'Goals', icon: 'goals', href: 'goals.html' },
+      { id: 'history', label: 'History', icon: 'history', href: 'history.html' },
+      { id: 'settings', label: 'Settings', icon: 'settings', href: 'settings.html' }
+    ];
+
+    const content = `
+      <div class="more-menu-grid">
+        ${menuItems.map(item => {
+          const isPinned = pinnedIds.includes(item.id);
+          const isActive = currentPage === item.id;
+          return `
+            <div class="more-menu-item-wrapper">
+              <a href="${item.href}" class="more-menu-item ${isActive ? 'active' : ''}">
+                <div class="more-menu-icon">${Icons[item.icon]}</div>
+                <span class="more-menu-label">${item.label}</span>
+              </a>
+              <button class="pin-btn ${isPinned ? 'pinned' : ''}" data-id="${item.id}" title="${isPinned ? 'Unpin' : 'Pin to navigation'}">
+                ${Icons.pin}
+              </button>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `;
+
+    const modal = createModal({
+      title: 'More Features',
+      content: content,
+      id: 'more-menu-modal'
+    });
+
+    modal.classList.add('modal-bottom-sheet');
+    openModal(modal);
+
+    modal.querySelectorAll('.pin-btn').forEach(btn => {
+      btn.onclick = (e) => {
+        e.preventDefault();
+        const id = btn.dataset.id;
+        const currentSettings = Storage.getSettings();
+        let currentPinned = currentSettings.pinned_nav_items || ['timer', 'calendar'];
+
+        if (currentPinned.includes(id)) {
+          currentPinned = currentPinned.filter(p => p !== id);
+        } else {
+          if (currentPinned.length >= 2) {
+            showToast('Max 2 items pinned. Unpin one first.', 'warning');
+            return;
+          }
+          currentPinned.push(id);
+        }
+
+        Storage.updateSetting('pinned_nav_items', currentPinned);
+        initNavigation(); // Refresh nav
+
+        // Update UI in modal
+        btn.classList.toggle('pinned');
+        const allPins = modal.querySelectorAll('.pin-btn.pinned').length;
+        modal.querySelectorAll('.pin-btn:not(.pinned)').forEach(p => {
+          p.disabled = allPins >= 2;
+        });
+      };
+    });
   }
 
   // ── Modal system ──────────────────────────────────────────────────────────
