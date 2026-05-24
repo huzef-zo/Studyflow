@@ -113,7 +113,30 @@
           <label class="toggle"><input type="checkbox" id="auto-start-work"><span class="toggle-slider"></span></label>
         </div>
 
-        <div id="notification-permission-item" class="mt-lg p-md card" style="background:rgba(255,255,255,0.03);border-radius:12px;display:none;">
+        <div style="border-top:1px solid rgba(255,255,255,0.1);padding:12px 0;margin:12px 0;"></div>
+
+        <div class="flex items-center justify-between mb-md">
+          <div style="flex:1;">
+            <div style="font-weight:700;font-size:0.875rem;">Weekend Mode</div>
+            <div style="font-size:0.75rem;color:var(--text-muted);">Reduce daily targets on Saturdays & Sundays</div>
+          </div>
+          <label class="toggle"><input type="checkbox" id="weekend-mode"><span class="toggle-slider"></span></label>
+        </div>
+
+        <div class="flex items-center justify-between mb-md">
+          <div style="flex:1;">
+            <div style="font-weight:700;font-size:0.875rem;">Theme</div>
+            <div style="font-size:0.75rem;color:var(--text-muted);">Visual appearance</div>
+          </div>
+          <select id="theme-select" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:white;padding:6px 12px;border-radius:8px;font-size:0.875rem;">
+            <option value="dark">Dark</option>
+            <option value="light">Light</option>
+          </select>
+        </div>
+
+        <div style="border-top:1px solid rgba(255,255,255,0.1);padding:12px 0;margin:12px 0;"></div>
+
+        <div class="flex items-center justify-between mb-md">
           <div class="flex items-center justify-between gap-md">
             <div style="flex:1;">
               <p style="margin:0;font-size:0.75rem;font-weight:600;" id="permission-status">System permissions required</p>
@@ -160,6 +183,8 @@
 
   <script src="js/storage.js?v=v2025-05-03-02"></script>
   <script src="js/subtask-utils.js?v=v2025-05-03-02"></script>
+  <script src="js/notifications.js?v=v2025-05-03-02"></script>
+  <script src="js/smart-features.js?v=v2025-05-03-02"></script>
   <script src="js/pwa-manager.js?v=v2025-05-03-02"></script>
   <script src="js/app.js?v=v2025-05-03-02"></script>
   <script>
@@ -177,6 +202,8 @@
         soundEnabled: document.getElementById('sound-enabled'),
         autoStartBreak: document.getElementById('auto-start-break'),
         autoStartWork: document.getElementById('auto-start-work'),
+        weekendMode: document.getElementById('weekend-mode'),
+        themeSelect: document.getElementById('theme-select'),
         testSoundBtn: document.getElementById('test-sound-btn'),
         requestPermissionBtn: document.getElementById('request-permission-btn'),
         permissionStatus: document.getElementById('permission-status'),
@@ -201,6 +228,8 @@
         elements.soundEnabled.checked = settings.sound !== false;
         elements.autoStartBreak.checked = settings.auto_start_break !== false;
         elements.autoStartWork.checked = settings.auto_start_work !== false;
+        elements.weekendMode.checked = settings.weekend_mode !== false;
+        elements.themeSelect.value = settings.theme || 'dark';
         updatePermissionStatus();
       }
 
@@ -232,6 +261,8 @@
         Storage.updateSetting('sound', elements.soundEnabled.checked);
         Storage.updateSetting('auto_start_break', elements.autoStartBreak.checked);
         Storage.updateSetting('auto_start_work', elements.autoStartWork.checked);
+        Storage.updateSetting('weekend_mode', elements.weekendMode.checked);
+        Storage.updateSetting('theme', elements.themeSelect.value);
       }
 
       function renderSubjects() {
@@ -300,7 +331,7 @@
         [elements.displayName, elements.userEmail, elements.workDuration, elements.shortBreak,
          elements.longBreak, elements.sessionsUntilLongBreak, elements.notificationsEnabled,
          elements.taskNotificationsEnabled, elements.soundEnabled,
-         elements.autoStartBreak, elements.autoStartWork
+         elements.autoStartBreak, elements.autoStartWork, elements.weekendMode, elements.themeSelect
         ].forEach(el => el.addEventListener('change', saveSettings));
 
         elements.testSoundBtn.onclick = () => {

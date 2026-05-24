@@ -21,7 +21,8 @@ const Storage = (function() {
     SETTINGS: 'studyflow_settings',
     TIMER: 'studyflow_timer',
     SIDEBAR: 'is_sidebar_collapsed',   // FIX 1: was a raw string in app.js, now tracked in cache
-    REPEATING_COMPLETIONS: 'studyflow_repeating_completions'
+    REPEATING_COMPLETIONS: 'studyflow_repeating_completions',
+    STREAK_FREEZES: 'studyflow_streak_freezes'
   };
 
   const cache = {};
@@ -97,9 +98,15 @@ const Storage = (function() {
       work_duration: 25,
       short_break: 5,
       long_break: 15,
-      sessions_until_long_break: 4
+      sessions_until_long_break: 4,
+      weekend_mode: false,
+      theme: 'dark'
     },
-    repeatingCompletions: {}
+    repeatingCompletions: {},
+    streakFreezes: {
+      available: 1,
+      usedDates: []
+    }
   };
 
   function getWeekStart(date) {
@@ -181,6 +188,7 @@ const Storage = (function() {
       goals: getGoals(),
       settings: getSettings(),
       repeatingCompletions: getRepeatingCompletions(),
+      streakFreezes: getStreakFreezes(),
       exported_at: new Date().toISOString(),
       version: '1.0.0'
     };
@@ -276,6 +284,13 @@ const Storage = (function() {
           if (data.repeatingCompletions[k] === true) safeRC[String(k)] = true;
         });
         saveRepeatingCompletions(safeRC);
+      }
+
+      if (data.streakFreezes && typeof data.streakFreezes === 'object' && !Array.isArray(data.streakFreezes)) {
+        const safeFreezes = { ...DEFAULTS.streakFreezes };
+        if ('available' in data.streakFreezes) safeFreezes.available = Math.max(0, Number(data.streakFreezes.available));
+        if (Array.isArray(data.streakFreezes.usedDates)) safeFreezes.usedDates = data.streakFreezes.usedDates.map(String);
+        saveStreakFreezes(safeFreezes);
       }
       return true;
     } catch (error) {
@@ -1118,6 +1133,41 @@ const Storage = (function() {
     return dateStr < formatDate(new Date());
   }
 
+  // ── Streak Freeze ───────────────────────────────────────────────────────────────
+
+  function getStreakFreezes() {
+    return loadData(KEYS.STREAK_FREEZES, DEFAULTS.streakFreezes);
+  }
+
+  function saveStreakFreezes(freezes) {
+    return saveData(KEYS.STREAK_FREEZES, freezes);
+  }
+
+  function useStreakFreeze() {
+    const freezes = getStreakFreezes();
+    if (freezes.available > 0) {
+      freezes.available--;
+      const today = formatDate(new Date());
+      freezes.usedDates.push(today);
+      saveStreakFreezes(freezes);
+      notifyTaskDataChanged();
+      return true;
+    }
+    return false;
+  }
+
+  function hasStreakFreezeAvailable() {
+    const freezes = getStreakFreezes();
+    return freezes.available > 0;
+  }
+
+  function resetWeeklyStreakFreeze() {
+    const freezes = getStreakFreezes();
+    freezes.available = 1;
+    freezes.usedDates = [];
+    saveStreakFreezes(freezes);
+  }
+
   return {
     KEYS, DEFAULTS,
     saveData, loadData, removeData, clearAllData, exportData, importData,
@@ -1141,6 +1191,7 @@ const Storage = (function() {
     getWeekNumber, isToday, isDateOverdue, getWeekStart,
     getRepeatingCompletions, saveRepeatingCompletions, isRepeatingTaskCompletedOnDate,
     setRepeatingTaskCompletedOnDate, pruneRepeatingCompletions,
+    getStreakFreezes, saveStreakFreezes, useStreakFreeze, hasStreakFreezeAvailable, resetWeeklyStreakFreeze,
     onSubtaskCompleted, _notifySubtaskCompleted
   };
 })();
