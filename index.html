@@ -323,7 +323,6 @@
 
         planList.innerHTML = plan.map(block => {
           let icon = '🎯';
-          if (block.type === 'srs') icon = '🃏';
           if (block.type === 'subject_review') icon = '📖';
 
           const href = block.taskId ? `timer.html?taskId=${block.taskId}` : 'timer.html';
