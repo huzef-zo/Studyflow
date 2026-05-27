@@ -20,8 +20,7 @@ const Achievements = (function() {
     COMPLETION: 'completion',
     TIME: 'time',
     SUBJECT: 'subject',
-    MASTERY: 'mastery',
-    SRS: 'srs'
+    MASTERY: 'mastery'
   };
 
   /**

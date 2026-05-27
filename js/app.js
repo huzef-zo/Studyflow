@@ -51,9 +51,6 @@ const App = (function() {
       { id: 'tasks', label: 'Tasks', icon: 'tasks', href: 'tasks.html' },
       { id: 'calendar', label: 'Calendar', icon: 'calendar', href: 'calendar.html' },
       { id: 'timer', label: 'Timer', icon: 'timer', href: 'timer.html' },
-      { id: 'flashcards', label: 'Flashcards', icon: 'bookOpen', href: 'flashcards.html' },
-      { id: 'habits', label: 'Habits', icon: 'target', href: 'habits.html' },
-      { id: 'exams', label: 'Exams', icon: 'award', href: 'exams.html' },
       { id: 'notes', label: 'Notes', icon: 'edit', href: 'notes.html' },
       { id: 'goals', label: 'Goals', icon: 'goals', href: 'goals.html' },
       { id: 'history', label: 'Analytics', icon: 'history', href: 'history.html' },
@@ -94,10 +91,7 @@ const App = (function() {
       dashboard: { id: 'dashboard', label: 'Home', icon: 'home', href: 'index.html' },
       tasks: { id: 'tasks', label: 'Tasks', icon: 'tasks', href: 'tasks.html' },
       timer: { id: 'timer', label: 'Timer', icon: 'timer', href: 'timer.html' },
-      flashcards: { id: 'flashcards', label: 'Cards', icon: 'bookOpen', href: 'flashcards.html' },
-      habits: { id: 'habits', label: 'Habits', icon: 'target', href: 'habits.html' },
       calendar: { id: 'calendar', label: 'Calendar', icon: 'calendar', href: 'calendar.html' },
-      exams: { id: 'exams', label: 'Exams', icon: 'award', href: 'exams.html' },
       notes: { id: 'notes', label: 'Vault', icon: 'edit', href: 'notes.html' },
       goals: { id: 'goals', label: 'Goals', icon: 'goals', href: 'goals.html' },
       history: { id: 'history', label: 'Stats', icon: 'history', href: 'history.html' },
@@ -138,8 +132,6 @@ const App = (function() {
       'index.html': 'dashboard', '': 'dashboard',
       'tasks.html': 'tasks', 'calendar.html': 'calendar',
       'timer.html': 'timer', 'goals.html': 'goals',
-      'flashcards.html': 'flashcards',
-      'habits.html': 'habits', 'exams.html': 'exams',
       'notes.html': 'notes',
       'history.html': 'history', 'settings.html': 'settings'
     };
@@ -181,9 +173,6 @@ const App = (function() {
     const menuItems = [
       { id: 'timer', label: 'Timer', icon: 'timer', href: 'timer.html' },
       { id: 'calendar', label: 'Calendar', icon: 'calendar', href: 'calendar.html' },
-      { id: 'flashcards', label: 'Flashcards', icon: 'bookOpen', href: 'flashcards.html' },
-      { id: 'habits', label: 'Habits', icon: 'target', href: 'habits.html' },
-      { id: 'exams', label: 'Exams', icon: 'award', href: 'exams.html' },
       { id: 'notes', label: 'Knowledge Vault', icon: 'edit', href: 'notes.html' },
       { id: 'goals', label: 'Goals', icon: 'goals', href: 'goals.html' },
       { id: 'history', label: 'History', icon: 'history', href: 'history.html' },
@@ -508,7 +497,7 @@ const App = (function() {
 
       // Quick Nav
       if (e.altKey) {
-        const navMap = { '1': 'index.html', '2': 'tasks.html', '3': 'calendar.html', '4': 'timer.html', '5': 'flashcards.html' };
+        const navMap = { '1': 'index.html', '2': 'tasks.html', '3': 'calendar.html', '4': 'timer.html' };
         if (navMap[e.key]) window.location.href = navMap[e.key];
       }
     });

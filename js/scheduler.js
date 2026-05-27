@@ -33,24 +33,9 @@ const Scheduler = (function() {
   function collectDueItems(date) {
     const todayStr = Storage.formatDate(date);
     const tasks = Storage.getTasks();
-    const flashcards = Storage.getFlashcards();
     const masteryStats = Storage.getSubjectMasteryStats();
 
     const items = [];
-
-    // 1. SRS Reviews (Overdue & Today)
-    const dueCards = flashcards.filter(c => c.nextReview <= todayStr);
-    if (dueCards.length > 0) {
-      const overdue = dueCards.filter(c => c.nextReview < todayStr);
-      const today = dueCards.filter(c => c.nextReview === todayStr);
-
-      if (overdue.length > 0) {
-        items.push({ type: 'srs', priority: 1, label: `SRS Review (${overdue.length} overdue)`, count: overdue.length });
-      }
-      if (today.length > 0) {
-        items.push({ type: 'srs', priority: 4, label: `SRS Review (${today.length} due)`, count: today.length });
-      }
-    }
 
     // 2. Tasks
     tasks.forEach(t => {

@@ -22,15 +22,10 @@ const Storage = (function() {
     TIMER: 'studyflow_timer',
     SIDEBAR: 'is_sidebar_collapsed',   // FIX 1: was a raw string in app.js, now tracked in cache
     REPEATING_COMPLETIONS: 'studyflow_repeating_completions',
-    FLASHCARDS: 'studyflow_flashcards',
-    DECKS: 'studyflow_decks',
-    REVIEW_LOGS: 'studyflow_review_logs',
     ACHIEVEMENTS: 'studyflow_achievements',
     XP_STATE: 'studyflow_xp',
     STUDY_BLOCKS: 'studyflow_study_blocks',
     STUDY_WINDOWS: 'studyflow_study_windows',
-    EXAMS: 'studyflow_exams',
-    HABITS: 'studyflow_habits',
     NOTES: 'studyflow_notes',
     TIME_BLOCKS: 'studyflow_time_blocks',
     REFLECTIONS: 'studyflow_reflections',
@@ -117,13 +112,8 @@ const Storage = (function() {
       pinned_nav_items: ['timer', 'calendar']
     },
     repeatingCompletions: {},
-    flashcards: [],
-    decks: [],
-    reviewLogs: [],
     achievements: [],
     studyBlocks: [],
-    exams: [],
-    habits: [],
     notes: [],
     timeBlocks: [],
     reflections: [],
@@ -227,15 +217,10 @@ const Storage = (function() {
       goals: getGoals(),
       settings: getSettings(),
       repeatingCompletions: getRepeatingCompletions(),
-      flashcards: getFlashcards(),
-      decks: getDecks(),
-      reviewLogs: getReviewLogs(),
       achievements: getAchievements(),
       xpState: getXPState(),
       studyBlocks: getStudyBlocks(),
       studyWindows: getStudyWindows(),
-      exams: getExams(),
-      habits: getHabits(),
       notes: getNotes(),
       timeBlocks: getTimeBlocks(),
       reflections: getReflections(),
@@ -364,41 +349,6 @@ const Storage = (function() {
         saveData(KEYS.ACHIEVEMENTS, safeAchievements);
       }
 
-      if (Array.isArray(data.habits)) {
-        const safeHabits = data.habits.map(h => {
-          const habit = {
-            id: String(h.id || generateId()),
-            title: String(h.title || 'Untitled Habit'),
-            icon: String(h.icon || '🎯'),
-            streak: Number(h.streak || 0),
-            lastCompleted: h.lastCompleted ? String(h.lastCompleted) : null,
-            createdAt: String(h.createdAt || new Date().toISOString()),
-            completions: {}
-          };
-          if (h.completions && typeof h.completions === 'object') {
-            Object.keys(h.completions).forEach(k => {
-              if (h.completions[k] === true) habit.completions[String(k)] = true;
-            });
-          }
-          return habit;
-        });
-        saveData(KEYS.HABITS, safeHabits);
-      }
-
-      if (Array.isArray(data.exams)) {
-        const safeExams = data.exams.map(e => ({
-          id: String(e.id || generateId()),
-          title: String(e.title || 'Untitled Exam'),
-          examDate: String(e.examDate),
-          subject: String(e.subject || 'Other'),
-          weight: Number(e.weight || 3),
-          revisionStartDate: String(e.revisionStartDate),
-          notes: String(e.notes || ''),
-          createdAt: String(e.createdAt || new Date().toISOString())
-        }));
-        saveData(KEYS.EXAMS, safeExams);
-      }
-
       if (Array.isArray(data.notes)) {
         const safeNotes = data.notes.map(n => ({
           id: String(n.id || generateId()),
@@ -409,40 +359,6 @@ const Storage = (function() {
           updatedAt: String(n.updatedAt || new Date().toISOString())
         }));
         saveData(KEYS.NOTES, safeNotes);
-      }
-
-      if (Array.isArray(data.decks)) {
-        const safeDecks = data.decks.map(d => ({
-          id: String(d.id || generateId()),
-          subjectId: String(d.subjectId),
-          createdAt: String(d.createdAt || new Date().toISOString())
-        }));
-        saveData(KEYS.DECKS, safeDecks);
-      }
-
-      if (Array.isArray(data.flashcards)) {
-        const safeCards = data.flashcards.map(c => ({
-          id: String(c.id || generateId()),
-          deckId: String(c.deckId),
-          front: String(c.front || ''),
-          back: String(c.back || ''),
-          easeFactor: Number(c.easeFactor || 2.5),
-          interval: Number(c.interval || 0),
-          repetitions: Number(c.repetitions || 0),
-          nextReview: String(c.nextReview || formatDate(new Date())),
-          createdAt: String(c.createdAt || new Date().toISOString())
-        }));
-        saveData(KEYS.FLASHCARDS, safeCards);
-      }
-
-      if (Array.isArray(data.reviewLogs)) {
-        const safeLogs = data.reviewLogs.map(l => ({
-          id: String(l.id || generateId()),
-          cardId: String(l.cardId),
-          rating: Number(l.rating),
-          timestamp: String(l.timestamp || new Date().toISOString())
-        }));
-        saveData(KEYS.REVIEW_LOGS, safeLogs);
       }
 
       if (Array.isArray(data.reflections)) {
@@ -557,8 +473,6 @@ const Storage = (function() {
   function getXPState() { return { ...loadData(KEYS.XP_STATE, DEFAULTS.xpState) }; }
   function getStudyBlocks() { return [...loadData(KEYS.STUDY_BLOCKS, DEFAULTS.studyBlocks)]; }
   function getStudyWindows() { return [...loadData(KEYS.STUDY_WINDOWS, DEFAULTS.studyWindows)]; }
-  function getExams() { return [...loadData(KEYS.EXAMS, DEFAULTS.exams)]; }
-  function getHabits() { return [...loadData(KEYS.HABITS, DEFAULTS.habits)]; }
   function getNotes() { return [...loadData(KEYS.NOTES, DEFAULTS.notes)]; }
   function getTimeBlocks() { return [...loadData(KEYS.TIME_BLOCKS, DEFAULTS.timeBlocks)]; }
   function getReflections() { return [...loadData(KEYS.REFLECTIONS, DEFAULTS.reflections)]; }
@@ -1010,83 +924,6 @@ const Storage = (function() {
     return saveSettings(settings);
   }
 
-  // ── Spaced Repetition (SRS) ──────────────────────────────────────────────────
-
-  function getFlashcards() { return [...loadData(KEYS.FLASHCARDS, DEFAULTS.flashcards)]; }
-  function saveFlashcards(cards) { return saveData(KEYS.FLASHCARDS, [...cards]); }
-
-  function getDecks() { return [...loadData(KEYS.DECKS, DEFAULTS.decks)]; }
-  function saveDecks(decks) { return saveData(KEYS.DECKS, [...decks]); }
-
-  function getReviewLogs() { return [...loadData(KEYS.REVIEW_LOGS, DEFAULTS.reviewLogs)]; }
-  function saveReviewLogs(logs) { return saveData(KEYS.REVIEW_LOGS, [...logs]); }
-
-  function addFlashcard(card) {
-    const cards = getFlashcards();
-    const newCard = {
-      id: 'fc_' + generateId(),
-      deckId: card.deckId,
-      front: card.front || '',
-      back: card.back || '',
-      easeFactor: 2.5,
-      interval: 0,
-      repetitions: 0,
-      nextReview: formatDate(new Date()),
-      createdAt: new Date().toISOString()
-    };
-    cards.push(newCard);
-    saveFlashcards(cards);
-    return newCard;
-  }
-
-  function updateFlashcard(id, updates) {
-    const cards = getFlashcards();
-    const idx = cards.findIndex(c => c.id === id);
-    if (idx !== -1) {
-      cards[idx] = { ...cards[idx], ...updates };
-      saveFlashcards(cards);
-      return cards[idx];
-    }
-    return null;
-  }
-
-  function deleteFlashcard(id) {
-    const cards = getFlashcards();
-    saveFlashcards(cards.filter(c => c.id !== id));
-    return true;
-  }
-
-  function getDeckBySubject(subjectId) {
-    let decks = getDecks();
-    let deck = decks.find(d => d.subjectId === subjectId);
-    if (!deck) {
-      deck = {
-        id: 'deck_' + generateId(),
-        subjectId: subjectId,
-        createdAt: new Date().toISOString()
-      };
-      decks.push(deck);
-      saveDecks(decks);
-    }
-    return deck;
-  }
-
-  function addReviewLog(cardId, rating) {
-    const logs = getReviewLogs();
-    const log = {
-      id: generateId(),
-      cardId,
-      rating,
-      timestamp: new Date().toISOString()
-    };
-    logs.push(log);
-    saveReviewLogs(logs);
-    if (typeof Achievements !== 'undefined') {
-      Achievements.awardXP(5, 'Flashcard Reviewed');
-    }
-    return log;
-  }
-
   // ── Timer persistence ────────────────────────────────────────────────────────
 
   function getTimerState() { return loadData(KEYS.TIMER, null); }
@@ -1490,15 +1327,13 @@ const Storage = (function() {
     getSettings, saveSettings, updateSetting,
     getTimerState, saveTimerState, clearTimerState, completeTimerSession,
     getStats, calculateStreak, calculateBestStreak,
-    getAchievements, getXPState, getStudyBlocks, getStudyWindows, getExams,
-    getHabits, getNotes, getTimeBlocks, getReflections, getTheme,
+    getAchievements, getXPState, getStudyBlocks, getStudyWindows,
+    getNotes, getTimeBlocks, getReflections, getTheme,
     generateId, formatDate, formatDisplayDate, getRelativeDays, getDaysUntil,
     getWeekNumber, isToday, isDateOverdue, getWeekStart,
     getRepeatingCompletions, saveRepeatingCompletions, isRepeatingTaskCompletedOnDate,
     setRepeatingTaskCompletedOnDate, pruneRepeatingCompletions,
-    onSubtaskCompleted, _notifySubtaskCompleted,
-    getFlashcards, saveFlashcards, getDecks, saveDecks, getReviewLogs, saveReviewLogs,
-    addFlashcard, updateFlashcard, deleteFlashcard, getDeckBySubject, addReviewLog
+    onSubtaskCompleted, _notifySubtaskCompleted
   };
 })();
 
