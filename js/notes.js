@@ -35,6 +35,14 @@ const Notes = (function() {
     elements.saveNoteBtn?.addEventListener('click', saveCurrentNote);
     elements.deleteNoteBtn?.addEventListener('click', deleteCurrentNote);
     elements.searchNotes?.addEventListener('input', App.debounce(() => renderNotes(), 300));
+
+    // Use event delegation for note selection to prevent XSS from unescaped IDs in onclick handlers
+    elements.notesList?.addEventListener('click', (e) => {
+      const item = e.target.closest('.note-item');
+      if (item && item.dataset.id) {
+        loadNote(item.dataset.id);
+      }
+    });
   }
 
   function populateSubjects() {
@@ -52,7 +60,7 @@ const Notes = (function() {
     }
 
     elements.notesList.innerHTML = filtered.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)).map(note => `
-      <div class="note-item ${note.id === currentNoteId ? 'active' : ''}" onclick="Notes.loadNote('${note.id}')">
+      <div class="note-item ${note.id === currentNoteId ? 'active' : ''}" data-id="${App.escapeHtml(note.id)}">
         <div style="font-weight: 700; color: white; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${App.escapeHtml(note.title || 'Untitled')}</div>
         <div class="flex items-center justify-between">
           <div style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">${App.escapeHtml(note.subject)}</div>

@@ -14,3 +14,8 @@
 **Vulnerability:** Persistent XSS via Malicious Backup Import
 **Learning:** Security controls must be applied at the rendering layer even for "internal" fields like IDs, dates, and priorities. Since the application supports importing JSON backups, any field in the storage can be manipulated by an attacker to execute scripts if not escaped during render.
 **Prevention:** Treat all data retrieved from Storage as untrusted. Consistently escape all dynamic values injected into HTML templates (including attribute values), regardless of their source or perceived safety.
+
+## 2025-05-30 - Inline Event Handlers as XSS Vector
+**Vulnerability:** XSS via Attribute Decoding in Event Handlers
+**Learning:** Inline event handlers like `onclick` are particularly dangerous because browsers decode HTML entities within attribute values before executing them as JavaScript. This means that even if a value is "escaped" for HTML, it may still execute script if injected into an event handler.
+**Prevention:** Avoid inline event handlers for dynamic content. Use event delegation with `addEventListener` on a stable parent element, and store dynamic data (like IDs) in `data-*` attributes which are properly HTML-escaped.
