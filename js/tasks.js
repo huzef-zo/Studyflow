@@ -67,6 +67,15 @@ const Tasks = (function() {
     `;
     await new Promise(r => setTimeout(r, 600));
     renderTasks();
+
+    // Check for "add" action in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('action') === 'add') {
+      openTaskModal();
+      // Clean up URL
+      const newUrl = window.location.pathname;
+      window.history.replaceState({}, document.title, newUrl);
+    }
   }
 
   function setupSubtaskCallbacks() {
