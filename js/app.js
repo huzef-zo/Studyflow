@@ -244,13 +244,17 @@ const App = (function() {
 
   function createModal(options) {
     const { id, title, content, footer, onClose } = options;
+    const modalId = id || 'modal-' + Date.now();
+    const titleId = modalId + '-title';
+
     const modal = document.createElement('div');
     modal.className = 'modal-overlay';
     if (id) modal.id = id;
+
     modal.innerHTML = `
-      <div class="modal">
+      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="${titleId}">
         <div class="modal-header">
-          <h3 class="modal-title">${escapeHtml(title)}</h3>
+          <h3 class="modal-title" id="${titleId}">${escapeHtml(title)}</h3>
           <button class="modal-close" aria-label="Close modal">${Icons.x}</button>
         </div>
         <div class="modal-body">${content}</div>
