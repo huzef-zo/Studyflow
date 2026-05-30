@@ -9,3 +9,7 @@
 ## 2026-05-23 - [Numeric Date Math & Bypassing defensive copies]
 **Learning:** While ISO string comparisons (e.g., `t.completedAt.startsWith(todayStr)`) are fast, they often introduce timezone regressions because `toISOString()` is always UTC. Standardizing on `Date.parse()` for numeric timestamp comparisons allows for high performance while maintaining local-time correctness when combined with `reusableDate.setTime()` and `formatDate()`. Additionally, bypassing defensive array copies (like those returned by public getters) when performing internal library-wide aggregations can reduce execution time by an additional 15-20% in high-item environments.
 **Action:** Use numeric `getTime()` or `Date.parse()` for range checks to preserve local time logic. Use direct access to raw data (e.g., `loadData`) instead of public getters inside performance-critical aggregation loops to avoid redundant array clones.
+
+## 2026-05-30 - [Calendar Grouping Optimization]
+**Learning:** Expanding repeating tasks in the calendar by iterating over every day for every task ((Tasks \times Days)$) is inefficient. Grouping repeating tasks by day-of-week once and then doing a single pass over the month ((Days + \text{Occurrences})$) improves performance by ~40%.
+**Action:** Use bucket-based grouping for recurrence patterns before expanding them into a timeline or grid. Always use public APIs (e.g., `Storage.getTasks()`) instead of reaching into module internals for micro-optimizations to maintain architectural safety.

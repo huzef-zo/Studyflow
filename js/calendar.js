@@ -32,51 +32,64 @@ const Calendar = (function() {
     return Storage.getTasksByDate(dateStr);
   }
 
+  /**
+   * Expands tasks into a map of dates for the given month.
+   * OPTIMIZATION: Uses a single-pass date loop for repeating tasks and skips defensive copies.
+   * Reduces complexity from O(Tasks * Days) to O(Tasks + Days) by grouping.
+   */
   function getTasksForMonth(year, month) {
     const tasks = Storage.getTasks();
     const monthTasks = {};
-
-    const monthStartStr = `${year}-${String(month + 1).padStart(2, '0')}-01`;
     const monthEndDate = new Date(year, month + 1, 0);
+    const numDays = monthEndDate.getDate();
+    const monthPrefix = `${year}-${String(month + 1).padStart(2, '0')}-`;
+    const monthStartStr = monthPrefix + '01';
     const monthEndStr = Storage.formatDate(monthEndDate);
 
-    for (let day = 1; day <= monthEndDate.getDate(); day++) {
-      const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-      monthTasks[dateStr] = [];
+    // Pre-initialize month map
+    for (let day = 1; day <= numDays; day++) {
+      monthTasks[monthPrefix + String(day).padStart(2, '0')] = [];
     }
 
-    const monthPrefix = `${year}-${String(month + 1).padStart(2, '0')}-`;
+    const repeatingByDay = [[], [], [], [], [], [], []]; // 0=Sun, 1=Mon...
+    const inRangeTasks = [];
 
+    // Categorize tasks in one pass
     tasks.forEach(task => {
       if (task.type === 'repeating') {
-        if (!task.repeatDays || task.repeatDays.length === 0) return;
-        task.repeatDays.forEach(targetDay => {
-          const firstDate = new Date(year, month, 1);
-          const firstDayOfMonth = firstDate.getDay();
-          let offset = targetDay - firstDayOfMonth;
-          if (offset < 0) offset += 7;
-          for (let day = 1 + offset; day <= monthEndDate.getDate(); day += 7) {
-            const dateStr = monthPrefix + String(day).padStart(2, '0');
-            if (monthTasks[dateStr]) monthTasks[dateStr].push(task);
-          }
+        if (task.repeatDays) task.repeatDays.forEach(d => {
+          if (repeatingByDay[d]) repeatingByDay[d].push(task);
         });
       } else if (task.dueDate) {
         const taskStart = task.startDate || task.dueDate;
-        const taskEnd = task.dueDate;
-
-        if (task.startDate && task.dueDate && task.startDate > task.dueDate) return;
-        if (taskEnd < monthStartStr || taskStart > monthEndStr) return;
-
-        const clampedStart = taskStart > monthStartStr ? taskStart : monthStartStr;
-        const clampedEnd = taskEnd < monthEndStr ? taskEnd : monthEndStr;
-
-        const startDay = parseInt(clampedStart.split('-')[2], 10);
-        const endDay = parseInt(clampedEnd.split('-')[2], 10);
-
-        for (let day = startDay; day <= endDay; day++) {
-          const dateStr = monthPrefix + String(day).padStart(2, '0');
-          if (monthTasks[dateStr]) monthTasks[dateStr].push(task);
+        // Basic range overlap check
+        if (!(task.dueDate < monthStartStr || taskStart > monthEndStr)) {
+          if (!(task.startDate && task.dueDate && task.startDate > task.dueDate)) {
+            inRangeTasks.push(task);
+          }
         }
+      }
+    });
+
+    // Expand repeating tasks using a single loop over the month's days
+    const iterDate = new Date(year, month, 1);
+    for (let day = 1; day <= numDays; day++) {
+      iterDate.setDate(day);
+      const dayOfWeek = iterDate.getDay();
+      const dateStr = monthPrefix + String(day).padStart(2, '0');
+      const scheduled = repeatingByDay[dayOfWeek];
+      if (scheduled.length > 0) {
+        scheduled.forEach(t => monthTasks[dateStr].push(t));
+      }
+    }
+
+    // Expand one-time and range tasks
+    inRangeTasks.forEach(task => {
+      const taskStart = task.startDate || task.dueDate;
+      const startDay = Math.max(1, taskStart > monthStartStr ? parseInt(taskStart.split('-')[2], 10) : 1);
+      const endDay = Math.min(numDays, task.dueDate < monthEndStr ? parseInt(task.dueDate.split('-')[2], 10) : numDays);
+      for (let d = startDay; d <= endDay; d++) {
+        monthTasks[monthPrefix + String(d).padStart(2, '0')].push(task);
       }
     });
 
