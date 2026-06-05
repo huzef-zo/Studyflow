@@ -34,6 +34,10 @@ const Storage = (function() {
 
   const cache = {};
 
+  function isValidHexColor(color) {
+    return /^#([0-9A-F]{3}){1,2}$/i.test(color);
+  }
+
   // Pending completions: taskId → { timeoutId }
   const _pendingCompletions = {};
 
@@ -246,12 +250,18 @@ const Storage = (function() {
       }
 
       if (Array.isArray(data.subjects)) {
-        const safeSubjects = data.subjects.map(s => ({
-          id: String(s.id || generateId()),
-          name: String(s.name || 'Unnamed Subject'),
-          color: String(s.color || '#2563EB'),
-          createdAt: String(s.createdAt || new Date().toISOString())
-        }));
+        const safeSubjects = data.subjects.map(s => {
+          let color = String(s.color || '#2563EB');
+          if (!isValidHexColor(color)) {
+            color = '#2563EB';
+          }
+          return {
+            id: String(s.id || generateId()),
+            name: String(s.name || 'Unnamed Subject'),
+            color: color,
+            createdAt: String(s.createdAt || new Date().toISOString())
+          };
+        });
         saveData(KEYS.SUBJECTS, safeSubjects);
       }
 
@@ -755,7 +765,11 @@ const Storage = (function() {
 
   function addSubject(name, color) {
     const subjects = getSubjects();
-    const newSubject = { id: generateId(), name, color: color || '#2563EB', createdAt: new Date().toISOString() };
+    let safeColor = color || '#2563EB';
+    if (!isValidHexColor(safeColor)) {
+      safeColor = '#2563EB';
+    }
+    const newSubject = { id: generateId(), name, color: safeColor, createdAt: new Date().toISOString() };
     subjects.push(newSubject);
     saveSubjects(subjects);
     return newSubject;
@@ -765,6 +779,9 @@ const Storage = (function() {
     const subjects = getSubjects();
     const index = subjects.findIndex(s => s.id === id);
     if (index !== -1) {
+      if (updates.color && !isValidHexColor(updates.color)) {
+        updates.color = subjects[index].color || '#2563EB';
+      }
       subjects[index] = { ...subjects[index], ...updates };
       saveSubjects(subjects);
       return subjects[index];

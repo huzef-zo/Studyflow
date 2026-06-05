@@ -521,6 +521,10 @@ const App = (function() {
     return `${r}, ${g}, ${b}`;
   }
 
+  function isValidHexColor(hex) {
+    return /^#([0-9A-F]{3}){1,2}$/i.test(hex);
+  }
+
   function getFormData(form) {
     const formData = new FormData(form), data = {};
     for (const [key, value] of formData.entries()) data[key] = value;
@@ -691,7 +695,7 @@ const App = (function() {
     showToast, showUndoToast,
     debounce, formatDuration, formatNumber, getPriorityClass, getPriorityLabel,
     getRepeatDaysLabel, createDeadlineBadge, createDateRangeBadge,
-    escapeHtml, getSubjectColor, hexToRgb,
+    escapeHtml, getSubjectColor, hexToRgb, isValidHexColor,
     getFormData, populateForm,
     createProgressBar,
     createEmptyStateHtml
