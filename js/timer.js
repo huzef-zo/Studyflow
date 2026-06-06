@@ -178,7 +178,8 @@ const Timer = (function() {
       totalTimeToday: document.getElementById('total-time-today'),
       streakCount: document.getElementById('streak-count'),
       cycleIndicator: document.getElementById('cycle-indicator'),
-      sessionNotes: document.getElementById('session-notes')
+      sessionNotes: document.getElementById('session-notes'),
+      skipBtn: document.getElementById('skip-btn')
     };
   }
 
@@ -205,6 +206,7 @@ const Timer = (function() {
 
     elements.startBtn?.addEventListener('click', toggleTimer);
     elements.resetBtn?.addEventListener('click', resetTimer);
+    elements.skipBtn?.addEventListener('click', skipSession);
     elements.taskSelect?.addEventListener('change', handleTaskChange);
     elements.subtaskSelect?.addEventListener('change', handleSubtaskChange);
 
