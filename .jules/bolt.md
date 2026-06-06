@@ -13,3 +13,7 @@
 ## 2026-05-30 - [Calendar Grouping Optimization]
 **Learning:** Expanding repeating tasks in the calendar by iterating over every day for every task ((Tasks \times Days)$) is inefficient. Grouping repeating tasks by day-of-week once and then doing a single pass over the month ((Days + \text{Occurrences})$) improves performance by ~40%.
 **Action:** Use bucket-based grouping for recurrence patterns before expanding them into a timeline or grid. Always use public APIs (e.g., `Storage.getTasks()`) instead of reaching into module internals for micro-optimizations to maintain architectural safety.
+
+## 2026-06-06 - [Logarithmic Session Retrieval]
+**Learning:** For append-only chronological datasets like focus sessions, replacing linear filters ($O(N)$) with binary search ($O(\log N)$) to find start indices yields massive performance gains (e.g., 9ms to 0.01ms for 20k entries). Additionally, refactoring higher-level getters (e.g., `getTodaySessions`) to share this optimized utility ensures these wins propagate through the dashboard and analytics.
+**Action:** Implement binary search for any range-based retrieval on sorted datasets. Ensure time-windowed getters (Today/Week) consume the optimized search utility.

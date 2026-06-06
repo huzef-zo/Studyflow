@@ -803,7 +803,7 @@ const Storage = (function() {
   function saveSessions(sessions) { return saveData(KEYS.SESSIONS, [...sessions]); }
 
   function addSession(duration, type = 'work', taskId = null, notes = '') {
-    const sessions = getSessions();
+    const sessions = loadData(KEYS.SESSIONS, DEFAULTS.sessions);
     const newSession = {
       id: generateId(),
       duration,
@@ -812,42 +812,65 @@ const Storage = (function() {
       notes,
       completedAt: new Date().toISOString()
     };
-    sessions.push(newSession);
-    saveSessions(sessions);
+    const newSessions = [...sessions, newSession];
+    saveData(KEYS.SESSIONS, newSessions);
     return newSession;
   }
 
   function getTodaySessions() {
     const today = formatDate(new Date());
-    return getSessions().filter(s => formatDate(new Date(s.completedAt)) === today && s.type === 'session_complete');
+    return getSessionsSince(today).filter(s => s.type === 'session_complete');
   }
 
   function getTodayWorkSessions() {
     const today = formatDate(new Date());
-    return getSessions().filter(s => formatDate(new Date(s.completedAt)) === today && s.type === 'work');
+    return getSessionsSince(today).filter(s => s.type === 'work');
   }
 
   function getWeekSessions() {
     const weekStart = getWeekStart(new Date());
-    return getSessions().filter(s => new Date(s.completedAt) >= weekStart && s.type === 'session_complete');
+    return getSessionsSince(formatDate(weekStart)).filter(s => s.type === 'session_complete');
   }
 
   function getWeekWorkSessions() {
     const weekStart = getWeekStart(new Date());
-    return getSessions().filter(s => new Date(s.completedAt) >= weekStart && s.type === 'work');
+    return getSessionsSince(formatDate(weekStart)).filter(s => s.type === 'work');
   }
 
   /**
    * Return sessions on or after the given date string (YYYY-MM-DD).
    * More efficient than filtering getSessions() inline everywhere.
+   * OPTIMIZATION: Uses binary search to find the start index since sessions are chronological.
    */
   function getSessionsSince(dateStr) {
     const threshold = new Date(dateStr).getTime();
-    return getSessions().filter(s => {
-      if (!s.completedAt) return false;
-      // Faster numeric comparison instead of string formatting in loop
-      return new Date(s.completedAt).getTime() >= threshold;
-    });
+    const sessions = loadData(KEYS.SESSIONS, DEFAULTS.sessions);
+    if (sessions.length === 0) return [];
+
+    // Fast path: check if the first session is already after the threshold
+    const firstTime = sessions[0].completedAt ? new Date(sessions[0].completedAt).getTime() : 0;
+    if (firstTime >= threshold) return sessions;
+
+    // Binary search for the first session >= threshold
+    let low = 0;
+    let high = sessions.length - 1;
+    let startIndex = sessions.length;
+
+    while (low <= high) {
+      const mid = (low + high) >>> 1;
+      const midTime = sessions[mid].completedAt ? new Date(sessions[mid].completedAt).getTime() : 0;
+      if (midTime >= threshold) {
+        startIndex = mid;
+        high = mid - 1;
+      } else {
+        low = mid + 1;
+      }
+    }
+
+    if (startIndex >= sessions.length) return [];
+
+    // Return a slice from the start index. Slice is O(K) where K is number of matching sessions.
+    return sessions.slice(startIndex);
   }
 
   /**
@@ -860,7 +883,7 @@ const Storage = (function() {
     if (sessionStorage.getItem(PRUNE_GUARD_KEY)) return 0;
     sessionStorage.setItem(PRUNE_GUARD_KEY, '1');
 
-    const sessions = getSessions();
+    const sessions = loadData(KEYS.SESSIONS, DEFAULTS.sessions);
     const cutoff = new Date();
     cutoff.setDate(cutoff.getDate() - keepDays);
     cutoff.setHours(0, 0, 0, 0);
@@ -872,7 +895,7 @@ const Storage = (function() {
 
     const removed = sessions.length - kept.length;
     if (removed > 0) {
-      saveSessions(kept);
+      saveData(KEYS.SESSIONS, [...kept]);
       console.log(`[StudyFlow] Pruned ${removed} old session records.`);
     }
     return removed;
