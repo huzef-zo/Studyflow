@@ -312,9 +312,13 @@
           const name = modal.querySelector('#sub-name').value.trim();
           const color = modal.querySelector('#sub-color').value;
           if (name) {
-            isEdit ? Storage.updateSubject(id, { name, color }) : Storage.addSubject(name, color);
-            App.closeModal();
-            renderSubjects();
+            if (App.isValidHexColor(color)) {
+              isEdit ? Storage.updateSubject(id, { name, color }) : Storage.addSubject(name, color);
+              App.closeModal();
+              renderSubjects();
+            } else {
+              App.showToast('Invalid color format. Please use hex (e.g. #3B82F6)', 'error');
+            }
           }
         };
         modal.querySelector('[data-action="cancel"]').onclick = () => App.closeModal();
