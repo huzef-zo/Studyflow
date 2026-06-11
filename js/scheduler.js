@@ -31,6 +31,7 @@ const Scheduler = (function() {
   }
 
   function collectDueItems(date) {
+    const dayOfWeek = date.getDay();
     const todayStr = Storage.formatDate(date);
     const tasks = Storage.getTasks();
     const masteryStats = Storage.getSubjectMasteryStats();
@@ -39,6 +40,21 @@ const Scheduler = (function() {
 
     // 2. Tasks
     tasks.forEach(t => {
+      if (t.type === 'repeating') {
+        // Only include if scheduled for today and not completed today
+        if (t.repeatDays && t.repeatDays.includes(dayOfWeek) && !Storage.isRepeatingTaskCompletedOnDate(t.id, todayStr)) {
+          items.push({
+            type: 'task',
+            priority: t.priority === 'critical' ? 2 : (t.priority === 'high' ? 3 : (t.priority === 'medium' ? 5 : 7)),
+            label: t.title,
+            subject: t.subject,
+            taskId: t.id,
+            estimatedCycles: t.subtasks?.reduce((acc, s) => acc + (s.estimatedCycles - s.completedCycles), 0) || 1
+          });
+        }
+        return;
+      }
+
       if (t.completed) return;
 
       const daysUntil = t.dueDate ? Storage.getDaysUntil(t.dueDate) : 999;

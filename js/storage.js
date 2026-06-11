@@ -38,6 +38,17 @@ const Storage = (function() {
     return /^#([0-9A-F]{3}){1,2}$/i.test(color);
   }
 
+  /**
+   * Parse a YYYY-MM-DD string into a local Date object.
+   * Prevents UTC off-by-one errors in different timezones.
+   */
+  function parseLocalDate(dateStr) {
+    if (!dateStr || typeof dateStr !== 'string') return null;
+    const parts = dateStr.split('-');
+    if (parts.length !== 3) return null;
+    return new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+  }
+
   // Pending completions: taskId → { timeoutId }
   const _pendingCompletions = {};
 
@@ -72,6 +83,10 @@ const Storage = (function() {
         } catch (err) {
           delete cache[e.key];
         }
+      }
+      // Notify other modules if tasks or completions changed in another tab
+      if (e.key === KEYS.TASKS || e.key === KEYS.REPEATING_COMPLETIONS) {
+        notifyTaskDataChanged();
       }
     }
   });
@@ -653,7 +668,8 @@ const Storage = (function() {
 
   function getTasksByDate(dateStr) {
     const tasks = getTasks();
-    const date = new Date(dateStr);
+    const date = parseLocalDate(dateStr);
+    if (!date) return [];
     const dayOfWeek = date.getDay();
 
     return tasks.filter(t => {
@@ -838,12 +854,16 @@ const Storage = (function() {
   }
 
   /**
-   * Return sessions on or after the given date string (YYYY-MM-DD).
+   * Return sessions on or after the given date string (YYYY-MM-DD) or timestamp.
    * More efficient than filtering getSessions() inline everywhere.
    * OPTIMIZATION: Uses binary search to find the start index since sessions are chronological.
    */
   function getSessionsSince(dateStr) {
-    const threshold = new Date(dateStr).getTime();
+    const d = (typeof dateStr === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateStr))
+      ? parseLocalDate(dateStr)
+      : new Date(dateStr);
+
+    const threshold = d ? d.getTime() : 0;
     const sessions = loadData(KEYS.SESSIONS, DEFAULTS.sessions);
     if (sessions.length === 0) return [];
 
@@ -1303,7 +1323,17 @@ const Storage = (function() {
 
   function formatDate(date) {
     // Avoid re-instantiating if already a Date; reuse object if possible in high-perf loops
-    const d = (date instanceof Date) ? date : new Date(date);
+    let d;
+    if (date instanceof Date) {
+      d = date;
+    } else if (typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      d = parseLocalDate(date);
+    } else {
+      d = new Date(date);
+    }
+
+    if (!d || isNaN(d.getTime())) return null;
+
     const m = d.getMonth() + 1;
     const day = d.getDate();
     // Use year directly, and fast conditional padding
@@ -1311,14 +1341,18 @@ const Storage = (function() {
   }
 
   function formatDisplayDate(dateStr) {
-    const date = new Date(dateStr);
+    if (!dateStr) return 'No date';
+    const date = parseLocalDate(dateStr);
+    if (!date) return dateStr;
     return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
   }
 
   function getRelativeDays(dateStr) {
     const today = new Date(); today.setHours(0, 0, 0, 0);
-    const targetDate = new Date(dateStr); targetDate.setHours(0, 0, 0, 0);
-    const diffDays = Math.ceil((targetDate - today) / (1000 * 60 * 60 * 24));
+    const targetDate = parseLocalDate(dateStr);
+    if (!targetDate) return dateStr;
+    targetDate.setHours(0, 0, 0, 0);
+    const diffDays = Math.round((targetDate - today) / (1000 * 60 * 60 * 24));
     if (diffDays === 0) return 'Today';
     if (diffDays === 1) return 'Tomorrow';
     if (diffDays === -1) return 'Yesterday';
@@ -1329,8 +1363,10 @@ const Storage = (function() {
 
   function getDaysUntil(dateStr) {
     const today = new Date(); today.setHours(0, 0, 0, 0);
-    const targetDate = new Date(dateStr); targetDate.setHours(0, 0, 0, 0);
-    return Math.ceil((targetDate - today) / (1000 * 60 * 60 * 24));
+    const targetDate = parseLocalDate(dateStr);
+    if (!targetDate) return 0;
+    targetDate.setHours(0, 0, 0, 0);
+    return Math.round((targetDate - today) / (1000 * 60 * 60 * 24));
   }
 
   function getWeekNumber(date) {
@@ -1341,7 +1377,10 @@ const Storage = (function() {
     return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
   }
 
-  function isToday(dateStr) { return formatDate(new Date()) === formatDate(new Date(dateStr)); }
+  function isToday(dateStr) {
+    if (!dateStr) return false;
+    return dateStr === formatDate(new Date());
+  }
 
   function isDateOverdue(dateStr) {
     if (!dateStr) return false;
@@ -1370,7 +1409,7 @@ const Storage = (function() {
     getAchievements, getXPState, getStudyBlocks, getStudyWindows,
     getNotes, getTimeBlocks, getReflections, getTheme,
     generateId, formatDate, formatDisplayDate, getRelativeDays, getDaysUntil,
-    getWeekNumber, isToday, isDateOverdue, getWeekStart,
+    getWeekNumber, isToday, isDateOverdue, getWeekStart, parseLocalDate,
     getRepeatingCompletions, saveRepeatingCompletions, isRepeatingTaskCompletedOnDate,
     setRepeatingTaskCompletedOnDate, pruneRepeatingCompletions,
     onSubtaskCompleted, _notifySubtaskCompleted
