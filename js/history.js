@@ -182,7 +182,8 @@ const History = (function() {
       // Aggregate focus sessions (weighted by 15-min intervals)
       filteredSessions.forEach(s => {
         if (s.type === 'work' && s.completedAt) {
-          const key = isWeekly ? new Date(s.completedAt).getDay() : Storage.formatDate(new Date(s.completedAt));
+          const date = new Date(s.completedAt);
+          const key = isWeekly ? date.getDay() : Storage.formatDate(date);
           activity[key] = (activity[key] || 0) + Math.max(1, Math.round(s.duration / 15));
         }
       });
@@ -190,7 +191,8 @@ const History = (function() {
       // Aggregate task completions (weighted as 1 unit)
       completedTasksInPeriod.forEach(t => {
         if (t._date) {
-          const key = isWeekly ? new Date(t._date).getDay() : Storage.formatDate(new Date(t._date));
+          const date = (t._date.length === 10) ? Storage.parseLocalDate(t._date) : new Date(t._date);
+          const key = isWeekly ? date.getDay() : Storage.formatDate(date);
           activity[key] = (activity[key] || 0) + 1;
         }
       });

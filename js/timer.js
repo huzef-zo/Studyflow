@@ -210,6 +210,10 @@ const Timer = (function() {
     elements.taskSelect?.addEventListener('change', handleTaskChange);
     elements.subtaskSelect?.addEventListener('change', handleSubtaskChange);
 
+    window.addEventListener('studyflow_taskDataChanged', () => {
+      populateTasks();
+    });
+
     // Keyboard shortcuts
     document.addEventListener('keydown', (e) => {
       if (['INPUT', 'SELECT', 'TEXTAREA'].includes(e.target.tagName)) return;
@@ -223,6 +227,7 @@ const Timer = (function() {
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'visible') {
         if (isRunning) requestWakeLock();   // re-acquire if still running
+        populateTasks();
         loadTimerState();
         updateDisplay();
         updateStats();
