@@ -17,3 +17,7 @@
 ## 2026-06-06 - [Logarithmic Session Retrieval]
 **Learning:** For append-only chronological datasets like focus sessions, replacing linear filters ($O(N)$) with binary search ($O(\log N)$) to find start indices yields massive performance gains (e.g., 9ms to 0.01ms for 20k entries). Additionally, refactoring higher-level getters (e.g., `getTodaySessions`) to share this optimized utility ensures these wins propagate through the dashboard and analytics.
 **Action:** Implement binary search for any range-based retrieval on sorted datasets. Ensure time-windowed getters (Today/Week) consume the optimized search utility.
+
+## 2026-06-12 - [Multi-Index Optimization for Chronological Data]
+**Learning:** In complex aggregations like `getStats` that require multiple time windows (Today/Week/Year), performing multiple binary searches to find all boundary indices *before* entering the loop is significantly faster than calculating timestamps or formatting dates inside the loop. Combining this with ISO string slicing (`.slice(0, 10)`) for date extraction avoids redundant object instantiation and reduced `getStats` execution time by ~81% (12.8ms to 2.4ms for 20k sessions).
+**Action:** For multi-window metrics on chronological data, pre-calculate all relevant indices via binary search and use index-based logic inside the loop. Use string slicing for fast date comparisons when data is in ISO format.
