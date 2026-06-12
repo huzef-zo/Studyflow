@@ -255,6 +255,8 @@ const Storage = (function() {
 
       // SECURITY: Explicitly pick and validate known properties to prevent malicious object property injection
       // and ensure data integrity from untrusted JSON backups.
+      const isValidDate = (str) => /^\d{4}-\d{2}-\d{2}$/.test(str);
+      const isValidTime = (str) => /^([01]\d|2[0-3]):[0-5]\d$/.test(str);
 
       if (data.user && typeof data.user === 'object' && !Array.isArray(data.user)) {
         const safeUser = { ...DEFAULTS.user };
@@ -285,9 +287,9 @@ const Storage = (function() {
           id: String(t.id || generateId()),
           title: String(t.title || 'Untitled Task'),
           type: String(t.type || 'one-time'),
-          startDate: t.startDate ? String(t.startDate) : null,
-          dueDate: t.dueDate ? String(t.dueDate) : null,
-          dueTime: t.dueTime ? String(t.dueTime) : null,
+          startDate: (t.startDate && isValidDate(t.startDate)) ? String(t.startDate) : null,
+          dueDate: (t.dueDate && isValidDate(t.dueDate)) ? String(t.dueDate) : null,
+          dueTime: (t.dueTime && isValidTime(t.dueTime)) ? String(t.dueTime) : null,
           priority: String(t.priority || 'medium'),
           subject: String(t.subject || 'Other'),
           repeatDays: Array.isArray(t.repeatDays) ? t.repeatDays.map(Number) : [],
@@ -343,6 +345,8 @@ const Storage = (function() {
       if (data.repeatingCompletions && typeof data.repeatingCompletions === 'object') {
         const safeRC = {};
         Object.keys(data.repeatingCompletions).forEach(k => {
+          // SECURITY: Prevent prototype pollution
+          if (k === '__proto__' || k === 'constructor' || k === 'prototype') return;
           if (data.repeatingCompletions[k] === true) safeRC[String(k)] = true;
         });
         saveRepeatingCompletions(safeRC);
@@ -399,8 +403,8 @@ const Storage = (function() {
         const safeSB = data.studyBlocks.map(b => ({
           id: String(b.id || generateId()),
           title: String(b.title || 'Untitled Block'),
-          startTime: String(b.startTime),
-          endTime: String(b.endTime),
+          startTime: isValidTime(b.startTime) ? String(b.startTime) : '09:00',
+          endTime: isValidTime(b.endTime) ? String(b.endTime) : '10:00',
           dayOfWeek: Number(b.dayOfWeek),
           subject: String(b.subject || 'Other'),
           createdAt: String(b.createdAt || new Date().toISOString())
@@ -412,8 +416,8 @@ const Storage = (function() {
         const safeSW = data.studyWindows.map(w => ({
           id: String(w.id || generateId()),
           dayOfWeek: Number(w.dayOfWeek),
-          startTime: String(w.startTime),
-          endTime: String(w.endTime),
+          startTime: isValidTime(w.startTime) ? String(w.startTime) : '09:00',
+          endTime: isValidTime(w.endTime) ? String(w.endTime) : '10:00',
           label: String(w.label || 'Study Session')
         }));
         saveData(KEYS.STUDY_WINDOWS, safeSW);
@@ -422,9 +426,9 @@ const Storage = (function() {
       if (Array.isArray(data.timeBlocks)) {
         const safeTB = data.timeBlocks.map(b => ({
           id: String(b.id || generateId()),
-          date: String(b.date),
-          startTime: String(b.startTime),
-          endTime: String(b.endTime),
+          date: isValidDate(b.date) ? String(b.date) : formatDate(new Date()),
+          startTime: isValidTime(b.startTime) ? String(b.startTime) : '09:00',
+          endTime: isValidTime(b.endTime) ? String(b.endTime) : '10:00',
           label: String(b.label || 'Time Block'),
           createdAt: String(b.createdAt || new Date().toISOString())
         }));
@@ -1318,7 +1322,15 @@ const Storage = (function() {
       return 'id_' + crypto.randomUUID();
     }
     // Fallback for environments without crypto.randomUUID
-    return 'id_' + Date.now().toString(36) + '_' + Math.random().toString(36).substring(2, 11) + '_' + (generateId._counter = (generateId._counter || 0) + 1);
+    let randomPart;
+    if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+      const arr = new Uint32Array(2);
+      crypto.getRandomValues(arr);
+      randomPart = arr[0].toString(36) + arr[1].toString(36);
+    } else {
+      randomPart = Math.random().toString(36).substring(2, 11);
+    }
+    return 'id_' + Date.now().toString(36) + '_' + randomPart + '_' + (generateId._counter = (generateId._counter || 0) + 1);
   }
 
   function formatDate(date) {
