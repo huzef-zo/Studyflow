@@ -24,3 +24,8 @@
 **Vulnerability:** CSS Injection/XSS via Sector Color Strings
 **Learning:** `App.escapeHtml` is insufficient for preventing injection within `style` attributes. A malicious user can provide a color value like `red; background-image: url('javascript:alert(1)')` to break out of the intended CSS property and inject arbitrary styles or script (in older/vulnerable browsers).
 **Prevention:** Strictly validate dynamic CSS properties using regex (e.g., hex code validation `/^#([0-9A-F]{3}){1,2}$/i`) at both the Storage layer (input/import) and the UI layer. Ensure validation logic is encapsulated within the data module to provide defense-in-depth even for programmatic or imported updates.
+
+## 2026-06-12 - Prototype Pollution and Import Hardening
+**Vulnerability:** Prototype Pollution and Unvalidated Input in Data Import
+**Learning:** Functions that iterate over user-controlled objects (like `importData`) are vulnerable to prototype pollution if keys like `__proto__` or `constructor` are not filtered. Furthermore, casting imported fields to `String` without format validation can lead to XSS if those strings are later rendered in `innerHTML`.
+**Prevention:** Always filter "forbidden" keys during object iteration. Use strict regex validation for dates (`YYYY-MM-DD`) and times (`HH:mm`) during import to ensure data integrity and prevent malicious payload injection before the data reaches the UI layer.

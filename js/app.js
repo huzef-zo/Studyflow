@@ -655,7 +655,7 @@ const App = (function() {
   };
 
   function applyTheme(themeName) {
-    const theme = THEMES[themeName] || THEMES.default;
+    const theme = Object.prototype.hasOwnProperty.call(THEMES, themeName) ? THEMES[themeName] : THEMES.default;
     document.documentElement.style.setProperty('--primary', theme.primary);
     document.documentElement.style.setProperty('--secondary', theme.secondary);
     // You'd also update the RGB variables if they exist in CSS

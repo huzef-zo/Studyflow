@@ -366,7 +366,7 @@ const Calendar = (function() {
       html += `
         <div class="card" style="position:absolute;top:${startTop}px;left:50px;width:calc(100% - 60px);height:${height}px;background:var(--primary-glow);border-left:3px solid var(--primary);padding:4px 8px;font-size:11px;overflow:hidden;margin:0;">
           <div style="font-weight:700;color:white;">${App.escapeHtml(block.label)}</div>
-          <div style="font-size:9px;opacity:0.7;color:white;">${block.startTime} - ${block.endTime}</div>
+          <div style="font-size:9px;opacity:0.7;color:white;">${App.escapeHtml(block.startTime)} - ${App.escapeHtml(block.endTime)}</div>
         </div>
       `;
     });
