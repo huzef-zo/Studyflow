@@ -13,3 +13,7 @@
 ## 2024-06-05 - [Discoverability of Keyboard-Only Features]
 **Learning:** Features only accessible via keyboard shortcuts (like "Skip Session") are effectively non-existent for mobile users and remain hidden from new users. Bringing these features into the UI via icon buttons (with appropriate ARIA labels) significantly improves discoverability and touch accessibility without cluttering the interface.
 **Action:** Audit logic for keyboard-only triggers and ensure corresponding UI elements exist for touch/mouse users.
+
+## 2026-06-13 - [Knowledge Vault Accessibility & Shortcuts]
+**Learning:** List-based navigation in secondary modules (like Notes) often relies on click-only `div` elements, creating barriers for keyboard and screen reader users. Additionally, text-heavy editors lack standard productivity shortcuts found in native apps.
+**Action:** Enhance item lists with `role="button"`, `tabindex="0"`, and `aria-current` to indicate state. Implement event delegation for `Enter`/`Space` keys. For editor fields, add standard shortcuts like `Ctrl/Cmd + S` to bridge the gap between web and desktop experiences.

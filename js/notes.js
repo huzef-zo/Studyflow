@@ -43,6 +43,26 @@ const Notes = (function() {
         loadNote(item.dataset.id);
       }
     });
+
+    elements.notesList?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        const item = e.target.closest('.note-item');
+        if (item && item.dataset.id) {
+          e.preventDefault();
+          loadNote(item.dataset.id);
+        }
+      }
+    });
+
+    const handleSaveShortcut = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        saveCurrentNote();
+      }
+    };
+
+    elements.noteTitle?.addEventListener('keydown', handleSaveShortcut);
+    elements.noteContent?.addEventListener('keydown', handleSaveShortcut);
   }
 
   function populateSubjects() {
@@ -60,7 +80,12 @@ const Notes = (function() {
     }
 
     elements.notesList.innerHTML = filtered.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)).map(note => `
-      <div class="note-item ${note.id === currentNoteId ? 'active' : ''}" data-id="${App.escapeHtml(note.id)}">
+      <div class="note-item ${note.id === currentNoteId ? 'active' : ''}"
+           data-id="${App.escapeHtml(note.id)}"
+           tabindex="0"
+           role="button"
+           aria-label="Open note: ${App.escapeHtml(note.title || 'Untitled')}"
+           aria-current="${note.id === currentNoteId ? 'true' : 'false'}">
         <div style="font-weight: 700; color: white; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${App.escapeHtml(note.title || 'Untitled')}</div>
         <div class="flex items-center justify-between">
           <div style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">${App.escapeHtml(note.subject)}</div>
