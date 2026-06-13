@@ -862,27 +862,27 @@ const Storage = (function() {
    * More efficient than filtering getSessions() inline everywhere.
    * OPTIMIZATION: Uses binary search to find the start index since sessions are chronological.
    */
-  function getSessionsSince(dateStr) {
-    const d = (typeof dateStr === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateStr))
-      ? parseLocalDate(dateStr)
-      : new Date(dateStr);
-
-    const threshold = d ? d.getTime() : 0;
-    const sessions = loadData(KEYS.SESSIONS, DEFAULTS.sessions);
-    if (sessions.length === 0) return [];
+  /**
+   * Internal helper to find the starting index for sessions >= threshold.
+   * Uses binary search for O(log N) performance.
+   */
+  function _findSessionIndex(threshold, sessions) {
+    if (!sessions || sessions.length === 0) return 0;
 
     // Fast path: check if the first session is already after the threshold
-    const firstTime = sessions[0].completedAt ? new Date(sessions[0].completedAt).getTime() : 0;
-    if (firstTime >= threshold) return sessions;
+    const firstVal = sessions[0].completedAt;
+    const firstTime = typeof firstVal === 'number' ? firstVal : (firstVal ? Date.parse(firstVal) : 0);
+    if (firstTime >= threshold) return 0;
 
-    // Binary search for the first session >= threshold
     let low = 0;
     let high = sessions.length - 1;
     let startIndex = sessions.length;
 
     while (low <= high) {
       const mid = (low + high) >>> 1;
-      const midTime = sessions[mid].completedAt ? new Date(sessions[mid].completedAt).getTime() : 0;
+      const midVal = sessions[mid].completedAt;
+      const midTime = typeof midVal === 'number' ? midVal : (midVal ? Date.parse(midVal) : 0);
+
       if (midTime >= threshold) {
         startIndex = mid;
         high = mid - 1;
@@ -890,8 +890,20 @@ const Storage = (function() {
         low = mid + 1;
       }
     }
+    return startIndex;
+  }
+
+  function getSessionsSince(dateStr) {
+    const d = (typeof dateStr === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateStr))
+      ? parseLocalDate(dateStr)
+      : new Date(dateStr);
+
+    const threshold = d ? d.getTime() : 0;
+    const sessions = loadData(KEYS.SESSIONS, DEFAULTS.sessions);
+    const startIndex = _findSessionIndex(threshold, sessions);
 
     if (startIndex >= sessions.length) return [];
+    if (startIndex === 0) return sessions;
 
     // Return a slice from the start index. Slice is O(K) where K is number of matching sessions.
     return sessions.slice(startIndex);
@@ -1142,8 +1154,12 @@ const Storage = (function() {
         if (compTime > 0) {
           if (compTime >= weekStartTime) weekCompleted++;
           if (compTime >= activityCutoff) {
-            reusableDate.setTime(compTime);
-            activityDates.add(formatDate(reusableDate));
+            if (typeof t.completedAt === 'string' && t.completedAt.length >= 10 && t.completedAt[4] === '-' && t.completedAt[7] === '-') {
+              activityDates.add(t.completedAt.slice(0, 10));
+            } else {
+              reusableDate.setTime(compTime);
+              activityDates.add(formatDate(reusableDate));
+            }
           }
         }
       } else {
@@ -1163,26 +1179,47 @@ const Storage = (function() {
     });
 
     let todaySessions = 0, weekSessions = 0, totalMinutesToday = 0, totalMinutesWeek = 0;
-    sessions.forEach(s => {
-      if (!s.completedAt) return;
-      const compTime = typeof s.completedAt === 'number' ? s.completedAt : Date.parse(s.completedAt);
-      if (isNaN(compTime)) return;
+    // OPTIMIZATION: Use binary search to find relevant indices once, avoiding O(N) Date.parse calls in loop
+    const startIndex = _findSessionIndex(activityCutoff, sessions);
+    const weekIndex = _findSessionIndex(weekStartTime, sessions);
+    const todayIndex = _findSessionIndex(todayStartTime, sessions);
 
+    let lastCompDay = '';
+
+    for (let i = startIndex; i < sessions.length; i++) {
+      const s = sessions[i];
       if (s.type === 'work') {
-        if (compTime >= activityCutoff) {
+        // Cache formatDate result for sessions on the same day to avoid redundant string generation
+        let currentDay;
+        // If s.completedAt is string "YYYY-MM-DD...", we can extract day fast
+        const compAt = s.completedAt;
+        if (typeof compAt === 'string' && compAt.length >= 10 && compAt[4] === '-' && compAt[7] === '-') {
+          currentDay = compAt.slice(0, 10);
+        } else {
+          const compTime = typeof compAt === 'number' ? compAt : (compAt ? Date.parse(compAt) : 0);
           reusableDate.setTime(compTime);
-          activityDates.add(formatDate(reusableDate));
+          currentDay = formatDate(reusableDate);
         }
-        if (compTime >= todayStartTime && compTime < todayEndTime) {
-          todaySessions++;
-          totalMinutesToday += s.duration;
+
+        if (currentDay !== lastCompDay) {
+          lastCompDay = currentDay;
+          activityDates.add(currentDay);
         }
-        if (compTime >= weekStartTime) {
+
+        if (i >= weekIndex) {
           weekSessions++;
           totalMinutesWeek += s.duration;
         }
+        if (i >= todayIndex) {
+          // Check todayEndTime just in case of future sessions
+          const compTime = typeof compAt === 'number' ? compAt : (compAt ? Date.parse(compAt) : 0);
+          if (compTime >= todayStartTime && compTime < todayEndTime) {
+            todaySessions++;
+            totalMinutesToday += s.duration;
+          }
+        }
       }
-    });
+    }
 
     const streak = calculateStreak(activityDates);
     const bestStreak = calculateBestStreak(activityDates);
@@ -1334,12 +1371,15 @@ const Storage = (function() {
   }
 
   function formatDate(date) {
+    // Fast path: if it's already a correctly formatted string, return it
+    if (typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      return date;
+    }
+
     // Avoid re-instantiating if already a Date; reuse object if possible in high-perf loops
     let d;
     if (date instanceof Date) {
       d = date;
-    } else if (typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
-      d = parseLocalDate(date);
     } else {
       d = new Date(date);
     }
