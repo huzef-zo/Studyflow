@@ -91,8 +91,13 @@ function runTests() {
 
         const stats = Storage.getStats();
         if (stats.tasks.todayCompleted !== 1) throw new Error(`Expected 1 todayCompleted, got ${stats.tasks.todayCompleted}`);
+        if (stats.tasks.weekCompleted !== 1) throw new Error(`Expected 1 weekCompleted, got ${stats.tasks.weekCompleted}`);
+        if (stats.tasks.completed !== 1) throw new Error(`Expected 1 total completed, got ${stats.tasks.completed}`);
 
-        console.log('  Passed: Stats correctly count repeating task completions for today.');
+        const goals = Storage.getGoals();
+        if (goals.current_tasks !== 1) throw new Error(`Expected 1 current_tasks in goals, got ${goals.current_tasks}`);
+
+        console.log('  Passed: Stats and Goals correctly count repeating task completions.');
     })();
 
     // Test 4: Pruning
