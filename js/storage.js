@@ -978,7 +978,17 @@ const Storage = (function() {
 
     // Dynamically recalculate from source of truth
     const tasks = getTasks();
-    goals.current_tasks = tasks.filter(t => t.completed && t.completedAt && new Date(t.completedAt) >= weekStart).length;
+    const taskIds = new Set(tasks.map(t => t.id));
+    const oneTimeCompleted = tasks.filter(t => t.type !== 'repeating' && t.completed && t.completedAt && new Date(t.completedAt) >= weekStart).length;
+
+    const completions = getRepeatingCompletions();
+    const weekStartDateStr = formatDate(weekStart);
+    const repeatingCompleted = Object.keys(completions).filter(key => {
+      const dateStr = key.slice(-10);
+      return dateStr >= weekStartDateStr && taskIds.has(key.slice(0, -11));
+    }).length;
+
+    goals.current_tasks = oneTimeCompleted + repeatingCompleted;
     goals.current_hours = getTotalMinutesWeek() / 60;
 
     return goals;
@@ -1086,11 +1096,13 @@ const Storage = (function() {
     const tasks = getTasks();
     const subjects = getSubjects();
     const subjectMetrics = {};
+    const completions = getRepeatingCompletions();
     subjects.forEach(s => { subjectMetrics[s.name] = { total: 0, completed: 0 }; });
     tasks.forEach(t => {
       if (subjectMetrics[t.subject]) {
         subjectMetrics[t.subject].total++;
-        if (t.completed) subjectMetrics[t.subject].completed++;
+        const isRepeatingDone = t.type === 'repeating' && Object.keys(completions).some(k => k.startsWith(`${t.id}_`));
+        if (t.completed || isRepeatingDone) subjectMetrics[t.subject].completed++;
       }
     });
     return subjects.map(subject => {
@@ -1175,6 +1187,25 @@ const Storage = (function() {
       if (isCompletedToday) {
         todayCompleted++;
         activityDates.add(todayStr);
+      }
+    });
+
+    // Add repeating completions to aggregate metrics
+    const weekStartDateStr = formatDate(weekStart);
+    const cutoffDateStr = formatDate(new Date(activityCutoff));
+    const taskIds = new Set(tasks.map(t => t.id));
+
+    Object.keys(completions).forEach(key => {
+      const dateStr = key.slice(-10);
+      const taskId = key.slice(0, -11);
+
+      if (taskIds.has(taskId)) {
+        completedTasks++;
+        if (dateStr >= weekStartDateStr) weekCompleted++;
+      }
+
+      if (dateStr >= cutoffDateStr) {
+        activityDates.add(dateStr);
       }
     });
 
@@ -1266,6 +1297,13 @@ const Storage = (function() {
           }
         }
       });
+      const completions = getRepeatingCompletions();
+      const taskIds = new Set(tasks.map(t => t.id));
+      Object.keys(completions).forEach(key => {
+        if (taskIds.has(key.slice(0, -11))) {
+          activityDates.add(key.slice(-10));
+        }
+      });
     }
     const sortedDates = Array.from(activityDates).sort();
     if (sortedDates.length === 0) return 0;
@@ -1317,6 +1355,13 @@ const Storage = (function() {
             reusableDate.setTime(compTime);
             activityDates.add(formatDate(reusableDate));
           }
+        }
+      });
+      const completions = getRepeatingCompletions();
+      const taskIds = new Set(tasks.map(t => t.id));
+      Object.keys(completions).forEach(key => {
+        if (taskIds.has(key.slice(0, -11))) {
+          activityDates.add(key.slice(-10));
         }
       });
     }
