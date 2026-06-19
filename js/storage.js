@@ -359,7 +359,7 @@ const Storage = (function() {
         if ('currentRank' in data.xpState) safeXP.currentRank = String(data.xpState.currentRank);
         if (Array.isArray(data.xpState.history)) {
           safeXP.history = data.xpState.history.map(h => ({
-            date: String(h.date),
+            date: isValidDate(h.date) ? String(h.date) : formatDate(new Date()),
             xpGained: Number(h.xpGained),
             source: String(h.source)
           }));
@@ -392,7 +392,7 @@ const Storage = (function() {
 
       if (Array.isArray(data.reflections)) {
         const safeReflections = data.reflections.map(r => ({
-          date: String(r.date),
+          date: isValidDate(r.date) ? String(r.date) : formatDate(new Date()),
           text: String(r.text),
           timestamp: String(r.timestamp || new Date().toISOString())
         }));
@@ -1440,14 +1440,14 @@ const Storage = (function() {
   function formatDisplayDate(dateStr) {
     if (!dateStr) return 'No date';
     const date = parseLocalDate(dateStr);
-    if (!date) return dateStr;
+    if (!date) return 'Invalid date';
     return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
   }
 
   function getRelativeDays(dateStr) {
     const today = new Date(); today.setHours(0, 0, 0, 0);
     const targetDate = parseLocalDate(dateStr);
-    if (!targetDate) return dateStr;
+    if (!targetDate) return 'Invalid date';
     targetDate.setHours(0, 0, 0, 0);
     const diffDays = Math.round((targetDate - today) / (1000 * 60 * 60 * 24));
     if (diffDays === 0) return 'Today';
