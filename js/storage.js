@@ -84,8 +84,8 @@ const Storage = (function() {
           delete cache[e.key];
         }
       }
-      // Notify other modules if tasks or completions changed in another tab
-      if (e.key === KEYS.TASKS || e.key === KEYS.REPEATING_COMPLETIONS) {
+      // Notify other modules if tasks, completions, or XP changed in another tab
+      if (e.key === KEYS.TASKS || e.key === KEYS.REPEATING_COMPLETIONS || e.key === KEYS.XP_STATE) {
         notifyTaskDataChanged();
       }
     }
