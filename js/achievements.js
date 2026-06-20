@@ -68,6 +68,11 @@ const Achievements = (function() {
       App.showToast(`+${amount} XP (${source})`, 'info');
     }
 
+    // Trigger UI refresh
+    if (typeof Storage !== 'undefined' && Storage.notifyTaskDataChanged) {
+      Storage.notifyTaskDataChanged();
+    }
+
     checkBadges();
     return xpState;
   }
