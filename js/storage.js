@@ -1097,11 +1097,19 @@ const Storage = (function() {
     const subjects = getSubjects();
     const subjectMetrics = {};
     const completions = getRepeatingCompletions();
+
+    // OPTIMIZATION: Extract task IDs from completions once to avoid O(N*M) nested loop
+    const completedRepeatingTaskIds = new Set();
+    Object.keys(completions).forEach(key => {
+      // Key format is "taskId_YYYY-MM-DD"
+      completedRepeatingTaskIds.add(key.slice(0, -11));
+    });
+
     subjects.forEach(s => { subjectMetrics[s.name] = { total: 0, completed: 0 }; });
     tasks.forEach(t => {
       if (subjectMetrics[t.subject]) {
         subjectMetrics[t.subject].total++;
-        const isRepeatingDone = t.type === 'repeating' && Object.keys(completions).some(k => k.startsWith(`${t.id}_`));
+        const isRepeatingDone = t.type === 'repeating' && completedRepeatingTaskIds.has(t.id);
         if (t.completed || isRepeatingDone) subjectMetrics[t.subject].completed++;
       }
     });
