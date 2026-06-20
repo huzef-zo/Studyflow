@@ -17,3 +17,7 @@
 ## 2026-06-13 - [Knowledge Vault Accessibility & Shortcuts]
 **Learning:** List-based navigation in secondary modules (like Notes) often relies on click-only `div` elements, creating barriers for keyboard and screen reader users. Additionally, text-heavy editors lack standard productivity shortcuts found in native apps.
 **Action:** Enhance item lists with `role="button"`, `tabindex="0"`, and `aria-current` to indicate state. Implement event delegation for `Enter`/`Space` keys. For editor fields, add standard shortcuts like `Ctrl/Cmd + S` to bridge the gap between web and desktop experiences.
+
+## 2026-06-20 - [Ambient Sound Toggle Feedback]
+**Learning:** Toggle buttons for ambient background processes (like noise generators) require immediate visual and programmatic feedback to confirm state. Without an "active" class and `aria-pressed` attribute, users are left uncertain if a sound is playing, especially in noisy environments or when using assistive technology.
+**Action:** Always implement a dedicated `.active` visual state and synchronized `aria-pressed` attribute for toggle controls. Refactor toggle logic to support mutually exclusive modes (e.g., Pink vs Brown noise) to prevent audio stacking and UI confusion.
