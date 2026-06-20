@@ -29,3 +29,13 @@
 **Vulnerability:** Prototype Pollution and Unvalidated Input in Data Import
 **Learning:** Functions that iterate over user-controlled objects (like `importData`) are vulnerable to prototype pollution if keys like `__proto__` or `constructor` are not filtered. Furthermore, casting imported fields to `String` without format validation can lead to XSS if those strings are later rendered in `innerHTML`.
 **Prevention:** Always filter "forbidden" keys during object iteration. Use strict regex validation for dates (`YYYY-MM-DD`) and times (`HH:mm`) during import to ensure data integrity and prevent malicious payload injection before the data reaches the UI layer.
+
+## 2026-06-19 - [Persistent XSS via Malicious Date Strings]
+**Vulnerability:** Persistent XSS via malicious date strings in backups and reflected date utility functions.
+**Learning:** Utility functions that fall back to returning raw, unvalidated input strings on parsing failure (like `formatDisplayDate`) create hidden XSS vectors when their output is rendered via `innerHTML`.
+**Prevention:** Always return a safe, static fallback string (e.g., 'Invalid date') on parsing failure. Combine this with strict validation at the storage boundary (e.g., in `importData`) using regex helpers for dates and times.
+
+## 2026-06-19 - [Persistent XSS via Malicious Date Strings]
+**Vulnerability:** Persistent XSS via malicious date strings in backups and reflected date utility functions.
+**Learning:** Utility functions that fall back to returning raw, unvalidated input strings on parsing failure (like `formatDisplayDate`) create hidden XSS vectors when their output is rendered via `innerHTML`.
+**Prevention:** Always return a safe, static fallback string (e.g., 'Invalid date') on parsing failure. Combine this with strict validation at the storage boundary (e.g., in `importData`) using regex helpers for dates and times.
