@@ -750,6 +750,13 @@ h4 {
   transform: scale(0.95);
 }
 
+.btn.active {
+  background: var(--primary-gradient);
+  color: white;
+  box-shadow: var(--shadow-glow-primary);
+  border-color: transparent;
+}
+
 /* Primary Button - Vibrant Gradient */
 .btn-primary {
   background: linear-gradient(135deg, var(--neon-blue) 0%, var(--neon-purple) 100%);

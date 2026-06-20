@@ -70,6 +70,7 @@ const Timer = (function() {
   // ── Audio ─────────────────────────────────────────────────────────────────────
   let audioCtx = null;
   let ambientNoise = null;
+  let currentAmbientType = null;
 
   function playTransitionSound(type) {
     const settings = Storage.getSettings();
@@ -114,12 +115,23 @@ const Timer = (function() {
   }
 
   function toggleAmbientSound(type) {
+    const pinkBtn = document.getElementById('ambient-pink-btn');
+    const brownBtn = document.getElementById('ambient-brown-btn');
+
     if (ambientNoise) {
       ambientNoise.stop();
       ambientNoise = null;
-      return false;
+
+      if (pinkBtn) { pinkBtn.classList.remove('active'); pinkBtn.setAttribute('aria-pressed', 'false'); }
+      if (brownBtn) { brownBtn.classList.remove('active'); brownBtn.setAttribute('aria-pressed', 'false'); }
+
+      if (currentAmbientType === type) {
+        currentAmbientType = null;
+        return false;
+      }
     }
 
+    currentAmbientType = type;
     try {
       if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       const bufferSize = 2 * audioCtx.sampleRate,
@@ -152,8 +164,18 @@ const Timer = (function() {
 
       whiteNoise.start();
       ambientNoise = whiteNoise;
+
+      const activeBtn = type === 'pink' ? pinkBtn : brownBtn;
+      if (activeBtn) {
+        activeBtn.classList.add('active');
+        activeBtn.setAttribute('aria-pressed', 'true');
+      }
       return true;
-    } catch (e) { console.error(e); return false; }
+    } catch (e) {
+      console.error(e);
+      currentAmbientType = null;
+      return false;
+    }
   }
 
   // ── DOM ───────────────────────────────────────────────────────────────────────
