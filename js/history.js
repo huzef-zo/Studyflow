@@ -54,11 +54,15 @@ const History = (function() {
     return cutoff;
   }
 
+  /**
+   * Return sessions in the selected period.
+   * OPTIMIZATION: Uses Storage.getSessionsSince() which utilizes binary search.
+   * Reduces complexity from O(N) to O(log N).
+   */
   function getFilteredSessions() {
-    const sessions = Storage.getSessions();
     const cutoff = getCutoffDate();
-    if (!cutoff) return sessions;
-    return sessions.filter(s => s.completedAt && new Date(s.completedAt) >= cutoff);
+    if (!cutoff) return Storage.getSessions();
+    return Storage.getSessionsSince(cutoff);
   }
 
   function getFilteredTasks() {
