@@ -26,12 +26,21 @@ const Tasks = (function() {
 
   function setupEventListeners() {
     elements.filterTabs.forEach(tab => {
-      tab.onclick = () => {
-        elements.filterTabs.forEach(t => t.classList.remove('active'));
+      const toggleFn = (e) => {
+        if (e.type === 'keydown' && e.key !== 'Enter' && e.key !== ' ') return;
+        if (e.type === 'keydown') e.preventDefault();
+
+        elements.filterTabs.forEach(t => {
+          t.classList.remove('active');
+          t.setAttribute('aria-selected', 'false');
+        });
         tab.classList.add('active');
+        tab.setAttribute('aria-selected', 'true');
         currentFilter = tab.dataset.filter;
         renderTasks();
       };
+      tab.onclick = toggleFn;
+      tab.onkeydown = toggleFn;
     });
 
     if (elements.addTaskBtn) {

@@ -29,14 +29,23 @@ const History = (function() {
     initElements();
 
     document.querySelectorAll('[data-period]').forEach(tab => {
-      tab.addEventListener('click', () => {
-        document.querySelectorAll('[data-period]').forEach(t => t.classList.remove('active'));
+      const toggleFn = (e) => {
+        if (e.type === 'keydown' && e.key !== 'Enter' && e.key !== ' ') return;
+        if (e.type === 'keydown') e.preventDefault();
+
+        document.querySelectorAll('[data-period]').forEach(t => {
+          t.classList.remove('active');
+          t.setAttribute('aria-selected', 'false');
+        });
         tab.classList.add('active');
+        tab.setAttribute('aria-selected', 'true');
         statsPeriodDays = tab.dataset.period === 'all' ? null : parseInt(tab.dataset.period);
         updateSummaryStats();
         renderFrequencyGraph();
         updateMasteryOverview();
-      });
+      };
+      tab.addEventListener('click', toggleFn);
+      tab.addEventListener('keydown', toggleFn);
     });
 
     updateSummaryStats();
