@@ -55,10 +55,10 @@
 
     <!-- Filter Bar -->
     <div class="flex flex-wrap items-center justify-between gap-md mb-sm animate-fade-in" style="animation-delay: 0.1s;">
-      <div class="filter-tabs" style="margin: 0;">
-        <div class="filter-tab active" data-filter="all">All Missions</div>
-        <div class="filter-tab" data-filter="pending">Active</div>
-        <div class="filter-tab" data-filter="completed">Accomplished</div>
+      <div class="filter-tabs" style="margin: 0;" role="tablist" aria-label="Filter missions">
+        <div class="filter-tab active" data-filter="all" role="tab" aria-selected="true" tabindex="0">All Missions</div>
+        <div class="filter-tab" data-filter="pending" role="tab" aria-selected="false" tabindex="0">Active</div>
+        <div class="filter-tab" data-filter="completed" role="tab" aria-selected="false" tabindex="0">Accomplished</div>
       </div>
 
       <div class="flex items-center gap-sm flex-wrap">
