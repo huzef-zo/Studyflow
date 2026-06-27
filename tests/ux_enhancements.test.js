@@ -31,7 +31,7 @@ async function runTests() {
         if (!appCode.includes('aria-modal="true"')) {
             throw new Error('App.createModal missing aria-modal="true" injection');
         }
-        if (!appCode.includes('aria-labelledby="${titleId}"')) {
+        if (!appCode.includes('aria-labelledby="${escapeHtml(titleId)}"')) {
             throw new Error('App.createModal missing aria-labelledby injection');
         }
         if (!appCode.includes('id="${titleId}"')) {

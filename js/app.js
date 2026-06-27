@@ -252,7 +252,7 @@ const App = (function() {
     if (id) modal.id = id;
 
     modal.innerHTML = `
-      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="${titleId}">
+      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="${escapeHtml(titleId)}">
         <div class="modal-header">
           <h3 class="modal-title" id="${titleId}">${escapeHtml(title)}</h3>
           <button class="modal-close" aria-label="Close modal">${Icons.x}</button>
@@ -513,7 +513,7 @@ const App = (function() {
   }
 
   function hexToRgb(hex) {
-    if (!hex) return '59, 130, 246';
+    if (!hex || !isValidHexColor(hex)) return '59, 130, 246';
     hex = hex.replace('#', '');
     if (hex.length === 3) hex = hex.split('').map(c => c + c).join('');
     const r = parseInt(hex.substring(0,2),16), g = parseInt(hex.substring(2,4),16), b = parseInt(hex.substring(4,6),16);
@@ -540,12 +540,12 @@ const App = (function() {
 
   function createProgressBar(current, max, label, showPercentage = true) {
     const percentage = max > 0 ? Math.min(100, Math.round((current / max) * 100)) : 0;
-    // SECURITY: Escape label to prevent XSS from dynamic progress labels
+    // SECURITY: Escape all dynamic parameters as they are injected into innerHTML
     return `
       <div class="progress-wrapper">
         <div class="progress-header">
           <span class="progress-label">${escapeHtml(label)}</span>
-          <span class="progress-value">${current} / ${max}${showPercentage ? ` (${percentage}%)` : ''}</span>
+          <span class="progress-value">${escapeHtml(current)} / ${escapeHtml(max)}${showPercentage ? ` (${percentage}%)` : ''}</span>
         </div>
         <div class="progress-bar-bg">
           <div class="progress-bar-fill" style="width:${percentage}%;"></div>
@@ -556,8 +556,11 @@ const App = (function() {
 
   function createEmptyStateHtml(options) {
     const { title='No Data', text='Nothing to show here yet.', icon='empty', actionText='', actionId='', padding='4rem' } = options;
+    // SECURITY: Strictly validate CSS padding to prevent style injection
+    const safePadding = /^[\d.a-zA-Z% \-]+$/.test(padding) ? padding : '4rem';
+
     return `
-      <div class="empty-state" style="padding:${padding};">
+      <div class="empty-state" style="padding:${safePadding};">
         <div class="empty-state-icon">${Icons[icon]||Icons.empty}</div>
         <h4 style="color:white;font-size:1.25rem;margin-bottom:8px;font-weight:600;">${escapeHtml(title)}</h4>
         <p style="color:var(--text-muted);font-size:0.875rem;margin-bottom:1.5rem;max-width:250px;">${escapeHtml(text)}</p>
