@@ -1005,7 +1005,29 @@ const Storage = (function() {
   function getSettings() { return { ...DEFAULTS.settings, ...loadData(KEYS.SETTINGS, DEFAULTS.settings) }; }
   function saveSettings(settings) { return saveData(KEYS.SETTINGS, settings); }
   function updateSetting(key, value) {
+    // SECURITY: Prevent prototype pollution and restrict to allowed keys
+    if (key === '__proto__' || key === 'constructor' || key === 'prototype') return false;
+
     const settings = getSettings();
+
+    // Only allow updating keys that exist in the default settings
+    if (!Object.prototype.hasOwnProperty.call(DEFAULTS.settings, key)) {
+      return false;
+    }
+
+    // Validation for specific settings
+    if (key === 'pinned_nav_items') {
+      if (!Array.isArray(value)) return false;
+      const VALID_IDS = ['dashboard', 'tasks', 'timer', 'calendar', 'notes', 'goals', 'history', 'settings'];
+      // Only keep valid IDs and limit to 2 pins
+      value = value.filter(id => VALID_IDS.includes(id)).slice(0, 2);
+    } else if (typeof DEFAULTS.settings[key] === 'number') {
+      value = Number(value);
+      if (isNaN(value)) return false;
+    } else if (typeof DEFAULTS.settings[key] === 'boolean') {
+      value = Boolean(value);
+    }
+
     settings[key] = value;
     return saveSettings(settings);
   }
