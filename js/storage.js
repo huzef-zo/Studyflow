@@ -332,11 +332,22 @@ const Storage = (function() {
 
       if (data.settings && typeof data.settings === 'object' && !Array.isArray(data.settings)) {
         const safeSettings = { ...DEFAULTS.settings };
+        const validNavIds = ['timer', 'calendar', 'notes', 'goals', 'history', 'settings'];
         Object.keys(DEFAULTS.settings).forEach(key => {
           if (key in data.settings) {
-            if (typeof DEFAULTS.settings[key] === 'boolean') safeSettings[key] = Boolean(data.settings[key]);
-            else if (typeof DEFAULTS.settings[key] === 'number') safeSettings[key] = Number(data.settings[key]);
-            else safeSettings[key] = data.settings[key];
+            const val = data.settings[key];
+            if (typeof DEFAULTS.settings[key] === 'boolean') {
+              safeSettings[key] = Boolean(val);
+            } else if (typeof DEFAULTS.settings[key] === 'number') {
+              const num = Number(val);
+              safeSettings[key] = isNaN(num) ? DEFAULTS.settings[key] : num;
+            } else if (key === 'pinned_nav_items') {
+              if (Array.isArray(val)) {
+                safeSettings[key] = val.filter(id => validNavIds.includes(id)).slice(0, 2);
+              }
+            } else if (typeof DEFAULTS.settings[key] === 'string') {
+              safeSettings[key] = String(val);
+            }
           }
         });
         saveData(KEYS.SETTINGS, safeSettings);
@@ -1005,8 +1016,22 @@ const Storage = (function() {
   function getSettings() { return { ...DEFAULTS.settings, ...loadData(KEYS.SETTINGS, DEFAULTS.settings) }; }
   function saveSettings(settings) { return saveData(KEYS.SETTINGS, settings); }
   function updateSetting(key, value) {
+    // SECURITY: Block prototype pollution and whitelist keys
+    if (key === '__proto__' || key === 'constructor' || key === 'prototype') return false;
+    if (!Object.prototype.hasOwnProperty.call(DEFAULTS.settings, key)) return false;
+
     const settings = getSettings();
-    settings[key] = value;
+
+    // SECURITY: Extra validation for sensitive settings
+    if (key === 'pinned_nav_items') {
+      const validIds = ['timer', 'calendar', 'notes', 'goals', 'history', 'settings'];
+      if (!Array.isArray(value)) return false;
+      const safeValue = value.filter(id => validIds.includes(id)).slice(0, 2);
+      settings[key] = safeValue;
+    } else {
+      settings[key] = value;
+    }
+
     return saveSettings(settings);
   }
 
