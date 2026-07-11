@@ -488,12 +488,15 @@ const App = (function() {
     document.addEventListener('keydown', (e) => {
       if (['INPUT', 'SELECT', 'TEXTAREA'].includes(e.target.tagName)) return;
 
-      // Ctrl/Meta + K: Command Palette (Search Tasks as fallback)
+      // Ctrl/Meta + K: Context-aware Search
       if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
         e.preventDefault();
-        const searchInput = document.getElementById('search-tasks');
-        if (searchInput) {
-          searchInput.focus();
+        const searchTasks = document.getElementById('search-tasks');
+        const searchNotes = document.getElementById('search-notes');
+        if (searchTasks) {
+          searchTasks.focus();
+        } else if (searchNotes) {
+          searchNotes.focus();
         } else {
           window.location.href = 'tasks.html';
         }
