@@ -54,10 +54,10 @@
       <section class="card animate-fade-in stagger-2" style="background:transparent;border:none;box-shadow:none;margin-bottom:0;">
         <div class="flex items-center justify-between mb-md">
           <span style="font-size:13px;font-weight:600;color:var(--text-secondary);">Stats Period</span>
-          <div class="filter-tabs" style="margin:0;">
-            <div class="filter-tab active" data-period="all">All Time</div>
-            <div class="filter-tab" data-period="30">Last 30 Days</div>
-            <div class="filter-tab" data-period="7">Last 7 Days</div>
+          <div class="filter-tabs" style="margin:0;" role="tablist" aria-label="Stats period">
+            <div class="filter-tab active" data-period="all" role="tab" aria-selected="true" tabindex="0">All Time</div>
+            <div class="filter-tab" data-period="30" role="tab" aria-selected="false" tabindex="0">Last 30 Days</div>
+            <div class="filter-tab" data-period="7" role="tab" aria-selected="false" tabindex="0">Last 7 Days</div>
           </div>
         </div>
       </section>

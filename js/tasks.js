@@ -26,12 +26,21 @@ const Tasks = (function() {
 
   function setupEventListeners() {
     elements.filterTabs.forEach(tab => {
-      tab.onclick = () => {
-        elements.filterTabs.forEach(t => t.classList.remove('active'));
+      const toggleFn = (e) => {
+        if (e.type === 'keydown' && e.key !== 'Enter' && e.key !== ' ') return;
+        if (e.type === 'keydown') e.preventDefault();
+
+        elements.filterTabs.forEach(t => {
+          t.classList.remove('active');
+          t.setAttribute('aria-selected', 'false');
+        });
         tab.classList.add('active');
+        tab.setAttribute('aria-selected', 'true');
         currentFilter = tab.dataset.filter;
         renderTasks();
       };
+      tab.onclick = toggleFn;
+      tab.onkeydown = toggleFn;
     });
 
     if (elements.addTaskBtn) {
@@ -68,11 +77,25 @@ const Tasks = (function() {
     await new Promise(r => setTimeout(r, 600));
     renderTasks();
 
-    // Check for "add" action in URL
+    // Check for URL parameters
     const urlParams = new URLSearchParams(window.location.search);
+    let shouldUpdateUrl = false;
+
     if (urlParams.get('action') === 'add') {
       openTaskModal();
-      // Clean up URL
+      shouldUpdateUrl = true;
+    }
+
+    const subjectParam = urlParams.get('subject');
+    if (subjectParam) {
+      if (elements.subjectFilter) {
+        elements.subjectFilter.value = subjectParam;
+        renderTasks();
+        shouldUpdateUrl = true;
+      }
+    }
+
+    if (shouldUpdateUrl) {
       const newUrl = window.location.pathname;
       window.history.replaceState({}, document.title, newUrl);
     }

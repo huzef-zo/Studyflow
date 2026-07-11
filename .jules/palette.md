@@ -21,3 +21,7 @@
 ## 2026-06-20 - [Ambient Sound Toggle Feedback]
 **Learning:** Toggle buttons for ambient background processes (like noise generators) require immediate visual and programmatic feedback to confirm state. Without an "active" class and `aria-pressed` attribute, users are left uncertain if a sound is playing, especially in noisy environments or when using assistive technology.
 **Action:** Always implement a dedicated `.active` visual state and synchronized `aria-pressed` attribute for toggle controls. Refactor toggle logic to support mutually exclusive modes (e.g., Pink vs Brown noise) to prevent audio stacking and UI confusion.
+
+## 2026-06-27 - [Filter Tab Accessibility Pattern]
+**Learning:** Navigation filters built with custom `div` elements are often overlooked in accessibility audits because they visually resemble tabs but lack the underlying semantic structure. This prevents keyboard users from discovering and interacting with content filtering options.
+**Action:** Always apply the ARIA `tablist` and `tab` pattern to filter groups. This includes `role="tablist"`, `role="tab"`, `tabindex="0"`, and `aria-selected` state management, along with dedicated keyboard listeners for `Enter` and `Space`.
