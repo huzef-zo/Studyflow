@@ -268,7 +268,7 @@
           return;
         }
         masteryEl.innerHTML = stats.map(subject => `
-          <div class="mastery-item">
+          <a href="tasks.html?subject=${encodeURIComponent(subject.name)}" class="mastery-item u-no-underline">
             <div class="flex items-center justify-between mb-sm">
               <span style="font-weight: 700; font-size: 0.875rem; color: white;">${App.escapeHtml(subject.name)}</span>
               <span style="font-weight: 800; color: white; font-size: 0.875rem;">${subject.percentage}%</span>
@@ -279,7 +279,7 @@
             <div style="font-size: 10px; color: rgba(255, 255, 255, 0.5); margin-top: 4px; font-weight: 600; text-transform: uppercase;">
               ${subject.completed} / ${subject.total} Objectives
             </div>
-          </div>
+          </a>
         `).join('');
       }
 
@@ -328,7 +328,7 @@
           const href = block.taskId ? `timer.html?taskId=${block.taskId}` : 'timer.html';
 
           return `
-            <a href="${href}" class="flex items-center gap-md p-sm hover-bg" style="text-decoration:none;border-radius:12px;border:1px solid rgba(255,255,255,0.05);background:rgba(255,255,255,0.02);">
+            <a href="${href}" class="flex items-center gap-md p-sm hover-bg u-no-underline" style="border-radius:12px;border:1px solid rgba(255,255,255,0.05);background:rgba(255,255,255,0.02);">
               <div style="font-size: 0.75rem; font-weight: 800; color: var(--primary); min-width: 80px;">${block.startTime} - ${block.endTime}</div>
               <div style="font-size: 1.25rem;">${icon}</div>
               <div class="flex-1">
@@ -351,7 +351,7 @@
         deadlinesEl.innerHTML = upcomingTasks.slice(0, 5).map(task => {
           const isOverdue = !task.completed && task.dueDate && Storage.isDateOverdue(task.dueDate);
           return `
-            <div class="timeline-item ${isOverdue ? 'overdue' : ''}">
+            <a href="timer.html?taskId=${task.id}" class="timeline-item ${isOverdue ? 'overdue' : ''} u-block u-no-underline">
               <div class="timeline-dot" style="background: ${App.getSubjectColor(task.subject)}"></div>
               <div class="flex items-center justify-between">
                 <div style="font-size: 11px; font-weight: 800; color: ${isOverdue ? 'var(--danger)' : 'var(--primary)'}; text-transform: uppercase;">
@@ -361,7 +361,7 @@
               </div>
               <div style="font-size: 14px; font-weight: 600; color: white;">${App.escapeHtml(task.title)}</div>
               <div style="font-size: 11px; color: var(--text-muted);">${App.escapeHtml(task.subject)}</div>
-            </div>
+            </a>
           `;
         }).join('');
       }

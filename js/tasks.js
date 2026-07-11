@@ -77,11 +77,25 @@ const Tasks = (function() {
     await new Promise(r => setTimeout(r, 600));
     renderTasks();
 
-    // Check for "add" action in URL
+    // Check for URL parameters
     const urlParams = new URLSearchParams(window.location.search);
+    let shouldUpdateUrl = false;
+
     if (urlParams.get('action') === 'add') {
       openTaskModal();
-      // Clean up URL
+      shouldUpdateUrl = true;
+    }
+
+    const subjectParam = urlParams.get('subject');
+    if (subjectParam) {
+      if (elements.subjectFilter) {
+        elements.subjectFilter.value = subjectParam;
+        renderTasks();
+        shouldUpdateUrl = true;
+      }
+    }
+
+    if (shouldUpdateUrl) {
       const newUrl = window.location.pathname;
       window.history.replaceState({}, document.title, newUrl);
     }

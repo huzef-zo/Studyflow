@@ -474,6 +474,10 @@ h4 {
 .p-lg { padding: var(--spacing-lg); }
 .pt-lg { padding-top: var(--spacing-lg); }
 
+/* Utility Classes */
+.u-block { display: block; }
+.u-no-underline { text-decoration: none; }
+
 /* Grid */
 .grid { display: grid; gap: var(--spacing-md); }
 .grid-2 { grid-template-columns: repeat(2, 1fr); }

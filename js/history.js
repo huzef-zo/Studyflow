@@ -63,11 +63,17 @@ const History = (function() {
     return cutoff;
   }
 
+  /**
+   * Return sessions in the selected period.
+   * OPTIMIZATION: Uses Storage.getSessionsSince() which utilizes binary search.
+   * Reduces complexity from O(N) to O(log N).
+   */
   function getFilteredSessions() {
-    const sessions = Storage.getSessions();
     const cutoff = getCutoffDate();
-    if (!cutoff) return sessions;
-    return sessions.filter(s => s.completedAt && new Date(s.completedAt) >= cutoff);
+    if (!cutoff) return Storage.getSessions();
+    // OPTIMIZATION: Use binary search via getSessionsSince for O(log N) retrieval
+    // We pass the formatted date string to ensure consistency with other Storage calls
+    return Storage.getSessionsSince(Storage.formatDate(cutoff));
   }
 
   function getFilteredTasks() {
@@ -143,6 +149,7 @@ const History = (function() {
   function getCompletedTasksInPeriod() {
     const tasks = Storage.getTasks();
     const cutoff = getCutoffDate();
+    const cutoffTime = cutoff ? cutoff.getTime() : 0;
     const cutoffStr = cutoff ? Storage.formatDate(cutoff) : null;
 
     // One-time tasks
@@ -150,7 +157,9 @@ const History = (function() {
       if (t.type === 'repeating') return false;
       if (!t.completed) return false;
       if (!cutoff) return true;
-      return t.completedAt && new Date(t.completedAt) >= cutoff;
+      // OPTIMIZATION: Use Date.parse() for numeric comparison instead of new Date()
+      const compTime = typeof t.completedAt === 'number' ? t.completedAt : (t.completedAt ? Date.parse(t.completedAt) : 0);
+      return compTime >= cutoffTime;
     }).map(t => ({ ...t, _date: t.completedAt }));
 
     // Repeating tasks
@@ -187,12 +196,19 @@ const History = (function() {
     if (elements.productiveDay) {
       const isWeekly = statsPeriodDays === 7;
       const activity = {}; // Key: day index (0-6) for weekly, date string for others
+      const reusableDate = new Date();
 
       // Aggregate focus sessions (weighted by 15-min intervals)
       filteredSessions.forEach(s => {
         if (s.type === 'work' && s.completedAt) {
-          const date = new Date(s.completedAt);
-          const key = isWeekly ? date.getDay() : Storage.formatDate(date);
+          // OPTIMIZATION: Use string slicing for date and reusableDate for getDay()
+          let key;
+          if (isWeekly) {
+            reusableDate.setTime(typeof s.completedAt === 'number' ? s.completedAt : Date.parse(s.completedAt));
+            key = reusableDate.getDay();
+          } else {
+            key = (typeof s.completedAt === 'string') ? s.completedAt.slice(0, 10) : Storage.formatDate(s.completedAt);
+          }
           activity[key] = (activity[key] || 0) + Math.max(1, Math.round(s.duration / 15));
         }
       });
@@ -200,8 +216,19 @@ const History = (function() {
       // Aggregate task completions (weighted as 1 unit)
       completedTasksInPeriod.forEach(t => {
         if (t._date) {
-          const date = (t._date.length === 10) ? Storage.parseLocalDate(t._date) : new Date(t._date);
-          const key = isWeekly ? date.getDay() : Storage.formatDate(date);
+          // OPTIMIZATION: Use string slicing for date and reusableDate for getDay()
+          let key;
+          if (isWeekly) {
+            if (t._date.length === 10) {
+              const d = Storage.parseLocalDate(t._date);
+              key = d ? d.getDay() : 0;
+            } else {
+              reusableDate.setTime(typeof t._date === 'number' ? t._date : Date.parse(t._date));
+              key = reusableDate.getDay();
+            }
+          } else {
+            key = (typeof t._date === 'string') ? t._date.slice(0, 10) : Storage.formatDate(t._date);
+          }
           activity[key] = (activity[key] || 0) + 1;
         }
       });
@@ -239,13 +266,13 @@ const History = (function() {
       return;
     }
     elements.masteryOverview.innerHTML = stats.map(subject => `
-      <div class="mastery-card">
+      <a href="tasks.html?subject=${encodeURIComponent(subject.name)}" class="mastery-card u-no-underline">
         <div class="mastery-subject-name" title="${App.escapeHtml(subject.name)}">${App.escapeHtml(subject.name)}</div>
         <div class="mastery-progress-mini">
           <div class="mastery-progress-mini-fill" style="width:${subject.percentage}%;background-color:${App.escapeHtml(subject.color)};"></div>
         </div>
         <div class="mastery-stats"><span>${subject.percentage}%</span><span>${subject.completed}/${subject.total}</span></div>
-      </div>
+      </a>
     `).join('');
   }
 
@@ -273,13 +300,17 @@ const History = (function() {
     const sessions = Storage.getSessionsSince(Storage.formatDate(cutoffDate));
 
     const activityData = {};
+    const reusableDate = new Date(today);
     for (let i = 0; i < daysCount; i++) {
-      const date = new Date(today); date.setDate(date.getDate() - i);
-      activityData[Storage.formatDate(date)] = { count: 0, notes: [] };
+      // OPTIMIZATION: Use reusableDate and modify it
+      reusableDate.setTime(today.getTime());
+      reusableDate.setDate(today.getDate() - i);
+      activityData[Storage.formatDate(reusableDate)] = { count: 0, notes: [] };
     }
     tasks.forEach(t => {
       if (t.type !== 'repeating' && t.completed && t.completedAt) {
-        const dateStr = Storage.formatDate(new Date(t.completedAt));
+        // OPTIMIZATION: Use string slicing for fast date extraction
+        const dateStr = (typeof t.completedAt === 'string') ? t.completedAt.slice(0, 10) : Storage.formatDate(t.completedAt);
         if (activityData.hasOwnProperty(dateStr)) activityData[dateStr].count += 1;
       }
     });
@@ -294,7 +325,8 @@ const History = (function() {
 
     sessions.forEach(s => {
       if (s.type === 'work' && s.completedAt) {
-        const dateStr = Storage.formatDate(new Date(s.completedAt));
+        // OPTIMIZATION: Use string slicing for fast date extraction
+        const dateStr = (typeof s.completedAt === 'string') ? s.completedAt.slice(0, 10) : Storage.formatDate(s.completedAt);
         if (activityData.hasOwnProperty(dateStr)) {
           activityData[dateStr].count += Math.max(1, Math.round(s.duration / 15));
           if (s.notes) activityData[dateStr].notes.push(s.notes);

@@ -1032,6 +1032,30 @@ const Storage = (function() {
       settings[key] = value;
     }
 
+    // SECURITY: Prevent prototype pollution and restrict to allowed keys
+    if (key === '__proto__' || key === 'constructor' || key === 'prototype') return false;
+
+    const settings = getSettings();
+
+    // Only allow updating keys that exist in the default settings
+    if (!Object.prototype.hasOwnProperty.call(DEFAULTS.settings, key)) {
+      return false;
+    }
+
+    // Validation for specific settings
+    if (key === 'pinned_nav_items') {
+      if (!Array.isArray(value)) return false;
+      const VALID_IDS = ['dashboard', 'tasks', 'timer', 'calendar', 'notes', 'goals', 'history', 'settings'];
+      // Only keep valid IDs and limit to 2 pins
+      value = value.filter(id => VALID_IDS.includes(id)).slice(0, 2);
+    } else if (typeof DEFAULTS.settings[key] === 'number') {
+      value = Number(value);
+      if (isNaN(value)) return false;
+    } else if (typeof DEFAULTS.settings[key] === 'boolean') {
+      value = Boolean(value);
+    }
+
+    settings[key] = value;
     return saveSettings(settings);
   }
 
@@ -1167,14 +1191,17 @@ const Storage = (function() {
     const activityDates = new Set();
     const completions = getRepeatingCompletions();
     const reusableDate = new Date();
+    const taskIds = new Set();
 
     tasks.forEach(t => {
+      taskIds.add(t.id);
       const isRepeating = t.type === 'repeating';
-      const compTime = t.completedAt ? (typeof t.completedAt === 'number' ? t.completedAt : Date.parse(t.completedAt)) : 0;
+      const compAt = t.completedAt;
+      let compTime = 0;
 
       const isCompletedToday = isRepeating
         ? (completions[`${t.id}_${todayStr}`] === true)
-        : (t.completed && compTime >= todayStartTime && compTime < todayEndTime);
+        : (t.completed && (compTime = (typeof compAt === 'number' ? compAt : (compAt ? Date.parse(compAt) : 0))) >= todayStartTime && compTime < todayEndTime);
 
       let isScheduledForToday = false;
       let isOverdue = false;
@@ -1196,11 +1223,12 @@ const Storage = (function() {
 
       if (t.completed) {
         completedTasks++;
+        if (!compTime && compAt) compTime = typeof compAt === 'number' ? compAt : Date.parse(compAt);
         if (compTime > 0) {
           if (compTime >= weekStartTime) weekCompleted++;
           if (compTime >= activityCutoff) {
-            if (typeof t.completedAt === 'string' && t.completedAt.length >= 10 && t.completedAt[4] === '-' && t.completedAt[7] === '-') {
-              activityDates.add(t.completedAt.slice(0, 10));
+            if (typeof compAt === 'string' && compAt.length >= 10 && compAt[4] === '-' && compAt[7] === '-') {
+              activityDates.add(compAt.slice(0, 10));
             } else {
               reusableDate.setTime(compTime);
               activityDates.add(formatDate(reusableDate));
@@ -1226,37 +1254,32 @@ const Storage = (function() {
     // Add repeating completions to aggregate metrics
     const weekStartDateStr = formatDate(weekStart);
     const cutoffDateStr = formatDate(new Date(activityCutoff));
-    const taskIds = new Set(tasks.map(t => t.id));
 
-    Object.keys(completions).forEach(key => {
+    for (const key in completions) {
+      if (!Object.prototype.hasOwnProperty.call(completions, key)) continue;
       const dateStr = key.slice(-10);
       const taskId = key.slice(0, -11);
 
       if (taskIds.has(taskId)) {
         completedTasks++;
         if (dateStr >= weekStartDateStr) weekCompleted++;
+        if (dateStr >= cutoffDateStr) {
+          activityDates.add(dateStr);
+        }
       }
-
-      if (dateStr >= cutoffDateStr) {
-        activityDates.add(dateStr);
-      }
-    });
+    }
 
     let todaySessions = 0, weekSessions = 0, totalMinutesToday = 0, totalMinutesWeek = 0;
-    // OPTIMIZATION: Use binary search to find relevant indices once, avoiding O(N) Date.parse calls in loop
     const startIndex = _findSessionIndex(activityCutoff, sessions);
     const weekIndex = _findSessionIndex(weekStartTime, sessions);
     const todayIndex = _findSessionIndex(todayStartTime, sessions);
 
     let lastCompDay = '';
-
     for (let i = startIndex; i < sessions.length; i++) {
       const s = sessions[i];
       if (s.type === 'work') {
-        // Cache formatDate result for sessions on the same day to avoid redundant string generation
-        let currentDay;
-        // If s.completedAt is string "YYYY-MM-DD...", we can extract day fast
         const compAt = s.completedAt;
+        let currentDay;
         if (typeof compAt === 'string' && compAt.length >= 10 && compAt[4] === '-' && compAt[7] === '-') {
           currentDay = compAt.slice(0, 10);
         } else {
@@ -1275,7 +1298,6 @@ const Storage = (function() {
           totalMinutesWeek += s.duration;
         }
         if (i >= todayIndex) {
-          // Check todayEndTime just in case of future sessions
           const compTime = typeof compAt === 'number' ? compAt : (compAt ? Date.parse(compAt) : 0);
           if (compTime >= todayStartTime && compTime < todayEndTime) {
             todaySessions++;
@@ -1332,11 +1354,11 @@ const Storage = (function() {
       });
       const completions = getRepeatingCompletions();
       const taskIds = new Set(tasks.map(t => t.id));
-      Object.keys(completions).forEach(key => {
-        if (taskIds.has(key.slice(0, -11))) {
+      for (const key in completions) {
+        if (Object.prototype.hasOwnProperty.call(completions, key) && taskIds.has(key.slice(0, -11))) {
           activityDates.add(key.slice(-10));
         }
-      });
+      }
     }
     const sortedDates = Array.from(activityDates).sort();
     if (sortedDates.length === 0) return 0;
@@ -1392,11 +1414,11 @@ const Storage = (function() {
       });
       const completions = getRepeatingCompletions();
       const taskIds = new Set(tasks.map(t => t.id));
-      Object.keys(completions).forEach(key => {
-        if (taskIds.has(key.slice(0, -11))) {
+      for (const key in completions) {
+        if (Object.prototype.hasOwnProperty.call(completions, key) && taskIds.has(key.slice(0, -11))) {
           activityDates.add(key.slice(-10));
         }
-      });
+      }
     }
 
     const goals = loadData(KEYS.GOALS, DEFAULTS.goals);
@@ -1450,7 +1472,7 @@ const Storage = (function() {
 
   function formatDate(date) {
     // Fast path: if it's already a correctly formatted string, return it
-    if (typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    if (typeof date === 'string' && date.length === 10 && date[4] === '-' && date[7] === '-') {
       return date;
     }
 
