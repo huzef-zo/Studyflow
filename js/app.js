@@ -254,7 +254,7 @@ const App = (function() {
     modal.innerHTML = `
       <div class="modal" role="dialog" aria-modal="true" aria-labelledby="${escapeHtml(titleId)}">
         <div class="modal-header">
-          <h3 class="modal-title" id="${titleId}">${escapeHtml(title)}</h3>
+          <h3 class="modal-title" id="${escapeHtml(titleId)}">${escapeHtml(title)}</h3>
           <button class="modal-close" aria-label="Close modal">${Icons.x}</button>
         </div>
         <div class="modal-body">${content}</div>
