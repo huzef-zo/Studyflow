@@ -239,13 +239,13 @@ const History = (function() {
       return;
     }
     elements.masteryOverview.innerHTML = stats.map(subject => `
-      <div class="mastery-card">
+      <a href="tasks.html?subject=${encodeURIComponent(subject.name)}" class="mastery-card u-no-underline">
         <div class="mastery-subject-name" title="${App.escapeHtml(subject.name)}">${App.escapeHtml(subject.name)}</div>
         <div class="mastery-progress-mini">
           <div class="mastery-progress-mini-fill" style="width:${subject.percentage}%;background-color:${App.escapeHtml(subject.color)};"></div>
         </div>
         <div class="mastery-stats"><span>${subject.percentage}%</span><span>${subject.completed}/${subject.total}</span></div>
-      </div>
+      </a>
     `).join('');
   }
 
