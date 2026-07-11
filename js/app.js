@@ -486,6 +486,17 @@ const App = (function() {
 
   function setupGlobalShortcuts() {
     document.addEventListener('keydown', (e) => {
+      if (['INPUT', 'SELECT', 'TEXTAREA'].includes(e.target.tagName)) return;
+
+      // Ctrl/Meta + K: Context-aware Search
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        const searchTasks = document.getElementById('search-tasks');
+        const searchNotes = document.getElementById('search-notes');
+        if (searchTasks) {
+          searchTasks.focus();
+        } else if (searchNotes) {
+          searchNotes.focus();
       // Ctrl/Meta + K: Command Palette (Focus search inputs)
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();

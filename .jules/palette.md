@@ -25,3 +25,7 @@
 ## 2026-06-27 - [Filter Tab Accessibility Pattern]
 **Learning:** Navigation filters built with custom `div` elements are often overlooked in accessibility audits because they visually resemble tabs but lack the underlying semantic structure. This prevents keyboard users from discovering and interacting with content filtering options.
 **Action:** Always apply the ARIA `tablist` and `tab` pattern to filter groups. This includes `role="tablist"`, `role="tab"`, `tabindex="0"`, and `aria-selected` state management, along with dedicated keyboard listeners for `Enter` and `Space`.
+
+## 2026-07-11 - [Context-Aware Search & Shortcut Hints]
+**Learning:** Global search shortcuts (Ctrl+K) should prioritize the relevant search input for the current module to minimize user interaction steps. Additionally, embedding shortcut hints directly into input placeholders significantly increases user awareness and adoption of productivity features.
+**Action:** Implement context-aware focus logic in global shortcut listeners. Update input placeholders to include keyboard shortcut hints (e.g., "(Ctrl+K)") in all searchable modules.
