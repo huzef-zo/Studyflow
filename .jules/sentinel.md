@@ -30,10 +30,11 @@
 **Learning:** Functions that iterate over user-controlled objects (like `importData`) are vulnerable to prototype pollution if keys like `__proto__` or `constructor` are not filtered. Furthermore, casting imported fields to `String` without format validation can lead to XSS if those strings are later rendered in `innerHTML`.
 **Prevention:** Always filter "forbidden" keys during object iteration. Use strict regex validation for dates (`YYYY-MM-DD`) and times (`HH:mm`) during import to ensure data integrity and prevent malicious payload injection before the data reaches the UI layer.
 
-## 2026-06-19 - [Persistent XSS via Malicious Date Strings]
-**Vulnerability:** Persistent XSS via malicious date strings in backups and reflected date utility functions.
-**Learning:** Utility functions that fall back to returning raw, unvalidated input strings on parsing failure (like `formatDisplayDate`) create hidden XSS vectors when their output is rendered via `innerHTML`.
-**Prevention:** Always return a safe, static fallback string (e.g., 'Invalid date') on parsing failure. Combine this with strict validation at the storage boundary (e.g., in `importData`) using regex helpers for dates and times.
+
+## 2026-07-03 - [Prototype Pollution and Unauthorized State Manipulation in Settings]
+**Vulnerability:** Prototype Pollution and Unauthorized State Manipulation via `Storage.updateSetting`.
+**Learning:** Public API functions that update objects using user-controlled keys (like `updateSetting`) are vulnerable to prototype pollution if keys like `__proto__` are not blocked. Additionally, without a whitelist or existence check, internal state can be manipulated with arbitrary keys.
+**Prevention:** Explicitly block prototype pollution keys (`__proto__`, `constructor`, `prototype`). Use `Object.prototype.hasOwnProperty.call` against a trusted default object (like `DEFAULTS.settings`) to ensure only intended keys are updated, providing a robust and maintainable whitelist.
 
 ## 2026-06-19 - [Persistent XSS via Malicious Date Strings]
 **Vulnerability:** Persistent XSS via malicious date strings in backups and reflected date utility functions.
