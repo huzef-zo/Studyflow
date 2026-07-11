@@ -254,7 +254,7 @@ const App = (function() {
     modal.innerHTML = `
       <div class="modal" role="dialog" aria-modal="true" aria-labelledby="${escapeHtml(titleId)}">
         <div class="modal-header">
-          <h3 class="modal-title" id="${titleId}">${escapeHtml(title)}</h3>
+          <h3 class="modal-title" id="${escapeHtml(titleId)}">${escapeHtml(title)}</h3>
           <button class="modal-close" aria-label="Close modal">${Icons.x}</button>
         </div>
         <div class="modal-body">${content}</div>
@@ -497,10 +497,20 @@ const App = (function() {
           searchTasks.focus();
         } else if (searchNotes) {
           searchNotes.focus();
+      // Ctrl/Meta + K: Command Palette (Focus search inputs)
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        const searchInput = document.getElementById('search-tasks') || document.getElementById('search-notes');
+        if (searchInput) {
+          searchInput.focus();
         } else {
+          // If on dashboard or elsewhere, go to tasks
           window.location.href = 'tasks.html';
         }
+        return;
       }
+
+      if (['INPUT', 'SELECT', 'TEXTAREA'].includes(e.target.tagName)) return;
 
       // Quick Nav
       if (e.altKey) {

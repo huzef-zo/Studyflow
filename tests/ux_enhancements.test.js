@@ -34,7 +34,7 @@ async function runTests() {
         if (!appCode.includes('aria-labelledby="${escapeHtml(titleId)}"')) {
             throw new Error('App.createModal missing aria-labelledby injection');
         }
-        if (!appCode.includes('id="${titleId}"')) {
+        if (!appCode.includes('id="${escapeHtml(titleId)}"')) {
             throw new Error('App.createModal missing id injection for title');
         }
 
