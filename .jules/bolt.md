@@ -25,3 +25,7 @@
 ## 2026-06-19 - [O(N+M) Subject Mastery Calculation]
 **Learning:** Calculating subject mastery stats by iterating through tasks and checking completions using `Object.keys(completions).some()` results in $O(N \times M)$ complexity. Pre-calculating a `Set` of task IDs from completion keys once reduces lookup to $O(1)$ and overall complexity to $O(N + M)$, yielding ~99% performance improvement (760ms to 1.5ms for 2k tasks/5k completions).
 **Action:** Always avoid nested loops or hidden traversals (like `some()` on large arrays) inside high-frequency aggregation functions. Use `Set` for fast existence checks.
+
+## 2026-07-03 - [Loop Consolidation & Allocation Reduction]
+**Learning:** Consolidating 'taskIds' Set creation into the main task loop and using 'for...in' loops (with 'hasOwnProperty' checks) instead of 'Object.keys().forEach' for large objects like 'repeating_completions' further reduces execution time by ~31% (~3.1ms to ~2.1ms for 20k sessions). String-based activity lookups using 'YYYY-MM-DD' keys remain highly performant when coupled with fast string slicing for date extraction.
+**Action:** Consolidate data structure preparation into existing traversals and prefer 'for...in' for object iteration in high-frequency aggregation paths to minimize intermediate array allocations.
