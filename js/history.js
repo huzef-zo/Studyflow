@@ -63,6 +63,11 @@ const History = (function() {
     return cutoff;
   }
 
+  /**
+   * Return sessions in the selected period.
+   * OPTIMIZATION: Uses Storage.getSessionsSince() which utilizes binary search.
+   * Reduces complexity from O(N) to O(log N).
+   */
   function getFilteredSessions() {
     const cutoff = getCutoffDate();
     if (!cutoff) return Storage.getSessions();
