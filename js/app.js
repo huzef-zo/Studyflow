@@ -488,8 +488,8 @@ const App = (function() {
     document.addEventListener('keydown', (e) => {
       if (['INPUT', 'SELECT', 'TEXTAREA'].includes(e.target.tagName)) return;
 
-      // Ctrl/Meta + K: Context-aware Search
-      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+      // Ctrl/Meta + K: Context-aware Search / Command Palette
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
         const searchTasks = document.getElementById('search-tasks');
         const searchNotes = document.getElementById('search-notes');
@@ -497,20 +497,12 @@ const App = (function() {
           searchTasks.focus();
         } else if (searchNotes) {
           searchNotes.focus();
-      // Ctrl/Meta + K: Command Palette (Focus search inputs)
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
-        e.preventDefault();
-        const searchInput = document.getElementById('search-tasks') || document.getElementById('search-notes');
-        if (searchInput) {
-          searchInput.focus();
         } else {
           // If on dashboard or elsewhere, go to tasks
           window.location.href = 'tasks.html';
         }
         return;
       }
-
-      if (['INPUT', 'SELECT', 'TEXTAREA'].includes(e.target.tagName)) return;
 
       // Quick Nav
       if (e.altKey) {
