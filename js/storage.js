@@ -1016,31 +1016,11 @@ const Storage = (function() {
   function getSettings() { return { ...DEFAULTS.settings, ...loadData(KEYS.SETTINGS, DEFAULTS.settings) }; }
   function saveSettings(settings) { return saveData(KEYS.SETTINGS, settings); }
   function updateSetting(key, value) {
-    // SECURITY: Block prototype pollution and whitelist keys
+    // SECURITY: Prevent prototype pollution and restrict to allowed keys
     if (key === '__proto__' || key === 'constructor' || key === 'prototype') return false;
     if (!Object.prototype.hasOwnProperty.call(DEFAULTS.settings, key)) return false;
 
     const settings = getSettings();
-
-    // SECURITY: Extra validation for sensitive settings
-    if (key === 'pinned_nav_items') {
-      const validIds = ['timer', 'calendar', 'notes', 'goals', 'history', 'settings'];
-      if (!Array.isArray(value)) return false;
-      const safeValue = value.filter(id => validIds.includes(id)).slice(0, 2);
-      settings[key] = safeValue;
-    } else {
-      settings[key] = value;
-    }
-
-    // SECURITY: Prevent prototype pollution and restrict to allowed keys
-    if (key === '__proto__' || key === 'constructor' || key === 'prototype') return false;
-
-    const settings = getSettings();
-
-    // Only allow updating keys that exist in the default settings
-    if (!Object.prototype.hasOwnProperty.call(DEFAULTS.settings, key)) {
-      return false;
-    }
 
     // Validation for specific settings
     if (key === 'pinned_nav_items') {
