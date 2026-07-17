@@ -40,3 +40,8 @@
 **Vulnerability:** Persistent XSS via malicious date strings in backups and reflected date utility functions.
 **Learning:** Utility functions that fall back to returning raw, unvalidated input strings on parsing failure (like `formatDisplayDate`) create hidden XSS vectors when their output is rendered via `innerHTML`.
 **Prevention:** Always return a safe, static fallback string (e.g., 'Invalid date') on parsing failure. Combine this with strict validation at the storage boundary (e.g., in `importData`) using regex helpers for dates and times.
+
+## 2026-07-17 - [Denial of Service and Theme Injection via Backups]
+**Vulnerability:** Denial of Service (DoS) memory/storage exhaustion and Style/Theme Injection via Malicious JSON Backup Import.
+**Learning:** Functions that ingest untrusted user-controlled datasets (like `importData`) are highly vulnerable to Denial of Service (DoS) attacks if there are no size limits on parsed arrays or length limits on string fields. An attacker could craft backups with millions of items or multi-megabyte titles to freeze browser threads and exhaust local storage. Additionally, unvalidated configuration strings like themes can result in CSS styling corruption or visual hijacking.
+**Prevention:** Always slice imported arrays to maximum sensible bounds (e.g., `.slice(0, 1000)`) and truncate incoming text parameters (e.g., `.substring(0, 200)`) at the storage ingestion boundary. Validate styling configuration variables against hard whitelists before persisting.

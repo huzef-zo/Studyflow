@@ -253,28 +253,28 @@ const Storage = (function() {
     try {
       if (!data || typeof data !== 'object' || Array.isArray(data)) return false;
 
-      // SECURITY: Explicitly pick and validate known properties to prevent malicious object property injection
-      // and ensure data integrity from untrusted JSON backups.
+      // SECURITY: Explicitly pick, validate, and constrain properties to prevent malicious object property injection,
+      // style injection, and denial of service (DoS) memory/storage exhaustion.
       const isValidDate = (str) => /^\d{4}-\d{2}-\d{2}$/.test(str);
       const isValidTime = (str) => /^([01]\d|2[0-3]):[0-5]\d$/.test(str);
 
       if (data.user && typeof data.user === 'object' && !Array.isArray(data.user)) {
         const safeUser = { ...DEFAULTS.user };
-        if ('name' in data.user) safeUser.name = String(data.user.name);
-        if ('email' in data.user) safeUser.email = String(data.user.email);
+        if ('name' in data.user) safeUser.name = String(data.user.name).substring(0, 100);
+        if ('email' in data.user) safeUser.email = String(data.user.email).substring(0, 100);
         if ('created_at' in data.user) safeUser.created_at = String(data.user.created_at);
         saveData(KEYS.USER, safeUser);
       }
 
       if (Array.isArray(data.subjects)) {
-        const safeSubjects = data.subjects.map(s => {
+        const safeSubjects = data.subjects.slice(0, 50).map(s => {
           let color = String(s.color || '#2563EB');
           if (!isValidHexColor(color)) {
             color = '#2563EB';
           }
           return {
             id: String(s.id || generateId()),
-            name: String(s.name || 'Unnamed Subject'),
+            name: String(s.name || 'Unnamed Subject').substring(0, 200),
             color: color,
             createdAt: String(s.createdAt || new Date().toISOString())
           };
@@ -283,21 +283,21 @@ const Storage = (function() {
       }
 
       if (Array.isArray(data.tasks)) {
-        const safeTasks = data.tasks.map(t => ({
+        const safeTasks = data.tasks.slice(0, 1000).map(t => ({
           id: String(t.id || generateId()),
-          title: String(t.title || 'Untitled Task'),
+          title: String(t.title || 'Untitled Task').substring(0, 200),
           type: String(t.type || 'one-time'),
           startDate: (t.startDate && isValidDate(t.startDate)) ? String(t.startDate) : null,
           dueDate: (t.dueDate && isValidDate(t.dueDate)) ? String(t.dueDate) : null,
           dueTime: (t.dueTime && isValidTime(t.dueTime)) ? String(t.dueTime) : null,
-          priority: String(t.priority || 'medium'),
-          subject: String(t.subject || 'Other'),
+          priority: String(t.priority || 'medium').substring(0, 50),
+          subject: String(t.subject || 'Other').substring(0, 100),
           repeatDays: Array.isArray(t.repeatDays) ? t.repeatDays.map(Number) : [],
           completed: Boolean(t.completed),
           completedAt: t.completedAt ? String(t.completedAt) : null,
           subtasks: Array.isArray(t.subtasks) ? t.subtasks.map(st => ({
             id: String(st.id || generateId()),
-            title: String(st.title || 'Untitled Subtask'),
+            title: String(st.title || 'Untitled Subtask').substring(0, 200),
             isCompleted: Boolean(st.isCompleted),
             estimatedCycles: Number(st.estimatedCycles || 1),
             completedCycles: Number(st.completedCycles || 0)
@@ -310,7 +310,7 @@ const Storage = (function() {
       }
 
       if (Array.isArray(data.sessions)) {
-        const safeSessions = data.sessions.map(s => ({
+        const safeSessions = data.sessions.slice(0, 5000).map(s => ({
           id: String(s.id || generateId()),
           duration: Number(s.duration || 0),
           type: String(s.type || 'work'),
@@ -321,7 +321,6 @@ const Storage = (function() {
       }
 
       if (data.goals && typeof data.goals === 'object' && !Array.isArray(data.goals)) {
-        // Goals are mostly numeric/string, simple spread is still risky but here we pick main ones
         const safeGoals = { ...DEFAULTS.goals };
         ['weekly_tasks', 'weekly_hours', 'daily_tasks', 'daily_hours', 'weekend_daily_tasks', 'weekend_daily_hours', 'current_tasks', 'current_hours'].forEach(key => {
           if (key in data.goals) safeGoals[key] = Number(data.goals[key]);
@@ -356,7 +355,6 @@ const Storage = (function() {
       if (data.repeatingCompletions && typeof data.repeatingCompletions === 'object') {
         const safeRC = {};
         Object.keys(data.repeatingCompletions).forEach(k => {
-          // SECURITY: Prevent prototype pollution
           if (k === '__proto__' || k === 'constructor' || k === 'prototype') return;
           if (data.repeatingCompletions[k] === true) safeRC[String(k)] = true;
         });
@@ -367,34 +365,34 @@ const Storage = (function() {
         const safeXP = { ...DEFAULTS.xpState };
         if ('totalXP' in data.xpState) safeXP.totalXP = Number(data.xpState.totalXP);
         if ('currentLevel' in data.xpState) safeXP.currentLevel = Number(data.xpState.currentLevel);
-        if ('currentRank' in data.xpState) safeXP.currentRank = String(data.xpState.currentRank);
+        if ('currentRank' in data.xpState) safeXP.currentRank = String(data.xpState.currentRank).substring(0, 100);
         if (Array.isArray(data.xpState.history)) {
-          safeXP.history = data.xpState.history.map(h => ({
+          safeXP.history = data.xpState.history.slice(0, 5000).map(h => ({
             date: isValidDate(h.date) ? String(h.date) : formatDate(new Date()),
             xpGained: Number(h.xpGained),
-            source: String(h.source)
+            source: String(h.source).substring(0, 200)
           }));
         }
         saveData(KEYS.XP_STATE, safeXP);
       }
 
       if (Array.isArray(data.achievements)) {
-        const safeAchievements = data.achievements.map(a => ({
+        const safeAchievements = data.achievements.slice(0, 1000).map(a => ({
           id: String(a.id || generateId()),
           type: String(a.type),
           condition: Number(a.condition),
           unlockedAt: a.unlockedAt ? String(a.unlockedAt) : null,
-          icon: String(a.icon)
+          icon: String(a.icon).substring(0, 100)
         }));
         saveData(KEYS.ACHIEVEMENTS, safeAchievements);
       }
 
       if (Array.isArray(data.notes)) {
-        const safeNotes = data.notes.map(n => ({
+        const safeNotes = data.notes.slice(0, 1000).map(n => ({
           id: String(n.id || generateId()),
-          title: String(n.title || 'Untitled Note'),
-          content: String(n.content || ''),
-          subject: String(n.subject || 'Other'),
+          title: String(n.title || 'Untitled Note').substring(0, 200),
+          content: String(n.content || '').substring(0, 10000),
+          subject: String(n.subject || 'Other').substring(0, 100),
           createdAt: String(n.createdAt || new Date().toISOString()),
           updatedAt: String(n.updatedAt || new Date().toISOString())
         }));
@@ -402,52 +400,55 @@ const Storage = (function() {
       }
 
       if (Array.isArray(data.reflections)) {
-        const safeReflections = data.reflections.map(r => ({
+        const safeReflections = data.reflections.slice(0, 1000).map(r => ({
           date: isValidDate(r.date) ? String(r.date) : formatDate(new Date()),
-          text: String(r.text),
+          text: String(r.text || '').substring(0, 2000),
           timestamp: String(r.timestamp || new Date().toISOString())
         }));
         saveData(KEYS.REFLECTIONS, safeReflections);
       }
 
       if (Array.isArray(data.studyBlocks)) {
-        const safeSB = data.studyBlocks.map(b => ({
+        const safeSB = data.studyBlocks.slice(0, 1000).map(b => ({
           id: String(b.id || generateId()),
-          title: String(b.title || 'Untitled Block'),
+          title: String(b.title || 'Untitled Block').substring(0, 200),
           startTime: isValidTime(b.startTime) ? String(b.startTime) : '09:00',
           endTime: isValidTime(b.endTime) ? String(b.endTime) : '10:00',
           dayOfWeek: Number(b.dayOfWeek),
-          subject: String(b.subject || 'Other'),
+          subject: String(b.subject || 'Other').substring(0, 100),
           createdAt: String(b.createdAt || new Date().toISOString())
         }));
         saveData(KEYS.STUDY_BLOCKS, safeSB);
       }
 
       if (Array.isArray(data.studyWindows)) {
-        const safeSW = data.studyWindows.map(w => ({
+        const safeSW = data.studyWindows.slice(0, 1000).map(w => ({
           id: String(w.id || generateId()),
           dayOfWeek: Number(w.dayOfWeek),
           startTime: isValidTime(w.startTime) ? String(w.startTime) : '09:00',
           endTime: isValidTime(w.endTime) ? String(w.endTime) : '10:00',
-          label: String(w.label || 'Study Session')
+          label: String(w.label || 'Study Session').substring(0, 200)
         }));
         saveData(KEYS.STUDY_WINDOWS, safeSW);
       }
 
       if (Array.isArray(data.timeBlocks)) {
-        const safeTB = data.timeBlocks.map(b => ({
+        const safeTB = data.timeBlocks.slice(0, 1000).map(b => ({
           id: String(b.id || generateId()),
           date: isValidDate(b.date) ? String(b.date) : formatDate(new Date()),
           startTime: isValidTime(b.startTime) ? String(b.startTime) : '09:00',
           endTime: isValidTime(b.endTime) ? String(b.endTime) : '10:00',
-          label: String(b.label || 'Time Block'),
+          label: String(b.label || 'Time Block').substring(0, 200),
           createdAt: String(b.createdAt || new Date().toISOString())
         }));
         saveData(KEYS.TIME_BLOCKS, safeTB);
       }
 
       if (data.theme && typeof data.theme === 'string') {
-        saveData(KEYS.THEME, data.theme);
+        const validThemes = ['default', 'emerald', 'coral', 'amber'];
+        if (validThemes.includes(data.theme)) {
+          saveData(KEYS.THEME, data.theme);
+        }
       }
 
       return true;
