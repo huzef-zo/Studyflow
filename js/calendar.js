@@ -24,7 +24,8 @@ const Calendar = (function() {
       todayBtn: document.getElementById('today-btn'),
       selectedDateTitle: document.getElementById('selected-date-title'),
       dayTasks: document.getElementById('day-tasks'),
-      dayTimeline: document.getElementById('day-timeline')
+      dayTimeline: document.getElementById('day-timeline'),
+      addTaskBtn: document.getElementById('add-task-btn')
     };
   }
 
@@ -162,9 +163,15 @@ const Calendar = (function() {
   function renderSelectedDayTasks() {
     if (!selectedDate) {
       elements.selectedDateTitle.textContent = 'Select a date';
+      if (elements.addTaskBtn) elements.addTaskBtn.style.display = 'none';
       elements.dayTasks.innerHTML = App.createEmptyStateHtml({ title: 'Select a Date', text: 'Choose a date from the calendar to view scheduled missions.', icon: 'calendar', padding: '2rem' });
       if (elements.dayTimeline) elements.dayTimeline.innerHTML = '';
       return;
+    }
+
+    if (elements.addTaskBtn) {
+      elements.addTaskBtn.style.display = 'block';
+      elements.addTaskBtn.onclick = () => openAddTaskForDate(selectedDate);
     }
 
     const date = new Date(selectedDate);

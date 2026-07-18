@@ -29,3 +29,7 @@
 ## 2026-07-11 - [Context-Aware Search & Shortcut Hints]
 **Learning:** Global search shortcuts (Ctrl+K) should prioritize the relevant search input for the current module to minimize user interaction steps. Additionally, embedding shortcut hints directly into input placeholders significantly increases user awareness and adoption of productivity features.
 **Action:** Implement context-aware focus logic in global shortcut listeners. Update input placeholders to include keyboard shortcut hints (e.g., "(Ctrl+K)") in all searchable modules.
+
+## 2026-07-18 - [Calendar Task Entry Points & Contextual Modal Open]
+**Learning:** Custom calendar views and detail panels often present "dead-end" states where task listing details are shown but the ability to add new tasks for that date is missing. Ensuring that any dynamic view element (like a selected day pane) includes a clear, accessible, and focusable add-task button linked directly to the task creation modal with pre-filled context prevents navigation frustration and ensures complete functional coverage across both Calendar and Task managers.
+**Action:** Always provide contextual action buttons (e.g., "+" or "Add Task") in date-specific visual elements. When rendering these dynamically, manage their visibility and event bindings programmatically, and ensure they carry descriptive `aria-label` properties.
