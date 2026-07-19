@@ -374,6 +374,7 @@
           }
         };
         elements.addSubjectBtn.onclick = () => openSubjectModal();
+        elements.addWindowBtn.onclick = () => openWindowModal();
 
         elements.exportBtn.onclick = () => {
           const a = document.createElement('a');
@@ -438,54 +439,75 @@
               <div style="font-size:0.875rem;font-weight:600;">${w.startTime} - ${w.endTime}</div>
               <div style="font-size:0.75rem;color:var(--text-muted);">${App.escapeHtml(w.label)}</div>
             </div>
-            <button class="btn btn-ghost btn-icon btn-sm del-window" data-id="${App.escapeHtml(w.id)}">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-            </button>
+            <div class="flex gap-xs">
+              <button class="btn btn-ghost btn-icon btn-sm edit-window" data-id="${App.escapeHtml(w.id)}" aria-label="Edit Study Window">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              </button>
+              <button class="btn btn-ghost btn-icon btn-sm del-window" data-id="${App.escapeHtml(w.id)}" aria-label="Delete Study Window">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+              </button>
+            </div>
           </div>
         `).join('');
 
+        elements.windowsList.querySelectorAll('.edit-window').forEach(b => b.addEventListener('click', () => openWindowModal(b.dataset.id)));
         elements.windowsList.querySelectorAll('.del-window').forEach(b => b.addEventListener('click', () => deleteWindow(b.dataset.id)));
       }
 
-      function openWindowModal() {
+      function openWindowModal(id = null) {
+        const isEdit = !!id;
+        const windows = Storage.loadData(Storage.KEYS.STUDY_WINDOWS, Storage.DEFAULTS.studyWindows);
+        const w = isEdit ? windows.find(x => x.id === id) : null;
+
         const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
         const content = `
           <div class="form-group">
             <label class="form-label">Day of Week</label>
             <select id="win-day" class="form-input">
-              ${dayNames.map((n, i) => `<option value="${i}">${n}</option>`).join('')}
+              ${dayNames.map((n, i) => `<option value="${i}" ${w && w.dayOfWeek === i ? 'selected' : ''}>${n}</option>`).join('')}
             </select>
           </div>
           <div class="grid-2">
             <div class="form-group">
               <label class="form-label">Start Time</label>
-              <input type="time" id="win-start" class="form-input" value="09:00">
+              <input type="time" id="win-start" class="form-input" value="${w ? App.escapeHtml(w.startTime) : '09:00'}">
             </div>
             <div class="form-group">
               <label class="form-label">End Time</label>
-              <input type="time" id="win-end" class="form-input" value="12:00">
+              <input type="time" id="win-end" class="form-input" value="${w ? App.escapeHtml(w.endTime) : '12:00'}">
             </div>
           </div>
           <div class="form-group">
             <label class="form-label">Label</label>
-            <input type="text" id="win-label" class="form-input" placeholder="e.g. Deep Work Morning">
+            <input type="text" id="win-label" class="form-input" value="${w ? App.escapeHtml(w.label) : ''}" placeholder="e.g. Deep Work Morning">
           </div>
         `;
         const modal = App.createModal({
-          title: 'Add Study Window',
+          title: isEdit ? 'Modify Study Window' : 'Add Study Window',
           content,
-          footer: `<button class="btn btn-secondary" data-action="cancel">Cancel</button><button class="btn btn-primary" id="save-window">Add</button>`
+          footer: `<button class="btn btn-secondary" data-action="cancel">Cancel</button><button class="btn btn-primary" id="save-window">${isEdit ? 'Save' : 'Add'}</button>`
         });
         modal.querySelector('#save-window').onclick = () => {
-          const dayOfWeek = parseInt(modal.querySelector('#day-day')?.value || modal.querySelector('#win-day').value);
+          const dayOfWeek = parseInt(modal.querySelector('#win-day').value, 10);
           const startTime = modal.querySelector('#win-start').value;
           const endTime = modal.querySelector('#win-end').value;
           const label = modal.querySelector('#win-label').value.trim() || 'Study Session';
 
           if (startTime && endTime) {
-            const windows = Storage.loadData(Storage.KEYS.STUDY_WINDOWS, Storage.DEFAULTS.studyWindows);
-            windows.push({ id: 'sw_' + Storage.generateId(), dayOfWeek, startTime, endTime, label });
-            Storage.saveData(Storage.KEYS.STUDY_WINDOWS, windows);
+            if (startTime >= endTime) {
+              App.showToast('Start time must be before end time', 'error');
+              return;
+            }
+            const currentWindows = Storage.loadData(Storage.KEYS.STUDY_WINDOWS, Storage.DEFAULTS.studyWindows);
+            if (isEdit) {
+              const updatedWindows = currentWindows.map(x => x.id === id ? { ...x, dayOfWeek, startTime, endTime, label } : x);
+              Storage.saveData(Storage.KEYS.STUDY_WINDOWS, updatedWindows);
+              App.showToast('Study window updated successfully', 'success');
+            } else {
+              currentWindows.push({ id: 'sw_' + Storage.generateId(), dayOfWeek, startTime, endTime, label });
+              Storage.saveData(Storage.KEYS.STUDY_WINDOWS, currentWindows);
+              App.showToast('Study window added successfully', 'success');
+            }
             App.closeModal();
             renderWindows();
           }
