@@ -105,7 +105,6 @@
       <aside class="notes-sidebar">
         <div class="p-md" style="border-bottom: 1px solid var(--border);">
           <input type="text" id="search-notes" class="form-input" placeholder="Search vault... (Ctrl+K)" aria-label="Search vault">
-          <input type="text" id="search-notes" class="form-input" placeholder="Search vault... (Ctrl+K)">
         </div>
         <div class="notes-list" id="notes-list">
           <!-- Populated by JS -->
@@ -114,14 +113,14 @@
 
       <section class="note-editor" id="note-editor" style="display: none;">
         <div class="flex items-center justify-between gap-md">
-          <input type="text" id="note-title" class="form-input" style="font-size: 1.5rem; font-weight: 800; border: none; background: none; padding-left: 0;" placeholder="Note Title">
+          <input type="text" id="note-title" class="form-input" style="font-size: 1.5rem; font-weight: 800; border: none; background: none; padding-left: 0;" placeholder="Note Title" maxlength="200">
           <div class="flex items-center gap-sm">
             <select id="note-subject" class="form-input" style="width: auto;"></select>
             <button class="btn btn-danger btn-sm" id="delete-note-btn">Delete</button>
             <button class="btn btn-primary" id="save-note-btn">Save</button>
           </div>
         </div>
-        <textarea id="note-content" class="form-input note-content-area" placeholder="Begin transmission... (Markdown supported)"></textarea>
+        <textarea id="note-content" class="form-input note-content-area" placeholder="Begin transmission... (Markdown supported)" maxlength="10000"></textarea>
       </section>
 
       <div id="empty-editor-state" class="flex-1 flex items-center justify-center card" style="background: rgba(255,255,255,0.01);">
