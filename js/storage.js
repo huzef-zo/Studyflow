@@ -317,7 +317,7 @@ const Storage = (function() {
           taskId: s.taskId ? String(s.taskId) : null,
           completedAt: String(s.completedAt || new Date().toISOString())
         }));
-        saveData(KEYS.SESSIONS, safeSessions);
+        saveSessions(safeSessions);
       }
 
       if (data.goals && typeof data.goals === 'object' && !Array.isArray(data.goals)) {
@@ -832,7 +832,17 @@ const Storage = (function() {
   // ── Sessions ────────────────────────────────────────────────────────────────
 
   function getSessions() { return [...loadData(KEYS.SESSIONS, DEFAULTS.sessions)]; }
-  function saveSessions(sessions) { return saveData(KEYS.SESSIONS, [...sessions]); }
+  // OPTIMIZATION: Always keep sessions chronologically sorted.
+  // This guarantees that binary search behaves correctly and safely under all conditions,
+  // including manual data imports or mock testing where records might be inserted out-of-order.
+  function saveSessions(sessions) {
+    const sorted = [...sessions].sort((a, b) => {
+      const aVal = String(a.completedAt || '');
+      const bVal = String(b.completedAt || '');
+      return aVal < bVal ? -1 : (aVal > bVal ? 1 : 0);
+    });
+    return saveData(KEYS.SESSIONS, sorted);
+  }
 
   function addSession(duration, type = 'work', taskId = null, notes = '') {
     const sessions = loadData(KEYS.SESSIONS, DEFAULTS.sessions);
@@ -845,7 +855,7 @@ const Storage = (function() {
       completedAt: new Date().toISOString()
     };
     const newSessions = [...sessions, newSession];
-    saveData(KEYS.SESSIONS, newSessions);
+    saveSessions(newSessions);
     return newSession;
   }
 
@@ -943,7 +953,7 @@ const Storage = (function() {
 
     const removed = sessions.length - kept.length;
     if (removed > 0) {
-      saveData(KEYS.SESSIONS, [...kept]);
+      saveSessions(kept);
       console.log(`[StudyFlow] Pruned ${removed} old session records.`);
     }
     return removed;
@@ -1254,6 +1264,9 @@ const Storage = (function() {
     const startIndex = _findSessionIndex(activityCutoff, sessions);
     const weekIndex = _findSessionIndex(weekStartTime, sessions);
     const todayIndex = _findSessionIndex(todayStartTime, sessions);
+    // OPTIMIZATION: Pre-calculate the end index of today's sessions using binary search.
+    // This allows O(1) inside the loop for today range checking, eliminating redundant Date.parse calls.
+    const todayEndIndex = _findSessionIndex(todayEndTime, sessions);
 
     let lastCompDay = '';
     for (let i = startIndex; i < sessions.length; i++) {
@@ -1278,12 +1291,11 @@ const Storage = (function() {
           weekSessions++;
           totalMinutesWeek += s.duration;
         }
-        if (i >= todayIndex) {
-          const compTime = typeof compAt === 'number' ? compAt : (compAt ? Date.parse(compAt) : 0);
-          if (compTime >= todayStartTime && compTime < todayEndTime) {
-            todaySessions++;
-            totalMinutesToday += s.duration;
-          }
+        // OPTIMIZATION: Use the pre-calculated binary-search boundaries to check if session i was completed today.
+        // Since sessions are chronological, any i between todayIndex and todayEndIndex is guaranteed to be today.
+        if (i >= todayIndex && i < todayEndIndex) {
+          todaySessions++;
+          totalMinutesToday += s.duration;
         }
       }
     }
@@ -1412,6 +1424,7 @@ const Storage = (function() {
     let streak = 0;
     const checkDate = new Date();
     checkDate.setHours(0, 0, 0, 0);
+    const initialFreezeCount = currentFreezeCount;
 
     for (let i = 0; i < 365; i++) {
       const dateStr = formatDate(checkDate);
@@ -1421,8 +1434,6 @@ const Storage = (function() {
         // Only apply freeze if it's within the current week and we have freezes left
         if (checkDate >= weekStart && checkDate <= today && currentFreezeCount > 0) {
           currentFreezeCount--;
-          // Update storage so it stays decremented
-          updateGoals({ freezeCount: currentFreezeCount });
           // Don't increment streak, but also don't break it
         } else {
           break;
@@ -1431,6 +1442,13 @@ const Storage = (function() {
       // Move back one day by modifying the existing Date instance
       checkDate.setDate(checkDate.getDate() - 1);
     }
+
+    // OPTIMIZATION: Batch the goals update outside of the 365-day loop.
+    // If the freeze count changed, update storage exactly once rather than on every iteration.
+    if (currentFreezeCount !== initialFreezeCount) {
+      updateGoals({ freezeCount: currentFreezeCount });
+    }
+
     return streak;
   }
 
