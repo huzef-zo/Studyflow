@@ -508,8 +508,8 @@ const Storage = (function() {
 
   function getUser() { return loadData(KEYS.USER, DEFAULTS.user); }
   function saveUser(user) { return saveData(KEYS.USER, user); }
-  function updateUserName(name) { const u = getUser(); u.name = name; return saveUser(u); }
-  function updateUserEmail(email) { const u = getUser(); u.email = email; return saveUser(u); }
+  function updateUserName(name) { const u = getUser(); u.name = String(name || '').substring(0, 100); return saveUser(u); }
+  function updateUserEmail(email) { const u = getUser(); u.email = String(email || '').substring(0, 100); return saveUser(u); }
   function getAchievements() { return [...loadData(KEYS.ACHIEVEMENTS, DEFAULTS.achievements)]; }
   function getXPState() { return { ...loadData(KEYS.XP_STATE, DEFAULTS.xpState) }; }
   function getStudyBlocks() { return [...loadData(KEYS.STUDY_BLOCKS, DEFAULTS.studyBlocks)]; }
@@ -526,7 +526,14 @@ const Storage = (function() {
 
   function addTask(task) {
     const tasks = getTasks();
-    const subtasks = task.subtasks || [];
+    const rawSubtasks = task.subtasks || [];
+    const subtasks = rawSubtasks.map(st => ({
+      id: String(st.id || generateId()),
+      title: String(st.title || '').substring(0, 200),
+      isCompleted: Boolean(st.isCompleted),
+      estimatedCycles: Number(st.estimatedCycles || 1),
+      completedCycles: Number(st.completedCycles || 0)
+    }));
     let completed = task.completed || false;
     let progress = 0;
     if (subtasks.length > 0) {
@@ -536,7 +543,7 @@ const Storage = (function() {
     }
     const newTask = {
       id: generateId(),
-      title: task.title,
+      title: String(task.title || '').substring(0, 200),
       type: task.type || 'one-time',
       startDate: task.startDate || task.dueDate || null,
       dueDate: task.dueDate || null,
@@ -562,7 +569,20 @@ const Storage = (function() {
     const index = tasks.findIndex(t => t.id === id);
     if (index !== -1) {
       const oldStatus = tasks[index].completed;
-      const task = { ...tasks[index], ...updates };
+      const safeUpdates = { ...updates };
+      if ('title' in safeUpdates) {
+        safeUpdates.title = String(safeUpdates.title || '').substring(0, 200);
+      }
+      if (Array.isArray(safeUpdates.subtasks)) {
+        safeUpdates.subtasks = safeUpdates.subtasks.map(st => ({
+          id: String(st.id || generateId()),
+          title: String(st.title || '').substring(0, 200),
+          isCompleted: Boolean(st.isCompleted),
+          estimatedCycles: Number(st.estimatedCycles || 1),
+          completedCycles: Number(st.completedCycles || 0)
+        }));
+      }
+      const task = { ...tasks[index], ...safeUpdates };
       if (task.subtasks && task.subtasks.length > 0) {
         const completedCount = task.subtasks.filter(s => s.isCompleted).length;
         task.progress = Math.round((completedCount / task.subtasks.length) * 100);
@@ -589,7 +609,7 @@ const Storage = (function() {
     const subtasks = task.subtasks || [];
     const newSubtask = {
       id: generateId(),
-      title: subtaskData.title,
+      title: String(subtaskData.title || '').substring(0, 200),
       isCompleted: subtaskData.isCompleted || false,
       estimatedCycles: subtaskData.estimatedCycles || 1,
       completedCycles: subtaskData.completedCycles || 0
@@ -801,7 +821,7 @@ const Storage = (function() {
     if (!isValidHexColor(safeColor)) {
       safeColor = '#2563EB';
     }
-    const newSubject = { id: generateId(), name, color: safeColor, createdAt: new Date().toISOString() };
+    const newSubject = { id: generateId(), name: String(name || '').substring(0, 200), color: safeColor, createdAt: new Date().toISOString() };
     subjects.push(newSubject);
     saveSubjects(subjects);
     return newSubject;
@@ -814,7 +834,11 @@ const Storage = (function() {
       if (updates.color && !isValidHexColor(updates.color)) {
         updates.color = subjects[index].color || '#2563EB';
       }
-      subjects[index] = { ...subjects[index], ...updates };
+      const safeUpdates = { ...updates };
+      if ('name' in safeUpdates) {
+        safeUpdates.name = String(safeUpdates.name || '').substring(0, 200);
+      }
+      subjects[index] = { ...subjects[index], ...safeUpdates };
       saveSubjects(subjects);
       return subjects[index];
     }

@@ -135,8 +135,8 @@ const Notes = (function() {
 
     const noteData = {
       id: currentNoteId,
-      title: elements.noteTitle.value.trim() || 'Untitled',
-      content: elements.noteContent.value,
+      title: String(elements.noteTitle.value || '').trim().substring(0, 200) || 'Untitled',
+      content: String(elements.noteContent.value || '').substring(0, 10000),
       subject: elements.noteSubject.value,
       updatedAt: new Date().toISOString()
     };

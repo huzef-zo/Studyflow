@@ -108,4 +108,25 @@ assert.deepStrictEqual(importedSettings.pinned_nav_items, ['history', 'settings'
 assert.ok(!isNaN(importedSettings.work_duration), 'Imported numeric settings should be numbers');
 console.log('✅ Test 5 Passed');
 
+// Test 6: Storage direct APIs enforce length limits (DoS / Local Storage Exhaustion Prevention)
+console.log('Test 6: Storage APIs enforce length limits');
+const longText = 'A'.repeat(500);
+
+Storage.updateUserName(longText);
+assert.strictEqual(Storage.getUser().name.length, 100, 'User name should be truncated to 100 characters');
+
+Storage.updateUserEmail(longText);
+assert.strictEqual(Storage.getUser().email.length, 100, 'User email should be truncated to 100 characters');
+
+const newSub = Storage.addSubject(longText, '#3B82F6');
+assert.strictEqual(newSub.name.length, 200, 'Subject name should be truncated to 200 characters');
+
+const newTask = Storage.addTask({
+  title: longText,
+  subtasks: [{ title: longText }]
+});
+assert.strictEqual(newTask.title.length, 200, 'Task title should be truncated to 200 characters');
+assert.strictEqual(newTask.subtasks[0].title.length, 200, 'Subtask title should be truncated to 200 characters');
+console.log('✅ Test 6 Passed');
+
 console.log('--- All Security Hardening Tests Passed ---');
