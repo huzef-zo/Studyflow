@@ -37,3 +37,7 @@
 ## 2026-07-19 - [Updating Scheduled Study Windows and Modal Forms]
 **Learning:** Configurable study schedules should always provide equal-parity actions for creation and updating (CRUD parity). When a scheduling block can only be deleted and recreated, users experience high friction during minor schedule changes. Standardizing modal forms to accept an optional ID parameter allows single-function dialog reusability with contextual labeling, while custom validation (e.g., ensuring start time is before end time) prevents database corruption before state persistence.
 **Action:** Refactor study window lists to expose accessible edit actions with consistent icons and screen-reader tags. Update modal forms to support dual add/edit paths using single dynamic modals, backed by robust validation and success toasts.
+
+## 2026-07-25 - [Duplicate Input ID Elimination in Search]
+**Learning:** Having duplicate input elements with identical IDs (like the double `#search-notes` in `notes.html`) causes severe accessibility and functional degradation. Screen readers get confused by redundant form controls, and standard DOM bindings like `document.getElementById` only capture the first element, leaving the other one visually present but entirely non-functional.
+**Action:** Always audit form HTML files to ensure unique DOM element IDs and remove redundant duplicate input fields to preserve assistive technology clarity and reliable interactivity.
