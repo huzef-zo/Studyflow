@@ -749,7 +749,10 @@ const Storage = (function() {
       if (a.type === 'repeating' && b.type !== 'repeating') return 1;
       if (a.type !== 'repeating' && b.type === 'repeating') return -1;
       if (a.type === 'repeating' && b.type === 'repeating') return 0;
-      return new Date(a.dueDate) - new Date(b.dueDate);
+      // OPTIMIZATION: Use fast lexicographical string comparison instead of `new Date` to avoid allocations and parsing overhead.
+      const aDate = a.dueDate || '';
+      const bDate = b.dueDate || '';
+      return aDate < bDate ? -1 : (aDate > bDate ? 1 : 0);
     });
   }
 
@@ -759,7 +762,12 @@ const Storage = (function() {
     return tasks.filter(t => {
       if (t.completed || !t.dueDate) return false;
       return t.dueDate < todayStr;
-    }).sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
+    }).sort((a, b) => {
+      // OPTIMIZATION: Use fast lexicographical string comparison instead of `new Date` to avoid allocations and parsing overhead.
+      const aDate = a.dueDate;
+      const bDate = b.dueDate;
+      return aDate < bDate ? -1 : (aDate > bDate ? 1 : 0);
+    });
   }
 
   function getTodayTasks() {

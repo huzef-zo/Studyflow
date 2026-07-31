@@ -193,7 +193,10 @@ const Tasks = (function() {
       if ((a.sortOrder || 0) !== (b.sortOrder || 0)) return (a.sortOrder || 0) - (b.sortOrder || 0);
       if (a._isOverdue && !b._isOverdue) return -1;
       if (!a._isOverdue && b._isOverdue) return 1;
-      return new Date(a.dueDate) - new Date(b.dueDate);
+      // OPTIMIZATION: Use fast lexicographical string comparison instead of `new Date` to avoid allocations and parsing overhead.
+      const aDate = a.dueDate || '';
+      const bDate = b.dueDate || '';
+      return aDate < bDate ? -1 : (aDate > bDate ? 1 : 0);
     }).map((task, index) => {
       const isDone = task.type === 'repeating' ? Storage.isRepeatingTaskCompletedOnDate(task.id, todayStr) : task.completed;
       const priorityClass = `priority-${App.escapeHtml(task.priority)}`;

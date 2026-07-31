@@ -345,7 +345,12 @@ const History = (function() {
       return;
     }
 
-    elements.reflectionsLog.innerHTML = reflections.sort((a, b) => new Date(b.date) - new Date(a.date)).map(r => `
+    elements.reflectionsLog.innerHTML = reflections.sort((a, b) => {
+      // OPTIMIZATION: Use fast lexicographical string comparison instead of `new Date` to avoid allocations and parsing overhead.
+      const aVal = a.date || '';
+      const bVal = b.date || '';
+      return bVal < aVal ? -1 : (bVal > aVal ? 1 : 0);
+    }).map(r => `
       <div class="card" style="padding: 1rem; background: rgba(255,255,255,0.02);">
         <div style="font-size: 0.75rem; font-weight: 800; color: var(--primary); text-transform: uppercase; margin-bottom: 0.5rem;">
           ${Storage.formatDisplayDate(r.date)}
