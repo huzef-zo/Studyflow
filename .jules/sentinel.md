@@ -50,3 +50,8 @@
 **Vulnerability:** Denial of Service (DoS) and local storage exhaustion via unbounded user profile, subject, task, and note creation.
 **Learning:** While the backup import feature (`importData`) had strict validation and length-truncation layers, direct UI creation and mutation functions in `js/storage.js` and `js/notes.js` lacked corresponding length restrictions. This allowed local storage exhaustion or thread-blocking DOM DoS through direct input channels or local storage manipulation scripts.
 **Prevention:** Enforce input length limits (e.g., 100 characters for user profile fields, 200 characters for subject/task/subtask/note titles, and 10000 characters for note contents) directly at the storage mutation boundary (`js/storage.js`) and UI controller saving layer (`js/notes.js`) as a defense-in-depth practice.
+
+## 2026-07-31 - Centralized Storage Truncation for Defense-in-Depth
+**Vulnerability:** Denial of Service (DoS) local storage exhaustion and DOM DoS via unvalidated input fields (session notes, daily reflections, study windows, and time blocks).
+**Learning:** Even if data import is hardened, dynamic UI fields and direct calls to `saveData` from separate HTML/JS modules (such as saving reflections or editing study windows in `settings.html`) can bypass validation layers, permitting extremely large strings to be written directly to `localStorage`.
+**Prevention:** Implement a central interceptor pattern inside the core serialization layer (`Storage.saveData`) to enforce robust, structural length limits (e.g., 2000 characters for notes/reflections, 200 characters for names/labels) as a bulletproof defense-in-depth shield.

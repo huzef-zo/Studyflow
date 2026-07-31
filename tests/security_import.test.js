@@ -68,6 +68,15 @@ const longTextFieldsData = {
       content: extremelyLongContent,
       subject: 'Other'
     }
+  ],
+  sessions: [
+    {
+      id: 'session_long_notes',
+      duration: 25,
+      type: 'work',
+      notes: extremelyLongContent,
+      completedAt: '2026-07-31T21:09:17.909Z'
+    }
   ]
 };
 
@@ -75,11 +84,15 @@ Storage.importData(longTextFieldsData);
 const updatedUser = Storage.getUser();
 const importedNotes = Storage.getNotes();
 const note = importedNotes.find(n => n.id === 'note_long_test');
+const importedSessions = Storage.getSessions();
+const session = importedSessions.find(s => s.id === 'session_long_notes');
 
 assert.strictEqual(updatedUser.name.length, 100, 'User name should be truncated to 100 chars');
 assert.ok(note, 'Note should be imported');
 assert.strictEqual(note.title.length, 200, 'Note title should be truncated to 200 chars');
 assert.strictEqual(note.content.length, 10000, 'Note content should be truncated to 10000 chars');
+assert.ok(session, 'Session should be imported');
+assert.strictEqual(session.notes.length, 2000, 'Session notes should be truncated to 2000 chars');
 console.log('✅ Test 2 Passed: Extremely long text inputs were truncated.');
 
 // Test 3: Array Size Bounds (DoS prevention)

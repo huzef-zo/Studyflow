@@ -129,4 +129,29 @@ assert.strictEqual(newTask.title.length, 200, 'Task title should be truncated to
 assert.strictEqual(newTask.subtasks[0].title.length, 200, 'Subtask title should be truncated to 200 characters');
 console.log('✅ Test 6 Passed');
 
+// Test 7: Storage new APIs and centralized saveData enforce length limits on session notes, reflections, study windows, and time blocks
+console.log('Test 7: Storage centralized saveData enforces length limits on sessions notes, reflections, study windows, and time blocks');
+const extremeText = 'S'.repeat(3000);
+
+// Test Session notes truncation via addSession
+const sessionWithLongNotes = Storage.addSession(25, 'work', null, extremeText);
+assert.strictEqual(sessionWithLongNotes.notes.length, 2000, 'Session notes should be truncated to 2000 characters');
+
+// Test Reflections truncation on save
+Storage.saveData(Storage.KEYS.REFLECTIONS, [{ text: extremeText, date: '2026-07-31' }]);
+const reflections = Storage.loadData(Storage.KEYS.REFLECTIONS);
+assert.strictEqual(reflections[0].text.length, 2000, 'Reflection text should be truncated to 2000 characters');
+
+// Test Study Windows truncation on save
+Storage.saveData(Storage.KEYS.STUDY_WINDOWS, [{ label: extremeText, dayOfWeek: 1, startTime: '09:00', endTime: '12:00' }]);
+const studyWindows = Storage.loadData(Storage.KEYS.STUDY_WINDOWS);
+assert.strictEqual(studyWindows[0].label.length, 200, 'Study window label should be truncated to 200 characters');
+
+// Test Time Blocks truncation on save
+Storage.saveData(Storage.KEYS.TIME_BLOCKS, [{ label: extremeText, date: '2026-07-31', startTime: '09:00', endTime: '10:00' }]);
+const timeBlocks = Storage.loadData(Storage.KEYS.TIME_BLOCKS);
+assert.strictEqual(timeBlocks[0].label.length, 200, 'Time block label should be truncated to 200 characters');
+
+console.log('✅ Test 7 Passed');
+
 console.log('--- All Security Hardening Tests Passed ---');
