@@ -41,3 +41,7 @@
 ## 2026-07-25 - [Duplicate Input ID Elimination in Search]
 **Learning:** Having duplicate input elements with identical IDs (like the double `#search-notes` in `notes.html`) causes severe accessibility and functional degradation. Screen readers get confused by redundant form controls, and standard DOM bindings like `document.getElementById` only capture the first element, leaving the other one visually present but entirely non-functional.
 **Action:** Always audit form HTML files to ensure unique DOM element IDs and remove redundant duplicate input fields to preserve assistive technology clarity and reliable interactivity.
+
+## 2026-08-01 - [ARIA Labels for Icon-Only and Symbolic Buttons]
+**Learning:** Decorative icon buttons and custom control elements (such as close icons or action items in settings) that lack text labels are completely unannounced or misannounced (e.g. reading multiplication signs like "&times;" as "times") to screen readers. Failing to include clear ARIA labels makes these vital interactive pathways completely inaccessible.
+**Action:** Consistently supply descriptive `aria-label` attributes to any button that uses only an SVG icon, symbol, or shorthand text character for its content. Incorporate a pre-commit static scan or verification script to catch missing ARIA indicators on interactive elements.
