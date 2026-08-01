@@ -168,9 +168,32 @@ const Storage = (function() {
 
   function saveData(key, data) {
     try {
-      const serialized = JSON.stringify(data);
+      let sanitizedData = data;
+      if (key === KEYS.REFLECTIONS && Array.isArray(data)) {
+        sanitizedData = data.map(r => r ? {
+          ...r,
+          text: r.text ? String(r.text).substring(0, 2000) : ''
+        } : r);
+      } else if (key === KEYS.STUDY_WINDOWS && Array.isArray(data)) {
+        sanitizedData = data.map(w => w ? {
+          ...w,
+          label: w.label ? String(w.label).substring(0, 200) : 'Study Session'
+        } : w);
+      } else if (key === KEYS.TIME_BLOCKS && Array.isArray(data)) {
+        sanitizedData = data.map(b => b ? {
+          ...b,
+          label: b.label ? String(b.label).substring(0, 200) : 'Time Block'
+        } : b);
+      } else if (key === KEYS.SESSIONS && Array.isArray(data)) {
+        sanitizedData = data.map(s => s ? {
+          ...s,
+          notes: s.notes ? String(s.notes).substring(0, 2000) : ''
+        } : s);
+      }
+
+      const serialized = JSON.stringify(sanitizedData);
       localStorage.setItem(key, serialized);
-      cache[key] = data;
+      cache[key] = sanitizedData;
       return true;
     } catch (error) {
       console.error('Storage save error:', error);
@@ -315,6 +338,7 @@ const Storage = (function() {
           duration: Number(s.duration || 0),
           type: String(s.type || 'work'),
           taskId: s.taskId ? String(s.taskId) : null,
+          notes: s.notes ? String(s.notes).substring(0, 2000) : '',
           completedAt: String(s.completedAt || new Date().toISOString())
         }));
         saveSessions(safeSessions);
@@ -875,7 +899,7 @@ const Storage = (function() {
       duration,
       type,
       taskId,
-      notes,
+      notes: String(notes || '').substring(0, 2000),
       completedAt: new Date().toISOString()
     };
     const newSessions = [...sessions, newSession];
