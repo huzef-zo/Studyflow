@@ -63,7 +63,7 @@ const App = (function() {
             ${Icons.bookOpen}
             <span class="nav-item-text">StudyFlow</span>
           </a>
-          <button id="sidebar-toggle" class="btn-icon btn-ghost" title="${isCollapsed ? 'Expand' : 'Collapse'}" style="margin-right:-10px;">
+          <button id="sidebar-toggle" class="btn-icon btn-ghost" title="${isCollapsed ? 'Expand' : 'Collapse'}" aria-label="${isCollapsed ? 'Expand' : 'Collapse'} sidebar" style="margin-right:-10px;">
             ${isCollapsed ? Icons.chevronRight : Icons.chevronLeft}
           </button>
         </div>

@@ -534,7 +534,7 @@ const Tasks = (function() {
               <div class="flex items-center gap-sm mb-sm">
                 <input type="text" class="form-input subtask-input" value="${App.escapeHtml(s.title)}" placeholder="Sub-mission title">
                 <input type="number" class="form-input subtask-cycles" value="${s.estimatedCycles}" style="width:60px;" title="Estimated Cycles">
-                <button type="button" class="btn btn-ghost btn-icon remove-subtask-row" style="color:var(--danger);">&times;</button>
+                <button type="button" class="btn btn-ghost btn-icon remove-subtask-row" style="color:var(--danger);" aria-label="Remove sub-mission">&times;</button>
               </div>
             `).join('') : ''}
           </div>
@@ -558,7 +558,7 @@ const Tasks = (function() {
       row.innerHTML = `
         <input type="text" class="form-input subtask-input" placeholder="Sub-mission title">
         <input type="number" class="form-input subtask-cycles" value="1" style="width:60px;" title="Estimated Cycles">
-        <button type="button" class="btn btn-ghost btn-icon remove-subtask-row" style="color:var(--danger);">&times;</button>
+        <button type="button" class="btn btn-ghost btn-icon remove-subtask-row" style="color:var(--danger);" aria-label="Remove sub-mission">&times;</button>
       `;
       row.querySelector('.remove-subtask-row').onclick = () => row.remove();
       modal.querySelector('#modal-subtasks-list').appendChild(row);
