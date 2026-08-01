@@ -79,7 +79,12 @@ const Notes = (function() {
       filtered = notes.filter(n => n.title.toLowerCase().includes(searchTerm) || n.content.toLowerCase().includes(searchTerm));
     }
 
-    elements.notesList.innerHTML = filtered.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)).map(note => `
+    elements.notesList.innerHTML = filtered.sort((a, b) => {
+      // OPTIMIZATION: Use fast lexicographical string comparison instead of `new Date` to avoid allocations and parsing overhead.
+      const aVal = a.updatedAt || '';
+      const bVal = b.updatedAt || '';
+      return bVal < aVal ? -1 : (bVal > aVal ? 1 : 0);
+    }).map(note => `
       <div class="note-item ${note.id === currentNoteId ? 'active' : ''}"
            data-id="${App.escapeHtml(note.id)}"
            tabindex="0"
