@@ -62,12 +62,17 @@
         </div>
       </section>
 
-      <!-- Day Timeline (Time Blocking) -->
+      <!-- Day Timeline (Focus History) -->
       <section class="card animate-fade-in stagger-3-5">
-        <div class="card-header">
-          <h3 class="card-title">Chronological Map</h3>
+        <div class="card-header flex items-center justify-between mb-md" style="flex-wrap: wrap; gap: 8px;">
+          <h3 class="card-title" id="history-card-title">Study History</h3>
+          <div class="filter-tabs" id="history-period-tabs" style="margin: 0;" role="tablist" aria-label="History period">
+            <div class="filter-tab active" data-period="day" role="tab" aria-selected="true" tabindex="0">Day</div>
+            <div class="filter-tab" data-period="week" role="tab" aria-selected="false" tabindex="0">Week</div>
+            <div class="filter-tab" data-period="month" role="tab" aria-selected="false" tabindex="0">Month</div>
+          </div>
         </div>
-        <div id="day-timeline">
+        <div id="day-timeline" style="max-height: 480px; overflow-y: auto; padding-right: 4px;">
           <!-- Populated by JS -->
         </div>
       </section>

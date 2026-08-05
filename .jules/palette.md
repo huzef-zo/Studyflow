@@ -45,3 +45,7 @@
 ## 2026-08-01 - [ARIA Labels for Icon-Only and Symbolic Buttons]
 **Learning:** Decorative icon buttons and custom control elements (such as close icons or action items in settings) that lack text labels are completely unannounced or misannounced (e.g. reading multiplication signs like "&times;" as "times") to screen readers. Failing to include clear ARIA labels makes these vital interactive pathways completely inaccessible.
 **Action:** Consistently supply descriptive `aria-label` attributes to any button that uses only an SVG icon, symbol, or shorthand text character for its content. Incorporate a pre-commit static scan or verification script to catch missing ARIA indicators on interactive elements.
+
+## 2026-08-05 - [Interactive Chronological Study History and Period Navigation]
+**Learning:** Replacing planned slots/schedules ("Chronological Map") with an interactive actual Focus History log categorized by Day, Week, or Month relative to the active selected date on the calendar dramatically increases the usability and utility of a temporal map view. Standardizing the period filters with the established accessible `tablist`/`tab` pattern keeps navigation fully keyboard and screen-reader accessible.
+**Action:** Always map chronologically recorded telemetry (like focus sessions) to their contextual objects (like tasks and subjects) with safe fallback handlers for deleted entities. Implement accessible filter selectors using `role="tablist"` and keydown listeners to synchronize filtered lists without manual reload.
