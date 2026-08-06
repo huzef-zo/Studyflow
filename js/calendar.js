@@ -11,6 +11,7 @@ const Calendar = (function() {
   let currentDate = new Date();
   let selectedDate = null;
   let elements = {};
+  let historyPeriod = 'day'; // 'day', 'week', 'month'
 
   const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
   const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -350,39 +351,93 @@ const Calendar = (function() {
   function renderDayTimeline(dateStr) {
     if (!elements.dayTimeline) return;
 
-    const timeBlocks = Storage.loadData(Storage.KEYS.TIME_BLOCKS, Storage.DEFAULTS.timeBlocks || [])
-      .filter(b => b.date === dateStr);
-
-    let html = '<div style="position:relative;height:480px;background:rgba(255,255,255,0.02);border-radius:12px;overflow-y:auto;overflow-x:hidden;border:1px solid var(--border);">';
-
-    // Draw hour lines
-    for (let i = 0; i < 24; i++) {
-      html += `<div style="position:absolute;top:${i * 40}px;left:0;width:100%;height:1px;background:rgba(255,255,255,0.05);display:flex;align-items:center;">
-        <span style="font-size:9px;color:rgba(255,255,255,0.2);padding-left:4px;">${i.toString().padStart(2, '0')}:00</span>
-      </div>`;
+    const date = Storage.parseLocalDate(dateStr);
+    if (!date) {
+      elements.dayTimeline.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-muted);font-size:0.75rem;">Invalid Date</div>';
+      return;
     }
 
-    // Draw blocks
-    timeBlocks.forEach(block => {
-      const startParts = block.startTime.split(':');
-      const endParts = block.endTime.split(':');
-      const startTop = (parseInt(startParts[0]) * 60 + parseInt(startParts[1])) / 60 * 40;
-      const endTop = (parseInt(endParts[0]) * 60 + parseInt(endParts[1])) / 60 * 40;
-      const height = Math.max(20, endTop - startTop);
+    let sessions = [];
+    const allSessions = Storage.getSessions() || [];
 
-      html += `
-        <div class="card" style="position:absolute;top:${startTop}px;left:50px;width:calc(100% - 60px);height:${height}px;background:var(--primary-glow);border-left:3px solid var(--primary);padding:4px 8px;font-size:11px;overflow:hidden;margin:0;">
-          <div style="font-weight:700;color:white;">${App.escapeHtml(block.label)}</div>
-          <div style="font-size:9px;opacity:0.7;color:white;">${App.escapeHtml(block.startTime)} - ${App.escapeHtml(block.endTime)}</div>
+    if (historyPeriod === 'day') {
+      sessions = allSessions.filter(s => {
+        if (s.type !== 'work' || !s.completedAt) return false;
+        const sDate = typeof s.completedAt === 'string' ? s.completedAt.slice(0, 10) : Storage.formatDate(s.completedAt);
+        return sDate === dateStr;
+      });
+    } else if (historyPeriod === 'week') {
+      const weekStart = Storage.getWeekStart(date);
+      const weekEnd = new Date(weekStart);
+      weekEnd.setDate(weekEnd.getDate() + 6);
+      const weekStartStr = Storage.formatDate(weekStart);
+      const weekEndStr = Storage.formatDate(weekEnd);
+
+      sessions = allSessions.filter(s => {
+        if (s.type !== 'work' || !s.completedAt) return false;
+        const sDate = typeof s.completedAt === 'string' ? s.completedAt.slice(0, 10) : Storage.formatDate(s.completedAt);
+        return sDate >= weekStartStr && sDate <= weekEndStr;
+      });
+    } else if (historyPeriod === 'month') {
+      const monthPrefix = dateStr.slice(0, 7); // "YYYY-MM"
+      sessions = allSessions.filter(s => {
+        if (s.type !== 'work' || !s.completedAt) return false;
+        const sDate = typeof s.completedAt === 'string' ? s.completedAt.slice(0, 10) : Storage.formatDate(s.completedAt);
+        return sDate.startsWith(monthPrefix);
+      });
+    }
+
+    // Sort newest first
+    const sortedSessions = [...sessions].reverse();
+
+    if (sortedSessions.length === 0) {
+      elements.dayTimeline.innerHTML = App.createEmptyStateHtml({
+        title: 'No Focus Sessions',
+        text: `No study focus sessions completed during this ${historyPeriod}.`,
+        icon: 'timer',
+        padding: '2rem'
+      });
+      return;
+    }
+
+    const html = sortedSessions.map(session => {
+      const task = session.taskId ? Storage.getTaskById(session.taskId) : null;
+      const taskTitle = task ? task.title : 'General Focus';
+      const subjectName = task ? task.subject : 'Other';
+      const subjectColor = App.getSubjectColor(subjectName);
+
+      const completeDate = new Date(session.completedAt);
+      const timeStr = completeDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+      const fullDateStr = completeDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+      const notesHtml = session.notes ? `
+        <div style="font-size: 0.8rem; color: var(--text-muted); font-style: italic; margin-top: 8px; border-left: 2px solid var(--glass-border); padding-left: 8px; line-height: 1.4;">
+          "${App.escapeHtml(session.notes)}"
+        </div>
+      ` : '';
+
+      return `
+        <div class="task-card" style="margin-bottom: 12px; --priority-color:${App.hexToRgb(subjectColor)};">
+          <div class="flex items-start justify-between w-full gap-sm">
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-sm mb-xs flex-wrap">
+                <div class="subject-pill" style="--tag-color:${App.hexToRgb(subjectColor)}">${App.escapeHtml(subjectName)}</div>
+                <span class="badge" style="background: rgba(255,255,255,0.05); color: var(--text-secondary); font-size: 9px; text-shadow: none;">
+                  ${session.duration} mins
+                </span>
+              </div>
+              <div class="task-title-text" style="font-size: 1rem; word-break: break-word;">${App.escapeHtml(taskTitle)}</div>
+              ${notesHtml}
+            </div>
+            <div style="text-align: right; flex-shrink: 0;">
+              <div style="font-size: 11px; font-weight: 700; color: white;">${timeStr}</div>
+              <div style="font-size: 9px; color: var(--text-muted); font-weight: 600; margin-top: 2px;">${fullDateStr}</div>
+            </div>
+          </div>
         </div>
       `;
-    });
+    }).join('');
 
-    if (timeBlocks.length === 0) {
-      html += '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-muted);font-size:0.75rem;">No time blocks for this day</div>';
-    }
-
-    html += '</div>';
     elements.dayTimeline.innerHTML = html;
   }
 
@@ -402,9 +457,31 @@ const Calendar = (function() {
   function init() {
     initElements();
     setupEventListeners();
+    setupHistoryTabs();
     selectedDate = Storage.formatDate(new Date());
     renderCalendar();
     renderSelectedDayTasks();
+  }
+
+  function setupHistoryTabs() {
+    const tabs = document.querySelectorAll('#history-period-tabs .filter-tab');
+    tabs.forEach(tab => {
+      const selectFn = (e) => {
+        if (e.type === 'keydown' && e.key !== 'Enter' && e.key !== ' ') return;
+        if (e.type === 'keydown') e.preventDefault();
+
+        tabs.forEach(t => {
+          t.classList.remove('active');
+          t.setAttribute('aria-selected', 'false');
+        });
+        tab.classList.add('active');
+        tab.setAttribute('aria-selected', 'true');
+        historyPeriod = tab.dataset.period;
+        renderSelectedDayTasks();
+      };
+      tab.addEventListener('click', selectFn);
+      tab.addEventListener('keydown', selectFn);
+    });
   }
 
   return { init, renderCalendar, renderSelectedDayTasks };
