@@ -495,20 +495,94 @@ const Storage = (function() {
     return completions[`${taskId}_${dateStr}`] === true;
   }
 
+  function isRepeatingSubtaskCompletedOnDate(taskId, subtaskId, dateStr) {
+    const completions = getRepeatingCompletions();
+    return completions[`${taskId}_${subtaskId}_${dateStr}`] === true;
+  }
+
+  function setRepeatingSubtaskCompletedOnDate(taskId, subtaskId, dateStr, completed) {
+    const completions = getRepeatingCompletions();
+    const key = `${taskId}_${subtaskId}_${dateStr}`;
+    if (completed) {
+      completions[key] = true;
+    } else {
+      delete completions[key];
+    }
+    saveRepeatingCompletions(completions);
+    notifyTaskDataChanged();
+  }
+
+  function getRepeatingSubtaskCyclesOnDate(taskId, subtaskId, dateStr) {
+    const completions = getRepeatingCompletions();
+    return completions[`${taskId}_${subtaskId}_cycles_${dateStr}`] || 0;
+  }
+
+  function setRepeatingSubtaskCyclesOnDate(taskId, subtaskId, dateStr, cycles) {
+    const completions = getRepeatingCompletions();
+    const key = `${taskId}_${subtaskId}_cycles_${dateStr}`;
+    if (cycles > 0) {
+      completions[key] = cycles;
+    } else {
+      delete completions[key];
+    }
+    saveRepeatingCompletions(completions);
+    notifyTaskDataChanged();
+  }
+
+  function resolveRepeatingTaskForDate(task, dateStr) {
+    if (!task) return null;
+    if (task.type !== 'repeating') return task;
+
+    const subtasks = task.subtasks ? task.subtasks.map(s => ({
+      ...s,
+      isCompleted: isRepeatingSubtaskCompletedOnDate(task.id, s.id, dateStr),
+      completedCycles: getRepeatingSubtaskCyclesOnDate(task.id, s.id, dateStr)
+    })) : [];
+
+    let progress = 0;
+    if (subtasks.length > 0) {
+      const completedSubtasks = subtasks.filter(s => s.isCompleted).length;
+      progress = Math.round((completedSubtasks / subtasks.length) * 100);
+    }
+
+    const completedOnDate = isRepeatingTaskCompletedOnDate(task.id, dateStr) || (subtasks.length > 0 && subtasks.every(s => s.isCompleted));
+
+    return {
+      ...task,
+      subtasks,
+      progress,
+      completed: false,
+      completedOnDate,
+      _dateContext: dateStr
+    };
+  }
+
   function setRepeatingTaskCompletedOnDate(taskId, dateStr, completed) {
     const completions = getRepeatingCompletions();
     const key = `${taskId}_${dateStr}`;
+    const task = [...loadData(KEYS.TASKS, DEFAULTS.tasks)].find(t => t.id === taskId);
+
     if (completed) {
       if (completions[key] !== true) {
-        const task = getTaskById(taskId);
         if (task && typeof Achievements !== 'undefined') {
           const xpAwards = { low: 10, medium: 25, high: 50, critical: 100 };
           Achievements.awardXP(xpAwards[task.priority] || 25, 'Repeating Task Completed');
         }
       }
       completions[key] = true;
+      if (task && task.subtasks) {
+        task.subtasks.forEach(s => {
+          completions[`${taskId}_${s.id}_${dateStr}`] = true;
+        });
+      }
     } else {
       delete completions[key];
+      if (task && task.subtasks) {
+        task.subtasks.forEach(s => {
+          delete completions[`${taskId}_${s.id}_${dateStr}`];
+          delete completions[`${taskId}_${s.id}_cycles_${dateStr}`];
+        });
+      }
     }
     saveRepeatingCompletions(completions);
     notifyTaskDataChanged();
@@ -545,8 +619,40 @@ const Storage = (function() {
 
   // ── Tasks ───────────────────────────────────────────────────────────────────
 
-  function getTasks() { return [...loadData(KEYS.TASKS, DEFAULTS.tasks)]; }
-  function saveTasks(tasks) { return saveData(KEYS.TASKS, [...tasks]); }
+  function getTasks() {
+    const raw = loadData(KEYS.TASKS, DEFAULTS.tasks);
+    if (!raw || !Array.isArray(raw)) return [];
+    const todayStr = formatDate(new Date());
+    return raw.map(t => {
+      if (t.type === 'repeating') {
+        return resolveRepeatingTaskForDate(t, todayStr);
+      }
+      return t;
+    });
+  }
+
+  function cleanRepeatingTaskForSave(task) {
+    if (task && task.type === 'repeating') {
+      const subtasks = task.subtasks ? task.subtasks.map(s => ({
+        ...s,
+        isCompleted: false,
+        completedCycles: 0
+      })) : [];
+      return {
+        ...task,
+        completed: false,
+        completedAt: null,
+        progress: 0,
+        subtasks
+      };
+    }
+    return task;
+  }
+
+  function saveTasks(tasks) {
+    const cleaned = tasks.map(cleanRepeatingTaskForSave);
+    return saveData(KEYS.TASKS, cleaned);
+  }
 
   function addTask(task) {
     const tasks = getTasks();
@@ -663,29 +769,56 @@ const Storage = (function() {
     }
   }
 
-  function toggleSubtask(taskId, subtaskId, isCompleted) {
-    return updateSubtask(taskId, subtaskId, { isCompleted });
+  function toggleSubtask(taskId, subtaskId, isCompleted, dateStr) {
+    return updateSubtask(taskId, subtaskId, { isCompleted }, dateStr);
   }
 
-  function updateSubtask(taskId, subtaskId, updates) {
+  function updateSubtask(taskId, subtaskId, updates, dateStr) {
     const task = getTaskById(taskId);
-    if (!task || !task.subtasks) return null;
-    
+    if (!task) return null;
+
+    const actualDateStr = dateStr || formatDate(new Date());
+
+    if (task.type === 'repeating') {
+      if ('isCompleted' in updates) {
+        setRepeatingSubtaskCompletedOnDate(taskId, subtaskId, actualDateStr, updates.isCompleted);
+      }
+      if ('completedCycles' in updates) {
+        setRepeatingSubtaskCyclesOnDate(taskId, subtaskId, actualDateStr, updates.completedCycles);
+      }
+
+      const resolvedTask = resolveRepeatingTaskForDate(task, actualDateStr);
+
+      if (updates.isCompleted) {
+        const completedSubtask = resolvedTask.subtasks.find(s => s.id === subtaskId);
+        const newProgress = SubtaskUtils && SubtaskUtils.calculateProgress(resolvedTask);
+        _notifySubtaskCompleted(taskId, completedSubtask, resolvedTask, newProgress);
+
+        if (SubtaskUtils && SubtaskUtils.shouldAutoCompleteParent(resolvedTask)) {
+          setRepeatingTaskCompletedOnDate(taskId, actualDateStr, true);
+        }
+      }
+
+      notifyTaskDataChanged();
+      return resolveRepeatingTaskForDate(getTaskById(taskId), actualDateStr);
+    }
+
+    if (!task.subtasks) return null;
     const subtasks = task.subtasks.map(s => s.id === subtaskId ? { ...s, ...updates } : s);
     const result = updateTask(taskId, { subtasks });
-    
+
     // Trigger callbacks if subtask was completed
     if (updates.isCompleted) {
       const completedSubtask = subtasks.find(s => s.id === subtaskId);
       const newProgress = SubtaskUtils && SubtaskUtils.calculateProgress(result);
       _notifySubtaskCompleted(taskId, completedSubtask, result, newProgress);
-      
+
       // Auto-complete parent task if all subtasks are complete
       if (SubtaskUtils && SubtaskUtils.shouldAutoCompleteParent(result)) {
         updateTask(taskId, { completed: true, completedAt: new Date().toISOString() });
       }
     }
-    
+
     return result;
   }
 
@@ -698,7 +831,15 @@ const Storage = (function() {
 
   function completeTask(id) {
     const task = getTaskById(id);
-    if (task && !task.completed) {
+    if (!task) return null;
+
+    if (task.type === 'repeating') {
+      const todayStr = formatDate(new Date());
+      setRepeatingTaskCompletedOnDate(id, todayStr, true);
+      return getTaskById(id);
+    }
+
+    if (!task.completed) {
       const xpAwards = { low: 10, medium: 25, high: 50, critical: 100 };
       if (typeof Achievements !== 'undefined') {
         Achievements.awardXP(xpAwards[task.priority] || 25, 'Task Completed');
@@ -715,7 +856,15 @@ const Storage = (function() {
 
   function uncompleteTask(id) {
     const task = getTaskById(id);
-    if (task && task.subtasks && task.subtasks.length > 0) {
+    if (!task) return null;
+
+    if (task.type === 'repeating') {
+      const todayStr = formatDate(new Date());
+      setRepeatingTaskCompletedOnDate(id, todayStr, false);
+      return getTaskById(id);
+    }
+
+    if (task.subtasks && task.subtasks.length > 0) {
       const updatedSubtasks = task.subtasks.map(s => ({ ...s, isCompleted: false }));
       return updateTask(id, { completed: false, completedAt: null, subtasks: updatedSubtasks });
     }
@@ -727,12 +876,12 @@ const Storage = (function() {
   }
 
   function getTasksByDate(dateStr) {
-    const tasks = getTasks();
+    const rawTasks = loadData(KEYS.TASKS, DEFAULTS.tasks) || [];
     const date = parseLocalDate(dateStr);
     if (!date) return [];
     const dayOfWeek = date.getDay();
 
-    return tasks.filter(t => {
+    return rawTasks.filter(t => {
       if (t.type === 'repeating') {
         return t.repeatDays && t.repeatDays.includes(dayOfWeek);
       }
@@ -741,11 +890,7 @@ const Storage = (function() {
       return dateStr >= start && dateStr <= t.dueDate;
     }).map(t => {
       if (t.type === 'repeating') {
-        return {
-          ...t,
-          completedOnDate: isRepeatingTaskCompletedOnDate(t.id, dateStr),
-          _dateContext: dateStr   // which date this instance is for
-        };
+        return resolveRepeatingTaskForDate(t, dateStr);
       }
       return t;
     });
@@ -1620,7 +1765,10 @@ const Storage = (function() {
     getWeekNumber, isToday, isDateOverdue, getWeekStart, parseLocalDate,
     getRepeatingCompletions, saveRepeatingCompletions, isRepeatingTaskCompletedOnDate,
     setRepeatingTaskCompletedOnDate, pruneRepeatingCompletions,
-    onSubtaskCompleted, _notifySubtaskCompleted
+    onSubtaskCompleted, _notifySubtaskCompleted,
+    isRepeatingSubtaskCompletedOnDate, setRepeatingSubtaskCompletedOnDate,
+    getRepeatingSubtaskCyclesOnDate, setRepeatingSubtaskCyclesOnDate,
+    resolveRepeatingTaskForDate
   };
 })();
 
