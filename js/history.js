@@ -21,7 +21,8 @@ const History = (function() {
       tasksProgress: document.getElementById('tasks-progress'),
       hoursProgress: document.getElementById('hours-progress'),
       progressPercentage: document.getElementById('progress-percentage'),
-      reflectionsLog: document.getElementById('reflections-log')
+      reflectionsLog: document.getElementById('reflections-log'),
+      studyHistoryList: document.getElementById('study-history-list')
     };
   }
 
@@ -43,6 +44,7 @@ const History = (function() {
         updateSummaryStats();
         renderFrequencyGraph();
         updateMasteryOverview();
+        renderStudyHistory();
       };
       tab.addEventListener('click', toggleFn);
       tab.addEventListener('keydown', toggleFn);
@@ -52,6 +54,7 @@ const History = (function() {
     renderFrequencyGraph();
     updateMasteryOverview();
     updateWeeklyProgress();
+    renderStudyHistory();
     renderReflections();
   }
 
@@ -334,6 +337,71 @@ const History = (function() {
       }
     });
     return activityData;
+  }
+
+  function renderStudyHistory() {
+    if (!elements.studyHistoryList) return;
+
+    const filteredSessions = getFilteredSessions() || [];
+    const workSessions = filteredSessions.filter(s => s.type === 'work' && s.completedAt);
+
+    // Sort newest first
+    const sortedSessions = [...workSessions].sort((a, b) => {
+      const aVal = a.completedAt || '';
+      const bVal = b.completedAt || '';
+      return bVal < aVal ? -1 : (bVal > aVal ? 1 : 0);
+    });
+
+    if (sortedSessions.length === 0) {
+      const periodLabel = statsPeriodDays ? `last ${statsPeriodDays} days` : 'all time';
+      elements.studyHistoryList.innerHTML = App.createEmptyStateHtml({
+        title: 'No Focus Sessions',
+        text: `No study focus sessions completed during ${periodLabel}.`,
+        icon: 'timer',
+        padding: '2rem'
+      });
+      return;
+    }
+
+    const html = sortedSessions.map(session => {
+      const task = session.taskId ? Storage.getTaskById(session.taskId) : null;
+      const taskTitle = task ? task.title : 'General Focus';
+      const subjectName = task ? task.subject : 'Other';
+      const subjectColor = App.getSubjectColor(subjectName);
+
+      const completeDate = new Date(session.completedAt);
+      const timeStr = completeDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+      const fullDateStr = completeDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+      const notesHtml = session.notes ? `
+        <div style="font-size: 0.8rem; color: var(--text-muted); font-style: italic; margin-top: 8px; border-left: 2px solid var(--glass-border); padding-left: 8px; line-height: 1.4;">
+          "${App.escapeHtml(session.notes)}"
+        </div>
+      ` : '';
+
+      return `
+        <div class="task-card" style="margin-bottom: 12px; --priority-color:${App.hexToRgb(subjectColor)};">
+          <div class="flex items-start justify-between w-full gap-sm">
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-sm mb-xs flex-wrap">
+                <div class="subject-pill" style="--tag-color:${App.hexToRgb(subjectColor)}">${App.escapeHtml(subjectName)}</div>
+                <span class="badge" style="background: rgba(255,255,255,0.05); color: var(--text-secondary); font-size: 9px; text-shadow: none;">
+                  ${session.duration} mins
+                </span>
+              </div>
+              <div class="task-title-text" style="font-size: 1rem; word-break: break-word;">${App.escapeHtml(taskTitle)}</div>
+              ${notesHtml}
+            </div>
+            <div style="text-align: right; flex-shrink: 0;">
+              <div style="font-size: 11px; font-weight: 700; color: white;">${timeStr}</div>
+              <div style="font-size: 9px; color: var(--text-muted); font-weight: 600; margin-top: 2px;">${fullDateStr}</div>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    elements.studyHistoryList.innerHTML = html;
   }
 
   function renderReflections() {
