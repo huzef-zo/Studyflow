@@ -1385,7 +1385,9 @@ const Storage = (function() {
     const reusableDate = new Date();
     const taskIds = new Set();
 
-    tasks.forEach(t => {
+    // OPTIMIZATION: Use high-performance traditional for loop instead of tasks.forEach to avoid callback overhead.
+    for (let idx = 0; idx < tasks.length; idx++) {
+      const t = tasks[idx];
       taskIds.add(t.id);
       const isRepeating = t.type === 'repeating';
       const compAt = t.completedAt;
@@ -1441,7 +1443,7 @@ const Storage = (function() {
         todayCompleted++;
         activityDates.add(todayStr);
       }
-    });
+    }
 
     // Add repeating completions to aggregate metrics
     const weekStartDateStr = formatDate(weekStart);
@@ -1627,8 +1629,14 @@ const Storage = (function() {
     checkDate.setHours(0, 0, 0, 0);
     const initialFreezeCount = currentFreezeCount;
 
+    // OPTIMIZATION: Use local/cached variables for year, month, day components and date-math with a single reusable Date.
+    // formatDate is avoided completely in the loop to reduce string allocations and GC pressure.
     for (let i = 0; i < 365; i++) {
-      const dateStr = formatDate(checkDate);
+      const y = checkDate.getFullYear();
+      const m = checkDate.getMonth() + 1;
+      const d = checkDate.getDate();
+      const dateStr = y + '-' + (m < 10 ? '0' + m : m) + '-' + (d < 10 ? '0' + d : d);
+
       if (activityDates.has(dateStr)) {
         streak++;
       } else {
