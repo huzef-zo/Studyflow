@@ -134,4 +134,45 @@ Storage.importData(validThemeData);
 assert.strictEqual(Storage.getTheme(), 'emerald', 'Valid theme "emerald" should be successfully imported');
 console.log('✅ Test 4 Passed: Only whitelisted themes are accepted.');
 
+// Test 5: ID Validation and Sanitization
+console.log('\n--- Test 5: ID Validation and Sanitization ---');
+const maliciousIdData = {
+  tasks: [
+    {
+      id: '"><script>alert("XSS")</script>',
+      title: 'XSS Task ID Test',
+      type: 'one-time',
+      subtasks: [
+        {
+          id: '"><script>alert("XSS Subtask")</script>',
+          title: 'XSS Subtask ID Test'
+        }
+      ]
+    }
+  ],
+  sessions: [
+    {
+      id: 'session_ok',
+      duration: 25,
+      type: 'work',
+      taskId: '"><script>alert("XSS TaskId")</script>',
+      completedAt: '2026-07-31T21:09:17.909Z'
+    }
+  ]
+};
+
+Storage.importData(maliciousIdData);
+const tasksAfterMaliciousId = Storage.getTasks();
+const maliciousTask = tasksAfterMaliciousId.find(t => t.title === 'XSS Task ID Test');
+assert.ok(maliciousTask, 'Task should be imported');
+assert.ok(!maliciousTask.id.includes('<script>'), 'Task ID should not contain XSS/malicious characters');
+assert.ok(maliciousTask.id.startsWith('id_'), 'Task ID should fall back to generateId() and start with id_');
+assert.ok(!maliciousTask.subtasks[0].id.includes('<script>'), 'Subtask ID should not contain XSS/malicious characters');
+
+const sessionsAfterMaliciousId = Storage.getSessions();
+const maliciousSession = sessionsAfterMaliciousId.find(s => s.id === 'session_ok');
+assert.ok(maliciousSession, 'Session should be imported');
+assert.strictEqual(maliciousSession.taskId, null, 'taskId containing XSS should be neutralized to null');
+console.log('✅ Test 5 Passed: Malicious IDs in importData were safely neutralized/regenerated.');
+
 console.log('\nResult: ALL IMPORT SECURITY TESTS PASSED');
