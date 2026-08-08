@@ -49,3 +49,7 @@
 ## 2026-08-05 - [Interactive Chronological Study History and Period Navigation]
 **Learning:** Replacing planned slots/schedules ("Chronological Map") with an interactive actual Focus History log categorized by Day, Week, or Month relative to the active selected date on the calendar dramatically increases the usability and utility of a temporal map view. Standardizing the period filters with the established accessible `tablist`/`tab` pattern keeps navigation fully keyboard and screen-reader accessible.
 **Action:** Always map chronologically recorded telemetry (like focus sessions) to their contextual objects (like tasks and subjects) with safe fallback handlers for deleted entities. Implement accessible filter selectors using `role="tablist"` and keydown listeners to synchronize filtered lists without manual reload.
+
+## 2026-08-08 - [Dynamic ARIA Labels for Dynamic Subtask Controls]
+**Learning:** In highly dynamic views where list elements like subtasks have repetitive action buttons (such as cycle increment/decrement controls), using static ARIA labels results in a confusing experience for screen reader users because they cannot tell which subtask the control belongs to. Providing context-aware dynamic ARIA labels (e.g. including the subtask title in the label) significantly enhances accessibility.
+**Action:** Always interpolate the parent or context entity's title/name into the `aria-label` of repetitive inline buttons (e.g., `"Increase completed cycles for [Subtask Title]"`) during rendering instead of relying on generic labels.

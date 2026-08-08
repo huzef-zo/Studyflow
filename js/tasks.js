@@ -244,9 +244,9 @@ const Tasks = (function() {
                       <div class="subtask-checkbox ${subtask.isCompleted ? 'checked' : ''}" data-task-id="${App.escapeHtml(task.id)}" data-subtask-id="${App.escapeHtml(subtask.id)}" tabindex="0" role="checkbox" aria-checked="${subtask.isCompleted}" aria-label="${subtask.isCompleted ? 'Mark as incomplete' : 'Mark as complete'}: ${App.escapeHtml(subtask.title)}"></div>
                       <div class="subtask-title ${subtask.isCompleted ? 'completed' : ''}">${App.escapeHtml(subtask.title)}</div>
                       <div class="subtask-cycle-tracker">
-                        <button class="cycle-btn dec-cycle" data-task-id="${App.escapeHtml(task.id)}" data-subtask-id="${App.escapeHtml(subtask.id)}">-</button>
+                        <button class="cycle-btn dec-cycle" data-task-id="${App.escapeHtml(task.id)}" data-subtask-id="${App.escapeHtml(subtask.id)}" aria-label="Decrease completed cycles for ${App.escapeHtml(subtask.title)}">-</button>
                         <span>${subtask.completedCycles}/${subtask.estimatedCycles}</span>
-                        <button class="cycle-btn inc-cycle" data-task-id="${App.escapeHtml(task.id)}" data-subtask-id="${App.escapeHtml(subtask.id)}">+</button>
+                        <button class="cycle-btn inc-cycle" data-task-id="${App.escapeHtml(task.id)}" data-subtask-id="${App.escapeHtml(subtask.id)}" aria-label="Increase completed cycles for ${App.escapeHtml(subtask.title)}">+</button>
                       </div>
                     </div>
                   `).join('')}
