@@ -437,9 +437,9 @@ const Timer = (function() {
     if (!subtask) { elements.subtaskTracker.innerHTML = ''; return; }
     elements.subtaskTracker.innerHTML = `
       <div class="subtask-cycle-tracker">
-        <button class="cycle-btn" id="dec-cycle">-</button>
+        <button class="cycle-btn" id="dec-cycle" aria-label="Decrease completed cycles for ${App.escapeHtml(subtask.title)}">-</button>
         <span>${subtask.completedCycles}/${subtask.estimatedCycles} Cycles</span>
-        <button class="cycle-btn" id="inc-cycle">+</button>
+        <button class="cycle-btn" id="inc-cycle" aria-label="Increase completed cycles for ${App.escapeHtml(subtask.title)}">+</button>
       </div>`;
     document.getElementById('inc-cycle')?.addEventListener('click', () => {
       Storage.updateSubtask(selectedTaskId, selectedSubtaskId, { completedCycles: (subtask.completedCycles || 0) + 1 });
