@@ -55,3 +55,8 @@
 **Vulnerability:** Denial of Service (DoS) local storage exhaustion and DOM DoS via unvalidated input fields (session notes, daily reflections, study windows, and time blocks).
 **Learning:** Even if data import is hardened, dynamic UI fields and direct calls to `saveData` from separate HTML/JS modules (such as saving reflections or editing study windows in `settings.html`) can bypass validation layers, permitting extremely large strings to be written directly to `localStorage`.
 **Prevention:** Implement a central interceptor pattern inside the core serialization layer (`Storage.saveData`) to enforce robust, structural length limits (e.g., 2000 characters for notes/reflections, 200 characters for names/labels) as a bulletproof defense-in-depth shield.
+
+## 2026-08-07 - Persistent XSS via Malicious Identifiers in Backup Import
+**Vulnerability:** Persistent XSS via injection of malicious payload (scripts/HTML elements) inside imported identifiers and referential fields (such as task IDs, session task IDs, subtask IDs) in backup data.
+**Learning:** Although input validation truncated text and capped array sizes, imported IDs were passed as raw strings. When these raw IDs were subsequently rendered in template literals injected via `innerHTML` (e.g., as links on the index.html page), they could cause attribute breakouts and execute arbitrary scripts.
+**Prevention:** Implement strict format-based validation at the input boundary for all imported IDs, verifying they conform to a whitelist pattern like `/^[a-zA-Z0-9_\-]+$/`, safely falling back to freshly generated, secure IDs. Additionally, perform defense-in-depth HTML escaping via `App.escapeHtml` on all dynamic values rendered in HTML template literals.

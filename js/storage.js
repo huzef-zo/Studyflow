@@ -280,6 +280,7 @@ const Storage = (function() {
       // style injection, and denial of service (DoS) memory/storage exhaustion.
       const isValidDate = (str) => /^\d{4}-\d{2}-\d{2}$/.test(str);
       const isValidTime = (str) => /^([01]\d|2[0-3]):[0-5]\d$/.test(str);
+      const isValidId = (id) => typeof id === 'string' && /^[a-zA-Z0-9_\-]+$/.test(id);
 
       if (data.user && typeof data.user === 'object' && !Array.isArray(data.user)) {
         const safeUser = { ...DEFAULTS.user };
@@ -296,7 +297,7 @@ const Storage = (function() {
             color = '#2563EB';
           }
           return {
-            id: String(s.id || generateId()),
+            id: (s.id && isValidId(String(s.id))) ? String(s.id) : generateId(),
             name: String(s.name || 'Unnamed Subject').substring(0, 200),
             color: color,
             createdAt: String(s.createdAt || new Date().toISOString())
@@ -307,7 +308,7 @@ const Storage = (function() {
 
       if (Array.isArray(data.tasks)) {
         const safeTasks = data.tasks.slice(0, 1000).map(t => ({
-          id: String(t.id || generateId()),
+          id: (t.id && isValidId(String(t.id))) ? String(t.id) : generateId(),
           title: String(t.title || 'Untitled Task').substring(0, 200),
           type: String(t.type || 'one-time'),
           startDate: (t.startDate && isValidDate(t.startDate)) ? String(t.startDate) : null,
@@ -319,7 +320,7 @@ const Storage = (function() {
           completed: Boolean(t.completed),
           completedAt: t.completedAt ? String(t.completedAt) : null,
           subtasks: Array.isArray(t.subtasks) ? t.subtasks.map(st => ({
-            id: String(st.id || generateId()),
+            id: (st.id && isValidId(String(st.id))) ? String(st.id) : generateId(),
             title: String(st.title || 'Untitled Subtask').substring(0, 200),
             isCompleted: Boolean(st.isCompleted),
             estimatedCycles: Number(st.estimatedCycles || 1),
@@ -334,10 +335,10 @@ const Storage = (function() {
 
       if (Array.isArray(data.sessions)) {
         const safeSessions = data.sessions.slice(0, 5000).map(s => ({
-          id: String(s.id || generateId()),
+          id: (s.id && isValidId(String(s.id))) ? String(s.id) : generateId(),
           duration: Number(s.duration || 0),
           type: String(s.type || 'work'),
-          taskId: s.taskId ? String(s.taskId) : null,
+          taskId: (s.taskId && isValidId(String(s.taskId))) ? String(s.taskId) : null,
           notes: s.notes ? String(s.notes).substring(0, 2000) : '',
           completedAt: String(s.completedAt || new Date().toISOString())
         }));
@@ -402,7 +403,7 @@ const Storage = (function() {
 
       if (Array.isArray(data.achievements)) {
         const safeAchievements = data.achievements.slice(0, 1000).map(a => ({
-          id: String(a.id || generateId()),
+          id: (a.id && isValidId(String(a.id))) ? String(a.id) : generateId(),
           type: String(a.type),
           condition: Number(a.condition),
           unlockedAt: a.unlockedAt ? String(a.unlockedAt) : null,
@@ -413,7 +414,7 @@ const Storage = (function() {
 
       if (Array.isArray(data.notes)) {
         const safeNotes = data.notes.slice(0, 1000).map(n => ({
-          id: String(n.id || generateId()),
+          id: (n.id && isValidId(String(n.id))) ? String(n.id) : generateId(),
           title: String(n.title || 'Untitled Note').substring(0, 200),
           content: String(n.content || '').substring(0, 10000),
           subject: String(n.subject || 'Other').substring(0, 100),
@@ -434,7 +435,7 @@ const Storage = (function() {
 
       if (Array.isArray(data.studyBlocks)) {
         const safeSB = data.studyBlocks.slice(0, 1000).map(b => ({
-          id: String(b.id || generateId()),
+          id: (b.id && isValidId(String(b.id))) ? String(b.id) : generateId(),
           title: String(b.title || 'Untitled Block').substring(0, 200),
           startTime: isValidTime(b.startTime) ? String(b.startTime) : '09:00',
           endTime: isValidTime(b.endTime) ? String(b.endTime) : '10:00',
@@ -447,7 +448,7 @@ const Storage = (function() {
 
       if (Array.isArray(data.studyWindows)) {
         const safeSW = data.studyWindows.slice(0, 1000).map(w => ({
-          id: String(w.id || generateId()),
+          id: (w.id && isValidId(String(w.id))) ? String(w.id) : generateId(),
           dayOfWeek: Number(w.dayOfWeek),
           startTime: isValidTime(w.startTime) ? String(w.startTime) : '09:00',
           endTime: isValidTime(w.endTime) ? String(w.endTime) : '10:00',
@@ -458,7 +459,7 @@ const Storage = (function() {
 
       if (Array.isArray(data.timeBlocks)) {
         const safeTB = data.timeBlocks.slice(0, 1000).map(b => ({
-          id: String(b.id || generateId()),
+          id: (b.id && isValidId(String(b.id))) ? String(b.id) : generateId(),
           date: isValidDate(b.date) ? String(b.date) : formatDate(new Date()),
           startTime: isValidTime(b.startTime) ? String(b.startTime) : '09:00',
           endTime: isValidTime(b.endTime) ? String(b.endTime) : '10:00',
