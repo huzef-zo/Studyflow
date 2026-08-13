@@ -53,3 +53,7 @@
 ## 2026-08-08 - [Dynamic ARIA Labels for Dynamic Subtask Controls]
 **Learning:** In highly dynamic views where list elements like subtasks have repetitive action buttons (such as cycle increment/decrement controls), using static ARIA labels results in a confusing experience for screen reader users because they cannot tell which subtask the control belongs to. Providing context-aware dynamic ARIA labels (e.g. including the subtask title in the label) significantly enhances accessibility.
 **Action:** Always interpolate the parent or context entity's title/name into the `aria-label` of repetitive inline buttons (e.g., `"Increase completed cycles for [Subtask Title]"`) during rendering instead of relying on generic labels.
+
+## 2026-08-15 - [Simplifying Subtask Cycle Estimations to Spent Sessions Only]
+**Learning:** Forcing users to estimate and configure a session/cycle target for minor subtasks adds unnecessary planning overhead. Showing progress as a simple, non-fractional "X sessions spent" count instead of "X/Y Cycles" aligns better with intuitive tracking and results in a cleaner, less cluttered interface.
+**Action:** Completely remove the target estimation configuration ("Estimated Cycles") input field from subtask editor forms and streamline the display indicators in list and active views to show only the count of completed sessions (e.g., "1 session" or "3 sessions").
