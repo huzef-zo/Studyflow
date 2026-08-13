@@ -438,7 +438,7 @@ const Timer = (function() {
     elements.subtaskTracker.innerHTML = `
       <div class="subtask-cycle-tracker">
         <button class="cycle-btn" id="dec-cycle" aria-label="Decrease completed cycles for ${App.escapeHtml(subtask.title)}">-</button>
-        <span>${subtask.completedCycles}/${subtask.estimatedCycles} Cycles</span>
+        <span>${subtask.completedCycles} session${subtask.completedCycles === 1 ? '' : 's'}</span>
         <button class="cycle-btn" id="inc-cycle" aria-label="Increase completed cycles for ${App.escapeHtml(subtask.title)}">+</button>
       </div>`;
     document.getElementById('inc-cycle')?.addEventListener('click', () => {

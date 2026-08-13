@@ -245,7 +245,7 @@ const Tasks = (function() {
                       <div class="subtask-title ${subtask.isCompleted ? 'completed' : ''}">${App.escapeHtml(subtask.title)}</div>
                       <div class="subtask-cycle-tracker">
                         <button class="cycle-btn dec-cycle" data-task-id="${App.escapeHtml(task.id)}" data-subtask-id="${App.escapeHtml(subtask.id)}" aria-label="Decrease completed cycles for ${App.escapeHtml(subtask.title)}">-</button>
-                        <span>${subtask.completedCycles}/${subtask.estimatedCycles}</span>
+                        <span>${subtask.completedCycles} session${subtask.completedCycles === 1 ? '' : 's'}</span>
                         <button class="cycle-btn inc-cycle" data-task-id="${App.escapeHtml(task.id)}" data-subtask-id="${App.escapeHtml(subtask.id)}" aria-label="Increase completed cycles for ${App.escapeHtml(subtask.title)}">+</button>
                       </div>
                     </div>
@@ -536,7 +536,6 @@ const Tasks = (function() {
             ${task && task.subtasks ? task.subtasks.map((s) => `
               <div class="flex items-center gap-sm mb-sm">
                 <input type="text" class="form-input subtask-input" value="${App.escapeHtml(s.title)}" placeholder="Sub-mission title">
-                <input type="number" class="form-input subtask-cycles" value="${s.estimatedCycles}" style="width:60px;" title="Estimated Cycles">
                 <button type="button" class="btn btn-ghost btn-icon remove-subtask-row" style="color:var(--danger);" aria-label="Remove sub-mission">&times;</button>
               </div>
             `).join('') : ''}
@@ -560,7 +559,6 @@ const Tasks = (function() {
       row.className = 'flex items-center gap-sm mb-sm';
       row.innerHTML = `
         <input type="text" class="form-input subtask-input" placeholder="Sub-mission title">
-        <input type="number" class="form-input subtask-cycles" value="1" style="width:60px;" title="Estimated Cycles">
         <button type="button" class="btn btn-ghost btn-icon remove-subtask-row" style="color:var(--danger);" aria-label="Remove sub-mission">&times;</button>
       `;
       row.querySelector('.remove-subtask-row').onclick = () => row.remove();
@@ -577,7 +575,6 @@ const Tasks = (function() {
       const type = form.querySelector('select[name="type"]').value;
 
       const subtaskInputs = modal.querySelectorAll('.subtask-input');
-      const cycleInputs = modal.querySelectorAll('.subtask-cycles');
       const subtasks = [];
       subtaskInputs.forEach((input, idx) => {
         if (input.value.trim()) {
@@ -586,7 +583,7 @@ const Tasks = (function() {
             id: existing.id || Storage.generateId(),
             title: input.value.trim(),
             isCompleted: existing.isCompleted || false,
-            estimatedCycles: parseInt(cycleInputs[idx].value) || 1,
+            estimatedCycles: existing.estimatedCycles || 1,
             completedCycles: existing.completedCycles || 0
           });
         }
