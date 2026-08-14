@@ -152,6 +152,14 @@ Storage.saveData(Storage.KEYS.TIME_BLOCKS, [{ label: extremeText, date: '2026-07
 const timeBlocks = Storage.loadData(Storage.KEYS.TIME_BLOCKS);
 assert.strictEqual(timeBlocks[0].label.length, 200, 'Time block label should be truncated to 200 characters');
 
+// Test Notes truncation on save
+const ultraText = 'S'.repeat(15000);
+Storage.saveData(Storage.KEYS.NOTES, [{ title: ultraText, content: ultraText, subject: ultraText }]);
+const notes = Storage.loadData(Storage.KEYS.NOTES);
+assert.strictEqual(notes[0].title.length, 200, 'Note title should be truncated to 200 characters');
+assert.strictEqual(notes[0].content.length, 10000, 'Note content should be truncated to 10000 characters');
+assert.strictEqual(notes[0].subject.length, 100, 'Note subject should be truncated to 100 characters');
+
 console.log('✅ Test 7 Passed');
 
 console.log('--- All Security Hardening Tests Passed ---');
