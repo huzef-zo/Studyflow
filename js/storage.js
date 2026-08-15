@@ -189,6 +189,13 @@ const Storage = (function() {
           ...s,
           notes: s.notes ? String(s.notes).substring(0, 2000) : ''
         } : s);
+      } else if (key === KEYS.NOTES && Array.isArray(data)) {
+        sanitizedData = data.map(n => n ? {
+          ...n,
+          title: n.title ? String(n.title).substring(0, 200) : 'Untitled',
+          content: n.content ? String(n.content).substring(0, 10000) : '',
+          subject: n.subject ? String(n.subject).substring(0, 100) : 'Other'
+        } : n);
       }
 
       const serialized = JSON.stringify(sanitizedData);
