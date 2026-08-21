@@ -60,3 +60,8 @@
 **Vulnerability:** Persistent XSS via injection of malicious payload (scripts/HTML elements) inside imported identifiers and referential fields (such as task IDs, session task IDs, subtask IDs) in backup data.
 **Learning:** Although input validation truncated text and capped array sizes, imported IDs were passed as raw strings. When these raw IDs were subsequently rendered in template literals injected via `innerHTML` (e.g., as links on the index.html page), they could cause attribute breakouts and execute arbitrary scripts.
 **Prevention:** Implement strict format-based validation at the input boundary for all imported IDs, verifying they conform to a whitelist pattern like `/^[a-zA-Z0-9_\-]+$/`, safely falling back to freshly generated, secure IDs. Additionally, perform defense-in-depth HTML escaping via `App.escapeHtml` on all dynamic values rendered in HTML template literals.
+
+## 2026-08-21 - Denial of Service via Unbounded Numeric Settings
+**Vulnerability:** Denial of Service (DoS) heap memory crash and UI thread freeze via unbounded and non-finite numeric settings (`sessions_until_long_break`, `work_duration`, `short_break`, `long_break`).
+**Learning:** `isNaN(num)` check alone allows non-finite numbers like `Infinity` and large integers (e.g., `1e9`). When consumed downstream in array allocations like `Array.from({ length: settings.sessions_until_long_break })` inside `timer.js`, this causes fatal heap allocation crashes or DOM creation freezes.
+**Prevention:** Validate numeric configuration inputs with `Number.isFinite(num)` and enforce explicit min/max boundary clamping (`SETTING_BOUNDS`) at both direct mutation (`updateSetting`) and backup ingestion (`importData`) boundaries.
