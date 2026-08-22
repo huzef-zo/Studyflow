@@ -15,7 +15,7 @@
   <link rel="apple-touch-icon" href="./icon-192.png">
   <link rel="manifest" href="./manifest.json">
   <link rel="msapplication-config" href="browserconfig.xml">
-  <meta name="msapplication-TileColor" content="#3B82F6">
+  <meta name="msapplication-TileColor" content="#6C5CE7">
   <title>Settings - StudyFlow</title>
   <link rel="stylesheet" href="css/style.css?v=v2025-05-03-02">
 </head>
@@ -26,15 +26,15 @@
   <main class="main-container">
     <header class="page-header animate-fade-in">
       <h1 class="glowing-text">System Settings</h1>
-      <p class="subtitle" style="font-weight:500;">Configure your study environment</p>
+      <p class="subtitle">Configure your study environment</p>
     </header>
 
     <div class="narrow-layout">
       <!-- Themes -->
-      <section class="card animate-fade-in stagger-0-5">
+      <section class="card animate-fade-in mb-md">
         <div class="card-header"><h3 class="card-title">Visual Protocol</h3></div>
         <div class="grid-2">
-          <div class="form-group">
+          <div class="form-group mb-0">
             <label class="form-label" for="theme-selector">Theme Preset</label>
             <select id="theme-selector" class="form-input">
               <option value="default">Midnight Blue</option>
@@ -47,35 +47,35 @@
       </section>
 
       <!-- Profile -->
-      <section class="card animate-fade-in stagger-1">
+      <section class="card animate-fade-in mb-md">
         <div class="card-header"><h3 class="card-title">Profile Configuration</h3></div>
         <div class="form-group">
           <label class="form-label" for="display-name">Display Name</label>
           <input type="text" class="form-input" id="display-name" placeholder="Enter operative name">
         </div>
-        <div class="form-group">
+        <div class="form-group mb-0">
           <label class="form-label" for="user-email">Communication ID (Email)</label>
           <input type="email" class="form-input" id="user-email" placeholder="id@studyflow.io">
         </div>
       </section>
 
-      <!-- Timer -->
-      <section class="card animate-fade-in stagger-2">
-        <div class="card-header"><h3 class="card-title">Focus Parameters</h3></div>
-        <div class="grid-2-dense-gap-lg">
-          <div class="form-group" style="margin-bottom:12px;">
+      <!-- Timer Parameters Grouped -->
+      <section class="card animate-fade-in mb-md">
+        <div class="card-header" style="margin-bottom: 20px;"><h3 class="card-title">Focus Parameters</h3></div>
+        <div class="grid-2-dense-gap-lg" style="margin-top: 8px;">
+          <div class="form-group" style="margin-bottom: 12px;">
             <label class="form-label" for="work-duration">Deep Work (Min)</label>
             <input type="number" class="form-input" id="work-duration" min="1" max="60">
           </div>
-          <div class="form-group" style="margin-bottom:12px;">
+          <div class="form-group" style="margin-bottom: 12px;">
             <label class="form-label" for="short-break">Cooldown (Min)</label>
             <input type="number" class="form-input" id="short-break" min="1" max="30">
           </div>
-          <div class="form-group" style="margin-bottom:12px;">
+          <div class="form-group" style="margin-bottom: 12px;">
             <label class="form-label" for="long-break">Deep Rest (Min)</label>
             <input type="number" class="form-input" id="long-break" min="1" max="60">
           </div>
-          <div class="form-group" style="margin-bottom:12px;">
+          <div class="form-group" style="margin-bottom: 12px;">
             <label class="form-label" for="sessions-until-long-break">Sessions per Cycle</label>
             <input type="number" class="form-input" id="sessions-until-long-break" min="1" max="10">
           </div>
@@ -83,102 +83,102 @@
       </section>
 
       <!-- Notifications -->
-      <section class="card animate-fade-in stagger-3">
+      <section class="card animate-fade-in mb-md">
         <div class="card-header"><h3 class="card-title">Neural Alerts</h3></div>
 
         <div class="flex items-center justify-between mb-md">
           <div style="flex:1;">
-            <div style="font-weight:700;font-size:0.875rem;">System Notifications</div>
-            <div style="font-size:0.75rem;color:var(--text-muted);">Push alerts for session transitions</div>
+            <div style="font-weight:600;font-size:14px;color:var(--text-primary);">System Notifications</div>
+            <div style="font-size:12px;color:var(--text-secondary);">Push alerts for session transitions</div>
           </div>
           <label class="toggle"><input type="checkbox" id="notifications-enabled"><span class="toggle-slider"></span></label>
         </div>
 
         <div class="flex items-center justify-between mb-md">
           <div style="flex:1;">
-            <div style="font-weight:700;font-size:0.875rem;">Task Reminders</div>
-            <div style="font-size:0.75rem;color:var(--text-muted);">Alerts when objectives reach target time</div>
+            <div style="font-weight:600;font-size:14px;color:var(--text-primary);">Task Reminders</div>
+            <div style="font-size:12px;color:var(--text-secondary);">Alerts when objectives reach target time</div>
           </div>
           <label class="toggle"><input type="checkbox" id="task-notifications-enabled"><span class="toggle-slider"></span></label>
         </div>
 
         <div class="flex items-center justify-between mb-md">
           <div style="flex:1;">
-            <div style="font-weight:700;font-size:0.875rem;">Audio Feedback</div>
-            <div style="font-size:0.75rem;color:var(--text-muted);">Sound cues on mission events</div>
+            <div style="font-weight:600;font-size:14px;color:var(--text-primary);">Audio Feedback</div>
+            <div style="font-size:12px;color:var(--text-secondary);">Sound cues on mission events</div>
           </div>
           <div class="flex items-center gap-md">
-            <button class="btn btn-secondary btn-sm" id="test-sound-btn" style="padding:4px 12px;font-size:10px;border-radius:8px;">TEST</button>
+            <button class="btn btn-secondary btn-sm" id="test-sound-btn" style="padding:4px 10px;font-size:11px;">TEST</button>
             <label class="toggle"><input type="checkbox" id="sound-enabled"><span class="toggle-slider"></span></label>
           </div>
         </div>
 
         <div class="flex items-center justify-between mb-md">
           <div>
-            <div style="font-weight:700;font-size:0.875rem;">Auto-start Cooldown</div>
-            <div style="font-size:0.75rem;color:var(--text-muted);">Begin break immediately after work</div>
+            <div style="font-weight:600;font-size:14px;color:var(--text-primary);">Auto-start Cooldown</div>
+            <div style="font-size:12px;color:var(--text-secondary);">Begin break immediately after work</div>
           </div>
           <label class="toggle"><input type="checkbox" id="auto-start-break"><span class="toggle-slider"></span></label>
         </div>
 
-        <div class="flex items-center justify-between mb-md">
+        <div class="flex items-center justify-between mb-xs">
           <div>
-            <div style="font-weight:700;font-size:0.875rem;">Auto-start Deep Work</div>
-            <div style="font-size:0.75rem;color:var(--text-muted);">Begin focus session immediately after break</div>
+            <div style="font-weight:600;font-size:14px;color:var(--text-primary);">Auto-start Deep Work</div>
+            <div style="font-size:12px;color:var(--text-secondary);">Begin focus session immediately after break</div>
           </div>
           <label class="toggle"><input type="checkbox" id="auto-start-work"><span class="toggle-slider"></span></label>
         </div>
 
-        <div id="notification-permission-item" class="mt-lg p-md card" style="background:rgba(255,255,255,0.03);border-radius:12px;display:none;">
+        <div id="notification-permission-item" class="mt-md p-md card" style="background:var(--bg-elevated);display:none;">
           <div class="flex items-center justify-between gap-md">
             <div style="flex:1;">
-              <p style="margin:0;font-size:0.75rem;font-weight:600;" id="permission-status">System permissions required</p>
-              <p style="margin:4px 0 0 0;font-size:0.65rem;color:var(--text-muted);display:none;" id="permission-hint">Check browser settings if blocked.</p>
+              <p style="margin:0;font-size:12px;font-weight:600;" id="permission-status">System permissions required</p>
+              <p style="margin:4px 0 0 0;font-size:11px;color:var(--text-secondary);display:none;" id="permission-hint">Check browser settings if blocked.</p>
             </div>
-            <button class="btn btn-primary btn-sm" id="request-permission-btn" style="border-radius:8px;">Enable</button>
+            <button class="btn btn-primary btn-sm" id="request-permission-btn">Enable</button>
           </div>
         </div>
       </section>
 
       <!-- Study Schedule -->
-      <section class="card animate-fade-in stagger-4">
+      <section class="card animate-fade-in mb-md">
         <div class="card-header">
           <h3 class="card-title">Study Windows</h3>
           <button class="btn btn-ghost btn-icon btn-sm" id="add-window-btn" aria-label="Add Study Window">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
           </button>
         </div>
         <div id="windows-list" style="display:grid;gap:8px;"></div>
       </section>
 
       <!-- Subjects -->
-      <section class="card animate-fade-in stagger-4-5">
+      <section class="card animate-fade-in mb-md">
         <div class="card-header">
           <h3 class="card-title">Knowledge Sectors</h3>
           <button class="btn btn-ghost btn-icon btn-sm" id="add-subject-btn" aria-label="Add Knowledge Sector">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
           </button>
         </div>
         <div id="subjects-list" style="display:grid;gap:8px;"></div>
       </section>
 
       <!-- Data -->
-      <section class="card animate-fade-in stagger-5">
+      <section class="card animate-fade-in">
         <div class="card-header"><h3 class="card-title">Data Core</h3></div>
         <div class="grid-2-dense-gap-lg">
-          <button class="btn btn-secondary" id="export-btn" style="border-radius:12px;">Export</button>
-          <label class="btn btn-secondary" style="border-radius:12px;cursor:pointer;">
+          <button class="btn btn-secondary" id="export-btn">Export</button>
+          <label class="btn btn-secondary" style="cursor:pointer;">
             Import
             <input type="file" id="import-input" accept=".json" style="display:none;">
           </label>
         </div>
-        <div class="mt-lg pt-lg" style="border-top:1px solid rgba(239,68,68,0.2);">
+        <div class="mt-lg pt-lg" style="border-top:1px solid var(--border-hairline);">
           <div class="flex items-center justify-between">
             <div>
-              <div style="font-weight:700;font-size:0.875rem;color:var(--coral);">Purge Protocol</div>
-              <div style="font-size:0.75rem;color:var(--text-muted);">Permanently erase all local intelligence</div>
+              <div style="font-weight:600;font-size:14px;color:var(--danger);">Purge Protocol</div>
+              <div style="font-size:12px;color:var(--text-secondary);">Permanently erase all local intelligence</div>
             </div>
-            <button class="btn btn-danger btn-sm" id="clear-data-btn" style="border-radius:8px;background:rgba(239,68,68,0.15);">Initiate Wipe</button>
+            <button class="btn btn-danger btn-sm" id="clear-data-btn">Initiate Wipe</button>
           </div>
         </div>
       </section>
@@ -270,7 +270,7 @@
       function renderSubjects() {
         const subjects = Storage.getSubjectMasteryStats();
         elements.subjectsList.innerHTML = subjects.map(s => `
-          <div class="card" style="padding:12px 16px;background:rgba(255,255,255,0.02);display:flex;align-items:center;justify-content:space-between;border-radius:12px;">
+          <div class="card" style="padding:10px 14px;background:var(--bg-elevated);display:flex;align-items:center;justify-content:space-between;">
             <div class="flex items-center gap-md">
               <div class="glass-tag" style="--tag-color:${App.hexToRgb(s.color)}">
                 <div style="width:8px;height:8px;border-radius:50%;background:${App.escapeHtml(s.color)};"></div>
@@ -301,7 +301,7 @@
           </div>
           <div class="form-group">
             <label class="form-label">Sector Color</label>
-            <input type="color" id="sub-color" class="form-input" value="${s ? s.color : '#3B82F6'}" style="height:50px;padding:4px;">
+            <input type="color" id="sub-color" class="form-input" value="${s ? s.color : '#6C5CE7'}" style="height:44px;padding:4px;">
           </div>
         `;
         const modal = App.createModal({
@@ -318,7 +318,7 @@
               App.closeModal();
               renderSubjects();
             } else {
-              App.showToast('Invalid color format. Please use hex (e.g. #3B82F6)', 'error');
+              App.showToast('Invalid color format. Please use hex (e.g. #6C5CE7)', 'error');
             }
           }
         };
@@ -383,8 +383,6 @@
           a.click();
         };
 
-        // FIX: Wrap JSON.parse in try/catch — previously a malformed file would
-        // crash silently and reload the page with corrupted/empty data.
         elements.importInput.onchange = (e) => {
           const file = e.target.files[0];
           if (!file) return;
@@ -392,7 +390,6 @@
           reader.onload = (ev) => {
             try {
               const parsed = JSON.parse(ev.target.result);
-              // Basic schema check before committing
               if (typeof parsed !== 'object' || parsed === null) {
                 throw new Error('File does not contain a valid JSON object.');
               }
@@ -406,7 +403,6 @@
             } catch (err) {
               console.error('Import failed:', err);
               App.showToast(`Import failed: ${err.message}`, 'error');
-              // Reset the file input so the user can try again
               elements.importInput.value = '';
             }
           };
@@ -433,11 +429,11 @@
           if (a.dayOfWeek !== b.dayOfWeek) return a.dayOfWeek - b.dayOfWeek;
           return a.startTime.localeCompare(b.startTime);
         }).map(w => `
-          <div class="card" style="padding:12px 16px;background:rgba(255,255,255,0.02);display:flex;align-items:center;justify-content:space-between;border-radius:12px;">
+          <div class="card" style="padding:10px 14px;background:var(--bg-elevated);display:flex;align-items:center;justify-content:space-between;">
             <div class="flex items-center gap-md">
-              <div class="badge" style="background:var(--primary-glow);color:var(--primary);font-size:10px;">${dayNames[w.dayOfWeek]}</div>
-              <div style="font-size:0.875rem;font-weight:600;">${w.startTime} - ${w.endTime}</div>
-              <div style="font-size:0.75rem;color:var(--text-muted);">${App.escapeHtml(w.label)}</div>
+              <div class="badge" style="background:rgba(108,92,231,0.15);color:var(--primary);">${dayNames[w.dayOfWeek]}</div>
+              <div style="font-size:13px;font-weight:600;color:var(--text-primary);">${w.startTime} - ${w.endTime}</div>
+              <div style="font-size:12px;color:var(--text-secondary);">${App.escapeHtml(w.label)}</div>
             </div>
             <div class="flex gap-xs">
               <button class="btn btn-ghost btn-icon btn-sm edit-window" data-id="${App.escapeHtml(w.id)}" aria-label="Edit Study Window">
