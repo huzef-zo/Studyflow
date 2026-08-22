@@ -162,4 +162,35 @@ assert.strictEqual(notes[0].subject.length, 100, 'Note subject should be truncat
 
 console.log('✅ Test 7 Passed');
 
+// Test 8: Storage numeric settings bounds and finite validation (DoS / Thread Crash Prevention)
+console.log('Test 8: Storage numeric settings validate bounds and finite numbers');
+
+// Test updateSetting with non-finite and out-of-bounds numbers
+assert.strictEqual(Storage.updateSetting('sessions_until_long_break', Infinity), false, 'Infinity should be rejected');
+assert.strictEqual(Storage.updateSetting('sessions_until_long_break', -Infinity), false, '-Infinity should be rejected');
+
+Storage.updateSetting('sessions_until_long_break', 1e9);
+assert.strictEqual(Storage.getSettings().sessions_until_long_break, 20, 'Oversized sessions_until_long_break should be clamped to 20');
+
+Storage.updateSetting('sessions_until_long_break', -10);
+assert.strictEqual(Storage.getSettings().sessions_until_long_break, 1, 'Negative sessions_until_long_break should be clamped to 1');
+
+Storage.updateSetting('work_duration', 1000);
+assert.strictEqual(Storage.getSettings().work_duration, 180, 'Oversized work_duration should be clamped to 180');
+
+// Test importData with non-finite and out-of-bounds numbers
+Storage.importData({
+    settings: {
+        sessions_until_long_break: 100,
+        work_duration: -5,
+        short_break: Infinity
+    }
+});
+const importedBoundSettings = Storage.getSettings();
+assert.strictEqual(importedBoundSettings.sessions_until_long_break, 20, 'Imported oversized setting should be clamped');
+assert.strictEqual(importedBoundSettings.work_duration, 1, 'Imported negative setting should be clamped');
+assert.strictEqual(importedBoundSettings.short_break, 5, 'Imported non-finite setting should fallback to default');
+
+console.log('✅ Test 8 Passed');
+
 console.log('--- All Security Hardening Tests Passed ---');

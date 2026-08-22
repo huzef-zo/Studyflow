@@ -38,6 +38,13 @@ const Storage = (function() {
     return /^#([0-9A-F]{3}){1,2}$/i.test(color);
   }
 
+  const SETTING_BOUNDS = {
+    work_duration: { min: 1, max: 180 },
+    short_break: { min: 1, max: 60 },
+    long_break: { min: 1, max: 120 },
+    sessions_until_long_break: { min: 1, max: 20 }
+  };
+
   /**
    * Parse a YYYY-MM-DD string into a local Date object.
    * Prevents UTC off-by-one errors in different timezones.
@@ -371,7 +378,12 @@ const Storage = (function() {
               safeSettings[key] = Boolean(val);
             } else if (typeof DEFAULTS.settings[key] === 'number') {
               const num = Number(val);
-              safeSettings[key] = isNaN(num) ? DEFAULTS.settings[key] : num;
+              if (!Number.isFinite(num)) {
+                safeSettings[key] = DEFAULTS.settings[key];
+              } else {
+                const bounds = SETTING_BOUNDS[key] || { min: 1, max: 1000 };
+                safeSettings[key] = Math.min(bounds.max, Math.max(bounds.min, Math.floor(num)));
+              }
             } else if (key === 'pinned_nav_items') {
               if (Array.isArray(val)) {
                 safeSettings[key] = val.filter(id => validNavIds.includes(id)).slice(0, 2);
@@ -1272,7 +1284,9 @@ const Storage = (function() {
       value = value.filter(id => VALID_IDS.includes(id)).slice(0, 2);
     } else if (typeof DEFAULTS.settings[key] === 'number') {
       value = Number(value);
-      if (isNaN(value)) return false;
+      if (!Number.isFinite(value)) return false;
+      const bounds = SETTING_BOUNDS[key] || { min: 1, max: 1000 };
+      value = Math.min(bounds.max, Math.max(bounds.min, Math.floor(value)));
     } else if (typeof DEFAULTS.settings[key] === 'boolean') {
       value = Boolean(value);
     }
