@@ -34,13 +34,13 @@
       <!-- Task Selection -->
       <section class="animate-fade-in stagger-1">
         <div class="form-group">
-          <label class="form-label" style="text-align:center;">Active Mission Selection</label>
+          <label class="form-label" for="timer-task" style="text-align:center;">Active Mission Selection</label>
           <select id="timer-task" class="form-input" style="text-align:center;font-weight:700;border-radius:99px;">
             <option value="">GENERAL FOCUS</option>
           </select>
         </div>
         <div class="form-group" id="subtask-select-container" style="display:none;margin-top:1rem;">
-          <label class="form-label" style="text-align:center;">Sub-Mission Focus</label>
+          <label class="form-label" for="timer-subtask" style="text-align:center;">Sub-Mission Focus</label>
           <select id="timer-subtask" class="form-input" style="text-align:center;font-weight:700;border-radius:99px;">
             <option value="">SELECT SUB-MISSION</option>
           </select>
@@ -79,7 +79,7 @@
       <!-- Session Notes -->
       <section class="animate-fade-in stagger-2-5" style="margin-top: 1rem;">
         <div class="form-group">
-          <textarea id="session-notes" class="form-input" placeholder="Session notes..." style="height: 80px; resize: none; border-radius: 12px; font-size: 0.875rem; padding: 12px;"></textarea>
+          <textarea id="session-notes" class="form-input" placeholder="Session notes..." aria-label="Session notes" style="height: 80px; resize: none; border-radius: 12px; font-size: 0.875rem; padding: 12px;"></textarea>
         </div>
       </section>
 

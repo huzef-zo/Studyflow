@@ -57,3 +57,7 @@
 ## 2026-08-15 - [Simplifying Subtask Cycle Estimations to Spent Sessions Only]
 **Learning:** Forcing users to estimate and configure a session/cycle target for minor subtasks adds unnecessary planning overhead. Showing progress as a simple, non-fractional "X sessions spent" count instead of "X/Y Cycles" aligns better with intuitive tracking and results in a cleaner, less cluttered interface.
 **Action:** Completely remove the target estimation configuration ("Estimated Cycles") input field from subtask editor forms and streamline the display indicators in list and active views to show only the count of completed sessions (e.g., "1 session" or "3 sessions").
+
+## 2026-08-22 - [Explicit Label Associations and ARIA Names for Form Controls]
+**Learning:** Form controls that rely solely on `placeholder` attributes or adjacent `<label>` text without explicit `for="..."` bindings fail accessibility standards. Screen readers cannot properly announce unlabelled inputs (such as textareas or note editors), and clicking adjacent label text fails to focus the associated form field.
+**Action:** Ensure every form `<label>` specifies `for="[input-id]"` matching the target input's ID, and add explicit `aria-label` attributes to standalone or unlabelled inputs.
