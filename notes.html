@@ -4,8 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
   <meta name="description" content="StudyFlow - Knowledge vault for study notes">
-  <meta name="theme-color" content="#0B0F19" media="(prefers-color-scheme: dark)">
-  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#14161B">
 
   <!-- Standalone PWA Configuration -->
   <meta name="mobile-web-app-capable" content="yes">
@@ -18,29 +17,27 @@
   <link rel="apple-touch-icon" href="./icon-192.png">
   <link rel="manifest" href="./manifest.json">
   <link rel="msapplication-config" href="browserconfig.xml">
-  <meta name="msapplication-TileColor" content="#3B82F6">
+  <meta name="msapplication-TileColor" content="#5B9BF0">
 
   <title>Notes - StudyFlow</title>
   <link rel="stylesheet" href="css/style.css?v=v2025-05-03-02">
   <style>
     .notes-layout {
       display: grid;
-      grid-template-columns: 300px 1fr;
-      gap: var(--spacing-lg);
-      height: calc(100vh - 180px);
+      grid-template-columns: 280px 1fr;
+      gap: var(--spacing-md);
+      min-height: 500px;
     }
 
     @media (max-width: 768px) {
       .notes-layout {
         grid-template-columns: 1fr;
-        height: auto;
       }
     }
 
     .notes-sidebar {
-      background: rgba(255, 255, 255, 0.02);
+      background: var(--bg-surface);
       border-radius: var(--radius-lg);
-      border: 1px solid var(--border);
       display: flex;
       flex-direction: column;
       overflow: hidden;
@@ -49,38 +46,41 @@
     .notes-list {
       flex: 1;
       overflow-y: auto;
-      padding: var(--spacing-md);
+      padding: var(--spacing-sm);
     }
 
     .note-item {
-      padding: var(--spacing-md);
-      border-radius: var(--radius-md);
+      padding: 10px 12px;
+      border-radius: var(--radius-sm);
       cursor: pointer;
-      transition: all 0.2s;
-      border: 1px solid transparent;
-      margin-bottom: var(--spacing-sm);
+      transition: var(--transition);
+      margin-bottom: 6px;
+      background: var(--bg-tertiary);
     }
 
     .note-item:hover {
-      background: rgba(255, 255, 255, 0.05);
+      opacity: 0.9;
     }
 
     .note-item.active {
-      background: var(--primary-glow);
-      border-color: var(--primary);
+      background: var(--accent-fill);
+      color: #FFFFFF;
     }
 
     .note-editor {
       display: flex;
       flex-direction: column;
       gap: var(--spacing-md);
+      background: var(--bg-surface);
+      border-radius: var(--radius-lg);
+      padding: var(--spacing-md);
     }
 
     .note-content-area {
       flex: 1;
-      min-height: 400px;
+      min-height: 350px;
       font-family: inherit;
-      line-height: 1.6;
+      line-height: 1.5;
     }
   </style>
 </head>
@@ -90,21 +90,19 @@
 
   <main class="main-container">
     <header class="page-header animate-fade-in">
-      <div class="flex items-center justify-between flex-wrap gap-md">
-        <div>
-          <h1 class="glowing-text">Knowledge Vault</h1>
-          <p class="subtitle">Secure storage for academic intelligence</p>
-        </div>
-        <button class="btn btn-primary" id="new-note-btn">
-          + New Entry
-        </button>
+      <div class="page-header-title-group">
+        <h1>Knowledge Vault</h1>
+        <p class="subtitle">Secure storage for academic intelligence</p>
       </div>
+      <button class="btn btn-primary" id="new-note-btn">
+        + New Entry
+      </button>
     </header>
 
-    <div class="notes-layout animate-fade-in stagger-1">
+    <div class="notes-layout animate-fade-in">
       <aside class="notes-sidebar">
-        <div class="p-md" style="border-bottom: 1px solid var(--border);">
-          <input type="text" id="search-notes" class="form-input" placeholder="Search vault... (Ctrl+K)" aria-label="Search vault">
+        <div class="p-sm" style="border-bottom: 1px solid var(--border-color);">
+          <input type="text" id="search-notes" class="form-input glass-pill-input" placeholder="Search vault..." aria-label="Search vault">
         </div>
         <div class="notes-list" id="notes-list">
           <!-- Populated by JS -->
@@ -112,8 +110,8 @@
       </aside>
 
       <section class="note-editor" id="note-editor" style="display: none;">
-        <div class="flex items-center justify-between gap-md">
-          <input type="text" id="note-title" class="form-input" style="font-size: 1.5rem; font-weight: 800; border: none; background: none; padding-left: 0;" placeholder="Note Title" maxlength="200" aria-label="Note Title">
+        <div class="flex items-center justify-between gap-md flex-wrap">
+          <input type="text" id="note-title" class="form-input" style="font-size: 15px; font-weight: 500; border: none; background: none; padding-left: 0;" placeholder="Note Title" maxlength="200" aria-label="Note Title">
           <div class="flex items-center gap-sm">
             <select id="note-subject" class="form-input" style="width: auto;" aria-label="Note Subject"></select>
             <button class="btn btn-danger btn-sm" id="delete-note-btn">Delete</button>
@@ -123,9 +121,9 @@
         <textarea id="note-content" class="form-input note-content-area" placeholder="Begin transmission... (Markdown supported)" maxlength="10000" aria-label="Note Content"></textarea>
       </section>
 
-      <div id="empty-editor-state" class="flex-1 flex items-center justify-center card" style="background: rgba(255,255,255,0.01);">
-        <div class="text-center">
-          <div style="font-size: 3rem; color: var(--text-muted); margin-bottom: 1rem;">📑</div>
+      <div id="empty-editor-state" class="flex-1 flex items-center justify-center card">
+        <div class="text-center p-lg">
+          <div style="font-size: 2rem; color: var(--text-muted); margin-bottom: 0.5rem;">📑</div>
           <h3 style="color: var(--text-muted);">Select or create an entry</h3>
         </div>
       </div>

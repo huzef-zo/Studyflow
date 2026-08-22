@@ -187,6 +187,20 @@ const History = (function() {
     const periodCompletedCount = completedTasksInPeriod.length;
     const studyMinutes = filteredSessions.filter(s => s.type === 'work').reduce((total, s) => total + s.duration, 0);
 
+    const noActivityEl = document.getElementById('no-activity-message');
+    const graphSectionEl = document.getElementById('graph-section');
+    const summaryGridEl = document.getElementById('summary-stats-grid');
+
+    if (periodCompletedCount === 0 && studyMinutes === 0) {
+      if (noActivityEl && noActivityEl.style) noActivityEl.style.display = 'block';
+      if (graphSectionEl && graphSectionEl.style) graphSectionEl.style.display = 'none';
+      if (summaryGridEl && summaryGridEl.style) summaryGridEl.style.display = 'none';
+    } else {
+      if (noActivityEl && noActivityEl.style) noActivityEl.style.display = 'none';
+      if (graphSectionEl && graphSectionEl.style) graphSectionEl.style.display = 'block';
+      if (summaryGridEl && summaryGridEl.style) summaryGridEl.style.display = 'grid';
+    }
+
     if (elements.totalCompletedTasks) elements.totalCompletedTasks.textContent = periodCompletedCount;
     if (elements.totalStudyHours) elements.totalStudyHours.textContent = Math.round(studyMinutes / 60) + 'h';
     if (elements.allTimeStreak) elements.allTimeStreak.textContent = stats.bestStreak;

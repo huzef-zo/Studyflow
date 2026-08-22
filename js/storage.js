@@ -29,7 +29,8 @@ const Storage = (function() {
     NOTES: 'studyflow_notes',
     TIME_BLOCKS: 'studyflow_time_blocks',
     REFLECTIONS: 'studyflow_reflections',
-    THEME: 'studyflow_theme'
+    THEME: 'studyflow_theme',
+    THEME_MODE: 'studyflow_theme_mode'
   };
 
   const cache = {};
@@ -144,6 +145,7 @@ const Storage = (function() {
     timeBlocks: [],
     reflections: [],
     theme: 'default',
+    themeMode: 'dark',
     studyWindows: [
       { id: 'sw_1', dayOfWeek: 1, startTime: '09:00', endTime: '12:00', label: 'Morning Study' },
       { id: 'sw_2', dayOfWeek: 1, startTime: '14:00', endTime: '17:00', label: 'Afternoon Study' },
@@ -636,6 +638,12 @@ const Storage = (function() {
   function getTimeBlocks() { return [...loadData(KEYS.TIME_BLOCKS, DEFAULTS.timeBlocks)]; }
   function getReflections() { return [...loadData(KEYS.REFLECTIONS, DEFAULTS.reflections)]; }
   function getTheme() { return loadData(KEYS.THEME, DEFAULTS.theme); }
+  function getThemeMode() { return loadData(KEYS.THEME_MODE, 'dark'); }
+  function setThemeMode(mode) {
+    const safeMode = mode === 'light' ? 'light' : 'dark';
+    saveData(KEYS.THEME_MODE, safeMode);
+    return safeMode;
+  }
 
   // ── Tasks ───────────────────────────────────────────────────────────────────
 
@@ -1812,7 +1820,7 @@ const Storage = (function() {
     getTimerState, saveTimerState, clearTimerState, completeTimerSession,
     getStats, calculateStreak, calculateBestStreak,
     getAchievements, getXPState, getStudyBlocks, getStudyWindows,
-    getNotes, getTimeBlocks, getReflections, getTheme,
+    getNotes, getTimeBlocks, getReflections, getTheme, getThemeMode, setThemeMode,
     generateId, formatDate, formatDisplayDate, getRelativeDays, getDaysUntil,
     getWeekNumber, isToday, isDateOverdue, getWeekStart, parseLocalDate,
     getRepeatingCompletions, saveRepeatingCompletions, isRepeatingTaskCompletedOnDate,
