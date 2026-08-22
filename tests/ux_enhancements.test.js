@@ -58,6 +58,49 @@ async function runTests() {
         console.log('  Passed: Task Manager "action=add" logic verified in source.');
     })();
 
+    // Test 4: Verify form control accessibility (for attributes and aria-label attributes)
+    (function testFormControlAccessibility() {
+        const settingsHtml = fs.readFileSync(path.join(__dirname, '../settings.html'), 'utf8');
+        const timerHtml = fs.readFileSync(path.join(__dirname, '../timer.html'), 'utf8');
+        const notesHtml = fs.readFileSync(path.join(__dirname, '../notes.html'), 'utf8');
+        const indexHtml = fs.readFileSync(path.join(__dirname, '../index.html'), 'utf8');
+
+        // Settings label 'for' attributes
+        ['theme-selector', 'display-name', 'user-email', 'work-duration', 'short-break', 'long-break', 'sessions-until-long-break'].forEach(id => {
+            if (!settingsHtml.includes(`for="${id}"`)) {
+                throw new Error(`settings.html missing for="${id}" on corresponding label`);
+            }
+        });
+
+        // Timer label 'for' and aria-label attributes
+        ['timer-task', 'timer-subtask'].forEach(id => {
+            if (!timerHtml.includes(`for="${id}"`)) {
+                throw new Error(`timer.html missing for="${id}" on corresponding label`);
+            }
+        });
+        if (!timerHtml.includes('id="session-notes"') || !timerHtml.includes('aria-label="Session notes"')) {
+            throw new Error('timer.html #session-notes missing aria-label="Session notes"');
+        }
+
+        // Notes aria-labels
+        if (!notesHtml.includes('id="note-title"') || !notesHtml.includes('aria-label="Note Title"')) {
+            throw new Error('notes.html #note-title missing aria-label="Note Title"');
+        }
+        if (!notesHtml.includes('id="note-subject"') || !notesHtml.includes('aria-label="Note Subject"')) {
+            throw new Error('notes.html #note-subject missing aria-label="Note Subject"');
+        }
+        if (!notesHtml.includes('id="note-content"') || !notesHtml.includes('aria-label="Note Content"')) {
+            throw new Error('notes.html #note-content missing aria-label="Note Content"');
+        }
+
+        // Dashboard reflection input aria-label
+        if (!indexHtml.includes('id="reflection-input"') || !indexHtml.includes('aria-label="Daily Reflection"')) {
+            throw new Error('index.html #reflection-input missing aria-label="Daily Reflection"');
+        }
+
+        console.log('  Passed: Form control label associations and ARIA attributes verified in source.');
+    })();
+
     console.log('\nMicro-UX Enhancement tests passed successfully!');
 }
 
