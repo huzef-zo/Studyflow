@@ -1455,6 +1455,87 @@ input:checked + .toggle-slider:before {
   text-align: center;
 }
 
+/* Daily Performance Bar Chart & Progress Indicators */
+.daily-bar-scroll {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 4px;
+}
+
+.daily-bar-container {
+  display: flex;
+  gap: var(--spacing-sm);
+  justify-content: space-between;
+  width: 100%;
+  min-width: 500px;
+}
+
+.daily-progress-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  text-align: center;
+  padding: 10px 6px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  min-width: 60px;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.daily-progress-item.today {
+  border-color: var(--accent-fill);
+  background: rgba(var(--primary-rgb), 0.08);
+}
+
+.daily-progress-day {
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+
+.daily-progress-item.today .daily-progress-day {
+  color: var(--accent-text);
+}
+
+.daily-progress-circle {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 4px 0;
+}
+
+.daily-progress-circle svg {
+  width: 100%;
+  height: 100%;
+}
+
+.daily-progress-value {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.daily-progress-label {
+  font-size: 10px;
+  color: var(--text-muted);
+  line-height: 1.3;
+  margin-top: 6px;
+  text-align: center;
+}
+
 /* Timer */
 .timer-ring-container {
   position: relative;
