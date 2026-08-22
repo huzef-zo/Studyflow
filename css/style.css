@@ -1121,6 +1121,133 @@ input:checked + .toggle-slider:before {
   border-top: 1px solid var(--border-color);
 }
 
+/* Modal Bottom Sheet & More Menu */
+.modal-overlay.modal-bottom-sheet {
+  align-items: flex-end;
+  padding: 0;
+}
+
+.modal-overlay.modal-bottom-sheet .modal {
+  max-width: 500px;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  border-top-left-radius: var(--radius-lg);
+  border-top-right-radius: var(--radius-lg);
+  max-height: 80vh;
+  margin: 0 auto;
+}
+
+@media (min-width: 640px) {
+  .modal-overlay.modal-bottom-sheet {
+    align-items: center;
+    padding: var(--spacing-md);
+  }
+
+  .modal-overlay.modal-bottom-sheet .modal {
+    border-radius: var(--radius-lg);
+  }
+}
+
+.more-menu-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.more-menu-item-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  transition: var(--transition);
+}
+
+.more-menu-item-wrapper:hover {
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.more-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+  text-decoration: none;
+  color: var(--text-primary);
+}
+
+.more-menu-item.active {
+  color: var(--accent-text);
+  font-weight: 500;
+}
+
+.more-menu-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--accent-fill);
+}
+
+.more-menu-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.more-menu-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.more-menu-item.active .more-menu-label {
+  color: var(--accent-text);
+}
+
+.pin-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 6px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: var(--transition);
+  margin-left: 4px;
+}
+
+.pin-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.pin-btn:hover:not(:disabled) {
+  color: var(--text-primary);
+  background: var(--bg-surface);
+}
+
+.pin-btn.pinned {
+  color: var(--accent-fill);
+}
+
+.pin-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
 /* Toast */
 #toast-container {
   position: fixed;
