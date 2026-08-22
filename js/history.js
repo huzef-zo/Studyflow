@@ -1,6 +1,5 @@
 /**
  * StudyFlow - History Module
- * FIX: Added empty-points guard in renderFrequencyGraph() to prevent crash for new users.
  */
 
 const History = (function() {
@@ -11,6 +10,7 @@ const History = (function() {
 
   function initElements() {
     elements = {
+      analyticsContent: document.getElementById('analytics-content'),
       frequencyGraph: document.getElementById('frequency-graph'),
       totalCompletedTasks: document.getElementById('total-completed-tasks'),
       totalStudyHours: document.getElementById('total-study-hours'),
@@ -41,14 +41,34 @@ const History = (function() {
         tab.classList.add('active');
         tab.setAttribute('aria-selected', 'true');
         statsPeriodDays = tab.dataset.period === 'all' ? null : parseInt(tab.dataset.period);
-        updateSummaryStats();
-        renderFrequencyGraph();
-        updateMasteryOverview();
-        renderStudyHistory();
+        renderView();
       };
       tab.addEventListener('click', toggleFn);
       tab.addEventListener('keydown', toggleFn);
     });
+
+    renderView();
+  }
+
+  function renderView() {
+    const allSessions = Storage.getSessions() || [];
+    const allTasks = Storage.getTasks() || [];
+
+    // Check if user has zero overall activity
+    if (allSessions.length === 0 && allTasks.length === 0) {
+      if (elements.analyticsContent) {
+        elements.analyticsContent.innerHTML = `
+          <div class="card text-center" style="padding: 2.5rem 1rem;">
+            <div class="empty-state-icon" style="margin: 0 auto 12px; width: 40px; height: 40px; color: var(--text-tertiary);">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m7 16 3-3 3 3 5-5"/></svg>
+            </div>
+            <h3 style="font-size: 16px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px;">No Activity Recorded Yet</h3>
+            <p style="font-size: 13px; color: var(--text-secondary); max-width: 320px; margin: 0 auto;">Complete focus sessions or missions to generate performance analytics.</p>
+          </div>
+        `;
+        return;
+      }
+    }
 
     updateSummaryStats();
     renderFrequencyGraph();
@@ -66,16 +86,9 @@ const History = (function() {
     return cutoff;
   }
 
-  /**
-   * Return sessions in the selected period.
-   * OPTIMIZATION: Uses Storage.getSessionsSince() which utilizes binary search.
-   * Reduces complexity from O(N) to O(log N).
-   */
   function getFilteredSessions() {
     const cutoff = getCutoffDate();
     if (!cutoff) return Storage.getSessions();
-    // OPTIMIZATION: Use binary search via getSessionsSince for O(log N) retrieval
-    // We pass the formatted date string to ensure consistency with other Storage calls
     return Storage.getSessionsSince(Storage.formatDate(cutoff));
   }
 
@@ -83,7 +96,6 @@ const History = (function() {
     const tasks = Storage.getTasks();
     const cutoff = getCutoffDate();
     if (!cutoff) {
-      // For "All Time", we need a reference start date for repeating tasks
       const user = Storage.getUser();
       const start = user && user.created_at ? new Date(user.created_at) : new Date();
       start.setHours(0, 0, 0, 0);
@@ -93,25 +105,18 @@ const History = (function() {
     return expandTaskOccurrences(tasks, cutoff, today);
   }
 
-  /**
-   * Expands repeating tasks into individual occurrences for the given period.
-   * OPTIMIZATION: Uses a single-pass date loop and a day-of-week lookup for repeating tasks.
-   * This reduces complexity from O(Tasks * Days) to O(Days + Total Occurrences).
-   */
   function expandTaskOccurrences(tasks, startDate, endDate) {
     const occurrences = [];
     const startStr = Storage.formatDate(startDate);
     const endStr = Storage.formatDate(endDate);
 
-    // Group repeating tasks by day of week for faster lookup
-    const repeatingByDay = [[], [], [], [], [], [], []]; // 0=Sun, 1=Mon...
+    const repeatingByDay = [[], [], [], [], [], [], []];
 
     tasks.forEach(t => {
       if (t.type !== 'repeating') {
         const completedAt = t.completedAt ? Storage.formatDate(new Date(t.completedAt)) : null;
         const dueDate = t.dueDate;
 
-        // Include if completed in period OR due in period (and not completed before)
         const completedInPeriod = completedAt && completedAt >= startStr && completedAt <= endStr;
         const dueInPeriod = dueDate && dueDate >= startStr && dueDate <= endStr;
 
@@ -125,7 +130,6 @@ const History = (function() {
       }
     });
 
-    // Single pass through the date range to expand repeating tasks
     const cur = new Date(startDate);
     cur.setHours(0, 0, 0, 0);
     const end = new Date(endDate);
@@ -155,17 +159,14 @@ const History = (function() {
     const cutoffTime = cutoff ? cutoff.getTime() : 0;
     const cutoffStr = cutoff ? Storage.formatDate(cutoff) : null;
 
-    // One-time tasks
     const completedOneTime = tasks.filter(t => {
       if (t.type === 'repeating') return false;
       if (!t.completed) return false;
       if (!cutoff) return true;
-      // OPTIMIZATION: Use Date.parse() for numeric comparison instead of new Date()
       const compTime = typeof t.completedAt === 'number' ? t.completedAt : (t.completedAt ? Date.parse(t.completedAt) : 0);
       return compTime >= cutoffTime;
     }).map(t => ({ ...t, _date: t.completedAt }));
 
-    // Repeating tasks
     const completedRepeating = [];
     const repeatingCompletions = Storage.getRepeatingCompletions();
     Object.keys(repeatingCompletions).forEach(key => {
@@ -188,7 +189,7 @@ const History = (function() {
     const studyMinutes = filteredSessions.filter(s => s.type === 'work').reduce((total, s) => total + s.duration, 0);
 
     if (elements.totalCompletedTasks) elements.totalCompletedTasks.textContent = periodCompletedCount;
-    if (elements.totalStudyHours) elements.totalStudyHours.textContent = Math.round(studyMinutes / 60) + 'h';
+    if (elements.totalStudyHours) elements.totalStudyHours.textContent = Math.round(studyMinutes / 60) + 'H';
     if (elements.allTimeStreak) elements.allTimeStreak.textContent = stats.bestStreak;
 
     if (elements.completionRate) {
@@ -198,13 +199,11 @@ const History = (function() {
 
     if (elements.productiveDay) {
       const isWeekly = statsPeriodDays === 7;
-      const activity = {}; // Key: day index (0-6) for weekly, date string for others
+      const activity = {};
       const reusableDate = new Date();
 
-      // Aggregate focus sessions (weighted by 15-min intervals)
       filteredSessions.forEach(s => {
         if (s.type === 'work' && s.completedAt) {
-          // OPTIMIZATION: Use string slicing for date and reusableDate for getDay()
           let key;
           if (isWeekly) {
             reusableDate.setTime(typeof s.completedAt === 'number' ? s.completedAt : Date.parse(s.completedAt));
@@ -216,10 +215,8 @@ const History = (function() {
         }
       });
 
-      // Aggregate task completions (weighted as 1 unit)
       completedTasksInPeriod.forEach(t => {
         if (t._date) {
-          // OPTIMIZATION: Use string slicing for date and reusableDate for getDay()
           let key;
           if (isWeekly) {
             if (t._date.length === 10) {
@@ -256,7 +253,7 @@ const History = (function() {
           elements.productiveDay.textContent = date.toLocaleDateString('en-US', options);
         }
       } else {
-        elements.productiveDay.textContent = 'N/A';
+        elements.productiveDay.textContent = '-';
       }
     }
   }
@@ -265,16 +262,19 @@ const History = (function() {
     if (!elements.masteryOverview) return;
     const stats = Storage.getSubjectMasteryStats();
     if (stats.length === 0) {
-      elements.masteryOverview.innerHTML = `<div style="grid-column:1/-1">${App.createEmptyStateHtml({ title: 'No Subjects', text: 'Define your subjects in Settings to begin tracking mastery.', icon: 'settings', padding: '2rem' })}</div>`;
+      elements.masteryOverview.innerHTML = `<div style="grid-column:1/-1">${App.createEmptyStateHtml({ title: 'No Subjects', text: 'Define your subjects in Settings to begin tracking mastery.', icon: 'settings', padding: '1.5rem' })}</div>`;
       return;
     }
     elements.masteryOverview.innerHTML = stats.map(subject => `
-      <a href="tasks.html?subject=${encodeURIComponent(subject.name)}" class="mastery-card u-no-underline">
-        <div class="mastery-subject-name" title="${App.escapeHtml(subject.name)}">${App.escapeHtml(subject.name)}</div>
-        <div class="mastery-progress-mini">
-          <div class="mastery-progress-mini-fill" style="width:${subject.percentage}%;background-color:${App.escapeHtml(subject.color)};"></div>
+      <a href="tasks.html?subject=${encodeURIComponent(subject.name)}" class="card u-no-underline" style="padding: 12px;">
+        <div class="flex items-center justify-between mb-xs">
+          <span style="font-weight:600; font-size: 13px; color: var(--text-primary);">${App.escapeHtml(subject.name)}</span>
+          <span style="font-weight:700; font-size: 13px; color: var(--text-primary);">${subject.percentage}%</span>
         </div>
-        <div class="mastery-stats"><span>${subject.percentage}%</span><span>${subject.completed}/${subject.total}</span></div>
+        <div class="progress-bar-bg" style="height: 6px;">
+          <div class="progress-bar-fill" style="width:${subject.percentage}%;background-color:${App.escapeHtml(subject.color)};"></div>
+        </div>
+        <div style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;">${subject.completed}/${subject.total} Objectives</div>
       </a>
     `).join('');
   }
@@ -283,10 +283,10 @@ const History = (function() {
     const goals = Storage.getGoals();
     if (elements.tasksProgress) {
       const tasksPercentage = goals.weekly_tasks > 0 ? Math.round((goals.current_tasks / goals.weekly_tasks) * 100) : 0;
-      elements.tasksProgress.innerHTML = App.createProgressBar(goals.current_tasks, goals.weekly_tasks, 'Tasks Completed');
+      elements.tasksProgress.innerHTML = App.createProgressBar(goals.current_tasks, goals.weekly_tasks, 'Missions Completed');
       if (elements.hoursProgress) {
         const currentHours = Math.round(goals.current_hours * 10) / 10;
-        elements.hoursProgress.innerHTML = App.createProgressBar(currentHours, goals.weekly_hours, 'Study Hours');
+        elements.hoursProgress.innerHTML = App.createProgressBar(currentHours, goals.weekly_hours, 'Focus Hours Logged');
         if (elements.progressPercentage) {
           const hoursPercentage = goals.weekly_hours > 0 ? (goals.current_hours / goals.weekly_hours * 100) : 0;
           elements.progressPercentage.textContent = `${Math.min(100, Math.round((tasksPercentage + hoursPercentage) / 2))}%`;
@@ -305,14 +305,12 @@ const History = (function() {
     const activityData = {};
     const reusableDate = new Date(today);
     for (let i = 0; i < daysCount; i++) {
-      // OPTIMIZATION: Use reusableDate and modify it
       reusableDate.setTime(today.getTime());
       reusableDate.setDate(today.getDate() - i);
       activityData[Storage.formatDate(reusableDate)] = { count: 0, notes: [] };
     }
     tasks.forEach(t => {
       if (t.type !== 'repeating' && t.completed && t.completedAt) {
-        // OPTIMIZATION: Use string slicing for fast date extraction
         const dateStr = (typeof t.completedAt === 'string') ? t.completedAt.slice(0, 10) : Storage.formatDate(t.completedAt);
         if (activityData.hasOwnProperty(dateStr)) activityData[dateStr].count += 1;
       }
@@ -328,7 +326,6 @@ const History = (function() {
 
     sessions.forEach(s => {
       if (s.type === 'work' && s.completedAt) {
-        // OPTIMIZATION: Use string slicing for fast date extraction
         const dateStr = (typeof s.completedAt === 'string') ? s.completedAt.slice(0, 10) : Storage.formatDate(s.completedAt);
         if (activityData.hasOwnProperty(dateStr)) {
           activityData[dateStr].count += Math.max(1, Math.round(s.duration / 15));
@@ -345,7 +342,6 @@ const History = (function() {
     const filteredSessions = getFilteredSessions() || [];
     const workSessions = filteredSessions.filter(s => s.type === 'work' && s.completedAt);
 
-    // Sort newest first
     const sortedSessions = [...workSessions].sort((a, b) => {
       const aVal = a.completedAt || '';
       const bVal = b.completedAt || '';
@@ -353,12 +349,11 @@ const History = (function() {
     });
 
     if (sortedSessions.length === 0) {
-      const periodLabel = statsPeriodDays ? `last ${statsPeriodDays} days` : 'all time';
       elements.studyHistoryList.innerHTML = App.createEmptyStateHtml({
         title: 'No Focus Sessions',
-        text: `No study focus sessions completed during ${periodLabel}.`,
+        text: `No focus sessions logged for this period.`,
         icon: 'timer',
-        padding: '2rem'
+        padding: '1.5rem'
       });
       return;
     }
@@ -367,34 +362,26 @@ const History = (function() {
       const task = session.taskId ? Storage.getTaskById(session.taskId) : null;
       const taskTitle = task ? task.title : 'General Focus';
       const subjectName = task ? task.subject : 'Other';
-      const subjectColor = App.getSubjectColor(subjectName);
 
       const completeDate = new Date(session.completedAt);
       const timeStr = completeDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
       const fullDateStr = completeDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
-      const notesHtml = session.notes ? `
-        <div style="font-size: 0.8rem; color: var(--text-muted); font-style: italic; margin-top: 8px; border-left: 2px solid var(--glass-border); padding-left: 8px; line-height: 1.4;">
-          "${App.escapeHtml(session.notes)}"
-        </div>
-      ` : '';
-
       return `
-        <div class="task-card" style="margin-bottom: 12px; --priority-color:${App.hexToRgb(subjectColor)};">
+        <div class="card" style="padding: 12px; margin-bottom: 8px;">
           <div class="flex items-start justify-between w-full gap-sm">
             <div class="flex-1 min-w-0">
               <div class="flex items-center gap-sm mb-xs flex-wrap">
-                <div class="subject-pill" style="--tag-color:${App.hexToRgb(subjectColor)}">${App.escapeHtml(subjectName)}</div>
-                <span class="badge" style="background: rgba(255,255,255,0.05); color: var(--text-secondary); font-size: 9px; text-shadow: none;">
+                <span class="badge">${App.escapeHtml(subjectName)}</span>
+                <span class="badge" style="background: rgba(255,255,255,0.05); color: var(--text-secondary);">
                   ${session.duration} mins
                 </span>
               </div>
-              <div class="task-title-text" style="font-size: 1rem; word-break: break-word;">${App.escapeHtml(taskTitle)}</div>
-              ${notesHtml}
+              <div class="task-title-text" style="font-size: 14px;">${App.escapeHtml(taskTitle)}</div>
             </div>
             <div style="text-align: right; flex-shrink: 0;">
-              <div style="font-size: 11px; font-weight: 700; color: white;">${timeStr}</div>
-              <div style="font-size: 9px; color: var(--text-muted); font-weight: 600; margin-top: 2px;">${fullDateStr}</div>
+              <div style="font-size: 11px; font-weight: 600; color: var(--text-primary);">${timeStr}</div>
+              <div style="font-size: 10px; color: var(--text-secondary);">${fullDateStr}</div>
             </div>
           </div>
         </div>
@@ -409,21 +396,20 @@ const History = (function() {
     const reflections = Storage.loadData(Storage.KEYS.REFLECTIONS, Storage.DEFAULTS.reflections || []);
 
     if (reflections.length === 0) {
-      elements.reflectionsLog.innerHTML = '<p class="text-secondary text-center">No tactical reflections recorded yet.</p>';
+      elements.reflectionsLog.innerHTML = '<p class="text-secondary text-center py-sm">No tactical reflections recorded yet.</p>';
       return;
     }
 
     elements.reflectionsLog.innerHTML = reflections.sort((a, b) => {
-      // OPTIMIZATION: Use fast lexicographical string comparison instead of `new Date` to avoid allocations and parsing overhead.
       const aVal = a.date || '';
       const bVal = b.date || '';
       return bVal < aVal ? -1 : (bVal > aVal ? 1 : 0);
     }).map(r => `
-      <div class="card" style="padding: 1rem; background: rgba(255,255,255,0.02);">
-        <div style="font-size: 0.75rem; font-weight: 800; color: var(--primary); text-transform: uppercase; margin-bottom: 0.5rem;">
+      <div class="card" style="padding: 12px;">
+        <div style="font-size: 11px; font-weight: 700; color: var(--primary); text-transform: uppercase; margin-bottom: 4px;">
           ${Storage.formatDisplayDate(r.date)}
         </div>
-        <div style="font-size: 0.875rem; color: white; line-height: 1.5;">
+        <div style="font-size: 13px; color: var(--text-primary); line-height: 1.4;">
           ${App.escapeHtml(r.text)}
         </div>
       </div>
@@ -460,15 +446,14 @@ const History = (function() {
       days.push({ date, count, notes: dayData.notes });
     }
 
-    // FIX 5: Guard against empty or all-zero data — prevents crash on first launch
     if (days.length === 0) {
-      elements.frequencyGraph.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:2rem 0;font-size:14px;">No activity data yet. Complete tasks or focus sessions to see your timeline.</p>';
+      elements.frequencyGraph.innerHTML = '<p style="color:var(--text-secondary);text-align:center;padding:2rem 0;font-size:13px;">No activity data yet.</p>';
       return;
     }
 
     if (maxCount === 0) maxCount = 5;
 
-    const width = 800, height = 200, paddingX = 40, paddingY = 30;
+    const width = 800, height = 180, paddingX = 40, paddingY = 24;
     const chartWidth = width - (paddingX * 2);
     const chartHeight = height - (paddingY * 2);
 
@@ -480,7 +465,6 @@ const History = (function() {
       notes: day.notes
     }));
 
-    // Build smoothed line path
     let linePath = `M ${points[0].x},${points[0].y}`;
     for (let i = 0; i < points.length - 1; i++) {
       const p0 = points[i], p1 = points[i + 1];
@@ -497,32 +481,19 @@ const History = (function() {
         <svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" class="line-graph-svg">
           <defs>
             <linearGradient id="areaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stop-color="var(--primary)" stop-opacity="0.3"/>
-              <stop offset="100%" stop-color="var(--primary)" stop-opacity="0.01"/>
+              <stop offset="0%" stop-color="var(--primary)" stop-opacity="0.2"/>
+              <stop offset="100%" stop-color="var(--primary)" stop-opacity="0.0"/>
             </linearGradient>
           </defs>
           <line x1="${paddingX}" y1="${paddingY}" x2="${width-paddingX}" y2="${paddingY}" class="graph-grid-line"/>
           <line x1="${paddingX}" y1="${paddingY+chartHeight/2}" x2="${width-paddingX}" y2="${paddingY+chartHeight/2}" class="graph-grid-line"/>
           <line x1="${paddingX}" y1="${height-paddingY}" x2="${width-paddingX}" y2="${height-paddingY}" class="graph-grid-line"/>
-          <path d="${areaPath}" fill="url(#areaGradient)" class="graph-area-enhanced"/>
-          <path d="${linePath}" class="graph-line" fill="none" stroke="var(--primary)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="${areaPath}" fill="url(#areaGradient)"/>
+          <path d="${linePath}" fill="none" stroke="var(--primary)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
           ${points.map(p => {
-            const notesStr = p.notes && p.notes.length > 0 ? `\n\nNotes:\n- ${p.notes.join('\n- ')}` : '';
-            return `<circle cx="${p.x}" cy="${p.y}" r="4" class="graph-dot"><title>${p.count} activities on ${p.date.toLocaleDateString()}${App.escapeHtml(notesStr)}</title></circle>`;
+            return `<circle cx="${p.x}" cy="${p.y}" r="3.5" fill="var(--primary)"><title>${p.count} activities on ${p.date.toLocaleDateString()}</title></circle>`;
           }).join('')}
         </svg>
-        <div class="graph-labels-x">
-          ${days.filter((_, i) => i % 5 === 0 || i === daysCount - 1).map(day => {
-            const index = days.indexOf(day);
-            const left = (paddingX + (index * (chartWidth / (daysCount - 1)))) / width * 100;
-            return `<span class="graph-label-x" style="left:${left}%">${day.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>`;
-          }).join('')}
-        </div>
-        <div class="graph-labels-y">
-          <span class="graph-label-y" style="bottom:${paddingY/height*100}%">0</span>
-          <span class="graph-label-y" style="bottom:50%">${Math.round(maxCount/2)}</span>
-          <span class="graph-label-y" style="top:${paddingY/height*100}%">${maxCount}</span>
-        </div>
       </div>`;
   }
 
