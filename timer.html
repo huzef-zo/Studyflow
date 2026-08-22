@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
   <meta name="description" content="StudyFlow - Pomodoro Timer for focused study sessions">
-  <meta name="theme-color" content="#0B0F19" media="(prefers-color-scheme: dark)">
-  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#14161B">
+  <meta name="color-scheme" content="dark light">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="StudyFlow">
@@ -15,7 +15,7 @@
   <link rel="apple-touch-icon" href="./icon-192.png">
   <link rel="manifest" href="./manifest.json">
   <link rel="msapplication-config" href="browserconfig.xml">
-  <meta name="msapplication-TileColor" content="#3B82F6">
+  <meta name="msapplication-TileColor" content="#5B9BF0">
   <title>Timer - StudyFlow</title>
   <link rel="stylesheet" href="css/style.css?v=v2025-05-03-02">
 </head>
@@ -25,100 +25,95 @@
 
   <main class="main-container">
     <header class="page-header animate-fade-in">
-      <h1 class="glowing-text">Focus Sphere</h1>
-      <p class="subtitle" style="font-weight:500;">Deep work state initialization</p>
+      <div class="page-header-title-group">
+        <h1>Focus Sphere</h1>
+        <p class="subtitle">Deep work state initialization</p>
+      </div>
     </header>
 
     <div class="narrow-layout">
 
       <!-- Task Selection -->
-      <section class="animate-fade-in stagger-1">
+      <section class="animate-fade-in">
         <div class="form-group">
           <label class="form-label" for="timer-task" style="text-align:center;">Active Mission Selection</label>
-          <select id="timer-task" class="form-input" style="text-align:center;font-weight:700;border-radius:99px;">
+          <select id="timer-task" class="form-input glass-pill-input" style="text-align:center;">
             <option value="">GENERAL FOCUS</option>
           </select>
         </div>
         <div class="form-group" id="subtask-select-container" style="display:none;margin-top:1rem;">
           <label class="form-label" for="timer-subtask" style="text-align:center;">Sub-Mission Focus</label>
-          <select id="timer-subtask" class="form-input" style="text-align:center;font-weight:700;border-radius:99px;">
+          <select id="timer-subtask" class="form-input glass-pill-input" style="text-align:center;">
             <option value="">SELECT SUB-MISSION</option>
           </select>
         </div>
         <div id="subtask-tracker-container" style="display:flex;justify-content:center;margin-top:1rem;"></div>
 
         <!-- Ambient Sound Mixer -->
-        <div style="display:flex;justify-content:center;gap:10px;margin-top:1rem;">
+        <div style="display:flex;justify-content:center;gap:8px;margin-top:1rem;">
           <button id="ambient-pink-btn" class="btn btn-secondary btn-sm" onclick="Timer.toggleAmbientSound('pink')" aria-pressed="false">Pink Noise</button>
           <button id="ambient-brown-btn" class="btn btn-secondary btn-sm" onclick="Timer.toggleAmbientSound('brown')" aria-pressed="false">Brown Noise</button>
         </div>
       </section>
 
       <!-- Timer Ring -->
-      <section class="timer-ring-container animate-fade-in stagger-2" id="timer-container">
-        <svg class="timer-ring-svg" viewBox="0 0 300 300" style="overflow:visible;">
-          <defs>
-            <linearGradient id="timerGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stop-color="#8B5CF6"/>
-              <stop offset="100%" stop-color="#3B82F6"/>
-            </linearGradient>
-          </defs>
-          <circle cx="150" cy="150" r="155" fill="none" stroke="var(--primary)" stroke-width="1" opacity="0.05"/>
+      <section class="timer-ring-container animate-fade-in" id="timer-container">
+        <svg class="timer-ring-svg" viewBox="0 0 300 300">
           <circle class="timer-ring-bg" cx="150" cy="150" r="140"/>
-          <circle id="timer-progress" class="timer-ring-fill" cx="150" cy="150" r="140"/>
+          <circle id="timer-progress" class="timer-ring-fill" cx="150" cy="150" r="140" stroke="var(--accent-fill)"/>
         </svg>
         <div class="timer-center">
           <div class="active-mission" id="active-mission-label">Focusing on: General</div>
           <div class="timer-status-badge" id="timer-label">Deep Work</div>
           <div class="timer-main-time" id="timer-time">25:00</div>
-          <div id="cycle-indicator" style="display:flex;gap:6px;align-items:center;justify-content:center;margin:6px 0 2px;"></div>
+          <div id="cycle-indicator" style="display:flex;gap:4px;align-items:center;justify-content:center;margin:4px 0 2px;"></div>
           <div class="timer-task-name" id="selected-task-display">Initializing...</div>
         </div>
       </section>
 
       <!-- Session Notes -->
-      <section class="animate-fade-in stagger-2-5" style="margin-top: 1rem;">
+      <section class="animate-fade-in" style="margin-top: 1rem;">
         <div class="form-group">
-          <textarea id="session-notes" class="form-input" placeholder="Session notes..." aria-label="Session notes" style="height: 80px; resize: none; border-radius: 12px; font-size: 0.875rem; padding: 12px;"></textarea>
+          <textarea id="session-notes" class="form-input" placeholder="Session notes..." aria-label="Session notes" style="height: 70px; resize: none; border-radius: var(--radius-sm); padding: 10px;"></textarea>
         </div>
       </section>
 
       <!-- Controls -->
-      <section class="timer-controls-fab animate-fade-in stagger-3">
+      <section class="timer-controls-fab animate-fade-in">
         <button class="btn-fab-sub" id="reset-btn" aria-label="Reset Mission">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
         </button>
         <button class="btn-fab-main" id="start-btn" aria-label="Engage Mission">
-          <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" id="play-pause-icon" style="transform:translateX(2px);"><polygon points="6 3 20 12 6 21 6 3"/></svg>
+          <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" id="play-pause-icon" style="transform:translateX(2px);"><polygon points="6 3 20 12 6 21 6 3"/></svg>
         </button>
         <button class="btn-fab-sub" id="skip-btn" aria-label="Skip Session">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>
         </button>
       </section>
 
       <!-- Stats Carousel -->
-      <section class="animate-fade-in stagger-4">
-        <h2 style="color:white;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:1rem;text-align:center;">Mission Intelligence</h2>
-        <div class="stats-carousel">
-          <div class="carousel-card">
-            <div style="font-size:10px;font-weight:800;color:var(--text-muted);text-transform:uppercase;">Sessions</div>
-            <div id="sessions-today" style="font-size:1.5rem;font-weight:800;color:white;">0</div>
+      <section class="animate-fade-in">
+        <h2 style="font-size:10px;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:0.75rem;text-align:center;color:var(--text-muted);">Mission Intelligence</h2>
+        <div class="grid-3">
+          <div class="card text-center" style="padding: 10px;">
+            <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;">Sessions</div>
+            <div id="sessions-today" style="font-size:18px;font-weight:500;color:var(--text-primary);">0</div>
           </div>
-          <div class="carousel-card">
-            <div style="font-size:10px;font-weight:800;color:var(--text-muted);text-transform:uppercase;">Deep Work</div>
-            <div id="total-time-today" style="font-size:1.5rem;font-weight:800;color:white;">0m</div>
+          <div class="card text-center" style="padding: 10px;">
+            <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;">Deep Work</div>
+            <div id="total-time-today" style="font-size:18px;font-weight:500;color:var(--text-primary);">0m</div>
           </div>
-          <div class="carousel-card">
-            <div style="font-size:10px;font-weight:800;color:var(--text-muted);text-transform:uppercase;">Streak</div>
-            <div id="streak-count" style="font-size:1.5rem;font-weight:800;color:white;">0</div>
+          <div class="card text-center" style="padding: 10px;">
+            <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;">Streak</div>
+            <div id="streak-count" style="font-size:18px;font-weight:500;color:var(--text-primary);">0</div>
           </div>
         </div>
 
         <!-- Wake lock status indicator -->
-        <div style="text-align:center;margin-top:1rem;">
+        <div style="text-align:center;margin-top:0.75rem;">
           <span
             id="wake-lock-indicator"
-            style="font-size:0.65rem;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:var(--text-muted);transition:color 0.3s,opacity 0.3s;"
+            style="font-size:10px;font-weight:500;letter-spacing:0.04em;text-transform:uppercase;color:var(--text-muted);"
           >⬤ Screen auto-off</span>
         </div>
       </section>

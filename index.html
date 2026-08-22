@@ -4,9 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
   <meta name="description" content="StudyFlow - Your personal study organizer and productivity hub">
-  <meta name="theme-color" content="#0B0F19" media="(prefers-color-scheme: dark)">
-  <meta name="color-scheme" content="dark">
-  <meta name="supported-color-schemes" content="dark">
+  <meta name="theme-color" content="#14161B">
   
   <!-- Standalone PWA Configuration -->
   <meta name="mobile-web-app-capable" content="yes">
@@ -19,87 +17,79 @@
   <!-- Icons -->
   <link rel="icon" type="image/png" href="./icon-192.png">
   <link rel="apple-touch-icon" href="./icon-192.png">
-  <link rel="apple-touch-icon" sizes="180x180" href="./icon-192.png">
   <link rel="shortcut icon" type="image/png" href="./icon-192.png">
   
   <!-- Manifest -->
   <link rel="manifest" href="./manifest.json">
   <link rel="msapplication-config" href="browserconfig.xml">
-  <meta name="msapplication-TileColor" content="#3B82F6">
+  <meta name="msapplication-TileColor" content="#5B9BF0">
   
   <title>Dashboard - StudyFlow</title>
   <link rel="stylesheet" href="css/style.css?v=v2025-05-03-02">
 </head>
 <body>
-  <!-- Global SVG Gradients -->
-  <svg width="0" height="0" style="position:absolute;">
-    <defs>
-      <linearGradient id="primaryGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stop-color="#3B82F6" />
-        <stop offset="100%" stop-color="#8B5CF6" />
-      </linearGradient>
-    </defs>
-  </svg>
-
   <!-- Navigation Containers -->
   <div id="sidebar-container"></div>
   <div id="bottom-nav-container"></div>
 
   <!-- Main Content -->
   <main class="main-container">
-    <!-- Page Header -->    <header class="page-header animate-fade-in">
-      <h1 class="glowing-text" id="greeting">Good morning!</h1>
-      <p class="subtitle" id="date-display"></p>
+    <!-- Page Header -->
+    <header class="page-header animate-fade-in">
+      <div class="page-header-title-group">
+        <h1 id="greeting">Good morning!</h1>
+        <p class="subtitle" id="date-display"></p>
+      </div>
     </header>
 
     <!-- XP Progress Widget -->
-    <section class="xp-widget animate-fade-in stagger-0-5" style="margin-bottom: 2rem;">
-      <div class="card" style="padding: 1rem 1.5rem; background: rgba(var(--primary-rgb), 0.05); border-color: rgba(var(--primary-rgb), 0.2);">
+    <section class="xp-widget animate-fade-in mb-md">
+      <div class="card">
         <div class="flex items-center justify-between mb-xs">
           <div class="flex items-center gap-sm">
             <div id="xp-rank-icon" style="font-size: 1.25rem;">🛡️</div>
             <div>
-              <div id="xp-rank-name" style="font-weight: 800; font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--primary);">Novice</div>
-              <div style="font-size: 0.75rem; color: var(--text-muted);">Level <span id="xp-level">1</span></div>
+              <div id="xp-rank-name" style="font-weight: 500; font-size: 13px; text-transform: uppercase; color: var(--accent-text);">Novice</div>
+              <div style="font-size: 11px; color: var(--text-muted);">Level <span id="xp-level">1</span></div>
             </div>
           </div>
           <div style="text-align: right;">
-            <div id="xp-value-display" style="font-weight: 700; font-size: 0.875rem; color: white;">0 / 100 XP</div>
+            <div id="xp-value-display" style="font-weight: 500; font-size: 13px; color: var(--accent-text);">0 / 100 XP</div>
           </div>
         </div>
-        <div class="progress-bar-bg" style="height: 8px; background: rgba(255,255,255,0.05);">
-          <div id="xp-progress-fill" class="progress-bar-fill" style="width: 0%; background: var(--primary);"></div>
+        <div class="progress-bar-bg" style="height: 6px;">
+          <div id="xp-progress-fill" class="progress-bar-fill" style="width: 0%;"></div>
         </div>
       </div>
     </section>
 
-    <!-- Stats Row (Glowing Pills) -->
-    <section class="stats-pill-row animate-fade-in stagger-1">
-      <div class="stat-pill glowing-pill">
-        <div class="stat-pill-icon icon-glow-primary" style="color: var(--primary);"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
+    <!-- Dense 2x2 Stats Grid -->
+    <section class="grid-2-dense animate-fade-in mb-md">
+      <div class="stat-pill">
+        <div class="stat-pill-icon"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
         <div>
-          <div class="data-number" style="font-size: 24px;" id="stat-today">0</div>
+          <div class="data-number" id="stat-today">0</div>
           <div class="stat-pill-label">Tasks Today</div>
         </div>
       </div>
-      <div class="stat-pill glowing-pill">
-        <div class="stat-pill-icon icon-glow-danger" style="color: var(--danger);"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+      <div class="stat-pill">
+        <div class="stat-pill-icon"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
         <div>
-          <div class="data-number" style="font-size: 24px;" id="stat-pending">0</div>
+          <div class="data-number" id="stat-pending">0</div>
           <div class="stat-pill-label">Pending</div>
         </div>
       </div>
-      <div class="stat-pill glowing-pill">
-        <div class="stat-pill-icon icon-glow-success" style="color: var(--success);"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+      <div class="stat-pill">
+        <div class="stat-pill-icon"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
         <div>
-          <div class="data-number" style="font-size: 24px;" id="stat-week">0</div>
+          <div class="data-number" id="stat-week">0</div>
           <div class="stat-pill-label">Completed Today</div>
         </div>
       </div>
-      <div class="stat-pill glowing-pill">
-        <div class="stat-pill-icon icon-glow-secondary" style="color: var(--secondary);"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg></div>
+      <div class="stat-pill">
+        <div class="stat-pill-icon"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg></div>
         <div>
-          <div class="data-number" style="font-size: 24px;" id="streak-count">0</div>
+          <div class="data-number" id="streak-count">0</div>
           <div class="stat-pill-label">Streak</div>
         </div>
       </div>
@@ -108,27 +98,28 @@
     <!-- Bento Grid -->
     <div class="bento-grid">
 
-      <!-- Mastery Overview (Wide Card) -->
-      <section class="card animate-fade-in stagger-2 col-span-3 md:col-span-2">
-        <div class="flex items-center justify-between mb-lg">
-          <h2 class="flex items-center gap-md" style="color: white;">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+      <!-- Mastery Overview -->
+      <section class="card animate-fade-in col-span-3 md:col-span-2">
+        <div class="flex items-center justify-between mb-md">
+          <h2 class="flex items-center gap-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-fill)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
             Mastery Overview
           </h2>
-          <a href="settings.html" class="btn btn-secondary btn-sm" style="padding: 6px 12px; font-size: 11px;">Manage Subjects</a>
+          <a href="settings.html" class="btn btn-secondary btn-sm">Manage</a>
         </div>
-        <div id="mastery-overview" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">          <!-- Populated by JS -->
+        <div id="mastery-overview" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px;">
+          <!-- Populated by JS -->
         </div>
       </section>
 
       <!-- Upcoming Deadlines -->
-      <section class="card animate-fade-in stagger-3 row-span-2">
-        <div class="flex items-center justify-between mb-lg">
-          <h2 class="flex items-center gap-md" style="color: white;">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--secondary)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+      <section class="card animate-fade-in row-span-2">
+        <div class="flex items-center justify-between mb-md">
+          <h2 class="flex items-center gap-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-fill)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
             Upcoming
           </h2>
-          <a href="tasks.html" class="btn btn-secondary btn-sm" style="padding: 6px 12px; font-size: 11px;">View All</a>
+          <a href="tasks.html" class="btn btn-secondary btn-sm">View All</a>
         </div>
         <div id="deadlines-list" class="timeline">
           <!-- Populated by JS -->
@@ -136,61 +127,60 @@
       </section>
 
       <!-- Weekly Progress -->
-      <section class="card animate-fade-in stagger-4 col-span-2 md:col-span-2">
-        <div class="flex items-center justify-between mb-lg">
-          <h2 class="flex items-center gap-md" style="color: white;">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+      <section class="card animate-fade-in col-span-2 md:col-span-2">
+        <div class="flex items-center justify-between mb-md">
+          <h2 class="flex items-center gap-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-fill)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
             Weekly Progress
           </h2>
-          <span class="badge" style="background: var(--success-glow); color: var(--success);" id="progress-percentage">0%</span>
+          <span class="badge" id="progress-percentage">0%</span>
         </div>
         <div id="tasks-progress" class="progress-container"></div>
-        <div id="hours-progress" class="progress-container" style="margin-top: var(--spacing-md);"></div>
+        <div id="hours-progress" class="progress-container" style="margin-top: var(--spacing-sm);"></div>
       </section>
 
-      <!-- Today's Plan (Scheduler) -->
-      <section class="card animate-fade-in stagger-4 col-span-3 md:col-span-2">
-        <h2 class="flex items-center gap-md mb-lg" style="color: white;">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M12 18h.01"/><path d="M16 18h.01"/></svg>
+      <!-- Today's Plan -->
+      <section class="card animate-fade-in col-span-3 md:col-span-2">
+        <h2 class="flex items-center gap-sm mb-md">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-fill)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M12 18h.01"/><path d="M16 18h.01"/></svg>
           Today's Optimized Plan
         </h2>
-        <div id="today-plan-list" class="flex flex-col gap-sm">
+        <div id="today-plan-list" class="flex flex-col gap-xs">
           <!-- Populated by Scheduler -->
         </div>
       </section>
 
-      <!-- Daily Reflection (Dashboard) -->
-      <section id="reflection-card" class="card animate-fade-in stagger-4-5 col-span-3" style="display:none; background: linear-gradient(135deg, rgba(var(--primary-rgb), 0.1) 0%, rgba(var(--neon-purple-rgb), 0.1) 100%);">
+      <!-- Daily Reflection -->
+      <section id="reflection-card" class="card animate-fade-in col-span-3" style="display:none;">
         <div class="flex items-center justify-between mb-md">
-          <h2 class="flex items-center gap-md" style="color: white; margin: 0;">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+          <h2 class="flex items-center gap-sm" style="margin: 0;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-fill)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
             Daily Reflection
           </h2>
           <button class="btn btn-ghost btn-sm" onclick="this.closest('#reflection-card').style.display='none'">Dismiss</button>
         </div>
-        <p class="text-secondary mb-md">Take a moment to record your tactical progress and neural state.</p>
+        <p class="text-secondary mb-md">Take a moment to record your progress today.</p>
         <textarea id="reflection-input" class="form-input mb-md" placeholder="How was your progress today? What could be optimized?" style="height:80px;" aria-label="Daily Reflection"></textarea>
         <button class="btn btn-primary" id="save-reflection-btn">Save Reflection</button>
       </section>
 
       <!-- Quick Actions -->
-      <section class="card animate-fade-in stagger-5">
-        <h2 class="flex items-center gap-md mb-lg" style="color: white;">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+      <section class="card animate-fade-in">
+        <h2 class="flex items-center gap-sm mb-md">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-fill)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
           Quick Actions
         </h2>
-        <div class="flex flex-col gap-sm">
+        <div class="flex flex-col gap-xs">
           <a href="tasks.html?action=add" class="btn btn-primary">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
             Add Task
           </a>
           <a href="timer.html" class="btn btn-secondary">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
             Focus
           </a>
         </div>
       </section>
-
 
     </div>
   </main>
@@ -204,10 +194,6 @@
   <script src="js/app.js?v=v2025-05-03-02"></script>
   
   <script>
-    
-    // ============================================
-    // DASHBOARD SPECIFIC CODE
-    // ============================================
     (function() {
       'use strict';
 
@@ -235,24 +221,23 @@
 
       function updateProgress() {
         const goals = Storage.getGoals();
-        const stats = Storage.getStats();
         
         const tasksPercentage = goals.weekly_tasks > 0 ? Math.round((goals.current_tasks / goals.weekly_tasks) * 100) : 0;
-        document.getElementById('tasks-progress').innerHTML = createGlowingProgressBar(goals.current_tasks, goals.weekly_tasks, 'Missions', '#3B82F6');
+        document.getElementById('tasks-progress').innerHTML = createProgressBar(goals.current_tasks, goals.weekly_tasks, 'Missions');
         
         const currentHours = Math.round(goals.current_hours * 10) / 10;
-        document.getElementById('hours-progress').innerHTML = createGlowingProgressBar(currentHours, goals.weekly_hours, 'Focus Hours', '#8B5CF6');
-                const hoursPercentage = goals.weekly_hours > 0 ? (goals.current_hours / goals.weekly_hours * 100) : 0;
+        document.getElementById('hours-progress').innerHTML = createProgressBar(currentHours, goals.weekly_hours, 'Focus Hours');
+        const hoursPercentage = goals.weekly_hours > 0 ? (goals.current_hours / goals.weekly_hours * 100) : 0;
         const avgPercentage = Math.round((tasksPercentage + hoursPercentage) / 2);
         document.getElementById('progress-percentage').textContent = `${Math.min(100, avgPercentage)}%`;
       }
 
-      function createGlowingProgressBar(current, max, label, color) {
+      function createProgressBar(current, max, label) {
         const percentage = max > 0 ? Math.min(100, Math.round((current / max) * 100)) : 0;
         return `
           <div class="progress-header">
             <span class="progress-label">${App.escapeHtml(label)}</span>
-            <span class="progress-percent" style="color: #FFFFFF;">${current} / ${max}</span>
+            <span class="progress-percent">${current} / ${max}</span>
           </div>
           <div class="progress-bar-bg">
             <div class="progress-bar-fill" style="width: ${percentage}%;"></div>
@@ -268,15 +253,15 @@
           return;
         }
         masteryEl.innerHTML = stats.map(subject => `
-          <a href="tasks.html?subject=${encodeURIComponent(subject.name)}" class="mastery-item u-no-underline">
-            <div class="flex items-center justify-between mb-sm">
-              <span style="font-weight: 700; font-size: 0.875rem; color: white;">${App.escapeHtml(subject.name)}</span>
-              <span style="font-weight: 800; color: white; font-size: 0.875rem;">${subject.percentage}%</span>
+          <a href="tasks.html?subject=${encodeURIComponent(subject.name)}" class="card u-no-underline" style="padding: 10px 12px; background: var(--bg-tertiary);">
+            <div class="flex items-center justify-between mb-xs">
+              <span style="font-size: 13px; font-weight: 500; color: var(--text-primary);">${App.escapeHtml(subject.name)}</span>
+              <span style="font-size: 13px; font-weight: 500; color: var(--accent-text);">${subject.percentage}%</span>
             </div>
-            <div class="progress-bar-bg" style="height: 6px;">
+            <div class="progress-bar-bg" style="height: 5px;">
               <div class="progress-bar-fill" style="width: ${subject.percentage}%;"></div>
             </div>
-            <div style="font-size: 10px; color: rgba(255, 255, 255, 0.5); margin-top: 4px; font-weight: 600; text-transform: uppercase;">
+            <div style="font-size: 10px; color: var(--text-muted); margin-top: 4px; font-weight: 500; text-transform: uppercase;">
               ${subject.completed} / ${subject.total} Objectives
             </div>
           </a>
@@ -294,12 +279,15 @@
         const xpRequired = nextLevelXP - currentLevelXP;
         const percentage = Math.min(100, Math.round((xpInLevel / xpRequired) * 100));
 
+        let fillWidth = percentage;
+        if (xpState.totalXP > 0 && fillWidth < 2) {
+          fillWidth = 2; // thin sliver for low XP
+        }
+
         document.getElementById('xp-level').textContent = level;
         document.getElementById('xp-rank-name').textContent = rank.title;
-        document.getElementById('xp-rank-name').style.color = rank.color;
         document.getElementById('xp-value-display').textContent = `${xpState.totalXP} / ${nextLevelXP} XP`;
-        document.getElementById('xp-progress-fill').style.width = `${percentage}%`;
-        document.getElementById('xp-progress-fill').style.background = rank.color;
+        document.getElementById('xp-progress-fill').style.width = `${fillWidth}%`;
 
         const rankIcons = {
           'Novice': '🛡️',
@@ -328,14 +316,13 @@
           const href = block.taskId ? `timer.html?taskId=${App.escapeHtml(block.taskId)}` : 'timer.html';
 
           return `
-            <a href="${href}" class="flex items-center gap-md p-sm hover-bg u-no-underline" style="border-radius:12px;border:1px solid rgba(255,255,255,0.05);background:rgba(255,255,255,0.02);">
-              <div style="font-size: 0.75rem; font-weight: 800; color: var(--primary); min-width: 80px;">${App.escapeHtml(block.startTime)} - ${App.escapeHtml(block.endTime)}</div>
-              <div style="font-size: 1.25rem;">${icon}</div>
-              <div class="flex-1">
-                <div style="font-size: 0.875rem; font-weight: 700; color: white;">${App.escapeHtml(block.label)}</div>
-                <div style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">${App.escapeHtml(block.subject || 'General')}</div>
+            <a href="${href}" class="flex items-center gap-sm p-sm u-no-underline" style="border-radius:8px; background:var(--bg-tertiary);">
+              <div style="font-size: 11px; font-weight: 500; color: var(--accent-text); min-width: 75px;">${App.escapeHtml(block.startTime)} - ${App.escapeHtml(block.endTime)}</div>
+              <div style="font-size: 1.1rem;">${icon}</div>
+              <div class="flex-1 min-w-0">
+                <div style="font-size: 13px; font-weight: 500; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${App.escapeHtml(block.label)}</div>
+                <div style="font-size: 10px; color: var(--text-muted); text-transform: uppercase;">${App.escapeHtml(block.subject || 'General')}</div>
               </div>
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-muted);"><polyline points="9 18 15 12 9 6"/></svg>
             </a>
           `;
         }).join('');
@@ -352,14 +339,14 @@
           const isOverdue = !task.completed && task.dueDate && Storage.isDateOverdue(task.dueDate);
           return `
             <a href="timer.html?taskId=${App.escapeHtml(task.id)}" class="timeline-item ${isOverdue ? 'overdue' : ''} u-block u-no-underline">
-              <div class="timeline-dot" style="background: ${App.getSubjectColor(task.subject)}"></div>
+              <div class="timeline-dot"></div>
               <div class="flex items-center justify-between">
-                <div style="font-size: 11px; font-weight: 800; color: ${isOverdue ? 'var(--danger)' : 'var(--primary)'}; text-transform: uppercase;">
+                <div style="font-size: 10px; font-weight: 500; color: ${isOverdue ? 'var(--danger)' : 'var(--accent-text)'}; text-transform: uppercase;">
                   ${Storage.formatDisplayDate(task.dueDate)}
                 </div>
-                ${isOverdue ? '<span class="badge" style="background:rgba(239,68,68,0.2);color:var(--danger);font-size:9px;padding:2px 6px;">MISSED</span>' : ''}
+                ${isOverdue ? '<span class="badge" style="color:var(--danger);">MISSED</span>' : ''}
               </div>
-              <div style="font-size: 14px; font-weight: 600; color: white;">${App.escapeHtml(task.title)}</div>
+              <div style="font-size: 13px; font-weight: 500; color: var(--text-primary);">${App.escapeHtml(task.title)}</div>
               <div style="font-size: 11px; color: var(--text-muted);">${App.escapeHtml(task.subject)}</div>
             </a>
           `;
@@ -407,7 +394,6 @@
       });
       init();
 
-      // Listen for task data changes and update stats in real-time
       window.addEventListener('studyflow_taskDataChanged', () => {
         updateStats();
         updateMasteryOverview();
@@ -417,5 +403,5 @@
       });
     })();
   </script>
-  </body>
-  </html>
+</body>
+</html>

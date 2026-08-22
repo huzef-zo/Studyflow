@@ -39,7 +39,9 @@ const App = (function() {
     target: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>`,
     award: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg>`,
     empty: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`,
-    history: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m7 16 3-3 3 3 5-5"/></svg>`
+    history: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m7 16 3-3 3 3 5-5"/></svg>`,
+    sun: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>`,
+    moon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>`
   };
 
   function getIcon(name) { return Icons[name] || ''; }
@@ -567,8 +569,8 @@ const App = (function() {
     return `
       <div class="empty-state" style="padding:${safePadding};">
         <div class="empty-state-icon">${Icons[icon]||Icons.empty}</div>
-        <h4 style="color:white;font-size:1.25rem;margin-bottom:8px;font-weight:600;">${escapeHtml(title)}</h4>
-        <p style="color:var(--text-muted);font-size:0.875rem;margin-bottom:1.5rem;max-width:250px;">${escapeHtml(text)}</p>
+        <h4 style="color:var(--text-primary);font-size:14px;margin-bottom:6px;font-weight:500;">${escapeHtml(title)}</h4>
+        <p style="color:var(--text-muted);font-size:12px;margin-bottom:1rem;max-width:250px;">${escapeHtml(text)}</p>
         ${actionText ? `<button class="btn btn-primary" id="${escapeHtml(actionId)}">${escapeHtml(actionText)}</button>` : ''}
       </div>
     `;
@@ -656,22 +658,77 @@ const App = (function() {
   }
 
   const THEMES = {
-    default: { primary: '#3B82F6', secondary: '#8B5CF6' },
-    emerald: { primary: '#10B981', secondary: '#3B82F6' },
-    coral: { primary: '#F43F5E', secondary: '#F97316' },
-    amber: { primary: '#F59E0B', secondary: '#D97706' }
+    default: { primary: '#5B9BF0', secondary: '#7EB0F5' },
+    emerald: { primary: '#10B981', secondary: '#34D399' },
+    coral: { primary: '#EF4444', secondary: '#F87171' },
+    amber: { primary: '#F59E0B', secondary: '#FBBF24' }
   };
 
   function applyTheme(themeName) {
     const theme = Object.prototype.hasOwnProperty.call(THEMES, themeName) ? THEMES[themeName] : THEMES.default;
     document.documentElement.style.setProperty('--primary', theme.primary);
-    document.documentElement.style.setProperty('--secondary', theme.secondary);
-    // You'd also update the RGB variables if they exist in CSS
+    document.documentElement.style.setProperty('--accent-fill', theme.primary);
+    document.documentElement.style.setProperty('--accent-text', theme.secondary);
+  }
+
+  function applyThemeMode(mode) {
+    const currentMode = mode || Storage.getThemeMode();
+    document.documentElement.setAttribute('data-theme', currentMode);
+
+    const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+    if (metaThemeColor) {
+      metaThemeColor.setAttribute('content', currentMode === 'light' ? '#F7F8FA' : '#14161B');
+    }
+
+    const toggleBtns = document.querySelectorAll('.theme-toggle-btn');
+    toggleBtns.forEach(btn => {
+      btn.setAttribute('aria-label', `Switch to ${currentMode === 'dark' ? 'Light' : 'Dark'} Mode`);
+      btn.setAttribute('title', `Switch to ${currentMode === 'dark' ? 'Light' : 'Dark'} Mode`);
+      btn.innerHTML = currentMode === 'dark'
+        ? `${Icons.sun} <span>Light Mode</span>`
+        : `${Icons.moon} <span>Dark Mode</span>`;
+    });
+  }
+
+  function toggleThemeMode() {
+    const currentMode = Storage.getThemeMode();
+    const newMode = currentMode === 'dark' ? 'light' : 'dark';
+    Storage.setThemeMode(newMode);
+    applyThemeMode(newMode);
+    showToast(`Switched to ${newMode} mode`, 'info');
+  }
+
+  function initThemeToggle() {
+    applyThemeMode();
+
+    const headers = document.querySelectorAll('.page-header');
+    headers.forEach(header => {
+      if (!header.querySelector('.theme-toggle-btn')) {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'theme-toggle-btn';
+        btn.onclick = (e) => {
+          e.preventDefault();
+          toggleThemeMode();
+        };
+        header.appendChild(btn);
+      }
+    });
+
+    document.querySelectorAll('.theme-toggle-btn').forEach(btn => {
+      btn.onclick = (e) => {
+        e.preventDefault();
+        toggleThemeMode();
+      };
+    });
+
+    applyThemeMode();
   }
 
   function init() {
     const savedTheme = Storage.loadData(Storage.KEYS.THEME, 'default');
     applyTheme(savedTheme);
+    initThemeToggle();
 
     initNavigation();
     setupGlobalShortcuts();
@@ -698,7 +755,7 @@ const App = (function() {
 
   return {
     Icons, getIcon, init, initNavigation, getCurrentPage,
-    applyTheme, THEMES,
+    applyTheme, applyThemeMode, toggleThemeMode, THEMES,
     createModal, openModal, closeModal, confirm, alert,
     showToast, showUndoToast,
     debounce, formatDuration, formatNumber, getPriorityClass, getPriorityLabel,
