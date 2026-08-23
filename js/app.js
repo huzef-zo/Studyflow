@@ -711,7 +711,12 @@ const App = (function() {
           e.preventDefault();
           toggleThemeMode();
         };
-        header.appendChild(btn);
+        const actions = header.querySelector('.page-header-actions');
+        if (actions) {
+          actions.appendChild(btn);
+        } else {
+          header.appendChild(btn);
+        }
       }
     });
 
