@@ -711,6 +711,12 @@ const App = (function() {
         };
         const target = header.querySelector('.flex.items-center') || header;
         target.appendChild(btn);
+        const actions = header.querySelector('.page-header-actions');
+        if (actions) {
+          actions.appendChild(btn);
+        } else {
+          header.appendChild(btn);
+        }
       }
     });
 

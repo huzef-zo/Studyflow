@@ -200,6 +200,13 @@ h2, h3, h4, .card-title, .modal-title {
   gap: 2px;
 }
 
+.page-header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  flex-wrap: wrap;
+}
+
 /* Theme Toggle Button */
 .theme-toggle-btn {
   background: var(--bg-surface);
@@ -1397,6 +1404,18 @@ input:checked + .toggle-slider:before {
 }
 
 /* Goals Strip */
+.calendar-strip {
+  display: flex;
+  gap: var(--spacing-sm, 8px);
+  overflow-x: auto;
+  align-items: center;
+}
+
+.calendar-strip .week-day {
+  flex: 1;
+  min-width: 0;
+}
+
 .week-day {
   min-width: 50px;
   padding: 8px 4px;
@@ -1758,6 +1777,10 @@ body.focus-mode .timer-main-time {
   color: #ffffff !important;
 }
 
+body.focus-mode .btn-fab-main {
+  box-shadow: none !important;
+}
+
 /* ============================================
    StudyFlow UI refresh
    ============================================ */
@@ -1863,7 +1886,7 @@ h2, h3, h4, .card-title, .modal-title { font-weight: 650; letter-spacing: -.015e
 .timer-ring-container { width: min(330px, 76vw); height: min(330px, 76vw); margin: 2rem auto; }
 .timer-ring-bg, .timer-ring-fill { stroke-width: 6; }
 .timer-main-time { font-size: clamp(3.75rem, 12vw, 5rem); font-weight: 750; letter-spacing: -.06em; }
-.btn-fab-main { width: 80px; height: 80px; box-shadow: 0 10px 28px rgba(var(--primary-rgb), .3); }
+.btn-fab-main { width: 80px; height: 80px; box-shadow: none; }
 .btn-fab-sub { width: 60px; height: 60px; }
 
 :focus-visible { outline: 3px solid rgba(var(--primary-rgb), .55); outline-offset: 3px; }
@@ -1872,6 +1895,9 @@ h2, h3, h4, .card-title, .modal-title { font-weight: 650; letter-spacing: -.015e
   .page-header { align-items: flex-start; }
   .page-header > div:last-child { width: 100%; }
   .page-header > div:last-child .form-group, .page-header > div:last-child input, .page-header > div:last-child .btn { width: 100%; }
+  .page-header-actions { width: 100%; display: flex; align-items: center; gap: 8px; }
+  .page-header-actions .btn { flex: 1; min-width: 0; }
+  .page-header-actions .theme-toggle-btn { flex: 0 0 auto; }
   .stat-pill { min-height: 74px; }
   .bento-grid { gap: 12px; }
   .card { padding: 1rem; }
