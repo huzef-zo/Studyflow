@@ -61,3 +61,7 @@
 ## 2026-08-22 - [Explicit Label Associations and ARIA Names for Form Controls]
 **Learning:** Form controls that rely solely on `placeholder` attributes or adjacent `<label>` text without explicit `for="..."` bindings fail accessibility standards. Screen readers cannot properly announce unlabelled inputs (such as textareas or note editors), and clicking adjacent label text fails to focus the associated form field.
 **Action:** Ensure every form `<label>` specifies `for="[input-id]"` matching the target input's ID, and add explicit `aria-label` attributes to standalone or unlabelled inputs.
+
+## 2026-08-22 - [Responsive Horizontal Scroll Layout for Daily Progress Metrics]
+**Learning:** Dynamic SVG components (such as circular progress indicators rendered within daily status cards) without explicit layout containers and dimension constraints can lose responsive context and overflow into massive vertical blocks. Using CSS flex containers with smooth horizontal scrolling (`overflow-x: auto`), explicit card flex parameters (`flex: 0 0 110px`), and fixed dimensions on inner SVGs ensures clean, mobile-friendly horizontal progression cards.
+**Action:** Always encapsulate dynamic multi-day or repeated metric cards within a scrollable horizontal flex container (`.daily-bar-scroll`), specifying `flex-shrink: 0` on card items and fixed `width`/`height` on SVG graphics.

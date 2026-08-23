@@ -143,6 +143,37 @@ function runTests() {
         console.log('  Passed: Donut charts updated with correct strokeDashoffset values.');
     })();
 
+    // Test Case: Daily progress rendering
+    (function testDailyProgressRendering() {
+        console.log('Test Case: Daily progress rendering');
+
+        Goals.renderDailyProgress();
+
+        const dailyProgressElem = elementMocks['daily-progress'];
+        if (!dailyProgressElem.innerHTML) {
+            throw new Error('Expected daily-progress element innerHTML to be populated');
+        }
+
+        const html = dailyProgressElem.innerHTML;
+        if (!html.includes('daily-progress-item')) {
+            throw new Error('Expected innerHTML to contain daily-progress-item elements');
+        }
+        if (!html.includes('daily-progress-day')) {
+            throw new Error('Expected innerHTML to contain daily-progress-day element');
+        }
+        if (!html.includes('daily-progress-circle')) {
+            throw new Error('Expected innerHTML to contain daily-progress-circle element');
+        }
+        if (!html.includes('daily-progress-value')) {
+            throw new Error('Expected innerHTML to contain daily-progress-value element');
+        }
+        if (!html.includes('daily-progress-label')) {
+            throw new Error('Expected innerHTML to contain daily-progress-label element');
+        }
+
+        console.log('  Passed: Daily progress HTML structure rendered correctly.');
+    })();
+
     console.log('\nGoals verification tests passed successfully!');
 }
 
