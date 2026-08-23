@@ -684,9 +684,7 @@ const App = (function() {
     toggleBtns.forEach(btn => {
       btn.setAttribute('aria-label', `Switch to ${currentMode === 'dark' ? 'Light' : 'Dark'} Mode`);
       btn.setAttribute('title', `Switch to ${currentMode === 'dark' ? 'Light' : 'Dark'} Mode`);
-      btn.innerHTML = currentMode === 'dark'
-        ? `${Icons.sun} <span>Light Mode</span>`
-        : `${Icons.moon} <span>Dark Mode</span>`;
+      btn.innerHTML = currentMode === 'dark' ? Icons.sun : Icons.moon;
     });
   }
 
@@ -711,6 +709,8 @@ const App = (function() {
           e.preventDefault();
           toggleThemeMode();
         };
+        const target = header.querySelector('.flex.items-center') || header;
+        target.appendChild(btn);
         const actions = header.querySelector('.page-header-actions');
         if (actions) {
           actions.appendChild(btn);
