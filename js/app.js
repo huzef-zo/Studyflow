@@ -176,9 +176,8 @@ const App = (function() {
     const items = nav.querySelectorAll('.bottom-nav-item');
     if (!indicator || items.length === 0) return;
 
-    function updateIndicatorPosition(activeItem) {
+    function updateIndicatorLayout(activeItem) {
       if (!activeItem) return;
-      const navRect = nav.getBoundingClientRect();
       const itemRect = activeItem.getBoundingClientRect();
       const offsetLeft = activeItem.offsetLeft;
       const offsetTop = activeItem.offsetTop;
@@ -189,14 +188,19 @@ const App = (function() {
       indicator.style.transform = `translateX(${offsetLeft}px)`;
     }
 
+    function updateIndicatorPosition(activeItem) {
+      if (!activeItem) return;
+      indicator.style.transform = `translateX(${activeItem.offsetLeft}px)`;
+    }
+
     const activeItem = nav.querySelector('.bottom-nav-item.active') || items[0];
     requestAnimationFrame(() => {
-      updateIndicatorPosition(activeItem);
+      updateIndicatorLayout(activeItem);
     });
 
     const handleResize = debounce(() => {
       const currentActive = nav.querySelector('.bottom-nav-item.active') || items[0];
-      updateIndicatorPosition(currentActive);
+      updateIndicatorLayout(currentActive);
     }, 100);
 
     window.removeEventListener('resize', nav._navResizeHandler);
@@ -210,11 +214,12 @@ const App = (function() {
       item.addEventListener('click', (e) => {
         const isReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-        // 1. Icon Pop on Activation
+        // 1. Icon Pop on Activation (without forcing reflow)
         if (!isReducedMotion) {
           item.classList.remove('pop');
-          void item.offsetWidth; // force reflow
-          item.classList.add('pop');
+          requestAnimationFrame(() => {
+            item.classList.add('pop');
+          });
           setTimeout(() => item.classList.remove('pop'), 350);
         }
 
@@ -238,7 +243,7 @@ const App = (function() {
           }, 400);
         }
 
-        // 3. Sliding Active Indicator Update
+        // 3. Sliding Active Indicator Update & Concurrent Color Sync
         items.forEach(i => i.classList.remove('active'));
         item.classList.add('active');
         updateIndicatorPosition(item);
