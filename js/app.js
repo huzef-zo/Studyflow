@@ -113,6 +113,7 @@ const App = (function() {
 
     return `
       <nav class="bottom-nav">
+        <div class="bottom-nav-indicator"></div>
         ${navItems.map(item => `
           <a href="${item.href}" class="bottom-nav-item ${currentPage === item.id ? 'active' : ''}">
             ${Icons[item.icon]}
@@ -164,7 +165,85 @@ const App = (function() {
       bottomNavContainer.innerHTML = renderBottomNav();
       const moreBtn = bottomNavContainer.querySelector('#more-nav-btn');
       if (moreBtn) moreBtn.onclick = (e) => { e.preventDefault(); openMoreMenu(); };
+      setupBottomNavAnimations(bottomNavContainer);
     }
+  }
+
+  function setupBottomNavAnimations(container) {
+    const nav = container.querySelector('.bottom-nav');
+    if (!nav) return;
+    const indicator = nav.querySelector('.bottom-nav-indicator');
+    const items = nav.querySelectorAll('.bottom-nav-item');
+    if (!indicator || items.length === 0) return;
+
+    function updateIndicatorPosition(activeItem) {
+      if (!activeItem) return;
+      const navRect = nav.getBoundingClientRect();
+      const itemRect = activeItem.getBoundingClientRect();
+      const offsetLeft = activeItem.offsetLeft;
+      const offsetTop = activeItem.offsetTop;
+
+      indicator.style.width = `${itemRect.width}px`;
+      indicator.style.height = `${itemRect.height}px`;
+      indicator.style.top = `${offsetTop}px`;
+      indicator.style.transform = `translateX(${offsetLeft}px)`;
+    }
+
+    const activeItem = nav.querySelector('.bottom-nav-item.active') || items[0];
+    requestAnimationFrame(() => {
+      updateIndicatorPosition(activeItem);
+    });
+
+    const handleResize = debounce(() => {
+      const currentActive = nav.querySelector('.bottom-nav-item.active') || items[0];
+      updateIndicatorPosition(currentActive);
+    }, 100);
+
+    window.removeEventListener('resize', nav._navResizeHandler);
+    window.removeEventListener('orientationchange', nav._navOrientationHandler);
+    nav._navResizeHandler = handleResize;
+    nav._navOrientationHandler = handleResize;
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('orientationchange', handleResize);
+
+    items.forEach(item => {
+      item.addEventListener('click', (e) => {
+        const isReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        // 1. Icon Pop on Activation
+        if (!isReducedMotion) {
+          item.classList.remove('pop');
+          void item.offsetWidth; // force reflow
+          item.classList.add('pop');
+          setTimeout(() => item.classList.remove('pop'), 350);
+        }
+
+        // 2. Tap Ripple Feedback
+        if (!isReducedMotion) {
+          const rect = item.getBoundingClientRect();
+          const ripple = document.createElement('span');
+          ripple.className = 'nav-ripple';
+          const size = Math.max(rect.width, rect.height);
+          ripple.style.width = `${size}px`;
+          ripple.style.height = `${size}px`;
+
+          const x = (e.clientX ? e.clientX - rect.left : rect.width / 2);
+          const y = (e.clientY ? e.clientY - rect.top : rect.height / 2);
+          ripple.style.left = `${x}px`;
+          ripple.style.top = `${y}px`;
+
+          item.appendChild(ripple);
+          setTimeout(() => {
+            if (ripple.parentNode) ripple.parentNode.removeChild(ripple);
+          }, 400);
+        }
+
+        // 3. Sliding Active Indicator Update
+        items.forEach(i => i.classList.remove('active'));
+        item.classList.add('active');
+        updateIndicatorPosition(item);
+      });
+    });
   }
 
   function openMoreMenu() {
