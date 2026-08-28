@@ -114,7 +114,7 @@ const Tasks = (function() {
       
       // Show completion toast with progress
       if (progress.isFullyComplete) {
-        App.showToast(`All sub-missions complete! Objective "${App.escapeHtml(task.title)}" is done!`, 'success', 4000);
+        App.showToast(`All sub-missions complete! Objective "${task.title}" is done!`, 'success', 4000);
       } else {
         App.showToast(`Sub-mission complete: ${progress.completed}/${progress.total}`, 'success', 2500);
       }
