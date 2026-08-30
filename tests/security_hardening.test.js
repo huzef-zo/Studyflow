@@ -193,4 +193,20 @@ assert.strictEqual(importedBoundSettings.short_break, 5, 'Imported non-finite se
 
 console.log('✅ Test 8 Passed');
 
+// Test 9: App.showToast HTML escaping
+console.log('Test 9: App.showToast escapes raw input');
+const toastPayload = 'Objective "<script>alert(1)</script> & test"';
+let createdToastHtml = '';
+context.document.getElementById = (id) => null;
+context.document.body.appendChild = (el) => {
+    if (el.id === 'toast-container') {
+        el.appendChild = (child) => { createdToastHtml = child.innerHTML; };
+    }
+};
+
+App.showToast(toastPayload, 'info', 1000);
+assert.ok(!createdToastHtml.includes('<script>'), 'Raw script tags should be HTML escaped');
+assert.ok(createdToastHtml.includes('&quot;&lt;script&gt;alert(1)&lt;/script&gt; &amp; test&quot;'), 'HTML special characters should be correctly escaped once');
+console.log('✅ Test 9 Passed');
+
 console.log('--- All Security Hardening Tests Passed ---');
