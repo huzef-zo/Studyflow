@@ -82,7 +82,13 @@ async function runTests() {
             throw new Error('timer.html #session-notes missing aria-label="Session notes"');
         }
 
-        // Notes aria-labels
+        // Notes aria-labels and icons
+        if (!notesHtml.includes('id="new-note-btn"') || !notesHtml.includes('aria-label="Create new note entry"')) {
+            throw new Error('notes.html #new-note-btn missing aria-label="Create new note entry"');
+        }
+        if (!notesHtml.includes('<svg xmlns="http://www.w3.org/2000/svg"') || !notesHtml.includes('line x1="12" x2="12" y1="5" y2="19"')) {
+            throw new Error('notes.html #new-note-btn missing inline SVG plus icon');
+        }
         if (!notesHtml.includes('id="note-title"') || !notesHtml.includes('aria-label="Note Title"')) {
             throw new Error('notes.html #note-title missing aria-label="Note Title"');
         }

@@ -73,3 +73,7 @@
 ## 2026-08-28 - [Synchronized Bottom Nav Animations & Clip Boundaries]
 **Learning:** Mobile tap animations for bottom navigation bars can produce visual glitches if tap ripples overflow container boundaries or if background indicators and icon/text active colors transition with different durations or from separate state events. Capping ripple opacity at 0.2 fading to 0, setting `overflow: hidden` on nav item containers, and synchronizing color and indicator `translateX` transitions to run concurrently over the exact same duration (0.35s) ensures crisp, unified visual feedback.
 **Action:** Always clip tap feedback animations within item bounds using `overflow: hidden`, cap tap ripple initial opacity to avoid opaque visual flashes, and ensure element state transitions (`.active` class and position transforms) trigger in the same tick with matching duration properties.
+
+## 2026-08-29 - [Primary Header Action Consistency & Icon SVG Alignment]
+**Learning:** Primary header action buttons (such as creation triggers across secondary modules like Notes) often use literal text characters (e.g. `+`) or lack explicit ARIA labels. Aligning primary action controls with uniform inline SVG icons and explicit `aria-label` attributes ensures a polished visual design system across modules while maintaining accessibility for screen reader users.
+**Action:** Ensure all primary header action buttons across modules incorporate inline SVG icons and descriptive `aria-label` attributes for uniform visual hierarchy and assistive technology support.
