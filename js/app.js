@@ -176,16 +176,24 @@ const App = (function() {
     const items = nav.querySelectorAll('.bottom-nav-item');
     if (!indicator || items.length === 0) return;
 
-    function updateIndicatorLayout(activeItem) {
+    function updateIndicatorLayout(activeItem, animate = true) {
       if (!activeItem) return;
       const itemRect = activeItem.getBoundingClientRect();
       const offsetLeft = activeItem.offsetLeft;
       const offsetTop = activeItem.offsetTop;
 
+      if (!animate) {
+        indicator.style.transition = 'none';
+      }
       indicator.style.width = `${itemRect.width}px`;
       indicator.style.height = `${itemRect.height}px`;
       indicator.style.top = `${offsetTop}px`;
       indicator.style.transform = `translateX(${offsetLeft}px)`;
+
+      if (!animate) {
+        void indicator.offsetHeight;
+        indicator.style.transition = '';
+      }
     }
 
     function updateIndicatorPosition(activeItem) {
@@ -194,13 +202,32 @@ const App = (function() {
     }
 
     const activeItem = nav.querySelector('.bottom-nav-item.active') || items[0];
-    requestAnimationFrame(() => {
-      updateIndicatorLayout(activeItem);
-    });
+    const prevLeftVal = sessionStorage.getItem('studyflow_prev_nav_left');
+
+    if (prevLeftVal !== null && !isNaN(parseFloat(prevLeftVal))) {
+      const prevLeft = parseFloat(prevLeftVal);
+      const itemRect = activeItem.getBoundingClientRect();
+      indicator.style.transition = 'none';
+      indicator.style.width = `${itemRect.width}px`;
+      indicator.style.height = `${itemRect.height}px`;
+      indicator.style.top = `${activeItem.offsetTop}px`;
+      indicator.style.transform = `translateX(${prevLeft}px)`;
+
+      void indicator.offsetHeight;
+
+      requestAnimationFrame(() => {
+        indicator.style.transition = '';
+        indicator.style.transform = `translateX(${activeItem.offsetLeft}px)`;
+        sessionStorage.setItem('studyflow_prev_nav_left', activeItem.offsetLeft);
+      });
+    } else {
+      updateIndicatorLayout(activeItem, false);
+      sessionStorage.setItem('studyflow_prev_nav_left', activeItem.offsetLeft);
+    }
 
     const handleResize = debounce(() => {
       const currentActive = nav.querySelector('.bottom-nav-item.active') || items[0];
-      updateIndicatorLayout(currentActive);
+      updateIndicatorLayout(currentActive, false);
     }, 100);
 
     window.removeEventListener('resize', nav._navResizeHandler);
@@ -214,13 +241,15 @@ const App = (function() {
       item.addEventListener('click', (e) => {
         const isReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-        // 1. Icon Pop on Activation (without forcing reflow)
+        sessionStorage.setItem('studyflow_prev_nav_left', item.offsetLeft);
+
+        // 1. Icon Pop on Activation
         if (!isReducedMotion) {
           item.classList.remove('pop');
           requestAnimationFrame(() => {
             item.classList.add('pop');
           });
-          setTimeout(() => item.classList.remove('pop'), 350);
+          setTimeout(() => item.classList.remove('pop'), 220);
         }
 
         // 2. Tap Ripple Feedback
