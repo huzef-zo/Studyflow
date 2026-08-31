@@ -77,3 +77,7 @@
 ## 2026-08-29 - [Primary Header Action Consistency & Icon SVG Alignment]
 **Learning:** Primary header action buttons (such as creation triggers across secondary modules like Notes) often use literal text characters (e.g. `+`) or lack explicit ARIA labels. Aligning primary action controls with uniform inline SVG icons and explicit `aria-label` attributes ensures a polished visual design system across modules while maintaining accessibility for screen reader users.
 **Action:** Ensure all primary header action buttons across modules incorporate inline SVG icons and descriptive `aria-label` attributes for uniform visual hierarchy and assistive technology support.
+
+## 2026-08-30 - [Cross-Page Nav Indicator Persistence & Smooth Easing]
+**Learning:** Bottom navigation indicators that re-initialize position from index 0 on every page load create jarring visual resets. Storing the active navigation item's offset in `sessionStorage` allows the indicator to mount at its previous position on new page loads and seamlessly animate to the new active tab, while modernizing easing curves (e.g. `cubic-bezier(0.16, 1, 0.3, 1)`) and speeding up durations to ~0.22s yields a fast, fluid mobile interaction.
+**Action:** Persist active nav item horizontal offset in `sessionStorage` on click/nav and apply instantaneous offset positioning before triggering smooth CSS transforms on page load.
