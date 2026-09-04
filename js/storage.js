@@ -981,20 +981,55 @@ const Storage = (function() {
   }
 
   function getTodayTasks() {
+    // OPTIMIZATION: Query raw task array directly in a single pass to eliminate multiple full collection mapping/traversal overheads
+    // (from getTasksByDate, getTasks, and getOverdueTasks) and O(N*M) array.some deduplication.
+    const rawTasks = loadData(KEYS.TASKS, DEFAULTS.tasks) || [];
     const todayStr = formatDate(new Date());
-    const tasks = getTasksByDate(todayStr).filter(t => {
+    const date = parseLocalDate(todayStr);
+    if (!date) return [];
+    const dayOfWeek = date.getDay();
+
+    const todayTasks = [];
+    const overdueTasks = [];
+    const todayIds = new Set();
+
+    for (let i = 0; i < rawTasks.length; i++) {
+      const t = rawTasks[i];
       if (t.type === 'repeating') {
-        return !isRepeatingTaskCompletedOnDate(t.id, todayStr);
+        if (t.repeatDays && t.repeatDays.includes(dayOfWeek)) {
+          if (!isRepeatingTaskCompletedOnDate(t.id, todayStr)) {
+            todayIds.add(t.id);
+            todayTasks.push(resolveRepeatingTaskForDate(t, todayStr));
+          }
+        }
+      } else {
+        if (!t.completed && t.dueDate) {
+          const start = t.startDate || t.dueDate;
+          if (todayStr >= start && todayStr <= t.dueDate) {
+            todayIds.add(t.id);
+            todayTasks.push(t);
+          } else if (t.dueDate < todayStr) {
+            overdueTasks.push(t);
+          }
+        }
       }
-      return !t.completed;
-    });
-    const overdue = getOverdueTasks().map(t => ({ ...t, _isOverdue: true }));
-    // Combine and deduplicate if a task is both today and overdue (though usually they aren't)
-    const combined = [...tasks];
-    overdue.forEach(ot => {
-      if (!combined.some(t => t.id === ot.id)) combined.push(ot);
-    });
-    return combined;
+    }
+
+    if (overdueTasks.length > 0) {
+      overdueTasks.sort((a, b) => {
+        const aDate = a.dueDate;
+        const bDate = b.dueDate;
+        return aDate < bDate ? -1 : (aDate > bDate ? 1 : 0);
+      });
+      for (let i = 0; i < overdueTasks.length; i++) {
+        const ot = overdueTasks[i];
+        if (!todayIds.has(ot.id)) {
+          todayTasks.push({ ...ot, _isOverdue: true });
+        }
+      }
+    }
+
+    return todayTasks;
   }
 
   /**

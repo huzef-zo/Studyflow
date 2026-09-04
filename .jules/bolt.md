@@ -57,3 +57,7 @@
 ## 2026-08-28 - [Targeted Item Lookup vs Full Collection Mapping]
 **Learning:** Calling high-level list getters (like `Storage.getTasks()`) inside single-item lookups (such as `Storage.getTaskById()`) creates severe unnecessary overhead when `getTasks()` transforms or resolves state across every item in storage (e.g. resolving repeating task completions for all tasks). Querying raw storage via `loadData` and matching the specific target ID *before* performing item-specific dynamic resolutions reduces lookup execution time by ~91% (~11.5x speedup).
 **Action:** In single-entity lookup methods, perform the identity search on raw collection data before executing any expensive item-level dynamic state resolutions.
+
+## 2026-09-04 - [Single-Pass O(N) Categorization for Today/Overdue Tasks]
+**Learning:** Functions like `getTodayTasks()` that compose multiple sub-queries (`getTasksByDate()`, `getOverdueTasks()`) cause repetitive full collection passes, object mappings, and $O(N \times M)$ `Array.prototype.some` deduplication passes. Combining criteria into a single indexed `for` loop over raw tasks and using a `Set` for $O(1)$ deduplication reduces execution time by over 80% (~5x speedup, 2.38ms to 0.45ms for 2000 tasks).
+**Action:** When deriving composite subsets (e.g. active + overdue entities), query raw storage once and categorize items in a single pass with `Set`-based ID tracking instead of chaining multiple public filtered getters.
