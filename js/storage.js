@@ -205,6 +205,29 @@ const Storage = (function() {
           content: n.content ? String(n.content).substring(0, 10000) : '',
           subject: n.subject ? String(n.subject).substring(0, 100) : 'Other'
         } : n);
+      } else if (key === KEYS.TASKS && Array.isArray(data)) {
+        sanitizedData = data.map(t => t ? {
+          ...t,
+          title: t.title ? String(t.title).substring(0, 200) : 'Untitled Task',
+          subject: t.subject ? String(t.subject).substring(0, 100) : 'Other',
+          priority: t.priority ? String(t.priority).substring(0, 50) : 'medium',
+          subtasks: Array.isArray(t.subtasks) ? t.subtasks.map(st => st ? {
+            ...st,
+            title: st.title ? String(st.title).substring(0, 200) : 'Subtask'
+          } : st) : []
+        } : t);
+      } else if (key === KEYS.SUBJECTS && Array.isArray(data)) {
+        sanitizedData = data.map(s => s ? {
+          ...s,
+          name: s.name ? String(s.name).substring(0, 200) : 'Unnamed Subject',
+          color: (s.color && isValidHexColor(s.color)) ? String(s.color) : '#2563EB'
+        } : s);
+      } else if (key === KEYS.STUDY_BLOCKS && Array.isArray(data)) {
+        sanitizedData = data.map(b => b ? {
+          ...b,
+          title: b.title ? String(b.title).substring(0, 200) : 'Study Block',
+          subject: b.subject ? String(b.subject).substring(0, 100) : 'Other'
+        } : b);
       }
 
       const serialized = JSON.stringify(sanitizedData);
