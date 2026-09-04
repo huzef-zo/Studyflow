@@ -13,6 +13,8 @@ const ASSETS_TO_CACHE = [
   './tasks.html',
   './timer.html',
   './notes.html',
+  './version.js',
+  './browserconfig.xml',
   `./css/style.css?v=${APP_VERSION}`,
   `./js/app.js?v=${APP_VERSION}`,
   `./js/storage.js?v=${APP_VERSION}`,
@@ -94,23 +96,43 @@ self.addEventListener('fetch', (event) => {
   
   // Route based on request type
   if (request.method === 'GET') {
+    const isHtml = request.mode === 'navigate' ||
+                   request.destination === 'document' ||
+                   url.pathname.endsWith('.html') ||
+                   url.pathname.endsWith('/') ||
+                   url.pathname === '';
+
+    const isCssOrJs = url.pathname.endsWith('.css') ||
+                      url.pathname.endsWith('.js') ||
+                      request.destination === 'style' ||
+                      request.destination === 'script';
+
+    const isImageOrFont = /\.(png|jpg|jpeg|gif|svg|woff|woff2|ico)$/i.test(url.pathname) ||
+                          request.destination === 'image' ||
+                          request.destination === 'font';
+
     // HTML pages: Network-first with fallback to cache
-    if (request.url.endsWith('.html') || request.url.endsWith('/')) {
+    if (isHtml) {
       event.respondWith(networkFirstStrategy(request, 3000));
     }
     // CSS and JS: Cache-first (versioned)
-    else if (request.url.endsWith('.css') || request.url.endsWith('.js') || request.url.includes('.css?v=') || request.url.includes('.js?v=')) {
+    else if (isCssOrJs || isImageOrFont) {
       event.respondWith(cacheFirstStrategy(request));
     }
-    // Images and fonts: Cache-first with network fallback
-    else if (/\.(png|jpg|jpeg|gif|svg|woff|woff2)$/i.test(request.url)) {
-      event.respondWith(cacheFirstStrategy(request));
-    }    // Default: Stale-while-revalidate
+    // Default: Stale-while-revalidate
     else {
       event.respondWith(staleWhileRevalidateStrategy(request));
     }
   }
 });
+
+// Helper to look up request in cache, ignoring search query params if needed
+function matchCacheWithFallback(request) {
+  return caches.match(request).then((response) => {
+    if (response) return response;
+    return caches.match(request, { ignoreSearch: true });
+  });
+}
 
 // ============================================
 // CACHING STRATEGIES
@@ -121,10 +143,12 @@ self.addEventListener('fetch', (event) => {
  * Used for HTML pages to ensure fresh content
  */
 function networkFirstStrategy(request, timeout = 3000) {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     let timeoutId = setTimeout(() => {
       console.log('[SW] Network timeout, using cache:', request.url);
-      resolve(caches.match(request).then(response => response || getOfflineFallback(request)));
+      matchCacheWithFallback(request)
+        .then(response => response || getOfflineFallback(request))
+        .then(resolve);
     }, timeout);
     
     fetch(request)
@@ -133,7 +157,9 @@ function networkFirstStrategy(request, timeout = 3000) {
         
         if (!networkResponse || networkResponse.status !== 200) {
           console.log('[SW] Invalid network response, using cache:', request.url);
-          resolve(caches.match(request).then(response => response || getOfflineFallback(request)));
+          matchCacheWithFallback(request)
+            .then(response => response || getOfflineFallback(request))
+            .then(resolve);
           return;
         }
         
@@ -143,22 +169,24 @@ function networkFirstStrategy(request, timeout = 3000) {
           cache.put(request, responseToCache);
         });
         
-        clearTimeout(timeoutId);
         resolve(networkResponse);
       })
       .catch((error) => {
         clearTimeout(timeoutId);
         console.log('[SW] Network error, using cache:', request.url, error);
-        resolve(caches.match(request).then(response => response || getOfflineFallback(request)));
+        matchCacheWithFallback(request)
+          .then(response => response || getOfflineFallback(request))
+          .then(resolve);
       });
   });
 }
 
-/** * Cache-first strategy
+/**
+ * Cache-first strategy
  * Used for assets that don't change frequently (CSS, JS, images)
  */
 function cacheFirstStrategy(request) {
-  return caches.match(request)
+  return matchCacheWithFallback(request)
     .then((cachedResponse) => {
       if (cachedResponse) {
         console.log('[SW] Cache hit:', request.url);
@@ -191,7 +219,7 @@ function cacheFirstStrategy(request) {
  * Return cache immediately, update in background
  */
 function staleWhileRevalidateStrategy(request) {
-  return caches.match(request)
+  return matchCacheWithFallback(request)
     .then((cachedResponse) => {
       const fetchPromise = fetch(request)
         .then((networkResponse) => {
@@ -203,7 +231,8 @@ function staleWhileRevalidateStrategy(request) {
           }
           return networkResponse;
         })
-        .catch((error) => {          console.log('[SW] Background fetch failed:', request.url, error);
+        .catch((error) => {
+          console.log('[SW] Background fetch failed:', request.url, error);
           return cachedResponse || getOfflineFallback(request);
         });
       
@@ -215,20 +244,27 @@ function staleWhileRevalidateStrategy(request) {
  * Offline fallback handler
  */
 function getOfflineFallback(request) {
-  if (request.destination === 'document') {
-    // ✅ FIX #3: Use registration scope for reliable fallback path
-    return caches.match(self.registration.scope + 'index.html')
-      .catch(() => new Response('Offline - please check your connection', { status: 503 }));
+  const url = new URL(request.url);
+  const isDocument = request.destination === 'document' ||
+                     request.mode === 'navigate' ||
+                     url.pathname.endsWith('.html') ||
+                     url.pathname.endsWith('/') ||
+                     url.pathname === '';
+
+  if (isDocument) {
+    return caches.match('./index.html')
+      .then(res => res || caches.match(self.registration.scope + 'index.html'))
+      .catch(() => new Response('Offline - please check your connection', { status: 503, headers: { 'Content-Type': 'text/html' } }));
   }
   
-  if (request.destination === 'image') {
+  if (request.destination === 'image' || /\.(png|jpg|jpeg|gif|svg)$/i.test(url.pathname)) {
     return new Response(
       '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect fill="#1a1a1a" width="100" height="100"/><text x="50" y="50" text-anchor="middle" dy=".3em" fill="#666">Image</text></svg>',
       { headers: { 'Content-Type': 'image/svg+xml' } }
     );
   }
   
-  return new Response('Resource unavailable offline', { status: 503 });
+  return new Response('Resource unavailable offline', { status: 503, headers: { 'Content-Type': 'text/plain' } });
 }
 
 // ============================================
@@ -252,7 +288,7 @@ async function syncTasks() {
         data: { synced: true, timestamp: Date.now() }
       });
     }
-        console.log('[SW] Background sync completed');
+    console.log('[SW] Background sync completed');
   } catch (error) {
     console.error('[SW] Background sync error:', error);
     throw error;
@@ -267,7 +303,6 @@ self.addEventListener('push', (event) => {
   
   const options = {
     body: event.data ? event.data.text() : 'StudyFlow notification',
-    // ✅ FIX #1: Use relative paths for icons (prevents CORS audit warnings)
     icon: './icon-192.png',
     badge: './icon-192.png',
     tag: 'studyflow-notification',
@@ -293,15 +328,14 @@ self.addEventListener('notificationclick', (event) => {
   if (event.action === 'open' || !event.action) {
     event.waitUntil(
       self.clients.matchAll({ type: 'window' }).then((clientList) => {
-        // ✅ FIX #2: Check for subdirectory path instead of exact '/' match
         for (const client of clientList) {
           if (client.url.includes('/Studyflow/') && 'focus' in client) {
             return client.focus();
           }
         }
         
-        // ✅ FIX #2: Open new window with relative path
-        if (self.clients.openWindow) {          return self.clients.openWindow('./');
+        if (self.clients.openWindow) {
+          return self.clients.openWindow('./');
         }
       })
     );
