@@ -160,6 +160,26 @@ assert.strictEqual(notes[0].title.length, 200, 'Note title should be truncated t
 assert.strictEqual(notes[0].content.length, 10000, 'Note content should be truncated to 10000 characters');
 assert.strictEqual(notes[0].subject.length, 100, 'Note subject should be truncated to 100 characters');
 
+// Test Tasks truncation on save
+Storage.saveData(Storage.KEYS.TASKS, [{ title: ultraText, subject: ultraText, priority: ultraText, subtasks: [{ title: ultraText }] }]);
+const savedTasks = Storage.loadData(Storage.KEYS.TASKS);
+assert.strictEqual(savedTasks[0].title.length, 200, 'Saved task title should be truncated to 200 characters');
+assert.strictEqual(savedTasks[0].subject.length, 100, 'Saved task subject should be truncated to 100 characters');
+assert.strictEqual(savedTasks[0].priority.length, 50, 'Saved task priority should be truncated to 50 characters');
+assert.strictEqual(savedTasks[0].subtasks[0].title.length, 200, 'Saved subtask title should be truncated to 200 characters');
+
+// Test Subjects truncation and color validation on save
+Storage.saveData(Storage.KEYS.SUBJECTS, [{ name: ultraText, color: 'invalid-color' }]);
+const savedSubjects = Storage.loadData(Storage.KEYS.SUBJECTS);
+assert.strictEqual(savedSubjects[0].name.length, 200, 'Subject name should be truncated to 200 characters');
+assert.strictEqual(savedSubjects[0].color, '#2563EB', 'Invalid subject color should fallback to default hex color');
+
+// Test Study Blocks truncation on save
+Storage.saveData(Storage.KEYS.STUDY_BLOCKS, [{ title: ultraText, subject: ultraText }]);
+const savedStudyBlocks = Storage.loadData(Storage.KEYS.STUDY_BLOCKS);
+assert.strictEqual(savedStudyBlocks[0].title.length, 200, 'Study block title should be truncated to 200 characters');
+assert.strictEqual(savedStudyBlocks[0].subject.length, 100, 'Study block subject should be truncated to 100 characters');
+
 console.log('✅ Test 7 Passed');
 
 // Test 8: Storage numeric settings bounds and finite validation (DoS / Thread Crash Prevention)
