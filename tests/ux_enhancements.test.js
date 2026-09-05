@@ -98,6 +98,15 @@ async function runTests() {
         if (!notesHtml.includes('id="note-content"') || !notesHtml.includes('aria-label="Note Content"')) {
             throw new Error('notes.html #note-content missing aria-label="Note Content"');
         }
+        if (!notesHtml.includes('id="search-notes"') || !notesHtml.includes('placeholder="Search vault... (Ctrl+K)"')) {
+            throw new Error('notes.html #search-notes missing placeholder="Search vault... (Ctrl+K)"');
+        }
+        if (!notesHtml.includes('id="save-note-btn"') || !notesHtml.includes('aria-label="Save note entry (Ctrl+S)"') || !notesHtml.includes('title="Save transmission (Ctrl+S)"')) {
+            throw new Error('notes.html #save-note-btn missing shortcut hint title or aria-label');
+        }
+        if (!notesHtml.includes('id="delete-note-btn"') || !notesHtml.includes('aria-label="Delete note entry"')) {
+            throw new Error('notes.html #delete-note-btn missing aria-label="Delete note entry"');
+        }
 
         // Dashboard reflection input aria-label
         if (!indexHtml.includes('id="reflection-input"') || !indexHtml.includes('aria-label="Daily Reflection"')) {
