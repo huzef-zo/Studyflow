@@ -229,4 +229,41 @@ assert.ok(!createdToastHtml.includes('<script>'), 'Raw script tags should be HTM
 assert.ok(createdToastHtml.includes('&quot;&lt;script&gt;alert(1)&lt;/script&gt; &amp; test&quot;'), 'HTML special characters should be correctly escaped once');
 console.log('✅ Test 9 Passed');
 
+// Test 10: Storage.updateGoals and Storage.importData goals validation and bounds clamping
+console.log('Test 10: Storage goals numeric validation, bounds clamping, and prototype pollution prevention');
+
+// Test updateGoals prototype pollution and unknown keys
+Storage.updateGoals({ '__proto__': { polluted: true }, 'unknown_goal_key': 999 });
+assert.strictEqual({}.polluted, undefined, 'Prototype should not be polluted via updateGoals');
+assert.strictEqual(Storage.getGoals().unknown_goal_key, undefined, 'Unknown goal key should not be added');
+
+// Test updateGoals non-finite and bounds clamping
+Storage.updateGoals({
+    weekly_tasks: Infinity,
+    weekly_hours: 500,
+    daily_tasks: -10,
+    daily_hours: 30,
+    freezeCount: 100
+});
+const clampedGoals = Storage.getGoals();
+assert.strictEqual(clampedGoals.weekly_hours, 168, 'Weekly hours should be clamped to max 168');
+assert.strictEqual(clampedGoals.daily_tasks, 1, 'Daily tasks should be clamped to min 1');
+assert.strictEqual(clampedGoals.daily_hours, 24, 'Daily hours should be clamped to max 24');
+assert.strictEqual(clampedGoals.freezeCount, 10, 'Freeze count should be clamped to max 10');
+
+// Test importData goals non-finite and bounds clamping
+Storage.importData({
+    goals: {
+        weekly_tasks: 500,
+        weekly_hours: -20,
+        daily_hours: NaN
+    }
+});
+const importedGoals = Storage.getGoals();
+assert.strictEqual(importedGoals.weekly_tasks, 100, 'Imported weekly tasks should be clamped to 100');
+assert.strictEqual(importedGoals.weekly_hours, 1, 'Imported negative weekly hours should be clamped to 1');
+assert.strictEqual(importedGoals.daily_hours, 3, 'Imported NaN daily hours should fallback to default');
+
+console.log('✅ Test 10 Passed');
+
 console.log('--- All Security Hardening Tests Passed ---');
