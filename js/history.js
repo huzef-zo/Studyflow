@@ -95,8 +95,8 @@ const History = (function() {
 
   /**
    * Expands repeating tasks into individual occurrences for the given period.
-   * OPTIMIZATION: Uses a single-pass date loop and a day-of-week lookup for repeating tasks.
-   * This reduces complexity from O(Tasks * Days) to O(Days + Total Occurrences).
+   * OPTIMIZATION: Uses indexed for loops instead of callback iterations
+   * and Storage.formatDate for safe timezone-aware date comparison.
    */
   function expandTaskOccurrences(tasks, startDate, endDate) {
     const occurrences = [];
@@ -106,9 +106,10 @@ const History = (function() {
     // Group repeating tasks by day of week for faster lookup
     const repeatingByDay = [[], [], [], [], [], [], []]; // 0=Sun, 1=Mon...
 
-    tasks.forEach(t => {
+    for (let i = 0; i < tasks.length; i++) {
+      const t = tasks[i];
       if (t.type !== 'repeating') {
-        const completedAt = t.completedAt ? Storage.formatDate(new Date(t.completedAt)) : null;
+        const completedAt = t.completedAt ? Storage.formatDate(t.completedAt) : null;
         const dueDate = t.dueDate;
 
         // Include if completed in period OR due in period (and not completed before)
@@ -119,11 +120,12 @@ const History = (function() {
           occurrences.push(t);
         }
       } else if (t.repeatDays && t.repeatDays.length > 0) {
-        t.repeatDays.forEach(day => {
+        for (let j = 0; j < t.repeatDays.length; j++) {
+          const day = t.repeatDays[j];
           if (day >= 0 && day <= 6) repeatingByDay[day].push(t);
-        });
+        }
       }
-    });
+    }
 
     // Single pass through the date range to expand repeating tasks
     const cur = new Date(startDate);
@@ -136,12 +138,12 @@ const History = (function() {
       const scheduledTasks = repeatingByDay[dayOfWeek];
       if (scheduledTasks.length > 0) {
         const dateStr = Storage.formatDate(cur);
-        scheduledTasks.forEach(t => {
+        for (let k = 0; k < scheduledTasks.length; k++) {
           occurrences.push({
-            ...t,
+            ...scheduledTasks[k],
             _occurrenceDate: dateStr
           });
-        });
+        }
       }
       cur.setDate(cur.getDate() + 1);
     }
@@ -150,32 +152,41 @@ const History = (function() {
   }
 
   function getCompletedTasksInPeriod() {
+    // OPTIMIZATION: Use indexed for loops and single array pushes to eliminate intermediate array allocations.
     const tasks = Storage.getTasks();
     const cutoff = getCutoffDate();
     const cutoffTime = cutoff ? cutoff.getTime() : 0;
     const cutoffStr = cutoff ? Storage.formatDate(cutoff) : null;
 
+    const result = [];
+
     // One-time tasks
-    const completedOneTime = tasks.filter(t => {
-      if (t.type === 'repeating') return false;
-      if (!t.completed) return false;
-      if (!cutoff) return true;
-      // OPTIMIZATION: Use Date.parse() for numeric comparison instead of new Date()
-      const compTime = typeof t.completedAt === 'number' ? t.completedAt : (t.completedAt ? Date.parse(t.completedAt) : 0);
-      return compTime >= cutoffTime;
-    }).map(t => ({ ...t, _date: t.completedAt }));
+    for (let i = 0; i < tasks.length; i++) {
+      const t = tasks[i];
+      if (t.type === 'repeating' || !t.completed) continue;
+
+      if (!cutoff) {
+        result.push({ ...t, _date: t.completedAt });
+      } else {
+        const compTime = typeof t.completedAt === 'number' ? t.completedAt : (t.completedAt ? Date.parse(t.completedAt) : 0);
+        if (compTime >= cutoffTime) {
+          result.push({ ...t, _date: t.completedAt });
+        }
+      }
+    }
 
     // Repeating tasks
-    const completedRepeating = [];
     const repeatingCompletions = Storage.getRepeatingCompletions();
-    Object.keys(repeatingCompletions).forEach(key => {
-      const dateStr = key.slice(-10);
-      if (!cutoffStr || dateStr >= cutoffStr) {
-        completedRepeating.push({ _date: dateStr });
+    for (const key in repeatingCompletions) {
+      if (Object.prototype.hasOwnProperty.call(repeatingCompletions, key)) {
+        const dateStr = key.slice(-10);
+        if (!cutoffStr || dateStr >= cutoffStr) {
+          result.push({ _date: dateStr });
+        }
       }
-    });
+    }
 
-    return [...completedOneTime, ...completedRepeating];
+    return result;
   }
 
   function updateSummaryStats() {
@@ -310,6 +321,7 @@ const History = (function() {
   }
 
   function getActivityData(daysCount) {
+    // OPTIMIZATION: Replace forEach callbacks with indexed for loops to reduce function invocation overhead
     const tasks = Storage.getTasks();
     const today = new Date(); today.setHours(0, 0, 0, 0);
     const cutoffDate = new Date(today);
@@ -319,37 +331,39 @@ const History = (function() {
     const activityData = {};
     const reusableDate = new Date(today);
     for (let i = 0; i < daysCount; i++) {
-      // OPTIMIZATION: Use reusableDate and modify it
       reusableDate.setTime(today.getTime());
       reusableDate.setDate(today.getDate() - i);
       activityData[Storage.formatDate(reusableDate)] = { count: 0, notes: [] };
     }
-    tasks.forEach(t => {
+
+    for (let i = 0; i < tasks.length; i++) {
+      const t = tasks[i];
       if (t.type !== 'repeating' && t.completed && t.completedAt) {
-        // OPTIMIZATION: Use string slicing for fast date extraction
-        const dateStr = (typeof t.completedAt === 'string') ? t.completedAt.slice(0, 10) : Storage.formatDate(t.completedAt);
-        if (activityData.hasOwnProperty(dateStr)) activityData[dateStr].count += 1;
+        const dateStr = Storage.formatDate(t.completedAt);
+        if (activityData[dateStr]) activityData[dateStr].count += 1;
       }
-    });
+    }
 
     const repeatingCompletions = Storage.getRepeatingCompletions();
-    Object.keys(repeatingCompletions).forEach(key => {
-      const dateStr = key.slice(-10);
-      if (activityData.hasOwnProperty(dateStr)) {
-        activityData[dateStr].count += 1;
+    for (const key in repeatingCompletions) {
+      if (Object.prototype.hasOwnProperty.call(repeatingCompletions, key)) {
+        const dateStr = key.slice(-10);
+        if (activityData[dateStr]) {
+          activityData[dateStr].count += 1;
+        }
       }
-    });
+    }
 
-    sessions.forEach(s => {
+    for (let i = 0; i < sessions.length; i++) {
+      const s = sessions[i];
       if (s.type === 'work' && s.completedAt) {
-        // OPTIMIZATION: Use string slicing for fast date extraction
-        const dateStr = (typeof s.completedAt === 'string') ? s.completedAt.slice(0, 10) : Storage.formatDate(s.completedAt);
-        if (activityData.hasOwnProperty(dateStr)) {
+        const dateStr = Storage.formatDate(s.completedAt);
+        if (activityData[dateStr]) {
           activityData[dateStr].count += Math.max(1, Math.round(s.duration / 15));
           if (s.notes) activityData[dateStr].notes.push(s.notes);
         }
       }
-    });
+    }
     return activityData;
   }
 
