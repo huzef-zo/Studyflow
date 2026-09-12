@@ -46,6 +46,18 @@ const Storage = (function() {
     sessions_until_long_break: { min: 1, max: 20 }
   };
 
+  const GOAL_BOUNDS = {
+    weekly_tasks: { min: 1, max: 100 },
+    weekly_hours: { min: 1, max: 168 },
+    daily_tasks: { min: 1, max: 50 },
+    daily_hours: { min: 0.5, max: 24 },
+    weekend_daily_tasks: { min: 1, max: 50 },
+    weekend_daily_hours: { min: 0.5, max: 24 },
+    freezeCount: { min: 0, max: 10 },
+    current_tasks: { min: 0, max: 10000 },
+    current_hours: { min: 0, max: 1000 }
+  };
+
   /**
    * Parse a YYYY-MM-DD string into a local Date object.
    * Prevents UTC off-by-one errors in different timezones.
@@ -386,8 +398,14 @@ const Storage = (function() {
 
       if (data.goals && typeof data.goals === 'object' && !Array.isArray(data.goals)) {
         const safeGoals = { ...DEFAULTS.goals };
-        ['weekly_tasks', 'weekly_hours', 'daily_tasks', 'daily_hours', 'weekend_daily_tasks', 'weekend_daily_hours', 'current_tasks', 'current_hours'].forEach(key => {
-          if (key in data.goals) safeGoals[key] = Number(data.goals[key]);
+        ['weekly_tasks', 'weekly_hours', 'daily_tasks', 'daily_hours', 'weekend_daily_tasks', 'weekend_daily_hours', 'current_tasks', 'current_hours', 'freezeCount'].forEach(key => {
+          if (key in data.goals) {
+            const val = Number(data.goals[key]);
+            if (Number.isFinite(val)) {
+              const bounds = GOAL_BOUNDS[key] || { min: 0, max: 10000 };
+              safeGoals[key] = Math.min(bounds.max, Math.max(bounds.min, val));
+            }
+          }
         });
         if (data.goals.week_start) safeGoals.week_start = String(data.goals.week_start);
         saveData(KEYS.GOALS, safeGoals);
@@ -1340,8 +1358,23 @@ const Storage = (function() {
 
   function saveGoals(goals) { return saveData(KEYS.GOALS, goals); }
   function updateGoals(updates) {
+    if (!updates || typeof updates !== 'object' || Array.isArray(updates)) return false;
     const goals = getGoals();
-    return saveGoals({ ...goals, ...updates });
+    Object.keys(updates).forEach(key => {
+      if (key === '__proto__' || key === 'constructor' || key === 'prototype') return;
+      if (!Object.prototype.hasOwnProperty.call(DEFAULTS.goals, key)) return;
+
+      const val = updates[key];
+      if (typeof DEFAULTS.goals[key] === 'number') {
+        const num = Number(val);
+        if (!Number.isFinite(num)) return;
+        const bounds = GOAL_BOUNDS[key] || { min: 0, max: 10000 };
+        goals[key] = Math.min(bounds.max, Math.max(bounds.min, num));
+      } else if (key === 'week_start') {
+        goals[key] = String(val);
+      }
+    });
+    return saveGoals(goals);
   }
 
   // ── Settings ────────────────────────────────────────────────────────────────
