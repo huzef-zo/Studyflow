@@ -281,6 +281,10 @@ const Timer = (function() {
 
     elements.playPauseIcon.innerHTML = `<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>`;
     elements.playPauseIcon.style.transform = 'none';
+    if (elements.startBtn) {
+      elements.startBtn.setAttribute('aria-label', 'Pause Mission');
+      elements.startBtn.setAttribute('title', 'Pause Mission');
+    }
     document.body.classList.add('focus-mode');
     elements.timerContainer.classList.add('active');
     timerInterval = setInterval(tick, 1000);
@@ -304,6 +308,10 @@ const Timer = (function() {
 
     elements.playPauseIcon.innerHTML = `<polygon points="6 3 20 12 6 21 6 3"/>`;
     elements.playPauseIcon.style.transform = 'translateX(2px)';
+    if (elements.startBtn) {
+      elements.startBtn.setAttribute('aria-label', 'Engage Mission');
+      elements.startBtn.setAttribute('title', 'Engage Mission');
+    }
     document.body.classList.remove('focus-mode');
     elements.timerContainer.classList.remove('active');
     saveTimerState();
