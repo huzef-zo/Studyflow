@@ -72,7 +72,7 @@ async function runTests() {
             }
         });
 
-        // Timer label 'for' and aria-label attributes
+        // Timer label 'for', aria-label, and title tooltip attributes
         ['timer-task', 'timer-subtask'].forEach(id => {
             if (!timerHtml.includes(`for="${id}"`)) {
                 throw new Error(`timer.html missing for="${id}" on corresponding label`);
@@ -80,6 +80,15 @@ async function runTests() {
         });
         if (!timerHtml.includes('id="session-notes"') || !timerHtml.includes('aria-label="Session notes"')) {
             throw new Error('timer.html #session-notes missing aria-label="Session notes"');
+        }
+        if (!timerHtml.includes('id="reset-btn"') || !timerHtml.includes('title="Reset Mission"')) {
+            throw new Error('timer.html #reset-btn missing title="Reset Mission"');
+        }
+        if (!timerHtml.includes('id="start-btn"') || !timerHtml.includes('title="Engage Mission"')) {
+            throw new Error('timer.html #start-btn missing title="Engage Mission"');
+        }
+        if (!timerHtml.includes('id="skip-btn"') || !timerHtml.includes('title="Skip Session"')) {
+            throw new Error('timer.html #skip-btn missing title="Skip Session"');
         }
 
         // Notes aria-labels and icons
