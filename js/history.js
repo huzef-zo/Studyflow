@@ -414,7 +414,7 @@ const History = (function() {
               <div class="flex items-center gap-sm mb-xs flex-wrap">
                 <div class="subject-pill" style="--tag-color:${App.hexToRgb(subjectColor)}">${App.escapeHtml(subjectName)}</div>
                 <span class="badge" style="background: rgba(255,255,255,0.05); color: var(--text-secondary); font-size: 9px; text-shadow: none;">
-                  ${session.duration} mins
+                  ${App.escapeHtml(session.duration)} mins
                 </span>
               </div>
               <div class="task-title-text" style="font-size: 1rem; word-break: break-word;">${App.escapeHtml(taskTitle)}</div>

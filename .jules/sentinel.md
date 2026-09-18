@@ -65,3 +65,8 @@
 **Vulnerability:** Denial of Service (DoS) heap memory crash and UI thread freeze via unbounded and non-finite numeric settings (`sessions_until_long_break`, `work_duration`, `short_break`, `long_break`).
 **Learning:** `isNaN(num)` check alone allows non-finite numbers like `Infinity` and large integers (e.g., `1e9`). When consumed downstream in array allocations like `Array.from({ length: settings.sessions_until_long_break })` inside `timer.js`, this causes fatal heap allocation crashes or DOM creation freezes.
 **Prevention:** Validate numeric configuration inputs with `Number.isFinite(num)` and enforce explicit min/max boundary clamping (`SETTING_BOUNDS`) at both direct mutation (`updateSetting`) and backup ingestion (`importData`) boundaries.
+
+## 2026-09-18 - Stored XSS via Session Duration Parameter
+**Vulnerability:** Stored XSS and numeric calculation corruption via unvalidated `duration` input in `Storage.addSession` rendered in `History.renderStudyHistory`.
+**Learning:** `Storage.addSession` accepted raw `duration` input without type validation or coercion, unlike `Storage.importData` which converted `duration` to a number. When non-numeric HTML/script strings were passed to `addSession`, they were persisted in local storage and subsequently injected directly into `innerHTML` via `${session.duration}` in `renderStudyHistory()`.
+**Prevention:** Always validate, coerce (`Number.isFinite`), and clamp numeric inputs to expected ranges (e.g., $[0, 1440]$) at the storage write boundary (`addSession`), and perform defense-in-depth HTML escaping (`App.escapeHtml`) whenever properties are interpolated into HTML template literals.
