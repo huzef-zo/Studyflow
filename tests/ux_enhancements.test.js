@@ -4,13 +4,16 @@ const path = require('path');
 async function runTests() {
     console.log('Running Micro-UX Enhancement Tests...');
 
-    // Test 1: Verify aria-label in tasks.html content (string check)
+        // Test 1: Verify aria-label and shortcut hints in tasks.html content (string check)
     (function testTasksAriaStrings() {
         const html = fs.readFileSync(path.join(__dirname, '../tasks.html'), 'utf8');
 
         if (!html.includes('aria-label="Search objectives"')) {
             throw new Error('Search input missing aria-label="Search objectives"');
         }
+            if (!html.includes('placeholder="Search objectives... (Ctrl+K)"')) {
+                throw new Error('Search input missing placeholder shortcut hint "(Ctrl+K)"');
+            }
         if (!html.includes('aria-label="Filter by priority"')) {
             throw new Error('Priority filter missing aria-label="Filter by priority"');
         }
@@ -18,7 +21,7 @@ async function runTests() {
             throw new Error('Subject filter missing aria-label="Filter by subject"');
         }
 
-        console.log('  Passed: Tasks page ARIA labels verified in source.');
+            console.log('  Passed: Tasks page ARIA labels and shortcut hints verified in source.');
     })();
 
     // Test 2: App.createModal ARIA attributes logic (string check of the generator function)
@@ -65,12 +68,19 @@ async function runTests() {
         const notesHtml = fs.readFileSync(path.join(__dirname, '../notes.html'), 'utf8');
         const indexHtml = fs.readFileSync(path.join(__dirname, '../index.html'), 'utf8');
 
-        // Settings label 'for' attributes
+        // Settings label 'for' attributes and import button accessibility
         ['theme-selector', 'display-name', 'user-email', 'work-duration', 'short-break', 'long-break', 'sessions-until-long-break'].forEach(id => {
             if (!settingsHtml.includes(`for="${id}"`)) {
                 throw new Error(`settings.html missing for="${id}" on corresponding label`);
             }
         });
+
+        if (!settingsHtml.includes('id="import-btn"') || !settingsHtml.includes('aria-label="Import backup data"')) {
+            throw new Error('settings.html missing accessible #import-btn or aria-label="Import backup data"');
+        }
+        if (!settingsHtml.includes('id="export-btn"') || !settingsHtml.includes('aria-label="Export backup data"')) {
+            throw new Error('settings.html missing aria-label="Export backup data" on #export-btn');
+        }
 
         // Timer label 'for', aria-label, and title tooltip attributes
         ['timer-task', 'timer-subtask'].forEach(id => {

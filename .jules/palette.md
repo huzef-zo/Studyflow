@@ -81,3 +81,7 @@
 ## 2026-08-30 - [Cross-Page Nav Indicator Persistence & Smooth Easing]
 **Learning:** Bottom navigation indicators that re-initialize position from index 0 on every page load create jarring visual resets. Storing the active navigation item's offset in `sessionStorage` allows the indicator to mount at its previous position on new page loads and seamlessly animate to the new active tab, while modernizing easing curves (e.g. `cubic-bezier(0.16, 1, 0.3, 1)`) and speeding up durations to ~0.22s yields a fast, fluid mobile interaction.
 **Action:** Persist active nav item horizontal offset in `sessionStorage` on click/nav and apply instantaneous offset positioning before triggering smooth CSS transforms on page load.
+
+## 2026-09-05 - [Keyboard Accessibility for File Upload Controls & Shortcut Guidance]
+**Learning:** Hidden file input controls (`display: none`) wrapped inside standard styled `<label>` elements are inaccessible via standard keyboard navigation (`Tab`), leaving screen reader and keyboard-only users unable to invoke import workflows. Replacing the pseudo-label with a native `<button>` element that delegates clicks to the hidden file input restores full keyboard access. Furthermore, surfacing shortcut hints (such as `(Ctrl+K)`) directly inside input placeholders increases user discovery of global features.
+**Action:** Always use native `<button>` controls with explicit `aria-label` tags for file upload triggers instead of un-focusable `<label>` wrappers, and include shortcut hints in searchable input placeholders.

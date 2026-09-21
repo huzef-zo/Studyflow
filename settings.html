@@ -172,11 +172,9 @@
       <section class="card animate-fade-in mt-md">
         <div class="card-header"><h3 class="card-title">Data Core</h3></div>
         <div class="grid-2-dense-gap-lg">
-          <button class="btn btn-secondary" id="export-btn">Export</button>
-          <label class="btn btn-secondary" style="cursor:pointer;">
-            Import
-            <input type="file" id="import-input" accept=".json" style="display:none;">
-          </label>
+          <button class="btn btn-secondary" id="export-btn" aria-label="Export backup data">Export</button>
+          <button class="btn btn-secondary" id="import-btn" aria-label="Import backup data">Import</button>
+          <input type="file" id="import-input" accept=".json" style="display:none;" aria-label="Select backup JSON file to import">
         </div>
         <div class="mt-md pt-md" style="border-top:1px solid var(--border-color);">
           <div class="flex items-center justify-between">
@@ -184,7 +182,7 @@
               <div style="font-weight:500;font-size:13px;color:var(--danger);">Purge Protocol</div>
               <div style="font-size:11px;color:var(--text-muted);">Permanently erase all local intelligence</div>
             </div>
-            <button class="btn btn-danger btn-sm" id="clear-data-btn">Initiate Wipe</button>
+            <button class="btn btn-danger btn-sm" id="clear-data-btn" aria-label="Initiate wipe of all local data">Initiate Wipe</button>
           </div>
         </div>
       </section>
@@ -220,6 +218,7 @@
         windowsList: document.getElementById('windows-list'),
         themeSelector: document.getElementById('theme-selector'),
         exportBtn: document.getElementById('export-btn'),
+        importBtn: document.getElementById('import-btn'),
         importInput: document.getElementById('import-input'),
         clearDataBtn: document.getElementById('clear-data-btn')
       };
@@ -388,6 +387,12 @@
           a.download = `studyflow-backup-${new Date().toISOString().slice(0,10)}.json`;
           a.click();
         };
+
+        if (elements.importBtn && elements.importInput) {
+          elements.importBtn.onclick = () => {
+            elements.importInput.click();
+          };
+        }
 
         elements.importInput.onchange = (e) => {
           const file = e.target.files[0];
