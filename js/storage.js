@@ -1164,9 +1164,12 @@ const Storage = (function() {
 
   function addSession(duration, type = 'work', taskId = null, notes = '') {
     const sessions = loadData(KEYS.SESSIONS, DEFAULTS.sessions);
+    // SECURITY: Validate and sanitize duration to a finite bounded integer to prevent Stored XSS and numeric corruption
+    const parsedDuration = Number(duration);
+    const safeDuration = Number.isFinite(parsedDuration) ? Math.max(0, Math.min(1440, Math.floor(parsedDuration))) : 0;
     const newSession = {
       id: generateId(),
-      duration,
+      duration: safeDuration,
       type,
       taskId,
       notes: String(notes || '').substring(0, 2000),
