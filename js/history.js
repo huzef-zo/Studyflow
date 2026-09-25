@@ -80,7 +80,9 @@ const History = (function() {
   }
 
   function getFilteredTasks() {
-    const tasks = Storage.getTasks();
+    // OPTIMIZATION: Query raw tasks storage directly instead of Storage.getTasks() to avoid
+    // redundant today-completion resolutions across all repeating tasks.
+    const tasks = Storage.loadData(Storage.KEYS.TASKS, Storage.DEFAULTS.tasks);
     const cutoff = getCutoffDate();
     if (!cutoff) {
       // For "All Time", we need a reference start date for repeating tasks
@@ -137,7 +139,10 @@ const History = (function() {
       const dayOfWeek = cur.getDay();
       const scheduledTasks = repeatingByDay[dayOfWeek];
       if (scheduledTasks.length > 0) {
-        const dateStr = Storage.formatDate(cur);
+        const y = cur.getFullYear();
+        const m = cur.getMonth() + 1;
+        const d = cur.getDate();
+        const dateStr = y + '-' + (m < 10 ? '0' + m : m) + '-' + (d < 10 ? '0' + d : d);
         for (let k = 0; k < scheduledTasks.length; k++) {
           occurrences.push({
             ...scheduledTasks[k],
@@ -152,8 +157,8 @@ const History = (function() {
   }
 
   function getCompletedTasksInPeriod() {
-    // OPTIMIZATION: Use indexed for loops and single array pushes to eliminate intermediate array allocations.
-    const tasks = Storage.getTasks();
+    // OPTIMIZATION: Query raw task storage directly and use indexed for loops to eliminate intermediate array allocations.
+    const tasks = Storage.loadData(Storage.KEYS.TASKS, Storage.DEFAULTS.tasks);
     const cutoff = getCutoffDate();
     const cutoffTime = cutoff ? cutoff.getTime() : 0;
     const cutoffStr = cutoff ? Storage.formatDate(cutoff) : null;
@@ -321,8 +326,9 @@ const History = (function() {
   }
 
   function getActivityData(daysCount) {
-    // OPTIMIZATION: Replace forEach callbacks with indexed for loops to reduce function invocation overhead
-    const tasks = Storage.getTasks();
+    // OPTIMIZATION: Query raw task storage directly to avoid repeating task resolutions,
+    // and format YYYY-MM-DD date strings inline to eliminate Date parsing and Storage.formatDate overhead.
+    const tasks = Storage.loadData(Storage.KEYS.TASKS, Storage.DEFAULTS.tasks);
     const today = new Date(); today.setHours(0, 0, 0, 0);
     const cutoffDate = new Date(today);
     cutoffDate.setDate(cutoffDate.getDate() - daysCount);
@@ -333,7 +339,11 @@ const History = (function() {
     for (let i = 0; i < daysCount; i++) {
       reusableDate.setTime(today.getTime());
       reusableDate.setDate(today.getDate() - i);
-      activityData[Storage.formatDate(reusableDate)] = { count: 0, notes: [] };
+      const y = reusableDate.getFullYear();
+      const m = reusableDate.getMonth() + 1;
+      const d = reusableDate.getDate();
+      const dateKey = y + '-' + (m < 10 ? '0' + m : m) + '-' + (d < 10 ? '0' + d : d);
+      activityData[dateKey] = { count: 0, notes: [] };
     }
 
     for (let i = 0; i < tasks.length; i++) {
@@ -480,12 +490,18 @@ const History = (function() {
 
     let maxCount = 0;
     const days = [];
+    const reusableDate = new Date(today);
     for (let i = daysCount - 1; i >= 0; i--) {
-      const date = new Date(today); date.setDate(today.getDate() - i);
-      const dayData = data[Storage.formatDate(date)] || { count: 0, notes: [] };
+      reusableDate.setTime(today.getTime());
+      reusableDate.setDate(today.getDate() - i);
+      const y = reusableDate.getFullYear();
+      const m = reusableDate.getMonth() + 1;
+      const d = reusableDate.getDate();
+      const dateStr = y + '-' + (m < 10 ? '0' + m : m) + '-' + (d < 10 ? '0' + d : d);
+      const dayData = data[dateStr] || { count: 0, notes: [] };
       const count = dayData.count;
       if (count > maxCount) maxCount = count;
-      days.push({ date, count, notes: dayData.notes });
+      days.push({ date: new Date(reusableDate), count, notes: dayData.notes });
     }
 
     // FIX 5: Guard against empty or all-zero data — prevents crash on first launch
