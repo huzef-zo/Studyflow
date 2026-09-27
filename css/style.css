@@ -804,6 +804,55 @@ h2, h3, h4, .card-title, .modal-title {
   display: none !important;
 }
 
+/* Sector Mastery Cards */
+.mastery-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background: var(--bg-surface);
+  border-radius: var(--radius-card, 10px);
+  padding: 12px;
+  text-decoration: none;
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.mastery-card:hover {
+  background: var(--bg-tertiary);
+  transform: translateY(-2px);
+}
+
+.mastery-subject-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mastery-progress-mini {
+  height: 6px;
+  background: var(--progress-track);
+  border-radius: 9999px;
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+
+.mastery-progress-mini-fill {
+  height: 100%;
+  border-radius: 9999px;
+  transition: width 0.3s ease;
+}
+
+.mastery-stats {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
 /* Custom Checkbox */
 .task-checkbox {
   width: 20px;
