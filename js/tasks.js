@@ -1,8 +1,5 @@
 /**
  * StudyFlow - Task Manager Module
- * FIX: Swipe vs scroll conflict — added Y-delta threshold so diagonal scrolls
- *      don't accidentally trigger task completion swipe.
- * ENHANCED: Added subtask progress tracking, milestone notifications, and auto-complete logic
  */
 
 const Tasks = (function() {
@@ -10,12 +7,14 @@ const Tasks = (function() {
 
   let elements = {};
   let currentFilter = 'all';
+  let currentDbView = 'table';
   let expandedTasks = new Set();
   let subtaskUnsubscribe = null;
 
   function initElements() {
     elements = {
       taskList: document.getElementById('task-list'),
+      dbViewSwitcher: document.getElementById('db-view-switcher'),
       addTaskBtn: document.getElementById('add-task-btn'),
       filterTabs: document.querySelectorAll('.filter-tab'),
       searchInput: document.getElementById('search-tasks'),
@@ -62,12 +61,23 @@ const Tasks = (function() {
     window.addEventListener('studyflow_taskDataChanged', () => {
       renderTasks();
     });
+
+    window.addEventListener('studyflow_db_updated', () => {
+      renderTasks();
+    });
   }
 
   async function init() {
     initElements();
     setupEventListeners();
     setupSubtaskCallbacks();
+
+    if (elements.dbViewSwitcher && typeof Database !== 'undefined') {
+      Database.renderViewSwitcherContainer(elements.dbViewSwitcher, (viewName) => {
+        currentDbView = viewName;
+        renderTasks();
+      });
+    }
 
     elements.taskList.innerHTML = `
       <div class="skeleton" style="height:100px;border-radius:20px;margin-bottom:1rem;"></div>
@@ -77,7 +87,6 @@ const Tasks = (function() {
     await new Promise(r => setTimeout(r, 600));
     renderTasks();
 
-    // Check for URL parameters
     const urlParams = new URLSearchParams(window.location.search);
     let shouldUpdateUrl = false;
 
@@ -102,17 +111,12 @@ const Tasks = (function() {
   }
 
   function setupSubtaskCallbacks() {
-    // Listen for subtask completions and provide feedback
     subtaskUnsubscribe = Storage.onSubtaskCompleted(({ taskId, subtask, task, progress }) => {
-      console.log('[v0] Subtask completed:', subtask.title, `Progress: ${progress.percentage}%`);
-      
-      // Show milestone notifications at key percentages
       const milestone = SubtaskUtils.getMilestoneMessage(progress.percentage);
       if (milestone) {
         showMilestoneNotification(milestone, progress.percentage);
       }
       
-      // Show completion toast with progress
       if (progress.isFullyComplete) {
         App.showToast(`All sub-missions complete! Objective "${task.title}" is done!`, 'success', 4000);
       } else {
@@ -122,7 +126,6 @@ const Tasks = (function() {
   }
 
   function showMilestoneNotification(message, percentage) {
-    // Create milestone badge animation
     const existing = document.querySelector('.progress-milestone');
     if (existing) existing.remove();
     
@@ -142,6 +145,22 @@ const Tasks = (function() {
   }
 
   function renderTasks() {
+    if (typeof Database !== 'undefined' && currentDbView) {
+      const dbItems = Database.getTaskDatabaseItems();
+      const processedItems = Database.applyFilterAndSort(dbItems);
+
+      if (currentDbView === 'table') {
+        elements.taskList.innerHTML = Database.renderTableView(processedItems);
+        return;
+      } else if (currentDbView === 'board') {
+        elements.taskList.innerHTML = Database.renderBoardView(processedItems);
+        return;
+      } else if (currentDbView === 'calendar') {
+        elements.taskList.innerHTML = Database.renderCalendarView(processedItems);
+        return;
+      }
+    }
+
     let tasks = Storage.getTasks();
 
     if (elements.subjectFilter && elements.subjectFilter.options.length === 1) {
@@ -188,12 +207,10 @@ const Tasks = (function() {
       const aDone = a.type === 'repeating' ? Storage.isRepeatingTaskCompletedOnDate(a.id, todayStr) : a.completed;
       const bDone = b.type === 'repeating' ? Storage.isRepeatingTaskCompletedOnDate(b.id, todayStr) : b.completed;
 
-      // Sort priority: 1. Completion status, 2. sortOrder, 3. Overdue status, 4. Due date
       if (aDone !== bDone) return aDone ? 1 : -1;
       if ((a.sortOrder || 0) !== (b.sortOrder || 0)) return (a.sortOrder || 0) - (b.sortOrder || 0);
       if (a._isOverdue && !b._isOverdue) return -1;
       if (!a._isOverdue && b._isOverdue) return 1;
-      // OPTIMIZATION: Use fast lexicographical string comparison instead of `new Date` to avoid allocations and parsing overhead.
       const aDate = a.dueDate || '';
       const bDate = b.dueDate || '';
       return aDate < bDate ? -1 : (aDate > bDate ? 1 : 0);
@@ -257,240 +274,6 @@ const Tasks = (function() {
         </div>
       `;
     }).join('');
-
-    // ── Expand buttons ──────────────────────────────────────────────────────
-    elements.taskList.querySelectorAll('.task-expand-btn').forEach(btn => {
-      btn.onclick = (e) => {
-        e.stopPropagation();
-        const id = btn.dataset.id;
-        expandedTasks.has(id) ? expandedTasks.delete(id) : expandedTasks.add(id);
-        renderTasks();
-      };
-    });
-
-    // ── Checkboxes ──────────────────────────────────────────────────────────
-    elements.taskList.querySelectorAll('.task-checkbox').forEach(cb => {
-      const toggleFn = (e) => {
-        e.stopPropagation();
-        const id = cb.dataset.id;
-        const task = Storage.getTaskById(id);
-        const card = cb.closest('.task-card');
-
-        if (e.type === 'keydown' && e.key !== 'Enter' && e.key !== ' ') return;
-        if (e.type === 'keydown') e.preventDefault();
-
-        if (task.type === 'repeating') {
-          const isCurrentlyDone = Storage.isRepeatingTaskCompletedOnDate(id, todayStr);
-          Storage.setRepeatingTaskCompletedOnDate(id, todayStr, !isCurrentlyDone);
-          if (!isCurrentlyDone) App.showToast('Task completed for today!', 'success');
-          renderTasks();
-        } else {
-          if (!task.completed) {
-            // Optimistically mark the card as completed visually
-            card.style.opacity = '0.5';
-            cb.classList.add('checked');
-
-            // Stage the write — give user 5 seconds to undo
-            const cancelFn = Storage.stageTaskCompletion(id, 5000, () => {
-              Storage.completeTask(id);
-              renderTasks();
-            });
-
-            App.showUndoToast('Task completed!', () => {
-              // User clicked Undo — cancel the staged write and restore the card
-              cancelFn();
-              card.style.opacity = '';
-              cb.classList.remove('checked');
-            });
-
-          } else {
-            Storage.uncompleteTask(id);
-            renderTasks();
-          }
-        }
-      };
-      cb.onclick = toggleFn;
-      cb.onkeydown = toggleFn;
-    });
-
-    // ── Subtask checkboxes ──────────────────────────────────────────────────
-    elements.taskList.querySelectorAll('.subtask-checkbox').forEach(cb => {
-      const toggleFn = (e) => {
-        e.stopPropagation();
-        if (e.type === 'keydown' && e.key !== 'Enter' && e.key !== ' ') return;
-        if (e.type === 'keydown') e.preventDefault();
-
-        const isCompleting = !cb.classList.contains('checked');
-        const taskId = cb.dataset.taskId;
-        const subtaskId = cb.dataset.subtaskId;
-        const subtaskItem = cb.closest('.subtask-item');
-        
-        if (isCompleting) {
-          // Add animation before completion
-          cb.classList.add('animating');
-          if (subtaskItem) subtaskItem.classList.add('completing');
-        }
-        
-        // Toggle the subtask via storage (triggers callbacks)
-        Storage.toggleSubtask(taskId, subtaskId, isCompleting);
-        
-        // Re-render after a brief delay to show animation
-        setTimeout(() => {
-          renderTasks();
-        }, 300);
-      };
-      cb.onclick = toggleFn;
-      cb.onkeydown = toggleFn;
-    });
-
-    // ── Cycle buttons ───────────────────────────────────────────────────────
-    elements.taskList.querySelectorAll('.inc-cycle').forEach(btn => {
-      btn.onclick = (e) => {
-        e.stopPropagation();
-        const task = Storage.getTaskById(btn.dataset.taskId);
-        const subtask = task.subtasks.find(s => s.id === btn.dataset.subtaskId);
-        Storage.updateSubtask(btn.dataset.taskId, btn.dataset.subtaskId, { completedCycles: subtask.completedCycles + 1 });
-        renderTasks();
-      };
-    });
-
-    elements.taskList.querySelectorAll('.dec-cycle').forEach(btn => {
-      btn.onclick = (e) => {
-        e.stopPropagation();
-        const task = Storage.getTaskById(btn.dataset.taskId);
-        const subtask = task.subtasks.find(s => s.id === btn.dataset.subtaskId);
-        if (subtask.completedCycles > 0) {
-          Storage.updateSubtask(btn.dataset.taskId, btn.dataset.subtaskId, { completedCycles: subtask.completedCycles - 1 });
-          renderTasks();
-        }
-      };
-    });
-
-    // ── Edit / Delete ───────────────────────────────────────────────────────
-    elements.taskList.querySelectorAll('.edit-task').forEach(btn => {
-      btn.onclick = (e) => { e.stopPropagation(); openTaskModal(btn.dataset.id); };
-    });
-    elements.taskList.querySelectorAll('.del-task').forEach(btn => {
-      btn.onclick = (e) => { e.stopPropagation(); deleteTask(btn.dataset.id); };
-    });
-
-    // ── Drag and Drop Reordering ────────────────────────────────────────────
-    elements.taskList.querySelectorAll('.task-card[draggable="true"]').forEach(card => {
-      card.addEventListener('dragstart', (e) => {
-        card.classList.add('dragging');
-        e.dataTransfer.setData('text/plain', card.dataset.id);
-        e.dataTransfer.effectAllowed = 'move';
-      });
-
-      card.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        e.dataTransfer.dropEffect = 'move';
-        const dragging = elements.taskList.querySelector('.dragging');
-        if (dragging && dragging !== card) {
-          card.classList.add('drag-over');
-        }
-      });
-
-      card.addEventListener('dragleave', () => {
-        card.classList.remove('drag-over');
-      });
-
-      card.addEventListener('dragend', () => {
-        card.classList.remove('dragging');
-        elements.taskList.querySelectorAll('.task-card').forEach(c => c.classList.remove('drag-over'));
-      });
-
-      card.addEventListener('drop', (e) => {
-        e.preventDefault();
-        card.classList.remove('drag-over');
-        const draggedId = e.dataTransfer.getData('text/plain');
-        const targetId = card.dataset.id;
-
-        if (draggedId === targetId) return;
-
-        const tasks = Storage.getTasks();
-        const draggedIndex = tasks.findIndex(t => t.id === draggedId);
-        const targetIndex = tasks.findIndex(t => t.id === targetId);
-
-        if (draggedIndex !== -1 && targetIndex !== -1) {
-          const [draggedTask] = tasks.splice(draggedIndex, 1);
-          tasks.splice(targetIndex, 0, draggedTask);
-
-          // Re-assign sortOrder based on new array positions
-          tasks.forEach((t, i) => t.sortOrder = i);
-
-          Storage.saveTasks(tasks);
-          renderTasks();
-        }
-      });
-    });
-
-    // ── Swipe to complete (mobile) ──────────────────────────────────────────
-    elements.taskList.querySelectorAll('.task-card').forEach(card => {
-      let touchStartX = 0, touchStartY = 0, touchMoveX = 0, touchMoveY = 0;
-      let swipeIntent = null; // 'swipe' | 'scroll' | null
-      const id = card.dataset.id;
-      const task = Storage.getTaskById(id);
-      if (task.completed) return;
-
-      card.addEventListener('touchstart', (e) => {
-        touchStartX = e.touches[0].clientX;
-        touchStartY = e.touches[0].clientY;
-        touchMoveX = touchStartX;
-        touchMoveY = touchStartY;
-        swipeIntent = null;
-      }, { passive: true });
-
-      card.addEventListener('touchmove', (e) => {
-        touchMoveX = e.touches[0].clientX;
-        touchMoveY = e.touches[0].clientY;
-        const deltaX = touchMoveX - touchStartX;
-        const deltaY = touchMoveY - touchStartY;
-
-        // FIX: Determine intent on first significant movement
-        if (swipeIntent === null && (Math.abs(deltaX) > 5 || Math.abs(deltaY) > 5)) {
-          // If moving more vertically than horizontally → scroll, not swipe
-          swipeIntent = Math.abs(deltaY) > Math.abs(deltaX) ? 'scroll' : 'swipe';
-        }
-
-        if (swipeIntent === 'swipe' && deltaX > 0) {
-          card.style.transform = `translateX(${deltaX}px)`;
-          const hint = card.querySelector('.swipe-hint');
-          if (hint) {
-            hint.style.opacity = Math.min(deltaX / 100, 1);
-            hint.style.left = '0';
-          }
-        }
-      }, { passive: true });
-
-      card.addEventListener('touchend', () => {
-        const deltaX = touchMoveX - touchStartX;
-        if (swipeIntent === 'swipe' && deltaX > 100) {
-          card.style.transition = 'all 0.3s ease';
-          card.style.transform = 'translateX(100%)';
-          card.style.opacity = '0';
-          setTimeout(() => {
-            const cancelFn = Storage.stageTaskCompletion(id, 5000, () => {
-              Storage.completeTask(id);
-              renderTasks();
-            });
-            App.showUndoToast('Task swiped complete!', () => {
-              cancelFn();
-              renderTasks();  // re-render to restore the card
-            });
-          }, 300);
-        } else {
-          card.style.transition = 'transform 0.3s ease';
-          card.style.transform = 'translateX(0)';
-          const hint = card.querySelector('.swipe-hint');
-          if (hint) hint.style.opacity = '0';
-          setTimeout(() => { card.style.transition = ''; }, 300);
-        }
-        touchStartX = 0; touchStartY = 0;
-        touchMoveX = 0; touchMoveY = 0;
-        swipeIntent = null;
-      });
-    });
   }
 
   function openTaskModal(id = null) {
