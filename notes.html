@@ -21,6 +21,7 @@
 
   <title>Notes - StudyFlow</title>
   <link rel="stylesheet" href="css/style.css?v=v2025-05-03-03">
+  <link rel="stylesheet" href="css/blocks.css?v=v2025-05-03-03">
   <style>
     .notes-layout {
       display: grid;
@@ -49,24 +50,6 @@
       padding: var(--spacing-sm);
     }
 
-    .note-item {
-      padding: 10px 12px;
-      border-radius: var(--radius-sm);
-      cursor: pointer;
-      transition: var(--transition);
-      margin-bottom: 6px;
-      background: var(--bg-tertiary);
-    }
-
-    .note-item:hover {
-      opacity: 0.9;
-    }
-
-    .note-item.active {
-      background: var(--accent-fill);
-      color: #FFFFFF;
-    }
-
     .note-editor {
       display: flex;
       flex-direction: column;
@@ -74,13 +57,6 @@
       background: var(--bg-surface);
       border-radius: var(--radius-lg);
       padding: var(--spacing-md);
-    }
-
-    .note-content-area {
-      flex: 1;
-      min-height: 350px;
-      font-family: inherit;
-      line-height: 1.5;
     }
   </style>
 </head>
@@ -92,12 +68,15 @@
     <header class="page-header animate-fade-in">
       <div class="page-header-title-group">
         <h1>Knowledge Vault</h1>
-        <p class="subtitle">Secure storage for academic intelligence</p>
+        <p class="subtitle">Secure workspace for academic intelligence</p>
       </div>
       <div class="page-header-actions flex items-center gap-sm flex-wrap">
-        <button class="btn btn-primary" id="new-note-btn" aria-label="Create new note entry">
+        <button class="btn btn-secondary" id="template-gallery-btn" aria-label="Open Template Gallery">
+          ✨ Templates
+        </button>
+        <button class="btn btn-primary" id="new-note-btn" aria-label="Create new page entry">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
-          New Entry
+          New Page
         </button>
       </div>
     </header>
@@ -105,35 +84,56 @@
     <div class="notes-layout animate-fade-in">
       <aside class="notes-sidebar">
         <div class="p-sm" style="border-bottom: 1px solid var(--border-color);">
-          <input type="text" id="search-notes" class="form-input glass-pill-input" placeholder="Search vault... (Ctrl+K)" aria-label="Search vault">
+          <input type="text" id="search-notes" class="form-input glass-pill-input" placeholder="Search pages... (Ctrl+K)" aria-label="Search pages">
         </div>
         <div class="notes-list" id="notes-list">
-          <!-- Populated by JS -->
+          <!-- Populated dynamically as tree by JS -->
         </div>
       </aside>
 
       <section class="note-editor" id="note-editor" style="display: none;">
-        <div class="flex items-center justify-between gap-md flex-wrap">
-          <input type="text" id="note-title" class="form-input" style="font-size: 15px; font-weight: 500; border: none; background: none; padding-left: 0;" placeholder="Note Title" maxlength="200" aria-label="Note Title">
+        <!-- Page Cover Strip -->
+        <div id="page-cover-strip" class="page-cover-strip">
+          <button id="change-cover-btn" class="page-cover-picker-btn" aria-label="Change cover color">Change Cover</button>
+        </div>
+
+        <!-- Page Icon -->
+        <div class="page-icon-wrapper">
+          <button id="page-icon-btn" class="page-icon-btn" aria-label="Change page icon" title="Click to pick emoji">📄</button>
+        </div>
+
+        <div class="flex items-center justify-between gap-md flex-wrap mt-xs">
+          <input type="text" id="note-title" class="form-input" style="font-size: 20px; font-weight: 700; border: none; background: none; padding-left: 0;" placeholder="Page Title" maxlength="200" aria-label="Page Title">
           <div class="flex items-center gap-sm">
-            <select id="note-subject" class="form-input" style="width: auto;" aria-label="Note Subject"></select>
-            <button class="btn btn-danger btn-sm" id="delete-note-btn" aria-label="Delete note entry">Delete</button>
-            <button class="btn btn-primary" id="save-note-btn" aria-label="Save note entry (Ctrl+S)" title="Save transmission (Ctrl+S)">Save</button>
+            <select id="note-subject" class="form-input" style="width: auto;" aria-label="Page Subject"></select>
+            <button class="btn btn-secondary btn-sm" id="save-as-template-btn" aria-label="Save as template">Save as Template</button>
+            <button class="btn btn-secondary btn-sm" id="add-subpage-btn" aria-label="Add sub-page">+ Sub-page</button>
+            <button class="btn btn-danger btn-sm" id="delete-note-btn" aria-label="Delete page entry">Delete</button>
+            <button class="btn btn-primary" id="save-note-btn" aria-label="Save page entry (Ctrl+S)" title="Save transmission (Ctrl+S)">Save</button>
           </div>
         </div>
-        <textarea id="note-content" class="form-input note-content-area" placeholder="Begin transmission... (Markdown supported)" maxlength="10000" aria-label="Note Content"></textarea>
+
+        <!-- Block Editor Container -->
+        <div id="note-blocks-container" class="note-editor-blocks">
+          <!-- Blocks populated dynamically by js/notes.js -->
+        </div>
+
+        <!-- Linked Mentions Container -->
+        <div id="linked-mentions-container"></div>
       </section>
 
       <div id="empty-editor-state" class="flex-1 flex items-center justify-center card">
         <div class="text-center p-lg">
-          <div style="font-size: 2rem; color: var(--text-muted); margin-bottom: 0.5rem;">📑</div>
-          <h3 style="color: var(--text-muted);">Select or create an entry</h3>
+          <div style="font-size: 2.5rem; color: var(--text-muted); margin-bottom: 0.5rem;">📄</div>
+          <h3 style="color: var(--text-muted);">Select or create a page</h3>
         </div>
       </div>
     </div>
   </main>
 
   <script src="js/storage.js?v=v2025-05-03-03"></script>
+  <script src="js/blocks.js?v=v2025-05-03-03"></script>
+  <script src="js/templates.js?v=v2025-05-03-03"></script>
   <script src="js/subtask-utils.js?v=v2025-05-03-03"></script>
   <script src="js/pwa-manager.js?v=v2025-05-03-03"></script>
   <script src="js/achievements.js?v=v2025-05-03-03"></script>

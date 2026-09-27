@@ -1,10 +1,5 @@
 /**
  * StudyFlow - Main Application Module
- * FIXES:
- * 1. checkTimerBackground: now uses a tab-unique flag so only one tab processes
- *    the background completion at a time. Prevents duplicate session recordings.
- * 2. createModal: tracks pointerdown target to fix overlay-close failing on mobile
- *    scroll-drag release.
  */
 
 const App = (function() {
@@ -377,9 +372,6 @@ const App = (function() {
       </div>
     `;
 
-    // FIX: Track where the pointer went DOWN so a scroll-drag-release on the
-    // overlay doesn't close the modal. Only close if both pointerdown and
-    // pointerup landed directly on the overlay element itself.
     let pointerDownOnOverlay = false;
     modal.addEventListener('pointerdown', (e) => {
       pointerDownOnOverlay = e.target === modal;
@@ -417,7 +409,6 @@ const App = (function() {
   function confirm(options) {
     return new Promise((resolve) => {
       const { title, message, confirmText = 'Confirm', cancelText = 'Cancel', danger = false } = options;
-      // SECURITY: Ensure all user-provided strings are escaped to prevent XSS
       const modal = createModal({
         id: 'confirm-modal', title,
         content: `<p style="margin:0;color:var(--text-secondary);">${escapeHtml(message)}</p>`,
@@ -433,7 +424,6 @@ const App = (function() {
   function alert(options) {
     return new Promise((resolve) => {
       const { title, message, buttonText = 'OK' } = options;
-      // SECURITY: Ensure all user-provided strings are escaped to prevent XSS
       const modal = createModal({
         id: 'alert-modal', title,
         content: `<p style="margin:0;color:var(--text-secondary);">${escapeHtml(message)}</p>`,
@@ -474,12 +464,6 @@ const App = (function() {
     }, duration);
   }
 
-  /**
-   * Show a toast with an Undo button.
-   * @param {string} message - Toast message
-   * @param {Function} onUndo - Called if user clicks Undo before timeout
-   * @param {number} duration - Ms before auto-dismiss (default 5000)
-   */
   function showUndoToast(message, onUndo, duration = 5000) {
     initToastContainer();
 
@@ -534,17 +518,15 @@ const App = (function() {
       setTimeout(() => { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 300);
     };
 
-    // Auto-dismiss after duration
     const autoTimer = setTimeout(dismiss, duration);
 
-    // Undo button
     toast.querySelector('.undo-btn').addEventListener('click', () => {
       clearTimeout(autoTimer);
       dismiss();
       onUndo();
     });
 
-    return dismiss;  // caller can force-dismiss
+    return dismiss;
   }
 
   // ── Utilities ─────────────────────────────────────────────────────────────
@@ -603,18 +585,16 @@ const App = (function() {
     document.addEventListener('keydown', (e) => {
       if (['INPUT', 'SELECT', 'TEXTAREA'].includes(e.target.tagName)) return;
 
-      // Ctrl/Meta + K: Context-aware Search / Command Palette
+      // Ctrl/Meta + K: Open Command Palette
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
-        const searchTasks = document.getElementById('search-tasks');
-        const searchNotes = document.getElementById('search-notes');
-        if (searchTasks) {
-          searchTasks.focus();
-        } else if (searchNotes) {
-          searchNotes.focus();
+        if (typeof CommandPalette !== 'undefined' && CommandPalette.open) {
+          CommandPalette.open();
         } else {
-          // If on dashboard or elsewhere, go to tasks
-          window.location.href = 'tasks.html';
+          const searchTasks = document.getElementById('search-tasks');
+          const searchNotes = document.getElementById('search-notes');
+          if (searchTasks) searchTasks.focus();
+          else if (searchNotes) searchNotes.focus();
         }
         return;
       }
@@ -660,7 +640,6 @@ const App = (function() {
 
   function createProgressBar(current, max, label, showPercentage = true) {
     const percentage = max > 0 ? Math.min(100, Math.round((current / max) * 100)) : 0;
-    // SECURITY: Escape all dynamic parameters as they are injected into innerHTML
     return `
       <div class="progress-wrapper">
         <div class="progress-header">
@@ -676,7 +655,6 @@ const App = (function() {
 
   function createEmptyStateHtml(options) {
     const { title='No Data', text='Nothing to show here yet.', icon='empty', actionText='', actionId='', padding='4rem' } = options;
-    // SECURITY: Strictly validate CSS padding to prevent style injection
     const safePadding = /^[\d.a-zA-Z% \-]+$/.test(padding) ? padding : '4rem';
 
     return `
@@ -711,14 +689,12 @@ const App = (function() {
   function showTaskNotification(task) {
     const body = `It's time for: ${task.title}`;
 
-    // Visual feedback on Dashboard
     const pendingPill = document.getElementById('stat-pending')?.closest('.stat-pill');
     if (pendingPill) {
       pendingPill.classList.add('flash-pulse');
       setTimeout(() => pendingPill.classList.remove('flash-pulse'), 10000);
     }
 
-    // Check application settings
     const settings = Storage.getSettings();
     if (settings.task_notifications !== false) {
       if (typeof PWAManager !== 'undefined' && PWAManager.sendNotification) {
@@ -731,11 +707,6 @@ const App = (function() {
     showToast(body, 'info', 10000);
   }
 
-  /**
-   * FIX: Background timer check — use a per-tab session flag so only the tab
-   * that first detects the expiry processes the completion. Other tabs will see
-   * the updated state on their next visibilitychange or their own check cycle.
-   */
   const _tabId = Date.now().toString(36) + Math.random().toString(36).slice(2);
 
   function checkTimerBackground() {
@@ -744,12 +715,10 @@ const App = (function() {
     if (!timerState || timerState.state !== 'running' || !timerState.endTime) return;
     if (Date.now() < timerState.endTime) return;
 
-    // Guard: use sessionStorage so only one tab handles this expiry event
     const lockKey = `timer_handled_${timerState.endTime}`;
     if (sessionStorage.getItem(lockKey)) return;
     sessionStorage.setItem(lockKey, _tabId);
 
-    // Small delay then verify we still hold the lock (race condition mitigation)
     setTimeout(() => {
       if (sessionStorage.getItem(lockKey) !== _tabId) return;
       Storage.completeTimerSession(timerState);
@@ -851,12 +820,10 @@ const App = (function() {
     initNavigation();
     setupGlobalShortcuts();
 
-    // Handle storage quota exceeded
     window.addEventListener('studyflow_storageQuotaExceeded', (e) => {
       showToast('Storage full! Data may not be saved. Clear history to free space.', 'error', 10000);
     });
 
-    // Prune old session data once per browser session to keep localStorage lean
     if (typeof Storage !== 'undefined' && Storage.pruneSessions) {
       Storage.pruneSessions(365);
     }
@@ -867,7 +834,6 @@ const App = (function() {
     });
     setInterval(checkTaskNotifications, 60000);
     setTimeout(checkTaskNotifications, 1000);
-    // FIX: Reduced to 5s interval and added tab guard inside the function
     setInterval(checkTimerBackground, 5000);
   }
 
