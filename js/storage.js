@@ -358,41 +358,53 @@ const Storage = (function() {
       }
 
       if (Array.isArray(data.tasks)) {
-        const safeTasks = data.tasks.slice(0, 1000).map(t => ({
-          id: (t.id && isValidId(String(t.id))) ? String(t.id) : generateId(),
-          title: String(t.title || 'Untitled Task').substring(0, 200),
-          type: String(t.type || 'one-time'),
-          startDate: (t.startDate && isValidDate(t.startDate)) ? String(t.startDate) : null,
-          dueDate: (t.dueDate && isValidDate(t.dueDate)) ? String(t.dueDate) : null,
-          dueTime: (t.dueTime && isValidTime(t.dueTime)) ? String(t.dueTime) : null,
-          priority: String(t.priority || 'medium').substring(0, 50),
-          subject: String(t.subject || 'Other').substring(0, 100),
-          repeatDays: Array.isArray(t.repeatDays) ? t.repeatDays.map(Number) : [],
-          completed: Boolean(t.completed),
-          completedAt: t.completedAt ? String(t.completedAt) : null,
-          subtasks: Array.isArray(t.subtasks) ? t.subtasks.map(st => ({
-            id: (st.id && isValidId(String(st.id))) ? String(st.id) : generateId(),
-            title: String(st.title || 'Untitled Subtask').substring(0, 200),
-            isCompleted: Boolean(st.isCompleted),
-            estimatedCycles: Number(st.estimatedCycles || 1),
-            completedCycles: Number(st.completedCycles || 0)
-          })) : [],
-          progress: Number(t.progress || 0),
-          sortOrder: Number(t.sortOrder || 0),
-          createdAt: String(t.createdAt || new Date().toISOString())
-        }));
+        const safeTasks = data.tasks.slice(0, 1000).map(t => {
+          const rawProgress = Number(t.progress);
+          const rawSortOrder = Number(t.sortOrder);
+          return {
+            id: (t.id && isValidId(String(t.id))) ? String(t.id) : generateId(),
+            title: String(t.title || 'Untitled Task').substring(0, 200),
+            type: String(t.type || 'one-time'),
+            startDate: (t.startDate && isValidDate(t.startDate)) ? String(t.startDate) : null,
+            dueDate: (t.dueDate && isValidDate(t.dueDate)) ? String(t.dueDate) : null,
+            dueTime: (t.dueTime && isValidTime(t.dueTime)) ? String(t.dueTime) : null,
+            priority: String(t.priority || 'medium').substring(0, 50),
+            subject: String(t.subject || 'Other').substring(0, 100),
+            repeatDays: Array.isArray(t.repeatDays) ? t.repeatDays.map(Number) : [],
+            completed: Boolean(t.completed),
+            completedAt: t.completedAt ? String(t.completedAt) : null,
+            subtasks: Array.isArray(t.subtasks) ? t.subtasks.map(st => {
+              const est = Number(st.estimatedCycles);
+              const comp = Number(st.completedCycles);
+              return {
+                id: (st.id && isValidId(String(st.id))) ? String(st.id) : generateId(),
+                title: String(st.title || 'Untitled Subtask').substring(0, 200),
+                isCompleted: Boolean(st.isCompleted),
+                estimatedCycles: Number.isFinite(est) ? Math.max(1, Math.min(100, Math.floor(est))) : 1,
+                completedCycles: Number.isFinite(comp) ? Math.max(0, Math.min(1000, Math.floor(comp))) : 0
+              };
+            }) : [],
+            progress: Number.isFinite(rawProgress) ? Math.max(0, Math.min(100, Math.floor(rawProgress))) : 0,
+            sortOrder: Number.isFinite(rawSortOrder) ? Math.max(0, Math.min(10000, Math.floor(rawSortOrder))) : 0,
+            createdAt: String(t.createdAt || new Date().toISOString())
+          };
+        });
         saveData(KEYS.TASKS, safeTasks);
       }
 
       if (Array.isArray(data.sessions)) {
-        const safeSessions = data.sessions.slice(0, 5000).map(s => ({
-          id: (s.id && isValidId(String(s.id))) ? String(s.id) : generateId(),
-          duration: Number(s.duration || 0),
-          type: String(s.type || 'work'),
-          taskId: (s.taskId && isValidId(String(s.taskId))) ? String(s.taskId) : null,
-          notes: s.notes ? String(s.notes).substring(0, 2000) : '',
-          completedAt: String(s.completedAt || new Date().toISOString())
-        }));
+        const safeSessions = data.sessions.slice(0, 5000).map(s => {
+          const parsedDur = Number(s.duration);
+          const safeDur = Number.isFinite(parsedDur) ? Math.max(0, Math.min(1440, Math.floor(parsedDur))) : 0;
+          return {
+            id: (s.id && isValidId(String(s.id))) ? String(s.id) : generateId(),
+            duration: safeDur,
+            type: String(s.type || 'work'),
+            taskId: (s.taskId && isValidId(String(s.taskId))) ? String(s.taskId) : null,
+            notes: s.notes ? String(s.notes).substring(0, 2000) : '',
+            completedAt: String(s.completedAt || new Date().toISOString())
+          };
+        });
         saveSessions(safeSessions);
       }
 
@@ -450,15 +462,20 @@ const Storage = (function() {
 
       if (data.xpState && typeof data.xpState === 'object' && !Array.isArray(data.xpState)) {
         const safeXP = { ...DEFAULTS.xpState };
-        if ('totalXP' in data.xpState) safeXP.totalXP = Number(data.xpState.totalXP);
-        if ('currentLevel' in data.xpState) safeXP.currentLevel = Number(data.xpState.currentLevel);
+        const totalXP = Number(data.xpState.totalXP);
+        const level = Number(data.xpState.currentLevel);
+        if ('totalXP' in data.xpState) safeXP.totalXP = Number.isFinite(totalXP) ? Math.max(0, Math.min(100000000, Math.floor(totalXP))) : 0;
+        if ('currentLevel' in data.xpState) safeXP.currentLevel = Number.isFinite(level) ? Math.max(1, Math.min(1000, Math.floor(level))) : 1;
         if ('currentRank' in data.xpState) safeXP.currentRank = String(data.xpState.currentRank).substring(0, 100);
         if (Array.isArray(data.xpState.history)) {
-          safeXP.history = data.xpState.history.slice(0, 5000).map(h => ({
-            date: isValidDate(h.date) ? String(h.date) : formatDate(new Date()),
-            xpGained: Number(h.xpGained),
-            source: String(h.source).substring(0, 200)
-          }));
+          safeXP.history = data.xpState.history.slice(0, 5000).map(h => {
+            const xpG = Number(h.xpGained);
+            return {
+              date: isValidDate(h.date) ? String(h.date) : formatDate(new Date()),
+              xpGained: Number.isFinite(xpG) ? Math.max(0, Math.min(100000, Math.floor(xpG))) : 0,
+              source: String(h.source).substring(0, 200)
+            };
+          });
         }
         saveData(KEYS.XP_STATE, safeXP);
       }
