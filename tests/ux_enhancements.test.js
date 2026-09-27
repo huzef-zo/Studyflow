@@ -127,9 +127,15 @@ async function runTests() {
             throw new Error('notes.html #delete-note-btn missing aria-label="Delete note entry"');
         }
 
-        // Dashboard reflection input aria-label
+        // Dashboard reflection input aria-label & dismiss button aria-label
         if (!indexHtml.includes('id="reflection-input"') || !indexHtml.includes('aria-label="Daily Reflection"')) {
             throw new Error('index.html #reflection-input missing aria-label="Daily Reflection"');
+        }
+        if (!indexHtml.includes('aria-label="Dismiss daily reflection prompt"')) {
+            throw new Error('index.html reflection card dismiss button missing aria-label="Dismiss daily reflection prompt"');
+        }
+        if (!indexHtml.includes("App.showToast('Please enter a reflection before saving', 'warning')")) {
+            throw new Error('index.html save reflection handler missing empty reflection validation feedback toast');
         }
 
         console.log('  Passed: Form control label associations and ARIA attributes verified in source.');

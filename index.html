@@ -157,7 +157,7 @@
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-fill)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
             Daily Reflection
           </h2>
-          <button class="btn btn-ghost btn-sm" onclick="this.closest('#reflection-card').style.display='none'">Dismiss</button>
+          <button class="btn btn-ghost btn-sm" onclick="this.closest('#reflection-card').style.display='none'" aria-label="Dismiss daily reflection prompt">Dismiss</button>
         </div>
         <p class="text-secondary mb-md">Take a moment to record your progress today.</p>
         <textarea id="reflection-input" class="form-input mb-md" placeholder="How was your progress today? What could be optimized?" style="height:80px;" aria-label="Daily Reflection"></textarea>
@@ -379,7 +379,8 @@
       }
 
       document.getElementById('save-reflection-btn')?.addEventListener('click', () => {
-        const text = document.getElementById('reflection-input').value.trim();
+        const inputEl = document.getElementById('reflection-input');
+        const text = inputEl ? inputEl.value.trim() : '';
         if (text) {
           const reflections = Storage.loadData(Storage.KEYS.REFLECTIONS, []);
           reflections.push({
@@ -390,6 +391,9 @@
           Storage.saveData(Storage.KEYS.REFLECTIONS, reflections);
           App.showToast('Reflection stored in history', 'success');
           document.getElementById('reflection-card').style.display = 'none';
+        } else {
+          App.showToast('Please enter a reflection before saving', 'warning');
+          inputEl?.focus();
         }
       });
       init();

@@ -85,3 +85,7 @@
 ## 2026-09-05 - [Keyboard Accessibility for File Upload Controls & Shortcut Guidance]
 **Learning:** Hidden file input controls (`display: none`) wrapped inside standard styled `<label>` elements are inaccessible via standard keyboard navigation (`Tab`), leaving screen reader and keyboard-only users unable to invoke import workflows. Replacing the pseudo-label with a native `<button>` element that delegates clicks to the hidden file input restores full keyboard access. Furthermore, surfacing shortcut hints (such as `(Ctrl+K)`) directly inside input placeholders increases user discovery of global features.
 **Action:** Always use native `<button>` controls with explicit `aria-label` tags for file upload triggers instead of un-focusable `<label>` wrappers, and include shortcut hints in searchable input placeholders.
+
+## 2026-09-26 - [Reflection Input Validation & Dismissal Accessibility]
+**Learning:** In reflection or feedback cards where submission can be attempted on an empty textarea, providing zero feedback leaves users uncertain if the action registered. Combining descriptive `aria-label` tags on dismiss controls with actionable warning toasts and automatic field refocusing on empty submits ensures assistive clarity and immediate feedback.
+**Action:** Always validate form inputs prior to persistence, showing informative warning toasts and focusing the invalid field when inputs are empty or invalid.
