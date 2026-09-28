@@ -3,10 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
-  <meta name="description" content="StudyFlow - Your personal study organizer and productivity hub">
-  <meta name="theme-color" content="#14161B">
+  <meta name="description" content="StudyFlow - Personal study organizer and focus manager">
+  <meta name="theme-color" content="#121314">
   
-  <!-- Standalone PWA Configuration -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="StudyFlow">
@@ -14,18 +13,16 @@
   <meta name="apple-touch-fullscreen" content="yes">
   <meta name="web-app-capable" content="yes">
   
-  <!-- Icons -->
   <link rel="icon" type="image/png" href="./icon-192.png">
   <link rel="apple-touch-icon" href="./icon-192.png">
   <link rel="shortcut icon" type="image/png" href="./icon-192.png">
   
-  <!-- Manifest -->
   <link rel="manifest" href="./manifest.json">
   <link rel="msapplication-config" href="browserconfig.xml">
-  <meta name="msapplication-TileColor" content="#5B9BF0">
+  <meta name="msapplication-TileColor" content="#3B6FD8">
   
   <title>Dashboard - StudyFlow</title>
-  <link rel="stylesheet" href="css/style.css?v=v2025-05-03-03">
+  <link rel="stylesheet" href="css/style.css?v=v2026-09-28-01">
 </head>
 <body>
   <!-- Navigation Containers -->
@@ -33,165 +30,127 @@
   <div id="bottom-nav-container"></div>
 
   <!-- Main Content -->
-  <main class="main-container">
-    <!-- Page Header -->
-    <header class="page-header animate-fade-in">
+  <main class="main-container narrow-layout">
+    <!-- Compact Page Header -->
+    <header class="page-header">
       <div class="page-header-title-group">
-        <h1 id="greeting">Good morning!</h1>
+        <h1 id="greeting">Good day!</h1>
         <p class="subtitle" id="date-display"></p>
       </div>
     </header>
 
-    <!-- XP Progress Widget -->
-    <section class="xp-widget animate-fade-in mb-md">
-      <div class="card">
-        <div class="flex items-center justify-between mb-xs">
-          <div class="flex items-center gap-sm">
-            <div id="xp-rank-icon" style="font-size: 1.25rem;">🛡️</div>
-            <div>
-              <div id="xp-rank-name" style="font-weight: 500; font-size: 13px; text-transform: uppercase; color: var(--accent-text);">Novice</div>
-              <div style="font-size: 11px; color: var(--text-muted);">Level <span id="xp-level">1</span></div>
-            </div>
-          </div>
-          <div style="text-align: right;">
-            <div id="xp-value-display" style="font-weight: 500; font-size: 13px; color: var(--accent-text);">0 / 100 XP</div>
-          </div>
-        </div>
-        <div class="progress-bar-bg" style="height: 6px;">
-          <div id="xp-progress-fill" class="progress-bar-fill" style="width: 0%;"></div>
-        </div>
+    <!-- Hero "Today" Card -->
+    <section class="card mb-md" id="hero-task-card">
+      <div class="card-header">
+        <span class="badge">Next Task</span>
+        <span id="hero-task-subject" class="badge">General</span>
       </div>
+      <div class="mb-md">
+        <h2 id="hero-task-title" class="mb-xs">No pending tasks for today</h2>
+        <p id="hero-task-meta" class="text-secondary">Take a break or add a task to get started.</p>
+      </div>
+      <a href="timer.html" id="hero-start-focus-btn" class="btn btn-primary w-full">Start Focus</a>
     </section>
 
-    <!-- Dense 2x2 Stats Grid -->
-    <section class="grid-2-dense animate-fade-in mb-md">
+    <!-- Single Compact Row for Streak, XP & Weekly Progress -->
+    <section class="grid-3 mb-lg">
+      <!-- Streak -->
       <div class="stat-pill">
-        <div class="stat-pill-icon"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
+        <div class="stat-pill-icon">🔥</div>
         <div>
-          <div class="data-number" id="stat-today">0</div>
-          <div class="stat-pill-label">Tasks Today</div>
+          <div class="stat-pill-value" id="streak-count">0</div>
+          <div class="stat-pill-label">Day Streak</div>
         </div>
       </div>
-      <div class="stat-pill">
-        <div class="stat-pill-icon"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
-        <div>
-          <div class="data-number" id="stat-pending">0</div>
-          <div class="stat-pill-label">Pending</div>
-        </div>
-      </div>
-      <div class="stat-pill">
-        <div class="stat-pill-icon"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
-        <div>
-          <div class="data-number" id="stat-week">0</div>
-          <div class="stat-pill-label">Completed Today</div>
-        </div>
-      </div>
-      <div class="stat-pill">
-        <div class="stat-pill-icon"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg></div>
-        <div>
-          <div class="data-number" id="streak-count">0</div>
-          <div class="stat-pill-label">Streak</div>
-        </div>
-      </div>
-    </section>
 
-    <!-- Bento Grid -->
-    <div class="bento-grid">
-
-      <!-- Mastery Overview -->
-      <section class="card animate-fade-in col-span-3 md:col-span-2">
-        <div class="flex items-center justify-between mb-md">
-          <h2 class="flex items-center gap-sm">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-fill)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
-            Mastery Overview
-          </h2>
-          <a href="settings.html" class="btn btn-secondary btn-sm">Manage</a>
+      <!-- XP -->
+      <div class="stat-pill">
+        <div class="stat-pill-icon">⚡</div>
+        <div>
+          <div class="stat-pill-value" id="xp-value-display">0 XP</div>
+          <div class="stat-pill-label"><span id="xp-rank-name">Novice</span> (Lvl <span id="xp-level">1</span>)</div>
         </div>
-        <div id="mastery-overview" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px;">
-          <!-- Populated by JS -->
-        </div>
-      </section>
-
-      <!-- Upcoming Deadlines -->
-      <section class="card animate-fade-in row-span-2">
-        <div class="flex items-center justify-between mb-md">
-          <h2 class="flex items-center gap-sm">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-fill)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
-            Upcoming
-          </h2>
-          <a href="tasks.html" class="btn btn-secondary btn-sm">View All</a>
-        </div>
-        <div id="deadlines-list" class="timeline">
-          <!-- Populated by JS -->
-        </div>
-      </section>
+      </div>
 
       <!-- Weekly Progress -->
-      <section class="card animate-fade-in col-span-2 md:col-span-2">
-        <div class="flex items-center justify-between mb-md">
-          <h2 class="flex items-center gap-sm">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-fill)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-            Weekly Progress
-          </h2>
-          <span class="badge" id="progress-percentage">0%</span>
+      <div class="stat-pill">
+        <div class="stat-pill-icon">📊</div>
+        <div>
+          <div class="stat-pill-value" id="progress-percentage">0%</div>
+          <div class="stat-pill-label">Weekly Goal</div>
         </div>
-        <div id="tasks-progress" class="progress-container"></div>
-        <div id="hours-progress" class="progress-container" style="margin-top: var(--spacing-sm);"></div>
-      </section>
+      </div>
+    </section>
 
-      <!-- Today's Plan -->
-      <section class="card animate-fade-in col-span-3 md:col-span-2">
-        <h2 class="flex items-center gap-sm mb-md">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-fill)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M12 18h.01"/><path d="M16 18h.01"/></svg>
-          Today's Optimized Plan
-        </h2>
+    <!-- Collapsible Sections -->
+
+    <!-- 1. Upcoming (Open by Default) -->
+    <section class="collapsible-section open">
+      <div class="collapsible-header">
+        <h3>Upcoming Tasks</h3>
+        <svg class="collapsible-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="collapsible-content">
+        <div id="deadlines-list" class="flex flex-col gap-xs">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. Today's Plan (Closed by Default) -->
+    <section class="collapsible-section">
+      <div class="collapsible-header">
+        <h3>Today's Schedule</h3>
+        <svg class="collapsible-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="collapsible-content">
         <div id="today-plan-list" class="flex flex-col gap-xs">
           <!-- Populated by Scheduler -->
         </div>
-      </section>
+      </div>
+    </section>
 
-      <!-- Daily Reflection -->
-      <section id="reflection-card" class="card animate-fade-in col-span-3" style="display:none;">
-        <div class="flex items-center justify-between mb-md">
-          <h2 class="flex items-center gap-sm" style="margin: 0;">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-fill)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-            Daily Reflection
-          </h2>
-          <button class="btn btn-ghost btn-sm" onclick="this.closest('#reflection-card').style.display='none'" aria-label="Dismiss daily reflection prompt">Dismiss</button>
+    <!-- 3. Subject Mastery (Closed by Default) -->
+    <section class="collapsible-section">
+      <div class="collapsible-header">
+        <h3>Subject Mastery</h3>
+        <svg class="collapsible-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="collapsible-content">
+        <div id="mastery-overview" class="grid-2-dense">
+          <!-- Populated by JS -->
         </div>
-        <p class="text-secondary mb-md">Take a moment to record your progress today.</p>
-        <textarea id="reflection-input" class="form-input mb-md" placeholder="How was your progress today? What could be optimized?" style="height:80px;" aria-label="Daily Reflection"></textarea>
-        <button class="btn btn-primary" id="save-reflection-btn">Save Reflection</button>
-      </section>
+      </div>
+    </section>
 
-      <!-- Quick Actions -->
-      <section class="card animate-fade-in">
-        <h2 class="flex items-center gap-sm mb-md">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-fill)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-          Quick Actions
-        </h2>
-        <div class="flex flex-col gap-xs">
-          <a href="tasks.html?action=add" class="btn btn-primary">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
-            Add Task
-          </a>
-          <a href="timer.html" class="btn btn-secondary">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            Focus
-          </a>
-        </div>
-      </section>
+    <!-- Daily Reflection Card (Shown when appropriate) -->
+    <section id="reflection-card" class="card mb-lg" style="display:none;">
+      <div class="flex items-center justify-between mb-sm">
+        <h3>Daily Reflection</h3>
+        <button class="btn btn-ghost btn-sm" onclick="document.getElementById('reflection-card').style.display='none'" aria-label="Dismiss daily reflection prompt">Dismiss</button>
+      </div>
+      <p class="text-secondary mb-sm">Record a quick reflection on your progress today.</p>
+      <textarea id="reflection-input" class="form-input mb-sm" placeholder="What went well today? What can be improved?" rows="3" aria-label="Daily Reflection"></textarea>
+      <button class="btn btn-primary btn-sm" id="save-reflection-btn">Save Reflection</button>
+    </section>
 
-    </div>
+    <!-- Hidden containers for progress math compat -->
+    <div id="tasks-progress" style="display:none;"></div>
+    <div id="hours-progress" style="display:none;"></div>
   </main>
 
+  <!-- Floating Add Task Button -->
+  <a href="tasks.html?action=add" id="fab-add-task" class="fab-add-task" aria-label="Add task" title="Add Task">
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
+  </a>
+
   <!-- Scripts -->
-  <script src="js/storage.js?v=v2025-05-03-03"></script>
-  <script src="js/subtask-utils.js?v=v2025-05-03-03"></script>
-  <script src="js/pwa-manager.js?v=v2025-05-03-03"></script>
-  <script src="js/achievements.js?v=v2025-05-03-03"></script>
-  <script src="js/scheduler.js?v=v2025-05-03-03"></script>
-  <script src="js/app.js?v=v2025-05-03-03"></script>
+  <script src="js/storage.js?v=v2026-09-28-01"></script>
+  <script src="js/subtask-utils.js?v=v2026-09-28-01"></script>
+  <script src="js/pwa-manager.js?v=v2026-09-28-01"></script>
+  <script src="js/achievements.js?v=v2026-09-28-01"></script>
+  <script src="js/scheduler.js?v=v2026-09-28-01"></script>
+  <script src="js/app.js?v=v2026-09-28-01"></script>
   
   <script>
     (function() {
@@ -211,58 +170,58 @@
         dateEl.textContent = new Date().toLocaleDateString('en-US', options);
       }
 
+      function updateHeroTask() {
+        const todayTasks = Storage.getTodayTasks();
+        const pending = todayTasks.filter(t => !t.completed);
+        const heroTitle = document.getElementById('hero-task-title');
+        const heroMeta = document.getElementById('hero-task-meta');
+        const heroSubject = document.getElementById('hero-task-subject');
+        const heroBtn = document.getElementById('hero-start-focus-btn');
+
+        if (pending.length > 0) {
+          const task = pending[0];
+          heroTitle.textContent = task.title;
+          heroMeta.textContent = `Due: ${task.dueDate ? Storage.formatDisplayDate(task.dueDate) : 'Today'} • ${task.subject}`;
+          heroSubject.textContent = task.subject;
+          heroBtn.textContent = 'Start Focus';
+          heroBtn.href = `timer.html?taskId=${encodeURIComponent(task.id)}`;
+        } else {
+          heroTitle.textContent = 'All clear for today!';
+          heroMeta.textContent = 'No pending tasks scheduled.';
+          heroSubject.textContent = 'Done';
+          heroBtn.textContent = 'Start Timer';
+          heroBtn.href = 'timer.html';
+        }
+      }
+
       function updateStats() {
         const stats = Storage.getStats();
-        document.getElementById('stat-today').textContent = stats.tasks.today || 0;
-        document.getElementById('stat-pending').textContent = stats.tasks.todayPending || 0;
-        document.getElementById('stat-week').textContent = stats.tasks.todayCompleted || 0;
         document.getElementById('streak-count').textContent = stats.streak || 0;
       }
 
       function updateProgress() {
         const goals = Storage.getGoals();
-        
         const tasksPercentage = goals.weekly_tasks > 0 ? Math.round((goals.current_tasks / goals.weekly_tasks) * 100) : 0;
-        document.getElementById('tasks-progress').innerHTML = createProgressBar(goals.current_tasks, goals.weekly_tasks, 'Missions');
-        
-        const currentHours = Math.round(goals.current_hours * 10) / 10;
-        document.getElementById('hours-progress').innerHTML = createProgressBar(currentHours, goals.weekly_hours, 'Focus Hours');
         const hoursPercentage = goals.weekly_hours > 0 ? (goals.current_hours / goals.weekly_hours * 100) : 0;
         const avgPercentage = Math.round((tasksPercentage + hoursPercentage) / 2);
         document.getElementById('progress-percentage').textContent = `${Math.min(100, avgPercentage)}%`;
-      }
-
-      function createProgressBar(current, max, label) {
-        const percentage = max > 0 ? Math.min(100, Math.round((current / max) * 100)) : 0;
-        return `
-          <div class="progress-header">
-            <span class="progress-label">${App.escapeHtml(label)}</span>
-            <span class="progress-percent">${current} / ${max}</span>
-          </div>
-          <div class="progress-bar-bg">
-            <div class="progress-bar-fill" style="width: ${percentage}%;"></div>
-          </div>
-        `;
       }
 
       function updateMasteryOverview() {
         const masteryEl = document.getElementById('mastery-overview');
         const stats = Storage.getSubjectMasteryStats();
         if (stats.length === 0) {
-          masteryEl.innerHTML = '<div class="empty-state" style="padding: 1rem; grid-column: 1 / -1;"><p class="text-secondary text-center">No sectors defined</p></div>';
+          masteryEl.innerHTML = '<p class="text-secondary text-center p-sm">No subjects defined</p>';
           return;
         }
         masteryEl.innerHTML = stats.map(subject => `
-          <a href="tasks.html?subject=${encodeURIComponent(subject.name)}" class="card u-no-underline" style="padding: 10px 12px; background: var(--bg-tertiary);">
+          <a href="tasks.html?subject=${encodeURIComponent(subject.name)}" class="card u-no-underline p-sm">
             <div class="flex items-center justify-between mb-xs">
-              <span style="font-size: 13px; font-weight: 500; color: var(--text-primary);">${App.escapeHtml(subject.name)}</span>
-              <span style="font-size: 13px; font-weight: 500; color: var(--accent-text);">${subject.percentage}%</span>
+              <span style="font-size:13px;font-weight:500;color:var(--text-primary);">${App.escapeHtml(subject.name)}</span>
+              <span style="font-size:12px;color:var(--accent-text);font-weight:500;">${subject.percentage}%</span>
             </div>
-            <div class="progress-bar-bg" style="height: 5px;">
-              <div class="progress-bar-fill" style="width: ${subject.percentage}%;"></div>
-            </div>
-            <div style="font-size: 10px; color: var(--text-muted); margin-top: 4px; font-weight: 500; text-transform: uppercase;">
-              ${subject.completed} / ${subject.total} Objectives
+            <div class="progress-bar-bg" style="height:4px;">
+              <div class="progress-bar-fill" style="width:${subject.percentage}%;"></div>
             </div>
           </a>
         `).join('');
@@ -273,31 +232,9 @@
         const level = Achievements.calculateLevel(xpState.totalXP);
         const rank = Achievements.getRank(xpState.totalXP);
 
-        const currentLevelXP = Achievements.getXPForLevel(level);
-        const nextLevelXP = Achievements.getXPForLevel(level + 1);
-        const xpInLevel = xpState.totalXP - currentLevelXP;
-        const xpRequired = nextLevelXP - currentLevelXP;
-        const percentage = Math.min(100, Math.round((xpInLevel / xpRequired) * 100));
-
-        let fillWidth = percentage;
-        if (xpState.totalXP > 0 && fillWidth < 2) {
-          fillWidth = 2; // thin sliver for low XP
-        }
-
         document.getElementById('xp-level').textContent = level;
         document.getElementById('xp-rank-name').textContent = rank.title;
-        document.getElementById('xp-value-display').textContent = `${xpState.totalXP} / ${nextLevelXP} XP`;
-        document.getElementById('xp-progress-fill').style.width = `${fillWidth}%`;
-
-        const rankIcons = {
-          'Novice': '🛡️',
-          'Apprentice': '⚔️',
-          'Scholar': '📜',
-          'Sage': '✨',
-          'Archmage': '🔮',
-          'Transcendent': '💎'
-        };
-        document.getElementById('xp-rank-icon').textContent = rankIcons[rank.title] || '🛡️';
+        document.getElementById('xp-value-display').textContent = `${xpState.totalXP} XP`;
       }
 
       function updateTodayPlan() {
@@ -305,24 +242,19 @@
         const planList = document.getElementById('today-plan-list');
 
         if (plan.length === 0) {
-          planList.innerHTML = '<p class="text-secondary text-center py-md">No sessions scheduled for today. Rest and recover!</p>';
+          planList.innerHTML = '<p class="text-secondary text-center p-sm">No sessions scheduled for today.</p>';
           return;
         }
 
         planList.innerHTML = plan.map(block => {
-          let icon = '🎯';
-          if (block.type === 'subject_review') icon = '📖';
-
           const href = block.taskId ? `timer.html?taskId=${App.escapeHtml(block.taskId)}` : 'timer.html';
-
           return `
-            <a href="${href}" class="flex items-center gap-sm p-sm u-no-underline" style="border-radius:8px; background:var(--bg-tertiary);">
-              <div style="font-size: 11px; font-weight: 500; color: var(--accent-text); min-width: 75px;">${App.escapeHtml(block.startTime)} - ${App.escapeHtml(block.endTime)}</div>
-              <div style="font-size: 1.1rem;">${icon}</div>
-              <div class="flex-1 min-w-0">
-                <div style="font-size: 13px; font-weight: 500; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${App.escapeHtml(block.label)}</div>
-                <div style="font-size: 10px; color: var(--text-muted); text-transform: uppercase;">${App.escapeHtml(block.subject || 'General')}</div>
+            <a href="${href}" class="flex items-center justify-between p-sm u-no-underline card">
+              <div>
+                <div style="font-size:13px;font-weight:500;color:var(--text-primary);">${App.escapeHtml(block.label)}</div>
+                <div style="font-size:11px;color:var(--text-muted);">${App.escapeHtml(block.subject || 'General')}</div>
               </div>
+              <div style="font-size:12px;font-weight:500;color:var(--accent-text);">${App.escapeHtml(block.startTime)} - ${App.escapeHtml(block.endTime)}</div>
             </a>
           `;
         }).join('');
@@ -332,37 +264,45 @@
         const deadlinesEl = document.getElementById('deadlines-list');
         const upcomingTasks = Storage.getUpcomingTasks(7);
         if (upcomingTasks.length === 0) {
-          deadlinesEl.innerHTML = '<div class="empty-state" style="padding: 1rem;"><p class="text-secondary text-center">Clear timeline</p></div>';
+          deadlinesEl.innerHTML = '<p class="text-secondary text-center p-sm">No upcoming tasks for the next 7 days.</p>';
           return;
         }
         deadlinesEl.innerHTML = upcomingTasks.slice(0, 5).map(task => {
           const isOverdue = !task.completed && task.dueDate && Storage.isDateOverdue(task.dueDate);
           return `
-            <a href="timer.html?taskId=${App.escapeHtml(task.id)}" class="timeline-item ${isOverdue ? 'overdue' : ''} u-block u-no-underline">
-              <div class="timeline-dot"></div>
-              <div class="flex items-center justify-between">
-                <div style="font-size: 10px; font-weight: 500; color: ${isOverdue ? 'var(--danger)' : 'var(--accent-text)'}; text-transform: uppercase;">
-                  ${Storage.formatDisplayDate(task.dueDate)}
-                </div>
-                ${isOverdue ? '<span class="badge" style="color:var(--danger);">MISSED</span>' : ''}
+            <a href="timer.html?taskId=${App.escapeHtml(task.id)}" class="card u-no-underline p-sm flex items-center justify-between">
+              <div>
+                <div style="font-size:13px;font-weight:500;color:var(--text-primary);">${App.escapeHtml(task.title)}</div>
+                <div style="font-size:11px;color:var(--text-muted);">${App.escapeHtml(task.subject)}</div>
               </div>
-              <div style="font-size: 13px; font-weight: 500; color: var(--text-primary);">${App.escapeHtml(task.title)}</div>
-              <div style="font-size: 11px; color: var(--text-muted);">${App.escapeHtml(task.subject)}</div>
+              <div style="font-size:12px;font-weight:500;color:${isOverdue ? 'var(--danger)' : 'var(--accent-text)'};">
+                ${Storage.formatDisplayDate(task.dueDate)}
+              </div>
             </a>
           `;
         }).join('');
+      }
+
+      function setupCollapsibles() {
+        document.querySelectorAll('.collapsible-header').forEach(header => {
+          header.onclick = () => {
+            header.closest('.collapsible-section').classList.toggle('open');
+          };
+        });
       }
 
       function init() {
         PWAManager.init();
         updateGreeting();
         updateDateDisplay();
+        updateHeroTask();
         updateStats();
         updateProgress();
         updateMasteryOverview();
         updateDeadlines();
         updateXPWidget();
         updateTodayPlan();
+        setupCollapsibles();
         checkReflectionStatus();
         Achievements.init();
       }
@@ -389,7 +329,7 @@
             timestamp: new Date().toISOString()
           });
           Storage.saveData(Storage.KEYS.REFLECTIONS, reflections);
-          App.showToast('Reflection stored in history', 'success');
+          App.showToast('Reflection saved', 'success');
           document.getElementById('reflection-card').style.display = 'none';
         } else {
           App.showToast('Please enter a reflection before saving', 'warning');
@@ -399,6 +339,7 @@
       init();
 
       window.addEventListener('studyflow_taskDataChanged', () => {
+        updateHeroTask();
         updateStats();
         updateMasteryOverview();
         updateDeadlines();

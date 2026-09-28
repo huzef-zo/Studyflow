@@ -1,8 +1,5 @@
 /**
- * StudyFlow - Task Manager Module
- * FIX: Swipe vs scroll conflict — added Y-delta threshold so diagonal scrolls
- *      don't accidentally trigger task completion swipe.
- * ENHANCED: Added subtask progress tracking, milestone notifications, and auto-complete logic
+ * StudyFlow - Tasks Module
  */
 
 const Tasks = (function() {
@@ -17,6 +14,7 @@ const Tasks = (function() {
     elements = {
       taskList: document.getElementById('task-list'),
       addTaskBtn: document.getElementById('add-task-btn'),
+      fabAddTaskBtn: document.getElementById('fab-add-task'),
       filterTabs: document.querySelectorAll('.filter-tab'),
       searchInput: document.getElementById('search-tasks'),
       priorityFilter: document.getElementById('filter-priority'),
@@ -47,6 +45,10 @@ const Tasks = (function() {
       elements.addTaskBtn.onclick = () => openTaskModal();
     }
 
+    if (elements.fabAddTaskBtn) {
+      elements.fabAddTaskBtn.onclick = () => openTaskModal();
+    }
+
     if (elements.searchInput) {
       elements.searchInput.oninput = App.debounce(() => renderTasks(), 300);
     }
@@ -70,11 +72,9 @@ const Tasks = (function() {
     setupSubtaskCallbacks();
 
     elements.taskList.innerHTML = `
-      <div class="skeleton" style="height:100px;border-radius:20px;margin-bottom:1rem;"></div>
-      <div class="skeleton" style="height:100px;border-radius:20px;margin-bottom:1rem;"></div>
-      <div class="skeleton" style="height:100px;border-radius:20px;margin-bottom:1rem;"></div>
+      <div class="card mb-sm p-md"><div class="text-secondary text-center">Loading tasks...</div></div>
     `;
-    await new Promise(r => setTimeout(r, 600));
+    await new Promise(r => setTimeout(r, 200));
     renderTasks();
 
     // Check for URL parameters
@@ -102,43 +102,13 @@ const Tasks = (function() {
   }
 
   function setupSubtaskCallbacks() {
-    // Listen for subtask completions and provide feedback
     subtaskUnsubscribe = Storage.onSubtaskCompleted(({ taskId, subtask, task, progress }) => {
-      console.log('[v0] Subtask completed:', subtask.title, `Progress: ${progress.percentage}%`);
-      
-      // Show milestone notifications at key percentages
-      const milestone = SubtaskUtils.getMilestoneMessage(progress.percentage);
-      if (milestone) {
-        showMilestoneNotification(milestone, progress.percentage);
-      }
-      
-      // Show completion toast with progress
       if (progress.isFullyComplete) {
-        App.showToast(`All sub-missions complete! Objective "${task.title}" is done!`, 'success', 4000);
+        App.showToast(`All subtasks complete! Task "${task.title}" is done!`, 'success', 4000);
       } else {
-        App.showToast(`Sub-mission complete: ${progress.completed}/${progress.total}`, 'success', 2500);
+        App.showToast(`Subtask complete: ${progress.completed}/${progress.total}`, 'success', 2500);
       }
     });
-  }
-
-  function showMilestoneNotification(message, percentage) {
-    // Create milestone badge animation
-    const existing = document.querySelector('.progress-milestone');
-    if (existing) existing.remove();
-    
-    const milestone = document.createElement('div');
-    milestone.className = 'progress-milestone';
-    milestone.innerHTML = `
-      <div style="display:flex;align-items:center;gap:8px;justify-content:center;">
-        <span style="font-size:18px;">🎉</span>
-        <span>${App.escapeHtml(message)}</span>
-      </div>
-    `;
-    document.body.appendChild(milestone);
-    
-    setTimeout(() => {
-      if (milestone.parentNode) milestone.parentNode.removeChild(milestone);
-    }, 3200);
   }
 
   function renderTasks() {
@@ -174,10 +144,10 @@ const Tasks = (function() {
 
     if (tasks.length === 0) {
       elements.taskList.innerHTML = App.createEmptyStateHtml({
-        title: 'No Objectives Found',
-        text: 'Initiate a new mission to begin tracking your progress and goals.',
+        title: 'No Tasks Found',
+        text: 'Add a new task to get started with your study goals.',
         icon: 'tasks',
-        actionText: 'Begin First Mission',
+        actionText: 'Add First Task',
         actionId: 'empty-add-btn'
       });
       document.getElementById('empty-add-btn')?.addEventListener('click', () => openTaskModal());
@@ -188,55 +158,49 @@ const Tasks = (function() {
       const aDone = a.type === 'repeating' ? Storage.isRepeatingTaskCompletedOnDate(a.id, todayStr) : a.completed;
       const bDone = b.type === 'repeating' ? Storage.isRepeatingTaskCompletedOnDate(b.id, todayStr) : b.completed;
 
-      // Sort priority: 1. Completion status, 2. sortOrder, 3. Overdue status, 4. Due date
       if (aDone !== bDone) return aDone ? 1 : -1;
       if ((a.sortOrder || 0) !== (b.sortOrder || 0)) return (a.sortOrder || 0) - (b.sortOrder || 0);
       if (a._isOverdue && !b._isOverdue) return -1;
       if (!a._isOverdue && b._isOverdue) return 1;
-      // OPTIMIZATION: Use fast lexicographical string comparison instead of `new Date` to avoid allocations and parsing overhead.
       const aDate = a.dueDate || '';
       const bDate = b.dueDate || '';
       return aDate < bDate ? -1 : (aDate > bDate ? 1 : 0);
-    }).map((task, index) => {
+    }).map((task) => {
       const isDone = task.type === 'repeating' ? Storage.isRepeatingTaskCompletedOnDate(task.id, todayStr) : task.completed;
-      const priorityClass = `priority-${App.escapeHtml(task.priority)}`;
-      const subjectColor = App.getSubjectColor(task.subject);
       const isExpanded = expandedTasks.has(task.id);
-      const staggerClass = index < 5 ? `stagger-${index + 1}` : '';
       return `
-        <div class="task-card ${priorityClass} ${isDone ? 'completed' : ''} animate-fade-in ${staggerClass}" data-id="${App.escapeHtml(task.id)}" draggable="${!isDone}">
-          <div class="swipe-hint">Swipe to complete</div>
-          <div class="flex items-start gap-md">
-            <div class="task-checkbox ${isDone ? 'checked' : ''}" data-id="${App.escapeHtml(task.id)}" style="margin-top:4px;" tabindex="0" role="checkbox" aria-checked="${isDone}" aria-label="${isDone ? 'Mark as incomplete' : 'Mark as complete'}: ${App.escapeHtml(task.title)}"></div>
+        <div class="task-card ${isDone ? 'completed' : ''}" data-id="${App.escapeHtml(task.id)}" draggable="${!isDone}">
+          <div class="flex items-start gap-sm">
+            <div class="task-checkbox ${isDone ? 'checked' : ''}" data-id="${App.escapeHtml(task.id)}" tabindex="0" role="checkbox" aria-checked="${isDone}" aria-label="${isDone ? 'Mark as incomplete' : 'Mark as complete'}: ${App.escapeHtml(task.title)}"></div>
+
             <div class="flex-1 min-w-0">
-              <div class="task-header-inline">
-                <div class="task-title-text" style="${isDone ? 'text-decoration:line-through;opacity:0.5;' : ''}">${App.escapeHtml(task.title)}</div>
-                <div class="subject-pill" style="--tag-color:${App.hexToRgb(subjectColor)};color:white;background:rgba(255,255,255,0.05);border-color:rgba(255,255,255,0.1);">${App.escapeHtml(task.subject)}</div>
-                ${task._isOverdue ? '<span class="overdue-badge">OVERDUE</span>' : ''}
-                ${task.priority === 'critical' ? '<span class="badge" style="--tag-color:var(--danger-rgb);font-size:9px;color:white;">Critical</span>' : ''}
-              </div>
-              <div class="flex items-center justify-between">
-                <div class="task-meta-text">
-                  Target: ${Storage.formatDisplayDate(task.dueDate)}
-                  ${task.dueTime ? ` • ${App.escapeHtml(task.dueTime)}` : ''}
+              <div class="flex items-center justify-between gap-sm mb-xs">
+                <div class="flex items-center gap-xs flex-1 min-w-0">
+                  <span class="priority-dot ${App.escapeHtml(task.priority)}" title="Priority: ${App.escapeHtml(task.priority)}"></span>
+                  <span class="task-title-text ${isDone ? 'completed' : ''}">${App.escapeHtml(task.title)}</span>
                 </div>
-                <div class="flex items-center gap-xs">
+
+                <div class="flex items-center gap-xs flex-shrink-0">
                   ${task.subtasks && task.subtasks.length > 0 ? `
-                    ${SubtaskUtils.buildProgressIndicator(task)}
-                    <button class="btn btn-ghost btn-icon btn-sm task-expand-btn" data-id="${App.escapeHtml(task.id)}" style="color:var(--text-muted);transition:transform 0.3s;${isExpanded ? 'transform:rotate(180deg);' : ''}" aria-label="${isExpanded ? 'Collapse sub-missions' : 'Expand sub-missions'}" aria-expanded="${isExpanded}">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                    <button class="btn btn-ghost btn-icon btn-sm task-expand-btn" data-id="${App.escapeHtml(task.id)}" aria-label="${isExpanded ? 'Collapse subtasks' : 'Expand subtasks'}" aria-expanded="${isExpanded}">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transform: ${isExpanded ? 'rotate(180deg)' : 'none'}; transition: transform 180ms ease-out;"><polyline points="6 9 12 15 18 9"/></svg>
                     </button>
                   ` : ''}
-                  <div class="task-actions-compact">
-                    <button class="btn btn-ghost btn-icon btn-sm edit-task" data-id="${App.escapeHtml(task.id)}" style="color:var(--text-muted);" aria-label="Edit objective: ${App.escapeHtml(task.title)}">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                    </button>
-                    <button class="btn btn-ghost btn-icon btn-sm del-task" data-id="${App.escapeHtml(task.id)}" style="color:var(--text-muted);" aria-label="Delete objective: ${App.escapeHtml(task.title)}">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                    </button>
-                  </div>
+                  <button class="btn btn-ghost btn-icon btn-sm edit-task" data-id="${App.escapeHtml(task.id)}" aria-label="Edit task: ${App.escapeHtml(task.title)}">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                  </button>
+                  <button class="btn btn-ghost btn-icon btn-sm del-task" data-id="${App.escapeHtml(task.id)}" aria-label="Delete task: ${App.escapeHtml(task.title)}">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                  </button>
                 </div>
               </div>
+
+              <div class="task-meta-text flex items-center gap-sm flex-wrap">
+                <span class="badge">${App.escapeHtml(task.subject)}</span>
+                ${task.dueDate ? `<span>Due: ${Storage.formatDisplayDate(task.dueDate)}</span>` : ''}
+                ${task.subtasks && task.subtasks.length > 0 ? `<span>${task.subtasks.filter(s => s.isCompleted).length}/${task.subtasks.length} subtasks</span>` : ''}
+              </div>
+
               ${task.subtasks && task.subtasks.length > 0 ? `
                 <div class="subtasks-container" style="${isExpanded ? 'display:block;' : 'display:none;'}">
                   ${task.subtasks.map(subtask => `
@@ -274,7 +238,6 @@ const Tasks = (function() {
         e.stopPropagation();
         const id = cb.dataset.id;
         const task = Storage.getTaskById(id);
-        const card = cb.closest('.task-card');
 
         if (e.type === 'keydown' && e.key !== 'Enter' && e.key !== ' ') return;
         if (e.type === 'keydown') e.preventDefault();
@@ -286,20 +249,15 @@ const Tasks = (function() {
           renderTasks();
         } else {
           if (!task.completed) {
-            // Optimistically mark the card as completed visually
-            card.style.opacity = '0.5';
             cb.classList.add('checked');
 
-            // Stage the write — give user 5 seconds to undo
             const cancelFn = Storage.stageTaskCompletion(id, 5000, () => {
               Storage.completeTask(id);
               renderTasks();
             });
 
             App.showUndoToast('Task completed!', () => {
-              // User clicked Undo — cancel the staged write and restore the card
               cancelFn();
-              card.style.opacity = '';
               cb.classList.remove('checked');
             });
 
@@ -323,21 +281,9 @@ const Tasks = (function() {
         const isCompleting = !cb.classList.contains('checked');
         const taskId = cb.dataset.taskId;
         const subtaskId = cb.dataset.subtaskId;
-        const subtaskItem = cb.closest('.subtask-item');
-        
-        if (isCompleting) {
-          // Add animation before completion
-          cb.classList.add('animating');
-          if (subtaskItem) subtaskItem.classList.add('completing');
-        }
-        
-        // Toggle the subtask via storage (triggers callbacks)
+
         Storage.toggleSubtask(taskId, subtaskId, isCompleting);
-        
-        // Re-render after a brief delay to show animation
-        setTimeout(() => {
-          renderTasks();
-        }, 300);
+        renderTasks();
       };
       cb.onclick = toggleFn;
       cb.onkeydown = toggleFn;
@@ -373,124 +319,6 @@ const Tasks = (function() {
     elements.taskList.querySelectorAll('.del-task').forEach(btn => {
       btn.onclick = (e) => { e.stopPropagation(); deleteTask(btn.dataset.id); };
     });
-
-    // ── Drag and Drop Reordering ────────────────────────────────────────────
-    elements.taskList.querySelectorAll('.task-card[draggable="true"]').forEach(card => {
-      card.addEventListener('dragstart', (e) => {
-        card.classList.add('dragging');
-        e.dataTransfer.setData('text/plain', card.dataset.id);
-        e.dataTransfer.effectAllowed = 'move';
-      });
-
-      card.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        e.dataTransfer.dropEffect = 'move';
-        const dragging = elements.taskList.querySelector('.dragging');
-        if (dragging && dragging !== card) {
-          card.classList.add('drag-over');
-        }
-      });
-
-      card.addEventListener('dragleave', () => {
-        card.classList.remove('drag-over');
-      });
-
-      card.addEventListener('dragend', () => {
-        card.classList.remove('dragging');
-        elements.taskList.querySelectorAll('.task-card').forEach(c => c.classList.remove('drag-over'));
-      });
-
-      card.addEventListener('drop', (e) => {
-        e.preventDefault();
-        card.classList.remove('drag-over');
-        const draggedId = e.dataTransfer.getData('text/plain');
-        const targetId = card.dataset.id;
-
-        if (draggedId === targetId) return;
-
-        const tasks = Storage.getTasks();
-        const draggedIndex = tasks.findIndex(t => t.id === draggedId);
-        const targetIndex = tasks.findIndex(t => t.id === targetId);
-
-        if (draggedIndex !== -1 && targetIndex !== -1) {
-          const [draggedTask] = tasks.splice(draggedIndex, 1);
-          tasks.splice(targetIndex, 0, draggedTask);
-
-          // Re-assign sortOrder based on new array positions
-          tasks.forEach((t, i) => t.sortOrder = i);
-
-          Storage.saveTasks(tasks);
-          renderTasks();
-        }
-      });
-    });
-
-    // ── Swipe to complete (mobile) ──────────────────────────────────────────
-    elements.taskList.querySelectorAll('.task-card').forEach(card => {
-      let touchStartX = 0, touchStartY = 0, touchMoveX = 0, touchMoveY = 0;
-      let swipeIntent = null; // 'swipe' | 'scroll' | null
-      const id = card.dataset.id;
-      const task = Storage.getTaskById(id);
-      if (task.completed) return;
-
-      card.addEventListener('touchstart', (e) => {
-        touchStartX = e.touches[0].clientX;
-        touchStartY = e.touches[0].clientY;
-        touchMoveX = touchStartX;
-        touchMoveY = touchStartY;
-        swipeIntent = null;
-      }, { passive: true });
-
-      card.addEventListener('touchmove', (e) => {
-        touchMoveX = e.touches[0].clientX;
-        touchMoveY = e.touches[0].clientY;
-        const deltaX = touchMoveX - touchStartX;
-        const deltaY = touchMoveY - touchStartY;
-
-        // FIX: Determine intent on first significant movement
-        if (swipeIntent === null && (Math.abs(deltaX) > 5 || Math.abs(deltaY) > 5)) {
-          // If moving more vertically than horizontally → scroll, not swipe
-          swipeIntent = Math.abs(deltaY) > Math.abs(deltaX) ? 'scroll' : 'swipe';
-        }
-
-        if (swipeIntent === 'swipe' && deltaX > 0) {
-          card.style.transform = `translateX(${deltaX}px)`;
-          const hint = card.querySelector('.swipe-hint');
-          if (hint) {
-            hint.style.opacity = Math.min(deltaX / 100, 1);
-            hint.style.left = '0';
-          }
-        }
-      }, { passive: true });
-
-      card.addEventListener('touchend', () => {
-        const deltaX = touchMoveX - touchStartX;
-        if (swipeIntent === 'swipe' && deltaX > 100) {
-          card.style.transition = 'all 0.3s ease';
-          card.style.transform = 'translateX(100%)';
-          card.style.opacity = '0';
-          setTimeout(() => {
-            const cancelFn = Storage.stageTaskCompletion(id, 5000, () => {
-              Storage.completeTask(id);
-              renderTasks();
-            });
-            App.showUndoToast('Task swiped complete!', () => {
-              cancelFn();
-              renderTasks();  // re-render to restore the card
-            });
-          }, 300);
-        } else {
-          card.style.transition = 'transform 0.3s ease';
-          card.style.transform = 'translateX(0)';
-          const hint = card.querySelector('.swipe-hint');
-          if (hint) hint.style.opacity = '0';
-          setTimeout(() => { card.style.transition = ''; }, 300);
-        }
-        touchStartX = 0; touchStartY = 0;
-        touchMoveX = 0; touchMoveY = 0;
-        swipeIntent = null;
-      });
-    });
   }
 
   function openTaskModal(id = null) {
@@ -501,7 +329,7 @@ const Tasks = (function() {
     const content = `
       <form id="task-form">
         <div class="form-group">
-          <label class="form-label">Objective Title</label>
+          <label class="form-label">Task Title</label>
           <input type="text" name="title" class="form-input" value="${task ? App.escapeHtml(task.title) : ''}" required>
         </div>
         <div class="form-group">
@@ -515,14 +343,14 @@ const Tasks = (function() {
         <div id="date-inputs-container"></div>
         <div class="grid-2">
           <div class="form-group">
-            <label class="form-label">Sector</label>
-            <select name="subject" class="form-input">
+            <label class="form-label">Subject</label>
+            <select name="subject" class="form-select">
               ${subjects.map(s => `<option value="${App.escapeHtml(s.name)}" ${task && task.subject === s.name ? 'selected' : ''}>${App.escapeHtml(s.name)}</option>`).join('')}
             </select>
           </div>
           <div class="form-group">
             <label class="form-label">Priority</label>
-            <select name="priority" class="form-input">
+            <select name="priority" class="form-select">
               <option value="low" ${task && task.priority === 'low' ? 'selected' : ''}>Low</option>
               <option value="medium" ${task && task.priority === 'medium' ? 'selected' : ''}>Medium</option>
               <option value="high" ${task && task.priority === 'high' ? 'selected' : ''}>High</option>
@@ -531,26 +359,26 @@ const Tasks = (function() {
           </div>
         </div>
         <div id="subtasks-editor">
-          <label class="form-label">Sub-missions</label>
+          <label class="form-label">Subtasks</label>
           <div id="modal-subtasks-list">
             ${task && task.subtasks ? task.subtasks.map((s) => `
               <div class="flex items-center gap-sm mb-sm">
-                <input type="text" class="form-input subtask-input" value="${App.escapeHtml(s.title)}" placeholder="Sub-mission title">
-                <button type="button" class="btn btn-ghost btn-icon remove-subtask-row" style="color:var(--danger);" aria-label="Remove sub-mission">&times;</button>
+                <input type="text" class="form-input subtask-input" value="${App.escapeHtml(s.title)}" placeholder="Subtask title">
+                <button type="button" class="btn btn-ghost btn-icon remove-subtask-row" style="color:var(--danger);" aria-label="Remove subtask">&times;</button>
               </div>
             `).join('') : ''}
           </div>
-          <button type="button" class="btn btn-secondary btn-sm" id="add-subtask-row">+ Add Sub-mission</button>
+          <button type="button" class="btn btn-secondary btn-sm" id="add-subtask-row">+ Add Subtask</button>
         </div>
       </form>
     `;
 
     const modal = App.createModal({
-      title: isEdit ? 'Modify Objective' : 'Initiate Objective',
+      title: isEdit ? 'Edit Task' : 'New Task',
       content,
       footer: `
         <button class="btn btn-secondary" data-action="cancel">Cancel</button>
-        <button class="btn btn-primary" id="save-task">${isEdit ? 'Update' : 'Launch'}</button>
+        <button class="btn btn-primary" id="save-task">${isEdit ? 'Save Changes' : 'Create Task'}</button>
       `
     });
 
@@ -558,8 +386,8 @@ const Tasks = (function() {
       const row = document.createElement('div');
       row.className = 'flex items-center gap-sm mb-sm';
       row.innerHTML = `
-        <input type="text" class="form-input subtask-input" placeholder="Sub-mission title">
-        <button type="button" class="btn btn-ghost btn-icon remove-subtask-row" style="color:var(--danger);" aria-label="Remove sub-mission">&times;</button>
+        <input type="text" class="form-input subtask-input" placeholder="Subtask title">
+        <button type="button" class="btn btn-ghost btn-icon remove-subtask-row" style="color:var(--danger);" aria-label="Remove subtask">&times;</button>
       `;
       row.querySelector('.remove-subtask-row').onclick = () => row.remove();
       modal.querySelector('#modal-subtasks-list').appendChild(row);
@@ -626,10 +454,10 @@ const Tasks = (function() {
         dateContainer.innerHTML = `
           <div class="form-group">
             <label class="form-label">Repeat On:</label>
-            <div class="repeat-days-grid">
-              ${days.map((day, i) => `<div class="day-toggle ${repeatDays.includes(i) ? 'active' : ''}" data-day="${i}">${day}</div>`).join('')}
+            <div class="flex items-center gap-xs flex-wrap">
+              ${days.map((day, i) => `<button type="button" class="btn btn-secondary btn-sm day-toggle ${repeatDays.includes(i) ? 'active' : ''}" data-day="${i}">${day}</button>`).join('')}
             </div>
-            <button type="button" class="btn btn-ghost btn-sm mt-sm" id="select-every-day">Select Every Day</button>
+            <button type="button" class="btn btn-ghost btn-sm mt-xs" id="select-every-day">Select Every Day</button>
           </div>
           <div class="form-group">
             <label class="form-label">Target Time (Optional)</label>
@@ -655,11 +483,11 @@ const Tasks = (function() {
         dateContainer.innerHTML = `
           <div class="grid-2">
             <div class="form-group">
-              <label class="form-label">Target Date</label>
+              <label class="form-label">Due Date</label>
               <input type="date" name="dueDate" class="form-input" value="${task ? App.escapeHtml(task.dueDate) : Storage.formatDate(new Date())}" required>
             </div>
             <div class="form-group">
-              <label class="form-label">Target Time (Optional)</label>
+              <label class="form-label">Due Time (Optional)</label>
               <input type="time" name="dueTime" class="form-input" value="${task ? App.escapeHtml(task.dueTime || '') : ''}">
             </div>
           </div>
@@ -678,7 +506,7 @@ const Tasks = (function() {
   }
 
   async function deleteTask(id) {
-    if (await App.confirm({ title: 'Purge Objective?', message: 'This mission data will be permanently erased.', confirmText: 'Purge', danger: true })) {
+    if (await App.confirm({ title: 'Delete Task?', message: 'This task will be permanently deleted.', confirmText: 'Delete', danger: true })) {
       Storage.deleteTask(id);
       renderTasks();
     }

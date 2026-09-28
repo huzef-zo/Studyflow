@@ -282,8 +282,8 @@ const Timer = (function() {
     elements.playPauseIcon.innerHTML = `<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>`;
     elements.playPauseIcon.style.transform = 'none';
     if (elements.startBtn) {
-      elements.startBtn.setAttribute('aria-label', 'Pause Mission');
-      elements.startBtn.setAttribute('title', 'Pause Mission');
+      elements.startBtn.setAttribute('aria-label', 'Pause Focus');
+      elements.startBtn.setAttribute('title', 'Pause Focus');
     }
     document.body.classList.add('focus-mode');
     elements.timerContainer.classList.add('active');
@@ -309,8 +309,8 @@ const Timer = (function() {
     elements.playPauseIcon.innerHTML = `<polygon points="6 3 20 12 6 21 6 3"/>`;
     elements.playPauseIcon.style.transform = 'translateX(2px)';
     if (elements.startBtn) {
-      elements.startBtn.setAttribute('aria-label', 'Engage Mission');
-      elements.startBtn.setAttribute('title', 'Engage Mission');
+      elements.startBtn.setAttribute('aria-label', 'Start Focus');
+      elements.startBtn.setAttribute('title', 'Start Focus');
     }
     document.body.classList.remove('focus-mode');
     elements.timerContainer.classList.remove('active');
@@ -491,7 +491,7 @@ const Timer = (function() {
     const totalCycles = settings.sessions_until_long_break || 4;
     const completedCycles = Storage.getTodaySessions().length;
     const sessionInCycle = currentSessionType === 'work' ? sessionsInCycle + 1 : sessionsInCycle;
-    const labelMap = { work: 'Deep Work', short_break: 'Cooldown', long_break: 'Deep Rest' };
+    const labelMap = { work: 'Focus', short_break: 'Short Break', long_break: 'Long Break' };
     elements.timerLabel.textContent = `${labelMap[currentSessionType]} (Session ${sessionInCycle}/${totalCycles} • Cycle ${completedCycles + 1})`;
 
     const totalTime = getSessionDuration(currentSessionType) * 60;
