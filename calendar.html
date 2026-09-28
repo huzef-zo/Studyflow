@@ -4,24 +4,22 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
   <meta name="description" content="StudyFlow - Calendar View for your study schedule">
-  <meta name="theme-color" content="#14161B">
+  <meta name="theme-color" content="#121314">
   
-  <!-- Standalone PWA Configuration -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="StudyFlow">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-touch-fullscreen" content="yes">
   
-  <!-- Icons and Manifest -->
   <link rel="icon" type="image/png" href="./icon-192.png">
   <link rel="apple-touch-icon" href="./icon-192.png">
   <link rel="manifest" href="./manifest.json">
   <link rel="msapplication-config" href="browserconfig.xml">
-  <meta name="msapplication-TileColor" content="#5B9BF0">
+  <meta name="msapplication-TileColor" content="#3B6FD8">
   
   <title>Calendar - StudyFlow</title>
-  <link rel="stylesheet" href="css/style.css?v=v2025-05-03-03">
+  <link rel="stylesheet" href="css/style.css?v=v2026-09-28-01">
 </head>
 <body>
   <!-- Navigation Containers -->
@@ -29,27 +27,27 @@
   <div id="bottom-nav-container"></div>
 
   <!-- Main Content -->
-  <main class="main-container">
+  <main class="main-container narrow-layout">
     <!-- Page Header -->
-    <header class="page-header animate-fade-in">
+    <header class="page-header">
       <div class="page-header-title-group">
-        <h1>Temporal Map</h1>
-        <p class="subtitle">Navigate your study timeline</p>
+        <h1>Calendar</h1>
+        <p class="subtitle">Schedule and timeline</p>
       </div>
     </header>
 
-    <!-- Calendar and Tasks Layout -->
-    <div class="narrow-layout calendar-layout">
+    <!-- Calendar Layout -->
+    <div class="calendar-layout flex flex-col gap-md">
       
-      <!-- Calendar Card -->
-      <section class="calendar-container animate-fade-in">
+      <!-- Calendar Grid Card -->
+      <section class="calendar-container">
         <div class="flex items-center justify-between mb-md">
-          <h2 id="calendar-title" style="font-size: 14px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.04em;">March 2026</h2>
+          <h2 id="calendar-title" style="font-size: var(--font-size-md);">March 2026</h2>
           <div class="flex gap-xs">
             <button class="btn btn-ghost btn-icon btn-sm" id="prev-month" aria-label="Previous Month">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
             </button>
-            <button class="btn btn-secondary btn-sm" id="today-btn" style="border-radius: 9999px; padding: 0 12px;">Today</button>
+            <button class="btn btn-secondary btn-sm" id="today-btn">Today</button>
             <button class="btn btn-ghost btn-icon btn-sm" id="next-month" aria-label="Next Month">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
             </button>
@@ -60,29 +58,29 @@
         </div>
       </section>
 
-      <!-- Selected Day Tasks -->
-      <section class="card animate-fade-in">
+      <!-- Selected Day Agenda -->
+      <section class="card">
         <div class="card-header">
-          <h3 class="card-title" id="selected-date-title">Target Date</h3>
+          <h3 class="card-title" id="selected-date-title">Scheduled Tasks</h3>
           <button class="btn btn-ghost btn-icon btn-sm" id="add-task-btn" style="display: none;" aria-label="Add task for selected date" title="Add task for selected date">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
           </button>
         </div>
-        <div id="day-tasks" class="timeline">
+        <div id="day-tasks" class="flex flex-col gap-xs">
           <!-- Populated by JS -->
         </div>
       </section>
 
-      <!-- Legend (Pills) -->
-      <section class="animate-fade-in">
+      <!-- Legend -->
+      <section>
         <div class="flex flex-wrap gap-sm justify-center">
-          <div class="glass-pill">
+          <div class="badge">
             <div style="width: 6px; height: 6px; border-radius: 50%; background: var(--accent-fill);"></div>
-            <span>Pending Mission</span>
+            <span>Active Task</span>
           </div>
-          <div class="glass-pill">
+          <div class="badge">
             <div style="width: 6px; height: 6px; border-radius: 50%; background: var(--success);"></div>
-            <span>Accomplished</span>
+            <span>Completed</span>
           </div>
         </div>
       </section>
@@ -90,12 +88,12 @@
   </main>
 
   <!-- Scripts -->
-  <script src="js/storage.js?v=v2025-05-03-03"></script>
-  <script src="js/subtask-utils.js?v=v2025-05-03-03"></script>
-  <script src="js/pwa-manager.js?v=v2025-05-03-03"></script>
-  <script src="js/achievements.js?v=v2025-05-03-03"></script>
-  <script src="js/app.js?v=v2025-05-03-03"></script>
-  <script src="js/calendar.js?v=v2025-05-03-03"></script>
+  <script src="js/storage.js?v=v2026-09-28-01"></script>
+  <script src="js/subtask-utils.js?v=v2026-09-28-01"></script>
+  <script src="js/pwa-manager.js?v=v2026-09-28-01"></script>
+  <script src="js/achievements.js?v=v2026-09-28-01"></script>
+  <script src="js/app.js?v=v2026-09-28-01"></script>
+  <script src="js/calendar.js?v=v2026-09-28-01"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       PWAManager.init();

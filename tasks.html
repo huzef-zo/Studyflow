@@ -3,25 +3,23 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
-  <meta name="description" content="StudyFlow - Task Manager and study objectives tracker">
-  <meta name="theme-color" content="#14161B">
+  <meta name="description" content="StudyFlow - Task Manager">
+  <meta name="theme-color" content="#121314">
   
-  <!-- Standalone PWA Configuration -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="StudyFlow">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-touch-fullscreen" content="yes">
   
-  <!-- Icons and Manifest -->
   <link rel="icon" type="image/png" href="./icon-192.png">
   <link rel="apple-touch-icon" href="./icon-192.png">
   <link rel="manifest" href="./manifest.json">
   <link rel="msapplication-config" href="browserconfig.xml">
-  <meta name="msapplication-TileColor" content="#5B9BF0">
+  <meta name="msapplication-TileColor" content="#3B6FD8">
   
   <title>Tasks - StudyFlow</title>
-  <link rel="stylesheet" href="css/style.css?v=v2025-05-03-03">
+  <link rel="stylesheet" href="css/style.css?v=v2026-09-28-01">
 </head>
 <body>
   <!-- Navigation Containers -->
@@ -29,60 +27,64 @@
   <div id="bottom-nav-container"></div>
 
   <!-- Main Content -->
-  <main class="main-container">
+  <main class="main-container narrow-layout">
     <!-- Page Header -->
-    <header class="page-header animate-fade-in">
+    <header class="page-header">
       <div class="page-header-title-group">
-        <h1>Mission Core</h1>
-        <p class="subtitle">Strategize and achieve your study targets</p>
+        <h1>Tasks</h1>
+        <p class="subtitle">Organize and track your study tasks</p>
       </div>
       <div class="page-header-actions flex items-center gap-sm flex-wrap">
         <div class="form-group mb-0">
-          <input type="text" id="search-tasks" class="form-input glass-pill-input" placeholder="Search objectives... (Ctrl+K)" aria-label="Search objectives">
+          <input type="text" id="search-tasks" class="form-input" placeholder="Search tasks... (Ctrl+K)" aria-label="Search tasks">
         </div>
-        <button class="btn btn-primary" id="add-task-btn" aria-label="Add new objective">
+        <button class="btn btn-primary" id="add-task-btn" aria-label="Add new task">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
-          New Objective
+          New Task
         </button>
       </div>
     </header>
 
-    <!-- Filter Bar -->
-    <div class="flex flex-wrap items-center justify-between gap-md mb-sm animate-fade-in">
-      <div class="filter-tabs" style="margin: 0;" role="tablist" aria-label="Filter missions">
-        <div class="filter-tab active" data-filter="all" role="tab" aria-selected="true" tabindex="0">All Missions</div>
+    <!-- Filter Bar (Scrollable Chip Row) -->
+    <div class="chips-scroll-row mb-md">
+      <div class="filter-tabs" role="tablist" aria-label="Filter tasks">
+        <div class="filter-tab active" data-filter="all" role="tab" aria-selected="true" tabindex="0">All Tasks</div>
         <div class="filter-tab" data-filter="pending" role="tab" aria-selected="false" tabindex="0">Active</div>
-        <div class="filter-tab" data-filter="completed" role="tab" aria-selected="false" tabindex="0">Accomplished</div>
+        <div class="filter-tab" data-filter="completed" role="tab" aria-selected="false" tabindex="0">Completed</div>
       </div>
 
-      <div class="flex items-center gap-sm flex-wrap">
-        <select id="filter-priority" class="form-input glass-pill-input" style="width: auto; min-width: 130px;" aria-label="Filter by priority">
-          <option value="all">All Priorities</option>
-          <option value="critical">Critical</option>
-          <option value="high">High</option>
-          <option value="medium">Medium</option>
-          <option value="low">Low</option>
-        </select>
-        <select id="filter-subject" class="form-input glass-pill-input" style="width: auto; min-width: 130px;" aria-label="Filter by subject">
-          <option value="all">All Subjects</option>
-          <!-- Populated by JS -->
-        </select>
-      </div>
+      <select id="filter-priority" class="form-select" style="width: auto; min-width: 120px;" aria-label="Filter by priority">
+        <option value="all">All Priorities</option>
+        <option value="critical">Critical</option>
+        <option value="high">High</option>
+        <option value="medium">Medium</option>
+        <option value="low">Low</option>
+      </select>
+
+      <select id="filter-subject" class="form-select" style="width: auto; min-width: 120px;" aria-label="Filter by subject">
+        <option value="all">All Subjects</option>
+        <!-- Populated by JS -->
+      </select>
     </div>
 
     <!-- Task List -->
-    <section id="task-list" class="animate-fade-in">
+    <section id="task-list">
       <!-- Populated by JS -->
     </section>
   </main>
 
+  <!-- Floating Add Task Button -->
+  <button id="fab-add-task" class="fab-add-task" aria-label="Add task" title="Add Task">
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
+  </button>
+
   <!-- Scripts -->
-  <script src="js/storage.js?v=v2025-05-03-03"></script>
-  <script src="js/subtask-utils.js?v=v2025-05-03-03"></script>
-  <script src="js/pwa-manager.js?v=v2025-05-03-03"></script>
-  <script src="js/achievements.js?v=v2025-05-03-03"></script>
-  <script src="js/app.js?v=v2025-05-03-03"></script>
-  <script src="js/tasks.js?v=v2025-05-03-03"></script>
+  <script src="js/storage.js?v=v2026-09-28-01"></script>
+  <script src="js/subtask-utils.js?v=v2026-09-28-01"></script>
+  <script src="js/pwa-manager.js?v=v2026-09-28-01"></script>
+  <script src="js/achievements.js?v=v2026-09-28-01"></script>
+  <script src="js/app.js?v=v2026-09-28-01"></script>
+  <script src="js/tasks.js?v=v2026-09-28-01"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       PWAManager.init();
