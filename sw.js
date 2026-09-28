@@ -31,9 +31,7 @@ const ASSETS_TO_CACHE = [
   `./js/notes.js?v=${APP_VERSION}`,
   './manifest.json',
   './icon-192.png',
-  './icon-512.png',
-  './fonts/inter-latin-wght-normal.woff2',
-  './fonts/bricolage-grotesque-latin-wght-normal.woff2'
+  './icon-512.png'
 ];
 
 // ============================================

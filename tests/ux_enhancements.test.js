@@ -8,12 +8,12 @@ async function runTests() {
     (function testTasksAriaStrings() {
         const html = fs.readFileSync(path.join(__dirname, '../tasks.html'), 'utf8');
 
-        if (!html.includes('aria-label="Search tasks"')) {
-            throw new Error('Search input missing aria-label="Search tasks"');
+        if (!html.includes('aria-label="Search objectives"')) {
+            throw new Error('Search input missing aria-label="Search objectives"');
         }
-        if (!html.includes('placeholder="Search tasks... (Ctrl+K)"')) {
-            throw new Error('Search input missing placeholder shortcut hint "(Ctrl+K)"');
-        }
+            if (!html.includes('placeholder="Search objectives... (Ctrl+K)"')) {
+                throw new Error('Search input missing placeholder shortcut hint "(Ctrl+K)"');
+            }
         if (!html.includes('aria-label="Filter by priority"')) {
             throw new Error('Priority filter missing aria-label="Filter by priority"');
         }
@@ -21,7 +21,7 @@ async function runTests() {
             throw new Error('Subject filter missing aria-label="Filter by subject"');
         }
 
-        console.log('  Passed: Tasks page ARIA labels and shortcut hints verified in source.');
+            console.log('  Passed: Tasks page ARIA labels and shortcut hints verified in source.');
     })();
 
     // Test 2: App.createModal ARIA attributes logic (string check of the generator function)
@@ -91,11 +91,11 @@ async function runTests() {
         if (!timerHtml.includes('id="session-notes"') || !timerHtml.includes('aria-label="Session notes"')) {
             throw new Error('timer.html #session-notes missing aria-label="Session notes"');
         }
-        if (!timerHtml.includes('id="reset-btn"') || !timerHtml.includes('title="Reset Task"')) {
-            throw new Error('timer.html #reset-btn missing title="Reset Task"');
+        if (!timerHtml.includes('id="reset-btn"') || !timerHtml.includes('title="Reset Mission"')) {
+            throw new Error('timer.html #reset-btn missing title="Reset Mission"');
         }
-        if (!timerHtml.includes('id="start-btn"') || !timerHtml.includes('title="Start Focus"')) {
-            throw new Error('timer.html #start-btn missing title="Start Focus"');
+        if (!timerHtml.includes('id="start-btn"') || !timerHtml.includes('title="Engage Mission"')) {
+            throw new Error('timer.html #start-btn missing title="Engage Mission"');
         }
         if (!timerHtml.includes('id="skip-btn"') || !timerHtml.includes('title="Skip Session"')) {
             throw new Error('timer.html #skip-btn missing title="Skip Session"');
@@ -117,10 +117,10 @@ async function runTests() {
         if (!notesHtml.includes('id="note-content"') || !notesHtml.includes('aria-label="Note Content"')) {
             throw new Error('notes.html #note-content missing aria-label="Note Content"');
         }
-        if (!notesHtml.includes('id="search-notes"') || !notesHtml.includes('placeholder="Search notes... (Ctrl+K)"')) {
-            throw new Error('notes.html #search-notes missing placeholder="Search notes... (Ctrl+K)"');
+        if (!notesHtml.includes('id="search-notes"') || !notesHtml.includes('placeholder="Search vault... (Ctrl+K)"')) {
+            throw new Error('notes.html #search-notes missing placeholder="Search vault... (Ctrl+K)"');
         }
-        if (!notesHtml.includes('id="save-note-btn"') || !notesHtml.includes('aria-label="Save note entry (Ctrl+S)"') || !notesHtml.includes('title="Save note (Ctrl+S)"')) {
+        if (!notesHtml.includes('id="save-note-btn"') || !notesHtml.includes('aria-label="Save note entry (Ctrl+S)"') || !notesHtml.includes('title="Save transmission (Ctrl+S)"')) {
             throw new Error('notes.html #save-note-btn missing shortcut hint title or aria-label');
         }
         if (!notesHtml.includes('id="delete-note-btn"') || !notesHtml.includes('aria-label="Delete note entry"')) {

@@ -154,13 +154,13 @@ const Notes = (function() {
     }
 
     Storage.saveData(Storage.KEYS.NOTES, notes);
-    App.showToast('Note saved', 'success');
+    App.showToast('Transmission saved to vault', 'success');
     renderNotes();
   }
 
   async function deleteCurrentNote() {
     if (!currentNoteId) return;
-    if (await App.confirm({ title: 'Delete Note?', message: 'This note will be permanently deleted.', confirmText: 'Delete', danger: true })) {
+    if (await App.confirm({ title: 'Purge Entry?', message: 'This note will be permanently erased from the vault.', confirmText: 'Purge', danger: true })) {
       const notes = Storage.loadData(Storage.KEYS.NOTES, []);
       Storage.saveData(Storage.KEYS.NOTES, notes.filter(n => n.id !== currentNoteId));
       currentNoteId = null;
