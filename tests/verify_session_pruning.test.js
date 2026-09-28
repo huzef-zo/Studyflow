@@ -150,25 +150,22 @@ function runTests() {
         for (let i = 0; i < 10; i++) {
             Storage.addSession(25, 'work');
         }
-        // Add 1 session earlier today (guaranteed to be in the same week regardless of day of week)
-        const earlierToday = new Date(today.getTime() - 3600000);
+        // Add 1 session yesterday (should be in same week if today is not Monday)
+        const yesterday = new Date(today);
+        yesterday.setDate(yesterday.getDate() - 1);
         const sessions = Storage.getSessions();
-        sessions.push({ id: 'old_work', duration: 25, type: 'work', completedAt: earlierToday.toISOString() });
+        sessions.push({ id: 'old_work', duration: 25, type: 'work', completedAt: yesterday.toISOString() });
         Storage.saveSessions(sessions);
 
-        const isMonday = today.getDay() === 1;
-        const expectedTodaySessions = isMonday ? 11 : 10;
-        const expectedTodayMins = isMonday ? 275 : 250;
-
         const stats = Storage.getStats();
-        if (stats.sessions.today !== expectedTodaySessions) throw new Error(`Expected ${expectedTodaySessions} today sessions, got ${stats.sessions.today}`);
-        if (stats.sessions.minutesToday !== expectedTodayMins) throw new Error(`Expected ${expectedTodayMins} today minutes, got ${stats.sessions.minutesToday}`);
+        if (stats.sessions.today !== 10) throw new Error(`Expected 10 today sessions, got ${stats.sessions.today}`);
+        if (stats.sessions.minutesToday !== 250) throw new Error(`Expected 250 today minutes, got ${stats.sessions.minutesToday}`);
 
         // Total minutes today helper
         const minsToday = Storage.getTotalMinutesToday();
-        if (minsToday !== expectedTodayMins) throw new Error(`getTotalMinutesToday: Expected ${expectedTodayMins}, got ${minsToday}`);
+        if (minsToday !== 250) throw new Error(`getTotalMinutesToday: Expected 250, got ${minsToday}`);
 
-        // Total minutes week helper
+        // Total minutes week helper (includes the one from 2 days ago)
         const minsWeek = Storage.getTotalMinutesWeek();
         if (minsWeek !== 275) throw new Error(`getTotalMinutesWeek: Expected 275, got ${minsWeek}`);
 

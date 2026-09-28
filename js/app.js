@@ -49,10 +49,10 @@ const App = (function() {
   function renderSidebar(isCollapsed = false) {
     const currentPage = getCurrentPage();
     const navItems = [
-      { id: 'dashboard', label: 'Home', icon: 'home', href: 'index.html' },
+      { id: 'dashboard', label: 'Dashboard', icon: 'home', href: 'index.html' },
       { id: 'tasks', label: 'Tasks', icon: 'tasks', href: 'tasks.html' },
-      { id: 'timer', label: 'Focus', icon: 'timer', href: 'timer.html' },
       { id: 'calendar', label: 'Calendar', icon: 'calendar', href: 'calendar.html' },
+      { id: 'timer', label: 'Timer', icon: 'timer', href: 'timer.html' },
       { id: 'notes', label: 'Notes', icon: 'edit', href: 'notes.html' },
       { id: 'goals', label: 'Goals', icon: 'goals', href: 'goals.html' },
       { id: 'history', label: 'Analytics', icon: 'history', href: 'history.html' },
@@ -60,12 +60,12 @@ const App = (function() {
     ];
     return `
       <aside class="sidebar ${isCollapsed ? 'collapsed' : ''}">
-        <div class="sidebar-header flex items-center justify-between gap-sm">
-          <a href="index.html" class="sidebar-logo flex-1 min-w-0">
+        <div class="sidebar-header" style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+          <a href="index.html" class="sidebar-logo" style="flex:1;min-width:0;">
             ${Icons.bookOpen}
             <span class="nav-item-text">StudyFlow</span>
           </a>
-          <button id="sidebar-toggle" class="btn-icon btn-ghost" title="${isCollapsed ? 'Expand' : 'Collapse'}" aria-label="${isCollapsed ? 'Expand' : 'Collapse'} sidebar">
+          <button id="sidebar-toggle" class="btn-icon btn-ghost" title="${isCollapsed ? 'Expand' : 'Collapse'}" aria-label="${isCollapsed ? 'Expand' : 'Collapse'} sidebar" style="margin-right:-10px;">
             ${isCollapsed ? Icons.chevronRight : Icons.chevronLeft}
           </button>
         </div>
@@ -77,21 +77,39 @@ const App = (function() {
             </a>
           `).join('')}
         </nav>
+        <div class="sidebar-footer">
+          <div class="text-secondary text-center nav-item-text" style="font-size:0.75rem;">All data saved locally</div>
+        </div>
       </aside>
     `;
   }
 
   function renderBottomNav() {
     const currentPage = getCurrentPage();
+    const settings = Storage.getSettings();
+    const pinnedIds = settings.pinned_nav_items || ['timer', 'calendar'];
+
+    const allItems = {
+      dashboard: { id: 'dashboard', label: 'Home', icon: 'home', href: 'index.html' },
+      tasks: { id: 'tasks', label: 'Tasks', icon: 'tasks', href: 'tasks.html' },
+      timer: { id: 'timer', label: 'Timer', icon: 'timer', href: 'timer.html' },
+      calendar: { id: 'calendar', label: 'Calendar', icon: 'calendar', href: 'calendar.html' },
+      notes: { id: 'notes', label: 'Vault', icon: 'edit', href: 'notes.html' },
+      goals: { id: 'goals', label: 'Goals', icon: 'goals', href: 'goals.html' },
+      history: { id: 'history', label: 'Stats', icon: 'history', href: 'history.html' },
+      settings: { id: 'settings', label: 'Settings', icon: 'settings', href: 'settings.html' }
+    };
 
     const navItems = [
-      { id: 'dashboard', label: 'Home', icon: 'home', href: 'index.html' },
-      { id: 'tasks', label: 'Tasks', icon: 'tasks', href: 'tasks.html' },
-      { id: 'timer', label: 'Focus', icon: 'timer', href: 'timer.html' },
-      { id: 'calendar', label: 'Calendar', icon: 'calendar', href: 'calendar.html' }
+      allItems.dashboard,
+      allItems.tasks
     ];
 
-    const isMoreActive = ['notes', 'goals', 'history', 'settings'].includes(currentPage);
+    pinnedIds.forEach(id => {
+      if (allItems[id]) navItems.push(allItems[id]);
+    });
+
+    const isMoreActive = !navItems.some(item => item.id === currentPage);
 
     return `
       <nav class="bottom-nav">
@@ -102,7 +120,7 @@ const App = (function() {
             <span>${item.label}</span>
           </a>
         `).join('')}
-        <button id="more-nav-btn" class="bottom-nav-item ${isMoreActive ? 'active' : ''}" style="background:none;border:none;font-family:inherit;cursor:pointer;" aria-label="Open More Menu">
+        <button id="more-nav-btn" class="bottom-nav-item ${isMoreActive ? 'active' : ''}" style="background:none;border:none;font-family:inherit;cursor:pointer;">
           ${Icons.grid}
           <span>More</span>
         </button>
@@ -263,39 +281,76 @@ const App = (function() {
   }
 
   function openMoreMenu() {
+    const settings = Storage.getSettings();
+    const pinnedIds = settings.pinned_nav_items || ['timer', 'calendar'];
     const currentPage = getCurrentPage();
 
     const menuItems = [
-      { id: 'notes', label: 'Notes', icon: 'edit', href: 'notes.html' },
+      { id: 'timer', label: 'Timer', icon: 'timer', href: 'timer.html' },
+      { id: 'calendar', label: 'Calendar', icon: 'calendar', href: 'calendar.html' },
+      { id: 'notes', label: 'Knowledge Vault', icon: 'edit', href: 'notes.html' },
       { id: 'goals', label: 'Goals', icon: 'goals', href: 'goals.html' },
-      { id: 'history', label: 'Analytics', icon: 'history', href: 'history.html' },
+      { id: 'history', label: 'History', icon: 'history', href: 'history.html' },
       { id: 'settings', label: 'Settings', icon: 'settings', href: 'settings.html' }
     ];
 
     const content = `
       <div class="more-menu-grid">
         ${menuItems.map(item => {
+          const isPinned = pinnedIds.includes(item.id);
           const isActive = currentPage === item.id;
           return `
-            <a href="${item.href}" class="more-menu-item-wrapper ${isActive ? 'active' : ''}">
-              <div class="more-menu-item">
+            <div class="more-menu-item-wrapper">
+              <a href="${item.href}" class="more-menu-item ${isActive ? 'active' : ''}">
                 <div class="more-menu-icon">${Icons[item.icon]}</div>
                 <span class="more-menu-label">${item.label}</span>
-              </div>
-            </a>
+              </a>
+              <button class="pin-btn ${isPinned ? 'pinned' : ''}" data-id="${item.id}" title="${isPinned ? 'Unpin' : 'Pin to navigation'}">
+                ${Icons.pin}
+              </button>
+            </div>
           `;
         }).join('')}
       </div>
     `;
 
     const modal = createModal({
-      title: 'More',
+      title: 'More Features',
       content: content,
       id: 'more-menu-modal'
     });
 
     modal.classList.add('modal-bottom-sheet');
     openModal(modal);
+
+    modal.querySelectorAll('.pin-btn').forEach(btn => {
+      btn.onclick = (e) => {
+        e.preventDefault();
+        const id = btn.dataset.id;
+        const currentSettings = Storage.getSettings();
+        let currentPinned = currentSettings.pinned_nav_items || ['timer', 'calendar'];
+
+        if (currentPinned.includes(id)) {
+          currentPinned = currentPinned.filter(p => p !== id);
+        } else {
+          if (currentPinned.length >= 2) {
+            showToast('Max 2 items pinned. Unpin one first.', 'warning');
+            return;
+          }
+          currentPinned.push(id);
+        }
+
+        Storage.updateSetting('pinned_nav_items', currentPinned);
+        initNavigation(); // Refresh nav
+
+        // Update UI in modal
+        btn.classList.toggle('pinned');
+        const allPins = modal.querySelectorAll('.pin-btn.pinned').length;
+        modal.querySelectorAll('.pin-btn:not(.pinned)').forEach(p => {
+          p.disabled = allPins >= 2;
+        });
+      };
+    });
   }
 
   // ── Modal system ──────────────────────────────────────────────────────────
