@@ -15,6 +15,7 @@ const ASSETS_TO_CACHE = [
   './notes.html',
   './version.js',
   './browserconfig.xml',
+  './fonts/jetbrains-mono-latin.woff2',
   `./css/style.css?v=${APP_VERSION}`,
   `./js/app.js?v=${APP_VERSION}`,
   `./js/storage.js?v=${APP_VERSION}`,
