@@ -89,3 +89,7 @@
 ## 2026-09-26 - [Reflection Input Validation & Dismissal Accessibility]
 **Learning:** In reflection or feedback cards where submission can be attempted on an empty textarea, providing zero feedback leaves users uncertain if the action registered. Combining descriptive `aria-label` tags on dismiss controls with actionable warning toasts and automatic field refocusing on empty submits ensures assistive clarity and immediate feedback.
 **Action:** Always validate form inputs prior to persistence, showing informative warning toasts and focusing the invalid field when inputs are empty or invalid.
+
+## 2026-09-27 - [Sector Mastery Overview Card Grid Styling & Track Visibility]
+**Learning:** Rendering domain-specific cards (such as Sector Mastery in analytics) using generic unstyled `<a>` and `<div>` tags causes layout collapsing, missing progress bar tracks, and concatenated text values (e.g. `0%0/0`). Defining dedicated card CSS classes (`.mastery-card`, `.mastery-progress-mini`, `.mastery-stats`) with flex alignment, progress track backgrounds, and responsive CSS grid containers (`repeat(auto-fit, minmax(180px, 1fr))`) restores visual clarity and design system consistency.
+**Action:** Ensure all dynamically rendered overview cards have explicitly defined CSS classes with flex alignment and track backgrounds, and wrap card collections in responsive CSS grid containers.
