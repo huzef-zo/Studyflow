@@ -42,7 +42,7 @@ eval(storageCode);
 const Storage = global.window.Storage;
 
 // Set up some data
-Storage.saveData(Storage.KEYS.THEME, 'emerald');
+Storage.saveData(Storage.KEYS.THEME, 'default');
 
 try {
     const exported = Storage.exportData();
@@ -54,7 +54,7 @@ try {
         if (!(k in exported)) throw new Error(`Missing key in export: ${k}`);
     });
 
-    if (exported.theme !== 'emerald') throw new Error('Theme not exported correctly');
+    if (exported.theme !== 'default') throw new Error('Theme not exported correctly');
 
     // Test Import
     localStorageMock.clear();
@@ -62,7 +62,7 @@ try {
     if (!importResult) throw new Error('Import failed');
 
     const importedTheme = Storage.getTheme();
-    if (importedTheme !== 'emerald') throw new Error('Theme not imported correctly');
+    if (importedTheme !== 'default') throw new Error('Theme not imported correctly');
 
     console.log('Verification successful!');
 } catch (err) {

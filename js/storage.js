@@ -548,12 +548,8 @@ const Storage = (function() {
         saveData(KEYS.TIME_BLOCKS, safeTB);
       }
 
-      if (data.theme && typeof data.theme === 'string') {
-        const validThemes = ['default', 'emerald', 'coral', 'amber'];
-        if (validThemes.includes(data.theme)) {
-          saveData(KEYS.THEME, data.theme);
-        }
-      }
+      saveData(KEYS.THEME, 'default');
+      saveData(KEYS.THEME_MODE, 'dark');
 
       return true;
     } catch (error) {
@@ -695,12 +691,11 @@ const Storage = (function() {
   function getNotes() { return [...loadData(KEYS.NOTES, DEFAULTS.notes)]; }
   function getTimeBlocks() { return [...loadData(KEYS.TIME_BLOCKS, DEFAULTS.timeBlocks)]; }
   function getReflections() { return [...loadData(KEYS.REFLECTIONS, DEFAULTS.reflections)]; }
-  function getTheme() { return loadData(KEYS.THEME, DEFAULTS.theme); }
-  function getThemeMode() { return loadData(KEYS.THEME_MODE, 'dark'); }
-  function setThemeMode(mode) {
-    const safeMode = mode === 'light' ? 'light' : 'dark';
-    saveData(KEYS.THEME_MODE, safeMode);
-    return safeMode;
+  function getTheme() { return 'default'; }
+  function getThemeMode() { return 'dark'; }
+  function setThemeMode() {
+    saveData(KEYS.THEME_MODE, 'dark');
+    return 'dark';
   }
 
   // ── Tasks ───────────────────────────────────────────────────────────────────

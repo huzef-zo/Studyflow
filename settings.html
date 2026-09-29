@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
   <meta name="description" content="StudyFlow - Settings and preferences">
   <meta name="theme-color" content="#14161B">
-  <meta name="color-scheme" content="dark light">
+  <meta name="color-scheme" content="dark">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="StudyFlow">
@@ -32,28 +32,8 @@
     </header>
 
     <div class="narrow-layout">
-      <!-- Themes -->
-      <section class="card animate-fade-in">
-        <div class="card-header"><h3 class="card-title">Visual Protocol</h3></div>
-        <div class="grid-2">
-          <div class="form-group">
-            <label class="form-label" for="theme-selector">Theme Preset</label>
-            <select id="theme-selector" class="form-input">
-              <option value="default">Midnight Blue</option>
-              <option value="emerald">Cyber Emerald</option>
-              <option value="coral">Neon Coral</option>
-              <option value="amber">Wasteland Amber</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Theme Mode</label>
-            <button type="button" class="theme-toggle-btn" id="settings-theme-toggle"></button>
-          </div>
-        </div>
-      </section>
-
       <!-- Profile -->
-      <section class="card animate-fade-in mt-md">
+      <section class="card animate-fade-in">
         <div class="card-header"><h3 class="card-title">Profile Configuration</h3></div>
         <div class="form-group">
           <label class="form-label" for="display-name">Display Name</label>
@@ -216,7 +196,6 @@
         addSubjectBtn: document.getElementById('add-subject-btn'),
         addWindowBtn: document.getElementById('add-window-btn'),
         windowsList: document.getElementById('windows-list'),
-        themeSelector: document.getElementById('theme-selector'),
         exportBtn: document.getElementById('export-btn'),
         importBtn: document.getElementById('import-btn'),
         importInput: document.getElementById('import-input'),
@@ -226,8 +205,6 @@
       function loadSettings() {
         const user = Storage.getUser();
         const settings = Storage.getSettings();
-        const theme = Storage.loadData(Storage.KEYS.THEME, 'default');
-        elements.themeSelector.value = theme;
         elements.displayName.value = user.name || '';
         elements.userEmail.value = user.email || '';
         elements.workDuration.value = settings.work_duration || 25;
@@ -339,13 +316,6 @@
       }
 
       function setupListeners() {
-        elements.themeSelector.addEventListener('change', (e) => {
-          const theme = e.target.value;
-          Storage.saveData(Storage.KEYS.THEME, theme);
-          App.applyTheme(theme);
-          App.showToast('Theme protocol updated', 'success');
-        });
-
         [elements.displayName, elements.userEmail, elements.workDuration, elements.shortBreak,
          elements.longBreak, elements.sessionsUntilLongBreak, elements.notificationsEnabled,
          elements.taskNotificationsEnabled, elements.soundEnabled,
