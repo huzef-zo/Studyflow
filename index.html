@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
   <meta name="description" content="StudyFlow - Your personal study organizer and productivity hub">
-  <meta name="theme-color" content="#14161B">
+  <meta name="theme-color" content="#0A0B0F">
   
   <!-- Standalone PWA Configuration -->
   <meta name="mobile-web-app-capable" content="yes">
@@ -25,12 +25,17 @@
   <meta name="msapplication-TileColor" content="#5B9BF0">
   
   <title>Dashboard - StudyFlow</title>
-  <link rel="stylesheet" href="css/style.css?v=v2025-05-03-03">
+  <link rel="stylesheet" href="css/style.css?v=v2026-09-29-01">
 </head>
 <body>
   <!-- Navigation Containers -->
   <div id="sidebar-container"></div>
   <div id="bottom-nav-container"></div>
+
+  <!-- Floating Add Task Button -->
+  <a href="tasks.html?action=add" class="fab-btn" aria-label="Add task" title="Add task">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
+  </a>
 
   <!-- Main Content -->
   <main class="main-container">
@@ -186,12 +191,12 @@
   </main>
 
   <!-- Scripts -->
-  <script src="js/storage.js?v=v2025-05-03-03"></script>
-  <script src="js/subtask-utils.js?v=v2025-05-03-03"></script>
-  <script src="js/pwa-manager.js?v=v2025-05-03-03"></script>
-  <script src="js/achievements.js?v=v2025-05-03-03"></script>
-  <script src="js/scheduler.js?v=v2025-05-03-03"></script>
-  <script src="js/app.js?v=v2025-05-03-03"></script>
+  <script src="js/storage.js?v=v2026-09-29-01"></script>
+  <script src="js/subtask-utils.js?v=v2026-09-29-01"></script>
+  <script src="js/pwa-manager.js?v=v2026-09-29-01"></script>
+  <script src="js/achievements.js?v=v2026-09-29-01"></script>
+  <script src="js/scheduler.js?v=v2026-09-29-01"></script>
+  <script src="js/app.js?v=v2026-09-29-01"></script>
   
   <script>
     (function() {
@@ -262,7 +267,7 @@
               <div class="progress-bar-fill" style="width: ${subject.percentage}%;"></div>
             </div>
             <div style="font-size: 10px; color: var(--text-muted); margin-top: 4px; font-weight: 500; text-transform: uppercase;">
-              ${subject.completed} / ${subject.total} Objectives
+              ${subject.completed} / ${subject.total} Tasks
             </div>
           </a>
         `).join('');

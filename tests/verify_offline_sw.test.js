@@ -65,6 +65,8 @@ const assetPaths = [
   'js/achievements.js',
   'js/scheduler.js',
   'js/notes.js',
+  'fonts/inter-latin-wght-normal.woff2',
+  'fonts/bricolage-grotesque-latin-wght-normal.woff2',
   'manifest.json',
   'icon-192.png',
   'icon-512.png'

@@ -114,9 +114,9 @@ const Tasks = (function() {
       
       // Show completion toast with progress
       if (progress.isFullyComplete) {
-        App.showToast(`All sub-missions complete! Objective "${task.title}" is done!`, 'success', 4000);
+        App.showToast(`All subtasks complete! Task "${task.title}" is done!`, 'success', 4000);
       } else {
-        App.showToast(`Sub-mission complete: ${progress.completed}/${progress.total}`, 'success', 2500);
+        App.showToast(`Subtask complete: ${progress.completed}/${progress.total}`, 'success', 2500);
       }
     });
   }
@@ -174,7 +174,7 @@ const Tasks = (function() {
 
     if (tasks.length === 0) {
       elements.taskList.innerHTML = App.createEmptyStateHtml({
-        title: 'No Objectives Found',
+        title: 'No Tasks Found',
         text: 'Initiate a new mission to begin tracking your progress and goals.',
         icon: 'tasks',
         actionText: 'Begin First Mission',
@@ -501,7 +501,7 @@ const Tasks = (function() {
     const content = `
       <form id="task-form">
         <div class="form-group">
-          <label class="form-label">Objective Title</label>
+          <label class="form-label">Task Title</label>
           <input type="text" name="title" class="form-input" value="${task ? App.escapeHtml(task.title) : ''}" required>
         </div>
         <div class="form-group">
@@ -531,22 +531,22 @@ const Tasks = (function() {
           </div>
         </div>
         <div id="subtasks-editor">
-          <label class="form-label">Sub-missions</label>
+          <label class="form-label">Subtasks</label>
           <div id="modal-subtasks-list">
             ${task && task.subtasks ? task.subtasks.map((s) => `
               <div class="flex items-center gap-sm mb-sm">
-                <input type="text" class="form-input subtask-input" value="${App.escapeHtml(s.title)}" placeholder="Sub-mission title">
+                <input type="text" class="form-input subtask-input" value="${App.escapeHtml(s.title)}" placeholder="Subtask title">
                 <button type="button" class="btn btn-ghost btn-icon remove-subtask-row" style="color:var(--danger);" aria-label="Remove sub-mission">&times;</button>
               </div>
             `).join('') : ''}
           </div>
-          <button type="button" class="btn btn-secondary btn-sm" id="add-subtask-row">+ Add Sub-mission</button>
+          <button type="button" class="btn btn-secondary btn-sm" id="add-subtask-row">+ Add Subtask</button>
         </div>
       </form>
     `;
 
     const modal = App.createModal({
-      title: isEdit ? 'Modify Objective' : 'Initiate Objective',
+      title: isEdit ? 'Edit Task' : 'Add Task',
       content,
       footer: `
         <button class="btn btn-secondary" data-action="cancel">Cancel</button>
@@ -558,7 +558,7 @@ const Tasks = (function() {
       const row = document.createElement('div');
       row.className = 'flex items-center gap-sm mb-sm';
       row.innerHTML = `
-        <input type="text" class="form-input subtask-input" placeholder="Sub-mission title">
+        <input type="text" class="form-input subtask-input" placeholder="Subtask title">
         <button type="button" class="btn btn-ghost btn-icon remove-subtask-row" style="color:var(--danger);" aria-label="Remove sub-mission">&times;</button>
       `;
       row.querySelector('.remove-subtask-row').onclick = () => row.remove();
@@ -678,7 +678,7 @@ const Tasks = (function() {
   }
 
   async function deleteTask(id) {
-    if (await App.confirm({ title: 'Purge Objective?', message: 'This mission data will be permanently erased.', confirmText: 'Purge', danger: true })) {
+    if (await App.confirm({ title: 'Delete Task?', message: 'This task will be permanently deleted.', confirmText: 'Delete', danger: true })) {
       Storage.deleteTask(id);
       renderTasks();
     }
