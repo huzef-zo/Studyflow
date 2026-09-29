@@ -457,7 +457,8 @@ const App = (function() {
   }
 
   function formatDuration(minutes) {
-    const hours = Math.floor(minutes / 60), mins = minutes % 60;
+    const safeMinutes = Number.isFinite(Number(minutes)) && Number(minutes) >= 0 ? Math.floor(Number(minutes)) : 0;
+    const hours = Math.floor(safeMinutes / 60), mins = safeMinutes % 60;
     if (hours === 0) return `${mins}m`;
     if (mins === 0) return `${hours}h`;
     return `${hours}h ${mins}m`;
@@ -555,12 +556,14 @@ const App = (function() {
   }
 
   function createProgressBar(current, max, label, showPercentage = true) {
-    const percentage = max > 0 ? Math.min(100, Math.round((current / max) * 100)) : 0;
+    const safeCurrent = Number.isFinite(Number(current)) ? Number(current) : 0;
+    const safeMax = Number.isFinite(Number(max)) ? Number(max) : 0;
+    const percentage = safeMax > 0 ? Math.min(100, Math.round((safeCurrent / safeMax) * 100)) : 0;
     return `
       <div class="progress-wrapper">
         <div class="progress-header">
           <span class="progress-label">${escapeHtml(label)}</span>
-          <span class="progress-value">${escapeHtml(current)} / ${escapeHtml(max)}${showPercentage ? ` (${percentage}%)` : ''}</span>
+          <span class="progress-value">${escapeHtml(safeCurrent)} / ${escapeHtml(safeMax)}${showPercentage ? ` (${percentage}%)` : ''}</span>
         </div>
         <div class="progress-bar-bg">
           <div class="progress-bar-fill" style="width:${percentage}%;"></div>
