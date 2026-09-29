@@ -2,7 +2,7 @@
    StudyFlow - Flat & Simple Design System
    ============================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;600;700&family=Rajdhani:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500&display=swap');
 
 :root {
   /* Dark Mode Default Tokens */
@@ -1979,3 +1979,53 @@ h2, h3, h4, .card-title, .modal-title { font-weight: 650; letter-spacing: -.015e
   .bottom-nav-item.pop svg { animation: none !important; }
   .nav-ripple { display: none !important; }
 }
+
+/* APEX-inspired sci-fi command interface */
+:root {
+  --bg-deep: #030607;
+  --bg-surface: #080d10;
+  --bg-secondary: #0b1317;
+  --bg-tertiary: #0e1c21;
+  --text-primary: #d9faff;
+  --text-secondary: #80aab0;
+  --text-muted: #4d7078;
+  --text-body: #afd0d4;
+  --accent-fill: #00e5ff;
+  --accent-text: #00e5ff;
+  --primary: #00e5ff;
+  --primary-rgb: 0, 229, 255;
+  --progress-track: #102a30;
+  --border-color: rgba(0,229,255,.2);
+  --glass-border: rgba(0,229,255,.3);
+  --success: #6dffb8;
+  --warning: #ffe066;
+  --radius-sm: 2px;
+  --radius-md: 3px;
+  --radius-lg: 4px;
+  --radius-xl: 6px;
+  --shadow-card: 0 0 0 1px rgba(0,229,255,.04), 0 0 26px rgba(0,229,255,.045);
+  --shadow-card-hover: 0 0 0 1px rgba(0,229,255,.32), 0 0 28px rgba(0,229,255,.13);
+}
+html { background: var(--bg-deep); }
+body { font-family: 'Rajdhani', sans-serif; font-size: 16px; letter-spacing: .025em; background: radial-gradient(circle at 70% -10%, rgba(0,229,255,.08), transparent 34rem), var(--bg-deep); }
+body::before { content: ''; position: fixed; inset: 0; pointer-events: none; opacity: .18; background: linear-gradient(rgba(0,229,255,.035) 1px, transparent 1px), linear-gradient(90deg, rgba(0,229,255,.035) 1px, transparent 1px); background-size: 32px 32px; mask-image: linear-gradient(to bottom, black, transparent 85%); }
+h1, h2, h3, h4, h5, h6, .sidebar-logo, .btn, .nav-item, .data-number { font-family: 'Orbitron', sans-serif; text-transform: uppercase; }
+h1, .page-header h1 { font-size: clamp(1.25rem, 2.5vw, 1.85rem); letter-spacing: .08em; color: var(--accent-text); text-shadow: 0 0 18px rgba(0,229,255,.35); }
+h2, h3, h4, .card-title, .modal-title { font-size: 1rem; letter-spacing: .08em; }
+.card, .stat-pill, .task-card, .calendar-container, .modal { background: linear-gradient(135deg, rgba(8,18,22,.98), rgba(5,10,13,.98)); border-color: var(--border-color); box-shadow: var(--shadow-card); }
+.card:hover, .task-card:hover { box-shadow: var(--shadow-card-hover); transform: translateY(-2px); }
+.card::after { display: block !important; content: ''; position: absolute; inset: 0; pointer-events: none; border: 1px solid rgba(0,229,255,.06); clip-path: polygon(0 0, 30px 0, 30px 1px, 100% 1px, 100% 100%, calc(100% - 1px) 100%, calc(100% - 1px) calc(100% - 30px), 100% calc(100% - 30px), 100% 100%, 0 100%); }
+.btn { border-radius: 2px; letter-spacing: .06em; font-size: .7rem; }
+.btn-primary { color: #001216; background: var(--accent-fill); box-shadow: 0 0 18px rgba(0,229,255,.2); }
+.btn-secondary { background: transparent; border-color: var(--border-color); color: var(--accent-text); }
+.sidebar { background: rgba(5,11,14,.96); border-right: 1px solid var(--border-color); }
+.sidebar-logo { color: var(--accent-text); letter-spacing: .14em; }
+.nav-item { border-radius: 2px; letter-spacing: .06em; font-size: .72rem; }
+.nav-item.active { background: rgba(0,229,255,.08); color: var(--accent-text); box-shadow: inset 2px 0 var(--accent-fill), 0 0 18px rgba(0,229,255,.06); }
+.stat-pill { border-radius: 2px; }
+.stat-pill-icon { border-radius: 2px; background: rgba(0,229,255,.1); color: var(--accent-text); }
+.data-number { color: var(--accent-text); text-shadow: 0 0 12px rgba(0,229,255,.35); }
+.progress-bar-fill { background: var(--accent-fill); box-shadow: 0 0 10px rgba(0,229,255,.6); }
+.form-input, .form-select { border-radius: 2px; background: #050b0e; }
+.badge { border-radius: 2px; font-family: 'Orbitron', sans-serif; letter-spacing: .08em; }
+@media (max-width: 640px) { body { font-size: 15px; } .main-container { padding: 1rem .85rem 5rem; } }
