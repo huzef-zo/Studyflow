@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
   <meta name="description" content="StudyFlow - Settings and preferences">
-  <meta name="theme-color" content="#14161B">
+  <meta name="theme-color" content="#0A0B0F">
   <meta name="color-scheme" content="dark">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -17,7 +17,7 @@
   <link rel="msapplication-config" href="browserconfig.xml">
   <meta name="msapplication-TileColor" content="#5B9BF0">
   <title>Settings - StudyFlow</title>
-  <link rel="stylesheet" href="css/style.css?v=v2025-05-03-03">
+  <link rel="stylesheet" href="css/style.css?v=v2026-09-29-01">
 </head>
 <body>
   <div id="sidebar-container"></div>
@@ -26,7 +26,7 @@
   <main class="main-container">
     <header class="page-header animate-fade-in">
       <div class="page-header-title-group">
-        <h1>System Settings</h1>
+        <h1>Settings</h1>
         <p class="subtitle">Configure your study environment</p>
       </div>
     </header>
@@ -70,7 +70,7 @@
 
       <!-- Notifications -->
       <section class="card animate-fade-in mt-md">
-        <div class="card-header"><h3 class="card-title">Neural Alerts</h3></div>
+        <div class="card-header"><h3 class="card-title">Notifications</h3></div>
 
         <div class="flex items-center justify-between mb-md">
           <div style="flex:1;">
@@ -159,21 +159,21 @@
         <div class="mt-md pt-md" style="border-top:1px solid var(--border-color);">
           <div class="flex items-center justify-between">
             <div>
-              <div style="font-weight:500;font-size:13px;color:var(--danger);">Purge Protocol</div>
+              <div style="font-weight:500;font-size:13px;color:var(--danger);">Delete All Data</div>
               <div style="font-size:11px;color:var(--text-muted);">Permanently erase all local intelligence</div>
             </div>
-            <button class="btn btn-danger btn-sm" id="clear-data-btn" aria-label="Initiate wipe of all local data">Initiate Wipe</button>
+            <button class="btn btn-danger btn-sm" id="clear-data-btn" aria-label="Erase all local data">Erase All Data</button>
           </div>
         </div>
       </section>
     </div>
   </main>
 
-  <script src="js/storage.js?v=v2025-05-03-03"></script>
-  <script src="js/subtask-utils.js?v=v2025-05-03-03"></script>
-  <script src="js/pwa-manager.js?v=v2025-05-03-03"></script>
-  <script src="js/achievements.js?v=v2025-05-03-03"></script>
-  <script src="js/app.js?v=v2025-05-03-03"></script>
+  <script src="js/storage.js?v=v2026-09-29-01"></script>
+  <script src="js/subtask-utils.js?v=v2026-09-29-01"></script>
+  <script src="js/pwa-manager.js?v=v2026-09-29-01"></script>
+  <script src="js/achievements.js?v=v2026-09-29-01"></script>
+  <script src="js/app.js?v=v2026-09-29-01"></script>
   <script>
     (function() {
       'use strict';
@@ -309,7 +309,7 @@
       }
 
       async function deleteSubject(id) {
-        if (await App.confirm({ title: 'Delete Sector?', message: 'Objectives in this sector will persist without categorization.', confirmText: 'Delete', danger: true })) {
+        if (await App.confirm({ title: 'Delete Sector?', message: 'Tasks in this sector will persist without categorization.', confirmText: 'Delete', danger: true })) {
           Storage.deleteSubject(id);
           renderSubjects();
         }

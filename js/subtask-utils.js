@@ -72,7 +72,7 @@ const SubtaskUtils = (function() {
     if (percentage === 25) return '25% of sub-missions complete!';
     if (percentage === 50) return '50% progress! You\'re halfway there!';
     if (percentage === 75) return '75% done! Finish strong!';
-    if (percentage === 100) return 'All sub-missions complete! Objective achieved!';
+    if (percentage === 100) return 'All subtasks complete! Task achieved!';
     return null;
   }
 

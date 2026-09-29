@@ -1,10 +1,6 @@
 /**
  * StudyFlow - Main Application Module
- * FIXES:
- * 1. checkTimerBackground: now uses a tab-unique flag so only one tab processes
- *    the background completion at a time. Prevents duplicate session recordings.
- * 2. createModal: tracks pointerdown target to fix overlay-close failing on mobile
- *    scroll-drag release.
+ * Single-accent glassmorphism, dark-mode only implementation.
  */
 
 const App = (function() {
@@ -39,9 +35,7 @@ const App = (function() {
     target: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>`,
     award: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg>`,
     empty: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`,
-    history: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m7 16 3-3 3 3 5-5"/></svg>`,
-    sun: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>`,
-    moon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>`
+    history: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m7 16 3-3 3 3 5-5"/></svg>`
   };
 
   function getIcon(name) { return Icons[name] || ''; }
@@ -49,10 +43,10 @@ const App = (function() {
   function renderSidebar(isCollapsed = false) {
     const currentPage = getCurrentPage();
     const navItems = [
-      { id: 'dashboard', label: 'Dashboard', icon: 'home', href: 'index.html' },
+      { id: 'dashboard', label: 'Home', icon: 'home', href: 'index.html' },
       { id: 'tasks', label: 'Tasks', icon: 'tasks', href: 'tasks.html' },
+      { id: 'timer', label: 'Focus', icon: 'timer', href: 'timer.html' },
       { id: 'calendar', label: 'Calendar', icon: 'calendar', href: 'calendar.html' },
-      { id: 'timer', label: 'Timer', icon: 'timer', href: 'timer.html' },
       { id: 'notes', label: 'Notes', icon: 'edit', href: 'notes.html' },
       { id: 'goals', label: 'Goals', icon: 'goals', href: 'goals.html' },
       { id: 'history', label: 'Analytics', icon: 'history', href: 'history.html' },
@@ -84,30 +78,16 @@ const App = (function() {
     `;
   }
 
+  /* 4 Fixed Primary Tabs (Home, Tasks, Focus, Calendar) + More */
   function renderBottomNav() {
     const currentPage = getCurrentPage();
-    const settings = Storage.getSettings();
-    const pinnedIds = settings.pinned_nav_items || ['timer', 'calendar'];
-
-    const allItems = {
-      dashboard: { id: 'dashboard', label: 'Home', icon: 'home', href: 'index.html' },
-      tasks: { id: 'tasks', label: 'Tasks', icon: 'tasks', href: 'tasks.html' },
-      timer: { id: 'timer', label: 'Timer', icon: 'timer', href: 'timer.html' },
-      calendar: { id: 'calendar', label: 'Calendar', icon: 'calendar', href: 'calendar.html' },
-      notes: { id: 'notes', label: 'Vault', icon: 'edit', href: 'notes.html' },
-      goals: { id: 'goals', label: 'Goals', icon: 'goals', href: 'goals.html' },
-      history: { id: 'history', label: 'Stats', icon: 'history', href: 'history.html' },
-      settings: { id: 'settings', label: 'Settings', icon: 'settings', href: 'settings.html' }
-    };
 
     const navItems = [
-      allItems.dashboard,
-      allItems.tasks
+      { id: 'dashboard', label: 'Home', icon: 'home', href: 'index.html' },
+      { id: 'tasks', label: 'Tasks', icon: 'tasks', href: 'tasks.html' },
+      { id: 'timer', label: 'Focus', icon: 'timer', href: 'timer.html' },
+      { id: 'calendar', label: 'Calendar', icon: 'calendar', href: 'calendar.html' }
     ];
-
-    pinnedIds.forEach(id => {
-      if (allItems[id]) navItems.push(allItems[id]);
-    });
 
     const isMoreActive = !navItems.some(item => item.id === currentPage);
 
@@ -243,7 +223,6 @@ const App = (function() {
 
         sessionStorage.setItem('studyflow_prev_nav_left', item.offsetLeft);
 
-        // 1. Icon Pop on Activation
         if (!isReducedMotion) {
           item.classList.remove('pop');
           requestAnimationFrame(() => {
@@ -252,27 +231,6 @@ const App = (function() {
           setTimeout(() => item.classList.remove('pop'), 220);
         }
 
-        // 2. Tap Ripple Feedback
-        if (!isReducedMotion) {
-          const rect = item.getBoundingClientRect();
-          const ripple = document.createElement('span');
-          ripple.className = 'nav-ripple';
-          const size = Math.max(rect.width, rect.height);
-          ripple.style.width = `${size}px`;
-          ripple.style.height = `${size}px`;
-
-          const x = (e.clientX ? e.clientX - rect.left : rect.width / 2);
-          const y = (e.clientY ? e.clientY - rect.top : rect.height / 2);
-          ripple.style.left = `${x}px`;
-          ripple.style.top = `${y}px`;
-
-          item.appendChild(ripple);
-          setTimeout(() => {
-            if (ripple.parentNode) ripple.parentNode.removeChild(ripple);
-          }, 400);
-        }
-
-        // 3. Sliding Active Indicator Update & Concurrent Color Sync
         items.forEach(i => i.classList.remove('active'));
         item.classList.add('active');
         updateIndicatorPosition(item);
@@ -281,23 +239,18 @@ const App = (function() {
   }
 
   function openMoreMenu() {
-    const settings = Storage.getSettings();
-    const pinnedIds = settings.pinned_nav_items || ['timer', 'calendar'];
     const currentPage = getCurrentPage();
 
     const menuItems = [
-      { id: 'timer', label: 'Timer', icon: 'timer', href: 'timer.html' },
-      { id: 'calendar', label: 'Calendar', icon: 'calendar', href: 'calendar.html' },
-      { id: 'notes', label: 'Knowledge Vault', icon: 'edit', href: 'notes.html' },
+      { id: 'notes', label: 'Notes', icon: 'edit', href: 'notes.html' },
       { id: 'goals', label: 'Goals', icon: 'goals', href: 'goals.html' },
-      { id: 'history', label: 'History', icon: 'history', href: 'history.html' },
+      { id: 'history', label: 'Analytics', icon: 'history', href: 'history.html' },
       { id: 'settings', label: 'Settings', icon: 'settings', href: 'settings.html' }
     ];
 
     const content = `
       <div class="more-menu-grid">
         ${menuItems.map(item => {
-          const isPinned = pinnedIds.includes(item.id);
           const isActive = currentPage === item.id;
           return `
             <div class="more-menu-item-wrapper">
@@ -305,9 +258,6 @@ const App = (function() {
                 <div class="more-menu-icon">${Icons[item.icon]}</div>
                 <span class="more-menu-label">${item.label}</span>
               </a>
-              <button class="pin-btn ${isPinned ? 'pinned' : ''}" data-id="${item.id}" title="${isPinned ? 'Unpin' : 'Pin to navigation'}">
-                ${Icons.pin}
-              </button>
             </div>
           `;
         }).join('')}
@@ -322,35 +272,6 @@ const App = (function() {
 
     modal.classList.add('modal-bottom-sheet');
     openModal(modal);
-
-    modal.querySelectorAll('.pin-btn').forEach(btn => {
-      btn.onclick = (e) => {
-        e.preventDefault();
-        const id = btn.dataset.id;
-        const currentSettings = Storage.getSettings();
-        let currentPinned = currentSettings.pinned_nav_items || ['timer', 'calendar'];
-
-        if (currentPinned.includes(id)) {
-          currentPinned = currentPinned.filter(p => p !== id);
-        } else {
-          if (currentPinned.length >= 2) {
-            showToast('Max 2 items pinned. Unpin one first.', 'warning');
-            return;
-          }
-          currentPinned.push(id);
-        }
-
-        Storage.updateSetting('pinned_nav_items', currentPinned);
-        initNavigation(); // Refresh nav
-
-        // Update UI in modal
-        btn.classList.toggle('pinned');
-        const allPins = modal.querySelectorAll('.pin-btn.pinned').length;
-        modal.querySelectorAll('.pin-btn:not(.pinned)').forEach(p => {
-          p.disabled = allPins >= 2;
-        });
-      };
-    });
   }
 
   // ── Modal system ──────────────────────────────────────────────────────────
@@ -377,9 +298,6 @@ const App = (function() {
       </div>
     `;
 
-    // FIX: Track where the pointer went DOWN so a scroll-drag-release on the
-    // overlay doesn't close the modal. Only close if both pointerdown and
-    // pointerup landed directly on the overlay element itself.
     let pointerDownOnOverlay = false;
     modal.addEventListener('pointerdown', (e) => {
       pointerDownOnOverlay = e.target === modal;
@@ -396,7 +314,7 @@ const App = (function() {
 
   function openModal(modal) {
     document.body.appendChild(modal);
-    modal.offsetHeight; // force reflow for animation
+    modal.offsetHeight;
     modal.classList.add('active');
     activeModal = modal;
     const focusable = modal.querySelectorAll('button, input, select, textarea');
@@ -417,7 +335,6 @@ const App = (function() {
   function confirm(options) {
     return new Promise((resolve) => {
       const { title, message, confirmText = 'Confirm', cancelText = 'Cancel', danger = false } = options;
-      // SECURITY: Ensure all user-provided strings are escaped to prevent XSS
       const modal = createModal({
         id: 'confirm-modal', title,
         content: `<p style="margin:0;color:var(--text-secondary);">${escapeHtml(message)}</p>`,
@@ -433,7 +350,6 @@ const App = (function() {
   function alert(options) {
     return new Promise((resolve) => {
       const { title, message, buttonText = 'OK' } = options;
-      // SECURITY: Ensure all user-provided strings are escaped to prevent XSS
       const modal = createModal({
         id: 'alert-modal', title,
         content: `<p style="margin:0;color:var(--text-secondary);">${escapeHtml(message)}</p>`,
@@ -463,7 +379,6 @@ const App = (function() {
     initToastContainer();
     const toast = document.createElement('div');
     toast.className = `toast toast-${type}`;
-    toast.style.cssText = `background-color:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius-md);padding:12px 16px;color:var(--text-primary);font-size:0.875rem;box-shadow:var(--shadow-lg);animation:slideUp 0.3s ease;pointer-events:auto;${type==='success'?'border-color:var(--success);':type==='error'?'border-color:var(--danger);':type==='warning'?'border-color:var(--warning);':''}`;
     const iconMap = { success: Icons.check, error: Icons.x, warning: Icons.alertCircle, info: Icons.alertCircle };
     const iconColorMap = { success: 'var(--success)', error: 'var(--danger)', warning: 'var(--warning)', info: 'var(--primary)' };
     toast.innerHTML = `<div style="display:flex;align-items:center;gap:8px;"><span style="color:${iconColorMap[type]};display:flex;">${iconMap[type]}</span><span>${escapeHtml(message)}</span></div>`;
@@ -474,26 +389,12 @@ const App = (function() {
     }, duration);
   }
 
-  /**
-   * Show a toast with an Undo button.
-   * @param {string} message - Toast message
-   * @param {Function} onUndo - Called if user clicks Undo before timeout
-   * @param {number} duration - Ms before auto-dismiss (default 5000)
-   */
   function showUndoToast(message, onUndo, duration = 5000) {
     initToastContainer();
 
     const toast = document.createElement('div');
     toast.className = 'toast toast-success';
     toast.style.cssText = `
-      background-color: var(--bg-secondary);
-      border: 1px solid var(--success);
-      border-radius: var(--radius-md);
-      padding: 12px 16px;
-      color: var(--text-primary);
-      font-size: 0.875rem;
-      box-shadow: var(--shadow-lg);
-      animation: slideUp 0.3s ease;
       pointer-events: auto;
       display: flex;
       align-items: center;
@@ -513,7 +414,7 @@ const App = (function() {
         border-radius: 6px;
         color: white;
         font-size: 12px;
-        font-weight: 700;
+        font-weight: 600;
         padding: 4px 10px;
         cursor: pointer;
         white-space: nowrap;
@@ -534,17 +435,15 @@ const App = (function() {
       setTimeout(() => { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 300);
     };
 
-    // Auto-dismiss after duration
     const autoTimer = setTimeout(dismiss, duration);
 
-    // Undo button
     toast.querySelector('.undo-btn').addEventListener('click', () => {
       clearTimeout(autoTimer);
       dismiss();
       onUndo();
     });
 
-    return dismiss;  // caller can force-dismiss
+    return dismiss;
   }
 
   // ── Utilities ─────────────────────────────────────────────────────────────
@@ -603,7 +502,6 @@ const App = (function() {
     document.addEventListener('keydown', (e) => {
       if (['INPUT', 'SELECT', 'TEXTAREA'].includes(e.target.tagName)) return;
 
-      // Ctrl/Meta + K: Context-aware Search / Command Palette
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
         const searchTasks = document.getElementById('search-tasks');
@@ -613,13 +511,11 @@ const App = (function() {
         } else if (searchNotes) {
           searchNotes.focus();
         } else {
-          // If on dashboard or elsewhere, go to tasks
           window.location.href = 'tasks.html';
         }
         return;
       }
 
-      // Quick Nav
       if (e.altKey) {
         const navMap = { '1': 'index.html', '2': 'tasks.html', '3': 'calendar.html', '4': 'timer.html' };
         if (navMap[e.key]) window.location.href = navMap[e.key];
@@ -629,15 +525,15 @@ const App = (function() {
 
   function getSubjectColor(subjectName) {
     const subject = Storage.getSubjectByName(subjectName);
-    return subject ? subject.color : '#6B7280';
+    return subject ? subject.color : '#5B9BF0';
   }
 
   function hexToRgb(hex) {
-    if (!hex || !isValidHexColor(hex)) return '59, 130, 246';
+    if (!hex || !isValidHexColor(hex)) return '91, 155, 240';
     hex = hex.replace('#', '');
     if (hex.length === 3) hex = hex.split('').map(c => c + c).join('');
     const r = parseInt(hex.substring(0,2),16), g = parseInt(hex.substring(2,4),16), b = parseInt(hex.substring(4,6),16);
-    if (isNaN(r)||isNaN(g)||isNaN(b)) return '59, 130, 246';
+    if (isNaN(r)||isNaN(g)||isNaN(b)) return '91, 155, 240';
     return `${r}, ${g}, ${b}`;
   }
 
@@ -660,7 +556,6 @@ const App = (function() {
 
   function createProgressBar(current, max, label, showPercentage = true) {
     const percentage = max > 0 ? Math.min(100, Math.round((current / max) * 100)) : 0;
-    // SECURITY: Escape all dynamic parameters as they are injected into innerHTML
     return `
       <div class="progress-wrapper">
         <div class="progress-header">
@@ -676,7 +571,6 @@ const App = (function() {
 
   function createEmptyStateHtml(options) {
     const { title='No Data', text='Nothing to show here yet.', icon='empty', actionText='', actionId='', padding='4rem' } = options;
-    // SECURITY: Strictly validate CSS padding to prevent style injection
     const safePadding = /^[\d.a-zA-Z% \-]+$/.test(padding) ? padding : '4rem';
 
     return `
@@ -688,8 +582,6 @@ const App = (function() {
       </div>
     `;
   }
-
-  // ── Notification & background timer checks ─────────────────────────────────
 
   function checkTaskNotifications() {
     const settings = Storage.getSettings();
@@ -711,14 +603,12 @@ const App = (function() {
   function showTaskNotification(task) {
     const body = `It's time for: ${task.title}`;
 
-    // Visual feedback on Dashboard
     const pendingPill = document.getElementById('stat-pending')?.closest('.stat-pill');
     if (pendingPill) {
       pendingPill.classList.add('flash-pulse');
       setTimeout(() => pendingPill.classList.remove('flash-pulse'), 10000);
     }
 
-    // Check application settings
     const settings = Storage.getSettings();
     if (settings.task_notifications !== false) {
       if (typeof PWAManager !== 'undefined' && PWAManager.sendNotification) {
@@ -731,11 +621,6 @@ const App = (function() {
     showToast(body, 'info', 10000);
   }
 
-  /**
-   * FIX: Background timer check — use a per-tab session flag so only the tab
-   * that first detects the expiry processes the completion. Other tabs will see
-   * the updated state on their next visibilitychange or their own check cycle.
-   */
   const _tabId = Date.now().toString(36) + Math.random().toString(36).slice(2);
 
   function checkTimerBackground() {
@@ -744,18 +629,16 @@ const App = (function() {
     if (!timerState || timerState.state !== 'running' || !timerState.endTime) return;
     if (Date.now() < timerState.endTime) return;
 
-    // Guard: use sessionStorage so only one tab handles this expiry event
     const lockKey = `timer_handled_${timerState.endTime}`;
     if (sessionStorage.getItem(lockKey)) return;
     sessionStorage.setItem(lockKey, _tabId);
 
-    // Small delay then verify we still hold the lock (race condition mitigation)
     setTimeout(() => {
       if (sessionStorage.getItem(lockKey) !== _tabId) return;
       Storage.completeTimerSession(timerState);
       const completedType = timerState.type;
       const body = completedType === 'work' ? 'Great job! Time for a break.' : 'Ready to get back to work?';
-      const title = completedType === 'work' ? 'Work Session Complete!' : 'Break Finished!';
+      const title = completedType === 'work' ? 'Focus Session Complete!' : 'Break Finished!';
 
       const settings = Storage.getSettings();
       if (settings.notifications !== false) {
@@ -771,7 +654,7 @@ const App = (function() {
   }
 
   const THEMES = {
-    default: { primary: '#5B9BF0', secondary: '#7EB0F5' }
+    default: { primary: '#5B9BF0', secondary: '#8DB8F5' }
   };
 
   function applyTheme() {
@@ -786,7 +669,7 @@ const App = (function() {
 
     const metaThemeColor = document.querySelector('meta[name="theme-color"]');
     if (metaThemeColor) {
-      metaThemeColor.setAttribute('content', '#14161B');
+      metaThemeColor.setAttribute('content', '#0A0B0F');
     }
 
     document.querySelectorAll('.theme-toggle-btn').forEach(btn => btn.remove());
@@ -807,12 +690,10 @@ const App = (function() {
     initNavigation();
     setupGlobalShortcuts();
 
-    // Handle storage quota exceeded
     window.addEventListener('studyflow_storageQuotaExceeded', (e) => {
       showToast('Storage full! Data may not be saved. Clear history to free space.', 'error', 10000);
     });
 
-    // Prune old session data once per browser session to keep localStorage lean
     if (typeof Storage !== 'undefined' && Storage.pruneSessions) {
       Storage.pruneSessions(365);
     }
@@ -823,7 +704,6 @@ const App = (function() {
     });
     setInterval(checkTaskNotifications, 60000);
     setTimeout(checkTaskNotifications, 1000);
-    // FIX: Reduced to 5s interval and added tab guard inside the function
     setInterval(checkTimerBackground, 5000);
   }
 

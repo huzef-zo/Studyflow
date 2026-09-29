@@ -2,13 +2,13 @@
   "id": "studyflow-dashboard",
   "name": "StudyFlow Dashboard",
   "short_name": "StudyFlow",
-  "description": "Your personal space-themed study organizer and productivity hub.",
+  "description": "Your personal single-accent study organizer and productivity hub.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait-primary",
-  "background_color": "#000000",
-  "theme_color": "#3B82F6",
+  "background_color": "#0A0B0F",
+  "theme_color": "#0A0B0F",
   "icons": [
     {
       "src": "./icon-192.png",
@@ -39,13 +39,13 @@
     {
       "name": "Tasks",
       "short_name": "Tasks",
-      "description": "View and manage your study objectives",
+      "description": "View and manage your study tasks",
       "url": "./tasks.html?source=shortcut",
       "icons": [{ "src": "./icon-192.png", "sizes": "192x192", "purpose": "maskable" }]
     },
     {
-      "name": "Timer",
-      "short_name": "Timer",
+      "name": "Focus",
+      "short_name": "Focus",
       "description": "Start a focus session with Pomodoro timer",
       "url": "./timer.html?source=shortcut",
       "icons": [{ "src": "./icon-192.png", "sizes": "192x192", "purpose": "maskable" }]

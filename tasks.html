@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
   <meta name="description" content="StudyFlow - Task Manager and study objectives tracker">
-  <meta name="theme-color" content="#14161B">
+  <meta name="theme-color" content="#0A0B0F">
   
   <!-- Standalone PWA Configuration -->
   <meta name="mobile-web-app-capable" content="yes">
@@ -21,38 +21,43 @@
   <meta name="msapplication-TileColor" content="#5B9BF0">
   
   <title>Tasks - StudyFlow</title>
-  <link rel="stylesheet" href="css/style.css?v=v2025-05-03-03">
+  <link rel="stylesheet" href="css/style.css?v=v2026-09-29-01">
 </head>
 <body>
   <!-- Navigation Containers -->
   <div id="sidebar-container"></div>
   <div id="bottom-nav-container"></div>
 
+  <!-- Floating Add Task Button -->
+  <button class="fab-btn" id="fab-add-task" aria-label="Add task" title="Add task">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
+  </button>
+
   <!-- Main Content -->
   <main class="main-container">
     <!-- Page Header -->
     <header class="page-header animate-fade-in">
       <div class="page-header-title-group">
-        <h1>Mission Core</h1>
+        <h1>Tasks</h1>
         <p class="subtitle">Strategize and achieve your study targets</p>
       </div>
       <div class="page-header-actions flex items-center gap-sm flex-wrap">
         <div class="form-group mb-0">
-          <input type="text" id="search-tasks" class="form-input glass-pill-input" placeholder="Search objectives... (Ctrl+K)" aria-label="Search objectives">
+          <input type="text" id="search-tasks" class="form-input glass-pill-input" placeholder="Search tasks... (Ctrl+K)" aria-label="Search tasks">
         </div>
-        <button class="btn btn-primary" id="add-task-btn" aria-label="Add new objective">
+        <button class="btn btn-primary" id="add-task-btn" aria-label="Add new task">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
-          New Objective
+          New Task
         </button>
       </div>
     </header>
 
     <!-- Filter Bar -->
     <div class="flex flex-wrap items-center justify-between gap-md mb-sm animate-fade-in">
-      <div class="filter-tabs" style="margin: 0;" role="tablist" aria-label="Filter missions">
-        <div class="filter-tab active" data-filter="all" role="tab" aria-selected="true" tabindex="0">All Missions</div>
+      <div class="filter-tabs" style="margin: 0;" role="tablist" aria-label="Filter tasks">
+        <div class="filter-tab active" data-filter="all" role="tab" aria-selected="true" tabindex="0">All Tasks</div>
         <div class="filter-tab" data-filter="pending" role="tab" aria-selected="false" tabindex="0">Active</div>
-        <div class="filter-tab" data-filter="completed" role="tab" aria-selected="false" tabindex="0">Accomplished</div>
+        <div class="filter-tab" data-filter="completed" role="tab" aria-selected="false" tabindex="0">Completed</div>
       </div>
 
       <div class="flex items-center gap-sm flex-wrap">
@@ -77,16 +82,21 @@
   </main>
 
   <!-- Scripts -->
-  <script src="js/storage.js?v=v2025-05-03-03"></script>
-  <script src="js/subtask-utils.js?v=v2025-05-03-03"></script>
-  <script src="js/pwa-manager.js?v=v2025-05-03-03"></script>
-  <script src="js/achievements.js?v=v2025-05-03-03"></script>
-  <script src="js/app.js?v=v2025-05-03-03"></script>
-  <script src="js/tasks.js?v=v2025-05-03-03"></script>
+  <script src="js/storage.js?v=v2026-09-29-01"></script>
+  <script src="js/subtask-utils.js?v=v2026-09-29-01"></script>
+  <script src="js/pwa-manager.js?v=v2026-09-29-01"></script>
+  <script src="js/achievements.js?v=v2026-09-29-01"></script>
+  <script src="js/app.js?v=v2026-09-29-01"></script>
+  <script src="js/tasks.js?v=v2026-09-29-01"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       PWAManager.init();
       Tasks.init();
+      document.getElementById('fab-add-task')?.addEventListener('click', () => {
+        if (typeof Tasks !== 'undefined' && Tasks.openTaskModal) {
+          Tasks.openTaskModal();
+        }
+      });
     });
   </script>
 </body>

@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
   <meta name="description" content="StudyFlow - Pomodoro Timer for focused study sessions">
-  <meta name="theme-color" content="#14161B">
+  <meta name="theme-color" content="#0A0B0F">
   <meta name="color-scheme" content="dark">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -17,7 +17,7 @@
   <link rel="msapplication-config" href="browserconfig.xml">
   <meta name="msapplication-TileColor" content="#5B9BF0">
   <title>Timer - StudyFlow</title>
-  <link rel="stylesheet" href="css/style.css?v=v2025-05-03-03">
+  <link rel="stylesheet" href="css/style.css?v=v2026-09-29-01">
 </head>
 <body>
   <div id="sidebar-container"></div>
@@ -26,7 +26,7 @@
   <main class="main-container">
     <header class="page-header animate-fade-in">
       <div class="page-header-title-group">
-        <h1>Focus Sphere</h1>
+        <h1>Focus</h1>
         <p class="subtitle">Deep work state initialization</p>
       </div>
     </header>
@@ -36,15 +36,15 @@
       <!-- Task Selection -->
       <section class="animate-fade-in">
         <div class="form-group">
-          <label class="form-label" for="timer-task" style="text-align:center;">Active Mission Selection</label>
+          <label class="form-label" for="timer-task" style="text-align:center;">Active Task Selection</label>
           <select id="timer-task" class="form-input glass-pill-input" style="text-align:center;">
             <option value="">GENERAL FOCUS</option>
           </select>
         </div>
         <div class="form-group" id="subtask-select-container" style="display:none;margin-top:1rem;">
-          <label class="form-label" for="timer-subtask" style="text-align:center;">Sub-Mission Focus</label>
+          <label class="form-label" for="timer-subtask" style="text-align:center;">Subtask Focus</label>
           <select id="timer-subtask" class="form-input glass-pill-input" style="text-align:center;">
-            <option value="">SELECT SUB-MISSION</option>
+            <option value="">SELECT SUBTASK</option>
           </select>
         </div>
         <div id="subtask-tracker-container" style="display:flex;justify-content:center;margin-top:1rem;"></div>
@@ -80,10 +80,10 @@
 
       <!-- Controls -->
       <section class="timer-controls-fab animate-fade-in">
-        <button class="btn-fab-sub" id="reset-btn" aria-label="Reset Mission" title="Reset Mission">
+        <button class="btn-fab-sub" id="reset-btn" aria-label="Reset Timer" title="Reset Timer">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
         </button>
-        <button class="btn-fab-main" id="start-btn" aria-label="Engage Mission" title="Engage Mission">
+        <button class="btn-fab-main" id="start-btn" aria-label="Start Focus" title="Start Focus">
           <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" id="play-pause-icon" style="transform:translateX(2px);"><polygon points="6 3 20 12 6 21 6 3"/></svg>
         </button>
         <button class="btn-fab-sub" id="skip-btn" aria-label="Skip Session" title="Skip Session">
@@ -93,7 +93,7 @@
 
       <!-- Stats Carousel -->
       <section class="animate-fade-in">
-        <h2 style="font-size:10px;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:0.75rem;text-align:center;color:var(--text-muted);">Mission Intelligence</h2>
+        <h2 style="font-size:10px;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:0.75rem;text-align:center;color:var(--text-muted);">Session Intelligence</h2>
         <div class="grid-3">
           <div class="card text-center" style="padding: 10px;">
             <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;">Sessions</div>
@@ -121,12 +121,12 @@
     </div>
   </main>
 
-  <script src="js/storage.js?v=v2025-05-03-03"></script>
-  <script src="js/subtask-utils.js?v=v2025-05-03-03"></script>
-  <script src="js/pwa-manager.js?v=v2025-05-03-03"></script>
-  <script src="js/achievements.js?v=v2025-05-03-03"></script>
-  <script src="js/app.js?v=v2025-05-03-03"></script>
-  <script src="js/timer.js?v=v2025-05-03-03"></script>
+  <script src="js/storage.js?v=v2026-09-29-01"></script>
+  <script src="js/subtask-utils.js?v=v2026-09-29-01"></script>
+  <script src="js/pwa-manager.js?v=v2026-09-29-01"></script>
+  <script src="js/achievements.js?v=v2026-09-29-01"></script>
+  <script src="js/app.js?v=v2026-09-29-01"></script>
+  <script src="js/timer.js?v=v2026-09-29-01"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       PWAManager.init();

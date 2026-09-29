@@ -282,8 +282,8 @@ const Timer = (function() {
     elements.playPauseIcon.innerHTML = `<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>`;
     elements.playPauseIcon.style.transform = 'none';
     if (elements.startBtn) {
-      elements.startBtn.setAttribute('aria-label', 'Pause Mission');
-      elements.startBtn.setAttribute('title', 'Pause Mission');
+      elements.startBtn.setAttribute('aria-label', 'Pause Focus');
+      elements.startBtn.setAttribute('title', 'Pause Focus');
     }
     document.body.classList.add('focus-mode');
     elements.timerContainer.classList.add('active');
@@ -309,8 +309,8 @@ const Timer = (function() {
     elements.playPauseIcon.innerHTML = `<polygon points="6 3 20 12 6 21 6 3"/>`;
     elements.playPauseIcon.style.transform = 'translateX(2px)';
     if (elements.startBtn) {
-      elements.startBtn.setAttribute('aria-label', 'Engage Mission');
-      elements.startBtn.setAttribute('title', 'Engage Mission');
+      elements.startBtn.setAttribute('aria-label', 'Start Focus');
+      elements.startBtn.setAttribute('title', 'Start Focus');
     }
     document.body.classList.remove('focus-mode');
     elements.timerContainer.classList.remove('active');
@@ -423,13 +423,13 @@ const Timer = (function() {
     const task = Storage.getTaskById(taskId);
     if (!task || !task.subtasks || task.subtasks.length === 0) {
       elements.subtaskContainer.style.display = 'none';
-      elements.subtaskSelect.innerHTML = '<option value="">SELECT SUB-MISSION</option>';
+      elements.subtaskSelect.innerHTML = '<option value="">SELECT SUBTASK</option>';
       selectedSubtaskId = null;
       updateSubtaskTracker(); return;
     }
     elements.subtaskContainer.style.display = 'block';
     const available = task.subtasks.filter(s => !s.isCompleted);
-    elements.subtaskSelect.innerHTML = '<option value="">SELECT SUB-MISSION</option>' +
+    elements.subtaskSelect.innerHTML = '<option value="">SELECT SUBTASK</option>' +
       available.map(s => `<option value="${App.escapeHtml(s.id)}" ${s.id === selectedSubtaskId ? 'selected' : ''}>${App.escapeHtml(s.title)}</option>`).join('');
     if (selectedSubtaskId && !available.some(s => s.id === selectedSubtaskId)) {
       selectedSubtaskId = null; elements.subtaskSelect.value = '';
@@ -526,7 +526,6 @@ const Timer = (function() {
   function loadTimerState() {
     const state = Storage.getTimerState();
 
-    // Check for taskId in URL if no active state or if it's a new request
     const urlParams = new URLSearchParams(window.location.search);
     const urlTaskId = urlParams.get('taskId');
 
@@ -557,7 +556,6 @@ const Timer = (function() {
       startTimer();
     } else {
       timeRemaining = state.timeRemaining || (getSessionDuration(currentSessionType) * 60);
-      // Override taskId from URL if provided and not currently running
       if (urlTaskId && urlTaskId !== selectedTaskId) {
         selectedTaskId = urlTaskId;
         handleTaskChange();
