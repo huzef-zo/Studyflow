@@ -69,7 +69,7 @@ async function runTests() {
         const indexHtml = fs.readFileSync(path.join(__dirname, '../index.html'), 'utf8');
 
         // Settings label 'for' attributes and import button accessibility
-        ['theme-selector', 'display-name', 'user-email', 'work-duration', 'short-break', 'long-break', 'sessions-until-long-break'].forEach(id => {
+        ['display-name', 'user-email', 'work-duration', 'short-break', 'long-break', 'sessions-until-long-break'].forEach(id => {
             if (!settingsHtml.includes(`for="${id}"`)) {
                 throw new Error(`settings.html missing for="${id}" on corresponding label`);
             }

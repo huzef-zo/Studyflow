@@ -771,82 +771,38 @@ const App = (function() {
   }
 
   const THEMES = {
-    default: { primary: '#5B9BF0', secondary: '#7EB0F5' },
-    emerald: { primary: '#10B981', secondary: '#34D399' },
-    coral: { primary: '#EF4444', secondary: '#F87171' },
-    amber: { primary: '#F59E0B', secondary: '#FBBF24' }
+    default: { primary: '#5B9BF0', secondary: '#7EB0F5' }
   };
 
-  function applyTheme(themeName) {
-    const theme = Object.prototype.hasOwnProperty.call(THEMES, themeName) ? THEMES[themeName] : THEMES.default;
+  function applyTheme() {
+    const theme = THEMES.default;
     document.documentElement.style.setProperty('--primary', theme.primary);
     document.documentElement.style.setProperty('--accent-fill', theme.primary);
     document.documentElement.style.setProperty('--accent-text', theme.secondary);
   }
 
-  function applyThemeMode(mode) {
-    const currentMode = mode || Storage.getThemeMode();
-    document.documentElement.setAttribute('data-theme', currentMode);
+  function applyThemeMode() {
+    document.documentElement.setAttribute('data-theme', 'dark');
 
     const metaThemeColor = document.querySelector('meta[name="theme-color"]');
     if (metaThemeColor) {
-      metaThemeColor.setAttribute('content', currentMode === 'light' ? '#F7F8FA' : '#14161B');
+      metaThemeColor.setAttribute('content', '#14161B');
     }
 
-    const toggleBtns = document.querySelectorAll('.theme-toggle-btn');
-    toggleBtns.forEach(btn => {
-      btn.setAttribute('aria-label', `Switch to ${currentMode === 'dark' ? 'Light' : 'Dark'} Mode`);
-      btn.setAttribute('title', `Switch to ${currentMode === 'dark' ? 'Light' : 'Dark'} Mode`);
-      btn.innerHTML = currentMode === 'dark' ? Icons.sun : Icons.moon;
-    });
+    document.querySelectorAll('.theme-toggle-btn').forEach(btn => btn.remove());
   }
 
   function toggleThemeMode() {
-    const currentMode = Storage.getThemeMode();
-    const newMode = currentMode === 'dark' ? 'light' : 'dark';
-    Storage.setThemeMode(newMode);
-    applyThemeMode(newMode);
-    showToast(`Switched to ${newMode} mode`, 'info');
+    applyThemeMode();
   }
 
   function initThemeToggle() {
     applyThemeMode();
-
-    const headers = document.querySelectorAll('.page-header');
-    headers.forEach(header => {
-      if (!header.querySelector('.theme-toggle-btn')) {
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'theme-toggle-btn';
-        btn.onclick = (e) => {
-          e.preventDefault();
-          toggleThemeMode();
-        };
-        const target = header.querySelector('.flex.items-center') || header;
-        target.appendChild(btn);
-        const actions = header.querySelector('.page-header-actions');
-        if (actions) {
-          actions.appendChild(btn);
-        } else {
-          header.appendChild(btn);
-        }
-      }
-    });
-
-    document.querySelectorAll('.theme-toggle-btn').forEach(btn => {
-      btn.onclick = (e) => {
-        e.preventDefault();
-        toggleThemeMode();
-      };
-    });
-
-    applyThemeMode();
   }
 
   function init() {
-    const savedTheme = Storage.loadData(Storage.KEYS.THEME, 'default');
-    applyTheme(savedTheme);
-    initThemeToggle();
+    applyTheme();
+    applyThemeMode();
 
     initNavigation();
     setupGlobalShortcuts();

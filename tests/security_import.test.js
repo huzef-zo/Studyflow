@@ -115,24 +115,16 @@ const importedTasks = Storage.getTasks();
 assert.strictEqual(importedTasks.length, 1000, 'Tasks array should be capped/sliced to max 1000 items');
 console.log('✅ Test 3 Passed: Oversized task array was capped at 1000.');
 
-// Test 4: Theme Whitelist Validation
-console.log('\n--- Test 4: Theme Validation ---');
-const originalTheme = Storage.getTheme();
+// Test 4: Theme Enforced as Default (Midnight Blue)
+console.log('\n--- Test 4: Theme Enforced as Default ---');
 
-// Import with invalid theme
-const invalidThemeData = {
-  theme: 'malicious-theme-injection'
-};
-Storage.importData(invalidThemeData);
-assert.strictEqual(Storage.getTheme(), originalTheme, 'Invalid theme should be rejected and original theme preserved');
-
-// Import with valid theme
-const validThemeData = {
+const customThemeData = {
   theme: 'emerald'
 };
-Storage.importData(validThemeData);
-assert.strictEqual(Storage.getTheme(), 'emerald', 'Valid theme "emerald" should be successfully imported');
-console.log('✅ Test 4 Passed: Only whitelisted themes are accepted.');
+Storage.importData(customThemeData);
+assert.strictEqual(Storage.getTheme(), 'default', 'Theme should always be default (Midnight Blue)');
+assert.strictEqual(Storage.getThemeMode(), 'dark', 'Theme mode should always be dark');
+console.log('✅ Test 4 Passed: Theme is always enforced as default (Midnight Blue) dark mode.');
 
 // Test 5: ID Validation and Sanitization
 console.log('\n--- Test 5: ID Validation and Sanitization ---');
