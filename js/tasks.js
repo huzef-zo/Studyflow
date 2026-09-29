@@ -210,10 +210,10 @@ const Tasks = (function() {
             <div class="task-checkbox ${isDone ? 'checked' : ''}" data-id="${App.escapeHtml(task.id)}" style="margin-top:4px;" tabindex="0" role="checkbox" aria-checked="${isDone}" aria-label="${isDone ? 'Mark as incomplete' : 'Mark as complete'}: ${App.escapeHtml(task.title)}"></div>
             <div class="flex-1 min-w-0">
               <div class="task-header-inline">
+                <span class="priority-dot ${App.escapeHtml(task.priority)}" title="Priority: ${App.escapeHtml(task.priority)}"></span>
                 <div class="task-title-text" style="${isDone ? 'text-decoration:line-through;opacity:0.5;' : ''}">${App.escapeHtml(task.title)}</div>
-                <div class="subject-pill" style="--tag-color:${App.hexToRgb(subjectColor)};color:white;background:rgba(255,255,255,0.05);border-color:rgba(255,255,255,0.1);">${App.escapeHtml(task.subject)}</div>
+                <div class="subject-pill" style="--tag-color:${App.hexToRgb(subjectColor)};color:var(--text-primary);background:rgba(255,255,255,0.05);border-color:var(--glass-border);">${App.escapeHtml(task.subject)}</div>
                 ${task._isOverdue ? '<span class="overdue-badge">OVERDUE</span>' : ''}
-                ${task.priority === 'critical' ? '<span class="badge" style="--tag-color:var(--danger-rgb);font-size:9px;color:white;">Critical</span>' : ''}
               </div>
               <div class="flex items-center justify-between">
                 <div class="task-meta-text">

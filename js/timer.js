@@ -491,8 +491,8 @@ const Timer = (function() {
     const totalCycles = settings.sessions_until_long_break || 4;
     const completedCycles = Storage.getTodaySessions().length;
     const sessionInCycle = currentSessionType === 'work' ? sessionsInCycle + 1 : sessionsInCycle;
-    const labelMap = { work: 'Deep Work', short_break: 'Cooldown', long_break: 'Deep Rest' };
-    elements.timerLabel.textContent = `${labelMap[currentSessionType]} (Session ${sessionInCycle}/${totalCycles} • Cycle ${completedCycles + 1})`;
+    const labelMap = { work: '[ DEEP WORK ]', short_break: '[ SHORT REST ]', long_break: '[ EXTENDED REST ]' };
+    elements.timerLabel.textContent = `${labelMap[currentSessionType]} (SESSION ${sessionInCycle}/${totalCycles} • CYCLE ${completedCycles + 1})`;
 
     const totalTime = getSessionDuration(currentSessionType) * 60;
     elements.timerProgress.style.strokeDashoffset = CIRCUMFERENCE - (timeRemaining / totalTime * CIRCUMFERENCE);

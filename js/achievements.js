@@ -80,21 +80,25 @@ const Achievements = (function() {
   function showLevelUpToast(level, rank) {
     const content = `
       <div class="text-center">
-        <div style="font-size: 3rem; margin-bottom: 1rem;">🎊</div>
-        <h3 class="mb-xs">Level Up!</h3>
-        <p class="text-secondary mb-md">You've reached Level ${level}</p>
-        <div class="badge" style="background: var(--primary-glow); color: var(--primary); font-size: 1rem; padding: 8px 16px;">
-          Rank: ${rank}
+        <div style="font-size: 3rem; margin-bottom: 1rem;">⚡</div>
+        <h3 class="hud-header mb-xs" style="font-size: 1.25rem;">★ LEVEL UP ★</h3>
+        <p class="terminal-caption mb-md" style="font-size: 12px;">SYSTEM RANK EXPANSION ACHIEVED</p>
+        <div style="font-family: var(--font-mono); font-size: 2.5rem; font-weight: 700; color: var(--accent-cyan); margin-bottom: 1rem;">
+          LEVEL ${level}
+        </div>
+        <div class="badge" style="background: rgba(77, 216, 232, 0.15); border: 1px solid var(--accent-cyan); color: var(--accent-cyan); font-family: var(--font-mono); font-size: 0.9rem; padding: 8px 16px;">
+          RANK: ${rank.toUpperCase()}
         </div>
       </div>
     `;
 
     const modal = App.createModal({
-      title: 'New Achievement',
+      title: '[ SYSTEM NOTIFICATION ]',
       content: content,
-      footer: `<button class="btn btn-primary w-full" data-action="ok">Continue</button>`
+      footer: `<button class="btn btn-primary w-full" data-action="ok">ACKNOWLEDGE</button>`
     });
 
+    modal.classList.add('level-up-card');
     modal.querySelector('[data-action="ok"]').onclick = () => App.closeModal();
     App.openModal(modal);
   }

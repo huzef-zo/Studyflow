@@ -21,7 +21,7 @@
   <meta name="msapplication-TileColor" content="#5B9BF0">
   
   <title>Analytics - StudyFlow</title>
-  <link rel="stylesheet" href="css/style.css?v=v2025-05-03-03">
+  <link rel="stylesheet" href="css/style.css?v=v2026-06-01-01">
 </head>
 <body>
   <!-- Navigation Containers -->
@@ -33,8 +33,8 @@
     <!-- Page Header -->
     <header class="page-header animate-fade-in">
       <div class="page-header-title-group">
-        <h1>Performance Analytics</h1>
-        <p class="subtitle">In-depth intelligence on your study patterns</p>
+        <h1>[ PERFORMANCE ANALYTICS ]</h1>
+        <p class="subtitle terminal-caption">SYSTEM METRICS & TACTICAL LOGS</p>
       </div>
     </header>
 
@@ -57,14 +57,15 @@
       </div>
 
       <!-- Activity Frequency Graph -->
-      <section class="card animate-fade-in mb-md" id="graph-section">
-        <div class="card-header">
-          <h3 class="card-title">Timeline Activity</h3>
+      <section class="card card-hud-clip scanline-overlay animate-fade-in mb-md" id="graph-section">
+        <div class="card-header" style="position: relative; z-index: 2;">
+          <h3 class="hud-header">[ HOLOGRAPHIC ACTIVITY TREND ]</h3>
         </div>
-        <div class="card-body">
+        <div class="card-body" style="position: relative; z-index: 2;">
           <div id="frequency-graph" style="height: 180px; width: 100%;">
             <!-- Populated by JS -->
           </div>
+          <div class="terminal-caption text-center mt-xs">STATUS: CALIBRATED • FREQUENCY RESPONSE OPTIMAL</div>
         </div>
       </section>
 
@@ -95,7 +96,7 @@
       <!-- Mastery Grid -->
       <section class="card animate-fade-in mb-md">
         <div class="card-header">
-          <h3 class="card-title">Sector Mastery</h3>
+          <h3 class="hud-header">[ SECTOR MASTERY ]</h3>
         </div>
         <div id="mastery-overview" style="display: grid; gap: 10px;">
           <!-- Populated by JS -->
@@ -105,8 +106,8 @@
       <!-- Current Objectives -->
       <section class="card animate-fade-in mb-md">
         <div class="card-header">
-          <h3 class="card-title">Current Objectives</h3>
-          <span class="badge" id="progress-percentage">0%</span>
+          <h3 class="hud-header">[ CURRENT OBJECTIVES ]</h3>
+          <span class="badge" id="progress-percentage" style="font-family: var(--font-mono); font-weight: 700; color: var(--accent-cyan);">0%</span>
         </div>
         <div id="tasks-progress"></div>
         <div id="hours-progress" class="mt-sm"></div>
@@ -115,7 +116,7 @@
       <!-- Study History -->
       <section class="card animate-fade-in mb-md">
         <div class="card-header">
-          <h3 class="card-title">Study History</h3>
+          <h3 class="hud-header">[ DUNGEON LOG ]</h3>
         </div>
         <div id="study-history-list" class="flex flex-col gap-xs" style="margin-top: 10px; max-height: 480px; overflow-y: auto;">
           <!-- Populated by JS -->
@@ -125,7 +126,7 @@
       <!-- Daily Reflections Log -->
       <section class="card animate-fade-in">
         <div class="card-header">
-          <h3 class="card-title">Tactical Reflections</h3>
+          <h3 class="hud-header">[ TACTICAL REFLECTIONS ]</h3>
         </div>
         <div id="reflections-log" class="flex flex-col gap-xs" style="margin-top: 10px;">
           <!-- Populated by JS -->
@@ -135,12 +136,12 @@
   </main>
 
   <!-- Scripts -->
-  <script src="js/storage.js?v=v2025-05-03-03"></script>
-  <script src="js/subtask-utils.js?v=v2025-05-03-03"></script>
-  <script src="js/pwa-manager.js?v=v2025-05-03-03"></script>
-  <script src="js/achievements.js?v=v2025-05-03-03"></script>
-  <script src="js/app.js?v=v2025-05-03-03"></script>
-  <script src="js/history.js?v=v2025-05-03-03"></script>
+  <script src="js/storage.js?v=v2026-06-01-01"></script>
+  <script src="js/subtask-utils.js?v=v2026-06-01-01"></script>
+  <script src="js/pwa-manager.js?v=v2026-06-01-01"></script>
+  <script src="js/achievements.js?v=v2026-06-01-01"></script>
+  <script src="js/app.js?v=v2026-06-01-01"></script>
+  <script src="js/history.js?v=v2026-06-01-01"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       PWAManager.init();

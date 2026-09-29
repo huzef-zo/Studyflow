@@ -51,6 +51,7 @@ const assetPaths = [
   'notes.html',
   'version.js',
   'browserconfig.xml',
+  'fonts/jetbrains-mono-latin.woff2',
   'css/style.css',
   'js/app.js',
   'js/storage.js',
