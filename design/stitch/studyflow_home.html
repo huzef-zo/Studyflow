@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_tab" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Plus+Jakarta+Sans:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { colors: { tertiary: "#febb3b", "on-primary": "#00315f", background: "#101419", "accent-hover": "#4A8AE0", "ambient-glow": "rgba(91, 155, 240, 0.08)", "on-primary-fixed-variant": "#004786", "text-secondary": "#8A94A6", "surface-container-low": "#181c21", outline: "#8b919d", "inverse-primary": "#005fb0", "surface-base": "#090D12", "surface-container": "#1c2025", "on-tertiary": "#422c00", "surface-glass": "rgba(24, 28, 38, 0.65)", "outline-variant": "#414751", "on-primary-container": "#003261", "glass-border-subtle": "rgba(255, 255, 255, 0.06)", "secondary-container": "#12487e", "on-error": "#690005", "on-surface-variant": "#c1c6d3", "primary-fixed-dim": "#a6c8ff", "on-primary-fixed": "#001c3b", "surface-container-lowest": "#0a0e14", "on-secondary-fixed": "#001c39", primary: "#a6c8ff", "surface-glass-active": "rgba(32, 38, 52, 0.8)", "secondary-fixed": "#d4e3ff", "tertiary-container": "#ca8e00", "secondary-fixed-dim": "#a4c9ff", "surface-bright": "#36393f", "tertiary-fixed-dim": "#febb3b", "error-container": "#93000a", "surface-tint": "#a6c8ff", "on-secondary-container": "#8cb7f4", "glass-border": "rgba(255, 255, 255, 0.12)", "text-primary": "#F4F6FB", "surface-container-high": "#262a30", "on-surface": "#e0e2ea", surface: "#101419", "on-secondary": "#00315d", "surface-dim": "#101419", "surface-variant": "#31353b", "tertiary-fixed": "#ffdeab", "on-tertiary-fixed": "#281900", "on-background": "#e0e2ea", "primary-fixed": "#d5e3ff", "surface-container-highest": "#31353b", "on-tertiary-fixed-variant": "#5f4100", "text-muted": "#525C6E", "on-error-container": "#ffdad6", "inverse-surface": "#e0e2ea", error: "#ffb4ab", "on-tertiary-container": "#442d00", secondary: "#a4c9ff", "on-secondary-fixed-variant": "#12487e", "inverse-on-surface": "#2d3136", "primary-container": "#5b9bf0" }, borderRadius: { DEFAULT: "1rem", lg: "2rem", xl: "3rem", full: "9999px" }, spacing: { "space-sm": "0.5rem", "margin-tablet": "2rem", "space-md": "1rem", "space-xl": "2rem", margin: "1.25rem", "gutter-sm": "0.75rem", "space-xs": "0.25rem", "space-lg": "1.5rem", gutter: "1rem" }, fontFamily: { "body-sm": ["Inter"], "label-sm": ["Inter"], "headline-lg-mobile": ["Plus Jakarta Sans"], "body-md": ["Inter"], "label-md": ["Inter"], "mono-timer": ["Plus Jakarta Sans"], "headline-sm": ["Plus Jakarta Sans"], "headline-lg": ["Plus Jakarta Sans"], "body-lg": ["Inter"], "display-lg": ["Plus Jakarta Sans"], "headline-md": ["Plus Jakarta Sans"] }, fontSize: { "body-sm": ["12px", { lineHeight: "18px", fontWeight: "400" }], "label-sm": ["12px", { lineHeight: "16px", letterSpacing: "0.02em", fontWeight: "500" }], "headline-lg-mobile": ["26px", { lineHeight: "34px", letterSpacing: "-0.015em", fontWeight: "600" }], "body-md": ["14px", { lineHeight: "20px", fontWeight: "400" }], "label-md": ["14px", { lineHeight: "20px", fontWeight: "500" }], "mono-timer": ["48px", { lineHeight: "52px", letterSpacing: "-0.03em", fontWeight: "700" }], "headline-sm": ["18px", { lineHeight: "24px", fontWeight: "600" }], "headline-lg": ["32px", { lineHeight: "40px", letterSpacing: "-0.02em", fontWeight: "600" }], "body-lg": ["16px", { lineHeight: "24px", fontWeight: "400" }], "display-lg": ["40px", { lineHeight: "48px", letterSpacing: "-0.02em", fontWeight: "700" }], "headline-md": ["22px", { lineHeight: "28px", letterSpacing: "-0.01em", fontWeight: "600" }] } } } };</script><style>@layer base{html,body{width:100vw;min-height:100vh;margin:0;padding:0;background-color:#090D12;}body{overscroll-behavior:none;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface-base text-on-surface font-body-md text-body-md flex flex-col relative antialiased selection:bg-primary-container selection:text-surface-base"><div class="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-lg h-80 bg-[radial-gradient(ellipse_at_top,rgba(91,155,240,0.14),transparent_70%)] pointer-events-none z-0"></div><header class="fixed top-0 inset-x-0 z-50 bg-surface-base/80 backdrop-blur-xl pt-safe"><div class="h-16 px-margin flex items-center justify-between"><div class="flex items-center gap-space-sm"><img alt="StudyFlow Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1X4S6uGUPziviGcaulGHTtkJvYW3e-QBbnhK5S9rvQI0PYAIUpnjurCMvYyM7mYT4YSmQw9CPhn8NKXXx_1MB80YyTHIC8Vlm78ECbR5DWUYZ2x2FUie8rtBns8auDoG9QFlVySbPGn6PX3GJDSu2IZ1w1kqYCyTAogkggXLsej4RdrFkEGdRTjhKg1IN7UC4hvoGW7gNY9uNPzjRacE-o92OrUhV5MZiIjlztywrIH8i24o1Ld5_1JG84"/><div class="flex flex-col"><span class="font-headline-sm text-headline-sm tracking-tight text-text-primary leading-none">StudyFlow</span><span class="font-label-sm text-label-sm text-text-secondary leading-none mt-1">Home</span></div></div><div class="flex items-center gap-space-sm"><button aria-label="Notifications" class="w-11 h-11 rounded-full flex items-center justify-center text-text-secondary hover:text-text-primary transition-colors"><span class="material-symbols-outlined text-[22px]">notifications</span></button><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="flex-1 flex flex-col relative w-full pt-16 pb-28 px-margin bg-surface-base z-10"><div class="flex flex-col w-full gap-space-xl">
+<!-- Top Greeting & Date Context Header -->
+<section class="flex items-center justify-between pt-space-xs">
+<div class="flex flex-col gap-0.5">
+<span class="font-label-sm text-label-sm text-text-secondary">Thursday, October 24</span>
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile text-text-primary tracking-tight">Good evening, Zo</h1>
+</div>
+<div class="flex items-center gap-space-sm">
+<div class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-container-high/60 backdrop-blur-md">
+<span class="w-2 h-2 rounded-full bg-primary-container animate-pulse"></span>
+<span class="font-label-sm text-[11px] text-text-primary">Deep Mode</span>
+</div>
+</div>
+</section>
+<!-- Hero Glass Card: Next Up Focus Block -->
+<section class="relative rounded-lg bg-surface-container/70 backdrop-blur-xl shadow-2xl p-6 overflow-hidden">
+<div class="absolute -right-12 -top-12 w-48 h-48 bg-primary-container/10 rounded-full blur-3xl pointer-events-none"></div>
+<div class="relative z-10 flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-[11px] uppercase tracking-wider text-primary px-2.5 py-1 rounded-full bg-primary/10">Next Up</span>
+<div class="flex items-center gap-1 text-text-secondary">
+<span class="material-symbols-outlined text-[16px]">schedule</span>
+<span class="font-body-sm text-body-sm">Due 8:30 PM</span>
+</div>
+</div>
+<div class="flex flex-col gap-1.5">
+<h2 class="font-headline-md text-headline-md text-text-primary tracking-tight leading-snug">Advanced Neurobiology Review &amp; Flashcards</h2>
+<div class="flex items-center gap-2 mt-0.5">
+<span class="font-label-sm text-[11px] px-2.5 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-medium">Biology</span>
+<span class="text-text-muted text-xs">•</span>
+<span class="font-body-sm text-body-sm text-text-secondary">45 min session</span>
+</div>
+</div>
+<div class="pt-2 flex items-center gap-3">
+<button class="flex-1 h-12 rounded-full bg-primary-container text-surface-base font-label-md text-label-md flex items-center justify-center gap-2 shadow-lg shadow-primary-container/20 hover:bg-accent-hover active:scale-[0.98] transition-all" id="start-focus-btn">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+<span>Start focus</span>
+</button>
+<button aria-label="Task options" class="w-12 h-12 rounded-full bg-surface-container-high/80 text-text-primary flex items-center justify-center hover:bg-surface-bright active:scale-95 transition-all">
+<span class="material-symbols-outlined text-[20px]">more_horiz</span>
+</button>
+</div>
+</div>
+</section>
+<!-- Metric / Stats Row: 3 Unified Glass Tiles -->
+<section class="grid grid-cols-3 gap-gutter-sm">
+<!-- Tile 1: Streak -->
+<div class="rounded-DEFAULT bg-surface-container/60 backdrop-blur-md p-3.5 flex flex-col justify-between shadow-md">
+<div class="flex items-center justify-between mb-2">
+<span class="material-symbols-outlined text-primary text-[20px]" style="font-variation-settings: 'FILL' 1;">local_fire_department</span>
+<span class="font-label-sm text-[10px] text-primary bg-primary/10 px-1.5 py-0.5 rounded-full">+1</span>
+</div>
+<div class="flex flex-col">
+<span class="font-headline-sm text-headline-sm text-text-primary leading-tight">7 days</span>
+<span class="font-label-sm text-[11px] text-text-secondary mt-0.5">Active streak</span>
+</div>
+</div>
+<!-- Tile 2: Level / XP -->
+<div class="rounded-DEFAULT bg-surface-container/60 backdrop-blur-md p-3.5 flex flex-col justify-between shadow-md">
+<div class="flex items-center justify-between mb-2">
+<span class="material-symbols-outlined text-primary text-[20px]">military_tech</span>
+<span class="font-label-sm text-[10px] text-text-secondary">70%</span>
+</div>
+<div class="flex flex-col gap-1.5">
+<span class="font-headline-sm text-[15px] font-semibold text-text-primary leading-tight">Lvl 12</span>
+<div class="w-full h-1.5 rounded-full bg-surface-container-highest overflow-hidden">
+<div class="h-full bg-primary-container rounded-full" style="width: 70%;"></div>
+</div>
+<span class="font-label-sm text-[11px] text-text-secondary">840 XP</span>
+</div>
+</div>
+<!-- Tile 3: Weekly Goal -->
+<div class="rounded-DEFAULT bg-surface-container/60 backdrop-blur-md p-3.5 flex flex-col justify-between shadow-md">
+<div class="flex items-center justify-between mb-2">
+<span class="material-symbols-outlined text-primary text-[20px]">task_alt</span>
+<span class="font-label-sm text-[10px] text-text-secondary">60%</span>
+</div>
+<div class="flex flex-col">
+<span class="font-headline-sm text-headline-sm text-text-primary leading-tight">6 of 10</span>
+<span class="font-label-sm text-[11px] text-text-secondary mt-0.5">Weekly goal</span>
+</div>
+</div>
+</section>
+<!-- Upcoming Tasks Section -->
+<section class="flex flex-col gap-space-md">
+<div class="flex items-center justify-between px-0.5">
+<div class="flex items-center gap-2">
+<h3 class="font-headline-sm text-headline-sm text-text-primary">Upcoming</h3>
+<span class="font-label-sm text-[11px] px-2 py-0.5 rounded-full bg-surface-container-high text-text-secondary">3</span>
+</div>
+<button class="font-label-sm text-label-sm text-primary hover:text-accent-hover transition-colors">View all</button>
+</div>
+<div class="flex flex-col gap-space-sm" id="upcoming-task-list">
+<!-- Task Row 1 -->
+<article class="task-item group rounded-DEFAULT bg-surface-container/50 backdrop-blur-md p-4 flex items-center justify-between shadow-sm hover:bg-surface-container/70 transition-all cursor-pointer">
+<div class="flex items-center gap-3.5 min-w-0 flex-1 pr-2">
+<button aria-label="Mark completed" class="task-checkbox flex-shrink-0 w-6 h-6 rounded-full bg-surface-container-highest flex items-center justify-center text-transparent hover:text-surface-base transition-colors">
+<span class="material-symbols-outlined text-[16px]">check</span>
+</button>
+<div class="flex flex-col min-w-0">
+<span class="task-title font-body-md text-body-md text-text-primary font-medium truncate">Macroeconomics Essay Outline</span>
+<div class="flex items-center gap-2 mt-0.5">
+<span class="font-label-sm text-[11px] text-text-secondary">Economics</span>
+<span class="text-text-muted text-xs">•</span>
+<span class="font-body-sm text-body-sm text-text-secondary">Tomorrow, 10:00 AM</span>
+</div>
+</div>
+</div>
+<span class="material-symbols-outlined text-text-muted text-[18px] group-hover:text-text-secondary transition-colors">chevron_right</span>
+</article>
+<!-- Task Row 2 -->
+<article class="task-item group rounded-DEFAULT bg-surface-container/50 backdrop-blur-md p-4 flex items-center justify-between shadow-sm hover:bg-surface-container/70 transition-all cursor-pointer">
+<div class="flex items-center gap-3.5 min-w-0 flex-1 pr-2">
+<button aria-label="Mark completed" class="task-checkbox flex-shrink-0 w-6 h-6 rounded-full bg-surface-container-highest flex items-center justify-center text-transparent hover:text-surface-base transition-colors">
+<span class="material-symbols-outlined text-[16px]">check</span>
+</button>
+<div class="flex flex-col min-w-0">
+<span class="task-title font-body-md text-body-md text-text-primary font-medium truncate">Organic Chemistry Lab Report</span>
+<div class="flex items-center gap-2 mt-0.5">
+<span class="font-label-sm text-[11px] text-text-secondary">Chemistry</span>
+<span class="text-text-muted text-xs">•</span>
+<span class="font-body-sm text-body-sm text-text-secondary">Friday, 2:00 PM</span>
+</div>
+</div>
+</div>
+<span class="material-symbols-outlined text-text-muted text-[18px] group-hover:text-text-secondary transition-colors">chevron_right</span>
+</article>
+<!-- Task Row 3 -->
+<article class="task-item group rounded-DEFAULT bg-surface-container/50 backdrop-blur-md p-4 flex items-center justify-between shadow-sm hover:bg-surface-container/70 transition-all cursor-pointer">
+<div class="flex items-center gap-3.5 min-w-0 flex-1 pr-2">
+<button aria-label="Mark completed" class="task-checkbox flex-shrink-0 w-6 h-6 rounded-full bg-surface-container-highest flex items-center justify-center text-transparent hover:text-surface-base transition-colors">
+<span class="material-symbols-outlined text-[16px]">check</span>
+</button>
+<div class="flex flex-col min-w-0">
+<span class="task-title font-body-md text-body-md text-text-primary font-medium truncate">Linear Algebra Problem Set</span>
+<div class="flex items-center gap-2 mt-0.5">
+<span class="font-label-sm text-[11px] text-text-secondary">Mathematics</span>
+<span class="text-text-muted text-xs">•</span>
+<span class="font-body-sm text-body-sm text-text-secondary">Sunday, 6:00 PM</span>
+</div>
+</div>
+</div>
+<span class="material-symbols-outlined text-text-muted text-[18px] group-hover:text-text-secondary transition-colors">chevron_right</span>
+</article>
+</div>
+</section>
+<!-- Interactive script for tactile task completion & micro-delight -->
+<script>
+    document.querySelectorAll('.task-checkbox').forEach((checkbox) => {
+      checkbox.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const article = checkbox.closest('.task-item');
+        const title = article.querySelector('.task-title');
+        const isDone = checkbox.dataset.done === 'true';
+
+        if (!isDone) {
+          checkbox.dataset.done = 'true';
+          checkbox.classList.remove('bg-surface-container-highest', 'text-transparent');
+          checkbox.classList.add('bg-primary-container', 'text-surface-base');
+          title.classList.add('line-through', 'text-text-muted');
+          title.classList.remove('text-text-primary');
+        } else {
+          checkbox.dataset.done = 'false';
+          checkbox.classList.add('bg-surface-container-highest', 'text-transparent');
+          checkbox.classList.remove('bg-primary-container', 'text-surface-base');
+          title.classList.remove('line-through', 'text-text-muted');
+          title.classList.add('text-text-primary');
+        }
+      });
+    });
+
+    const focusBtn = document.getElementById('start-focus-btn');
+    if (focusBtn) {
+      focusBtn.addEventListener('click', () => {
+        const textSpan = focusBtn.querySelector('span:last-child');
+        if (textSpan) {
+          const originalText = textSpan.textContent;
+          textSpan.textContent = 'Session Active';
+          focusBtn.classList.add('opacity-90');
+          setTimeout(() => {
+            textSpan.textContent = originalText;
+            focusBtn.classList.remove('opacity-90');
+          }, 1800);
+        }
+      });
+    }
+  </script>
+</div></main><div class="fixed bottom-20 right-margin z-50 pb-safe pointer-events-auto"><button aria-label="Add task or session" class="w-14 h-14 rounded-full bg-primary-container text-surface-base flex items-center justify-center shadow-[0_12px_24px_-4px_rgba(91,155,240,0.4)] hover:bg-accent-hover active:scale-95 transition-all"><span class="material-symbols-outlined text-[28px] font-bold">add</span></button></div><nav class="fixed bottom-0 inset-x-0 z-40 pb-safe bg-surface-glass backdrop-blur-2xl" data-active-classes="text-primary-container"><div class="flex justify-around items-center h-16 px-space-xs"><a aria-current="page" class="flex flex-col items-center justify-center gap-0.5 min-w-[56px] h-12 transition-all text-primary-container" data-path="home" href="#"><span class="material-symbols-outlined text-[22px]">dashboard</span><span class="font-label-sm text-[11px] leading-tight">Home</span></a><a class="flex flex-col items-center justify-center gap-0.5 min-w-[56px] h-12 text-text-secondary hover:text-text-primary transition-all" data-path="tasks" href="#"><span class="material-symbols-outlined text-[22px]">check_circle</span><span class="font-label-sm text-[11px] leading-tight">Tasks</span></a><a class="flex flex-col items-center justify-center gap-0.5 min-w-[56px] h-12 text-text-secondary hover:text-text-primary transition-all" data-path="focus-timer" href="#"><span class="material-symbols-outlined text-[22px]">timelapse</span><span class="font-label-sm text-[11px] leading-tight">Focus</span></a><a class="flex flex-col items-center justify-center gap-0.5 min-w-[56px] h-12 text-text-secondary hover:text-text-primary transition-all" data-path="calendar" href="#"><span class="material-symbols-outlined text-[22px]">calendar_today</span><span class="font-label-sm text-[11px] leading-tight">Calendar</span></a><a class="flex flex-col items-center justify-center gap-0.5 min-w-[56px] h-12 text-text-secondary hover:text-text-primary transition-all" data-path="more-menu" href="#"><span class="material-symbols-outlined text-[22px]">grid_view</span><span class="font-label-sm text-[11px] leading-tight">More</span></a></div></nav></body></html>
