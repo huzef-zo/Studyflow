@@ -25,7 +25,7 @@
   <meta name="msapplication-TileColor" content="#5B9BF0">
   
   <title>Dashboard - StudyFlow</title>
-  <link rel="stylesheet" href="css/style.css?v=v2026-09-29-01">
+  <link rel="stylesheet" href="css/style.css?v=v2026-09-30-01">
 </head>
 <body>
   <!-- Navigation Containers -->
@@ -39,337 +39,327 @@
 
   <!-- Main Content -->
   <main class="main-container">
+    <!-- Top Bar Header -->
+    <div id="global-top-bar" class="flex items-center justify-between w-full mb-md">
+      <div class="top-bar-brand">
+        <div class="top-bar-logo">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+        </div>
+        <span class="top-bar-title">StudyFlow</span>
+      </div>
+      <a href="settings.html" class="user-avatar-circle" id="top-user-avatar" title="Settings" aria-label="User settings">
+        SF
+      </a>
+    </div>
+
     <!-- Page Header -->
-    <header class="page-header animate-fade-in">
+    <header class="page-header animate-fade-in mb-md">
       <div class="page-header-title-group">
-        <h1 id="greeting">Good morning!</h1>
-        <p class="subtitle" id="date-display"></p>
+        <p class="subtitle" id="date-display" style="font-size:12px;text-transform:uppercase;letter-spacing:0.04em;color:var(--text-muted);"></p>
+        <h1 id="greeting">Good evening</h1>
       </div>
     </header>
 
-    <!-- XP Progress Widget -->
-    <section class="xp-widget animate-fade-in mb-md">
-      <div class="card">
+    <!-- NEXT UP Hero Card -->
+    <section id="next-up-hero" class="hero-card mb-md animate-fade-in">
+      <!-- Populated by JS -->
+    </section>
+
+    <!-- 3 Compact Tiles -->
+    <section class="grid-3 mb-md animate-fade-in">
+      <!-- Streak Tile -->
+      <div class="card p-sm">
         <div class="flex items-center justify-between mb-xs">
-          <div class="flex items-center gap-sm">
-            <div id="xp-rank-icon" style="font-size: 1.25rem;">🛡️</div>
-            <div>
-              <div id="xp-rank-name" style="font-weight: 500; font-size: 13px; text-transform: uppercase; color: var(--accent-text);">Novice</div>
-              <div style="font-size: 11px; color: var(--text-muted);">Level <span id="xp-level">1</span></div>
-            </div>
-          </div>
-          <div style="text-align: right;">
-            <div id="xp-value-display" style="font-weight: 500; font-size: 13px; color: var(--accent-text);">0 / 100 XP</div>
-          </div>
+          <span style="font-size:11px;text-transform:uppercase;color:var(--text-muted);font-weight:600;">Streak</span>
+          <span id="streak-active-chip" class="badge" style="font-size:10px;background:rgba(91,155,240,0.12);color:var(--accent-text);display:none;">+1 Today</span>
         </div>
-        <div class="progress-bar-bg" style="height: 6px;">
+        <div class="flex items-baseline gap-xs">
+          <span class="data-number" id="streak-count">0</span>
+          <span style="font-size:12px;color:var(--text-muted);">days</span>
+        </div>
+      </div>
+
+      <!-- Level & XP Tile -->
+      <div class="card p-sm">
+        <div class="flex items-center justify-between mb-xs">
+          <span style="font-size:11px;text-transform:uppercase;color:var(--text-muted);font-weight:600;" id="xp-rank-name">Lvl 1</span>
+          <span style="font-size:10px;color:var(--text-muted);" id="xp-value-display">0 XP</span>
+        </div>
+        <div class="progress-bar-bg mb-xs" style="height:4px;">
           <div id="xp-progress-fill" class="progress-bar-fill" style="width: 0%;"></div>
         </div>
+        <div style="font-size:11px;color:var(--text-secondary);" id="xp-level-text">Level 1 Novice</div>
       </div>
-    </section>
 
-    <!-- Dense 2x2 Stats Grid -->
-    <section class="grid-2-dense animate-fade-in mb-md">
-      <div class="stat-pill">
-        <div class="stat-pill-icon"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
-        <div>
-          <div class="data-number" id="stat-today">0</div>
-          <div class="stat-pill-label">Tasks Today</div>
+      <!-- Weekly Goal Tile -->
+      <div class="card p-sm">
+        <div class="flex items-center justify-between mb-xs">
+          <span style="font-size:11px;text-transform:uppercase;color:var(--text-muted);font-weight:600;">Weekly Goal</span>
+          <span style="font-size:10px;color:var(--accent-text);" id="weekly-goal-percent">0%</span>
         </div>
-      </div>
-      <div class="stat-pill">
-        <div class="stat-pill-icon"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
-        <div>
-          <div class="data-number" id="stat-pending">0</div>
-          <div class="stat-pill-label">Pending</div>
-        </div>
-      </div>
-      <div class="stat-pill">
-        <div class="stat-pill-icon"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
-        <div>
-          <div class="data-number" id="stat-week">0</div>
-          <div class="stat-pill-label">Completed Today</div>
-        </div>
-      </div>
-      <div class="stat-pill">
-        <div class="stat-pill-icon"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg></div>
-        <div>
-          <div class="data-number" id="streak-count">0</div>
-          <div class="stat-pill-label">Streak</div>
+        <div class="flex items-baseline gap-xs">
+          <span class="data-number" id="weekly-goal-count">0</span>
+          <span style="font-size:12px;color:var(--text-muted);" id="weekly-goal-target">of 10 tasks</span>
         </div>
       </div>
     </section>
 
-    <!-- Bento Grid -->
-    <div class="bento-grid">
+    <!-- Upcoming Section -->
+    <section class="card mb-md animate-fade-in">
+      <div class="card-header mb-sm">
+        <div class="flex items-center gap-sm">
+          <h2 style="font-size:16px;">Upcoming</h2>
+          <span class="badge" id="upcoming-count-badge">0 pending</span>
+        </div>
+        <a href="tasks.html" class="btn btn-ghost btn-sm" style="font-size:12px;">View all</a>
+      </div>
+      <div id="upcoming-tasks-list" class="flex flex-col gap-xs">
+        <!-- Populated by JS -->
+      </div>
+    </section>
 
-      <!-- Mastery Overview -->
-      <section class="card animate-fade-in col-span-3 md:col-span-2">
-        <div class="flex items-center justify-between mb-md">
-          <h2 class="flex items-center gap-sm">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-fill)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
-            Mastery Overview
-          </h2>
-          <a href="settings.html" class="btn btn-secondary btn-sm">Manage</a>
-        </div>
-        <div id="mastery-overview" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px;">
-          <!-- Populated by JS -->
-        </div>
-      </section>
+    <!-- Collapsed Sections under Upcoming -->
+    <details class="card mb-md animate-fade-in">
+      <summary class="card-title" style="cursor:pointer;user-select:none;color:var(--text-secondary);">Today's Optimized Plan</summary>
+      <div id="today-plan-list" class="flex flex-col gap-xs mt-sm">
+        <!-- Populated by Scheduler -->
+      </div>
+    </details>
 
-      <!-- Upcoming Deadlines -->
-      <section class="card animate-fade-in row-span-2">
-        <div class="flex items-center justify-between mb-md">
-          <h2 class="flex items-center gap-sm">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-fill)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
-            Upcoming
-          </h2>
-          <a href="tasks.html" class="btn btn-secondary btn-sm">View All</a>
-        </div>
-        <div id="deadlines-list" class="timeline">
-          <!-- Populated by JS -->
-        </div>
-      </section>
+    <details class="card mb-md animate-fade-in">
+      <summary class="card-title" style="cursor:pointer;user-select:none;color:var(--text-secondary);">Sector Mastery Overview</summary>
+      <div id="mastery-overview" class="grid-2 mt-sm">
+        <!-- Populated by JS -->
+      </div>
+    </details>
 
-      <!-- Weekly Progress -->
-      <section class="card animate-fade-in col-span-2 md:col-span-2">
-        <div class="flex items-center justify-between mb-md">
-          <h2 class="flex items-center gap-sm">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-fill)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-            Weekly Progress
-          </h2>
-          <span class="badge" id="progress-percentage">0%</span>
-        </div>
-        <div id="tasks-progress" class="progress-container"></div>
-        <div id="hours-progress" class="progress-container" style="margin-top: var(--spacing-sm);"></div>
-      </section>
-
-      <!-- Today's Plan -->
-      <section class="card animate-fade-in col-span-3 md:col-span-2">
-        <h2 class="flex items-center gap-sm mb-md">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-fill)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M12 18h.01"/><path d="M16 18h.01"/></svg>
-          Today's Optimized Plan
-        </h2>
-        <div id="today-plan-list" class="flex flex-col gap-xs">
-          <!-- Populated by Scheduler -->
-        </div>
-      </section>
-
-      <!-- Daily Reflection -->
-      <section id="reflection-card" class="card animate-fade-in col-span-3" style="display:none;">
-        <div class="flex items-center justify-between mb-md">
-          <h2 class="flex items-center gap-sm" style="margin: 0;">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-fill)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-            Daily Reflection
-          </h2>
-          <button class="btn btn-ghost btn-sm" onclick="this.closest('#reflection-card').style.display='none'" aria-label="Dismiss daily reflection prompt">Dismiss</button>
-        </div>
-        <p class="text-secondary mb-md">Take a moment to record your progress today.</p>
-        <textarea id="reflection-input" class="form-input mb-md" placeholder="How was your progress today? What could be optimized?" style="height:80px;" aria-label="Daily Reflection"></textarea>
-        <button class="btn btn-primary" id="save-reflection-btn">Save Reflection</button>
-      </section>
-
-      <!-- Quick Actions -->
-      <section class="card animate-fade-in">
-        <h2 class="flex items-center gap-sm mb-md">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-fill)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-          Quick Actions
-        </h2>
-        <div class="flex flex-col gap-xs">
-          <a href="tasks.html?action=add" class="btn btn-primary">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
-            Add Task
-          </a>
-          <a href="timer.html" class="btn btn-secondary">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            Focus
-          </a>
-        </div>
-      </section>
-
-    </div>
+    <!-- Daily Reflection -->
+    <section id="reflection-card" class="card mb-md animate-fade-in" style="display:none;">
+      <div class="flex items-center justify-between mb-md">
+        <h3 class="card-title" style="margin: 0;">Daily Reflection</h3>
+        <button class="btn btn-ghost btn-sm" onclick="this.closest('#reflection-card').style.display='none'" aria-label="Dismiss daily reflection prompt">Dismiss</button>
+      </div>
+      <p class="text-secondary mb-md">Take a moment to record your progress today.</p>
+      <textarea id="reflection-input" class="form-input mb-md" placeholder="How was your progress today?" style="height:80px;" aria-label="Daily Reflection"></textarea>
+      <button class="btn btn-primary" id="save-reflection-btn">Save Reflection</button>
+    </section>
   </main>
 
   <!-- Scripts -->
-  <script src="js/storage.js?v=v2026-09-29-01"></script>
-  <script src="js/subtask-utils.js?v=v2026-09-29-01"></script>
-  <script src="js/pwa-manager.js?v=v2026-09-29-01"></script>
-  <script src="js/achievements.js?v=v2026-09-29-01"></script>
-  <script src="js/scheduler.js?v=v2026-09-29-01"></script>
-  <script src="js/app.js?v=v2026-09-29-01"></script>
-  
+  <script src="js/storage.js?v=v2026-09-30-01"></script>
+  <script src="js/subtask-utils.js?v=v2026-09-30-01"></script>
+  <script src="js/pwa-manager.js?v=v2026-09-30-01"></script>
+  <script src="js/achievements.js?v=v2026-09-30-01"></script>
+  <script src="js/scheduler.js?v=v2026-09-30-01"></script>
+  <script src="js/app.js?v=v2026-09-30-01"></script>
+
   <script>
     (function() {
       'use strict';
 
-      function updateGreeting() {
-        const hour = new Date().getHours();
-        const greetingEl = document.getElementById('greeting');
-        const user = Storage.getUser();
-        let greeting = hour < 12 ? 'Good morning' : (hour < 18 ? 'Good afternoon' : 'Good evening');
-        greetingEl.textContent = `${greeting}, ${user.name}!`;
+      function getUserInitials(name) {
+        if (!name || typeof name !== 'string') return 'SF';
+        const parts = name.trim().split(/\s+/).filter(Boolean);
+        if (parts.length === 0) return 'SF';
+        if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
+        return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
       }
 
-      function updateDateDisplay() {
+      function updateHeaderUser() {
+        const user = Storage.getUser();
+        const hour = new Date().getHours();
+        const greetingEl = document.getElementById('greeting');
+        let greeting = hour < 12 ? 'Good morning' : (hour < 18 ? 'Good afternoon' : 'Good evening');
+        greetingEl.textContent = `${greeting}, ${user.name}!`;
+
+        const avatarEl = document.getElementById('top-user-avatar');
+        if (avatarEl) {
+          avatarEl.textContent = getUserInitials(user.name);
+          avatarEl.setAttribute('aria-label', `User settings: ${user.name}`);
+        }
+
         const dateEl = document.getElementById('date-display');
-        const options = { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' };
+        const options = { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' };
         dateEl.textContent = new Date().toLocaleDateString('en-US', options);
       }
 
-      function updateStats() {
-        const stats = Storage.getStats();
-        document.getElementById('stat-today').textContent = stats.tasks.today || 0;
-        document.getElementById('stat-pending').textContent = stats.tasks.todayPending || 0;
-        document.getElementById('stat-week').textContent = stats.tasks.todayCompleted || 0;
-        document.getElementById('streak-count').textContent = stats.streak || 0;
-      }
+      function renderNextUpHero() {
+        const heroEl = document.getElementById('next-up-hero');
+        const tasks = Storage.getTasks().filter(t => !t.completed);
+        const todayStr = Storage.formatDate(new Date());
 
-      function updateProgress() {
-        const goals = Storage.getGoals();
-        
-        const tasksPercentage = goals.weekly_tasks > 0 ? Math.round((goals.current_tasks / goals.weekly_tasks) * 100) : 0;
-        document.getElementById('tasks-progress').innerHTML = createProgressBar(goals.current_tasks, goals.weekly_tasks, 'Missions');
-        
-        const currentHours = Math.round(goals.current_hours * 10) / 10;
-        document.getElementById('hours-progress').innerHTML = createProgressBar(currentHours, goals.weekly_hours, 'Focus Hours');
-        const hoursPercentage = goals.weekly_hours > 0 ? (goals.current_hours / goals.weekly_hours * 100) : 0;
-        const avgPercentage = Math.round((tasksPercentage + hoursPercentage) / 2);
-        document.getElementById('progress-percentage').textContent = `${Math.min(100, avgPercentage)}%`;
-      }
+        const pendingTasks = tasks.filter(t => {
+          if (t.type === 'repeating') return !Storage.isRepeatingTaskCompletedOnDate(t.id, todayStr);
+          return !t.completed;
+        });
 
-      function createProgressBar(current, max, label) {
-        const percentage = max > 0 ? Math.min(100, Math.round((current / max) * 100)) : 0;
-        return `
-          <div class="progress-header">
-            <span class="progress-label">${App.escapeHtml(label)}</span>
-            <span class="progress-percent">${current} / ${max}</span>
+        if (pendingTasks.length === 0) {
+          heroEl.innerHTML = `
+            <div class="text-center py-sm">
+              <span style="font-size:10px;text-transform:uppercase;color:var(--text-muted);font-weight:600;letter-spacing:0.04em;">NEXT UP</span>
+              <h3 style="font-size:16px;margin:8px 0;color:var(--text-primary);">All clear for today!</h3>
+              <p style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">No pending tasks. Take a break or add a new goal.</p>
+              <a href="tasks.html?action=add" class="btn btn-secondary btn-sm">+ Add Task</a>
+            </div>
+          `;
+          return;
+        }
+
+        const nextTask = pendingTasks[0];
+        const subjectColor = App.getSubjectColor(nextTask.subject);
+
+        heroEl.innerHTML = `
+          <div class="flex items-center justify-between mb-xs">
+            <span style="font-size:10px;text-transform:uppercase;color:var(--text-muted);font-weight:600;letter-spacing:0.04em;">NEXT UP</span>
+            <span class="badge" style="font-size:11px;background:rgba(91,155,240,0.12);color:var(--accent-text);border:none;">
+              ${nextTask.dueTime ? App.escapeHtml(nextTask.dueTime) : 'Due Today'}
+            </span>
           </div>
-          <div class="progress-bar-bg">
-            <div class="progress-bar-fill" style="width: ${percentage}%;"></div>
+
+          <h2 style="font-size:18px;margin-bottom:8px;color:var(--text-primary);">${App.escapeHtml(nextTask.title)}</h2>
+
+          <div class="flex items-center gap-sm mb-md">
+            <span class="subject-tag" style="background:rgba(${App.hexToRgb(subjectColor)}, 0.12);color:${subjectColor};">
+              <span style="width:6px;height:6px;border-radius:50%;background:${subjectColor};"></span>
+              ${App.escapeHtml(nextTask.subject)}
+            </span>
+          </div>
+
+          <div class="flex items-center justify-between gap-sm">
+            <a href="timer.html?taskId=${App.escapeHtml(nextTask.id)}" class="btn btn-primary flex-1">
+              Start focus
+            </a>
+            <button class="btn btn-secondary btn-icon" id="hero-complete-btn" aria-label="Complete task" title="Complete task">
+              ✓
+            </button>
           </div>
         `;
+
+        document.getElementById('hero-complete-btn')?.addEventListener('click', () => {
+          if (nextTask.type === 'repeating') {
+            Storage.setRepeatingTaskCompletedOnDate(nextTask.id, todayStr, true);
+          } else {
+            Storage.completeTask(nextTask.id);
+          }
+          App.showToast('Task completed!', 'success');
+          renderNextUpHero();
+          renderUpcomingList();
+          updateStatsAndTiles();
+        });
+      }
+
+      function renderUpcomingList() {
+        const listEl = document.getElementById('upcoming-tasks-list');
+        const badgeEl = document.getElementById('upcoming-count-badge');
+        const tasks = Storage.getTasks();
+        const todayStr = Storage.formatDate(new Date());
+
+        const pending = tasks.filter(t => {
+          if (t.type === 'repeating') return !Storage.isRepeatingTaskCompletedOnDate(t.id, todayStr);
+          return !t.completed;
+        });
+
+        badgeEl.textContent = `${pending.length} pending`;
+
+        if (pending.length === 0) {
+          listEl.innerHTML = '<p class="text-muted text-center py-sm" style="font-size:13px;">No upcoming tasks.</p>';
+          return;
+        }
+
+        listEl.innerHTML = pending.slice(0, 5).map(task => {
+          const subjectColor = App.getSubjectColor(task.subject);
+          return `
+            <div class="flex items-center gap-md p-xs" style="border-radius:12px;background:var(--bg-surface);">
+              <div class="task-checkbox" data-id="${App.escapeHtml(task.id)}" tabindex="0" role="checkbox" aria-checked="false" aria-label="Mark complete: ${App.escapeHtml(task.title)}"></div>
+              <div class="flex-1 min-w-0">
+                <div style="font-size:14px;font-weight:500;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${App.escapeHtml(task.title)}</div>
+                <div style="font-size:11px;color:var(--text-muted);">${App.escapeHtml(task.subject)} • ${task.dueDate ? Storage.formatDisplayDate(task.dueDate) : 'Today'}</div>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        listEl.querySelectorAll('.task-checkbox').forEach(cb => {
+          cb.onclick = () => {
+            const id = cb.dataset.id;
+            const t = Storage.getTaskById(id);
+            if (t.type === 'repeating') {
+              Storage.setRepeatingTaskCompletedOnDate(id, todayStr, true);
+            } else {
+              Storage.completeTask(id);
+            }
+            App.showToast('Task completed!', 'success');
+            renderNextUpHero();
+            renderUpcomingList();
+            updateStatsAndTiles();
+          };
+        });
+      }
+
+      function updateStatsAndTiles() {
+        const stats = Storage.getStats();
+        const goals = Storage.getGoals();
+
+        // Streak
+        document.getElementById('streak-count').textContent = stats.streak || 0;
+        const activeToday = stats.tasks.todayCompleted > 0;
+        document.getElementById('streak-active-chip').style.display = activeToday ? 'inline-block' : 'none';
+
+        // XP & Level
+        const xpState = Storage.loadData(Storage.KEYS.XP_STATE, Storage.DEFAULTS.xpState);
+        const level = Achievements.calculateLevel(xpState.totalXP);
+        const rank = Achievements.getRank(xpState.totalXP);
+        const nextLevelXP = Achievements.getXPForLevel(level + 1);
+        const currentLevelXP = Achievements.getXPForLevel(level);
+        const percentage = Math.min(100, Math.round(((xpState.totalXP - currentLevelXP) / (nextLevelXP - currentLevelXP)) * 100));
+
+        document.getElementById('xp-rank-name').textContent = `Lvl ${level}`;
+        document.getElementById('xp-value-display').textContent = `${xpState.totalXP} XP`;
+        document.getElementById('xp-progress-fill').style.width = `${percentage}%`;
+        document.getElementById('xp-level-text').textContent = `Level ${level} ${rank.title}`;
+
+        // Weekly Goal
+        const completed = goals.current_tasks || 0;
+        const target = goals.weekly_tasks || 10;
+        const goalPercent = target > 0 ? Math.min(100, Math.round((completed / target) * 100)) : 0;
+        document.getElementById('weekly-goal-percent').textContent = `${goalPercent}%`;
+        document.getElementById('weekly-goal-count').textContent = completed;
+        document.getElementById('weekly-goal-target').textContent = `of ${target} tasks`;
       }
 
       function updateMasteryOverview() {
         const masteryEl = document.getElementById('mastery-overview');
         const stats = Storage.getSubjectMasteryStats();
         if (stats.length === 0) {
-          masteryEl.innerHTML = '<div class="empty-state" style="padding: 1rem; grid-column: 1 / -1;"><p class="text-secondary text-center">No sectors defined</p></div>';
+          masteryEl.innerHTML = '<p class="text-muted text-center" style="grid-column: 1 / -1;font-size:12px;">No subjects defined.</p>';
           return;
         }
         masteryEl.innerHTML = stats.map(subject => `
-          <a href="tasks.html?subject=${encodeURIComponent(subject.name)}" class="card u-no-underline" style="padding: 10px 12px; background: var(--bg-tertiary);">
+          <div class="card p-xs" style="background:var(--bg-raised);">
             <div class="flex items-center justify-between mb-xs">
-              <span style="font-size: 13px; font-weight: 500; color: var(--text-primary);">${App.escapeHtml(subject.name)}</span>
-              <span style="font-size: 13px; font-weight: 500; color: var(--accent-text);">${subject.percentage}%</span>
+              <span style="font-size:12px;font-weight:500;color:var(--text-primary);">${App.escapeHtml(subject.name)}</span>
+              <span style="font-size:11px;color:var(--accent-text);">${subject.percentage}%</span>
             </div>
-            <div class="progress-bar-bg" style="height: 5px;">
-              <div class="progress-bar-fill" style="width: ${subject.percentage}%;"></div>
+            <div class="progress-bar-bg" style="height:4px;">
+              <div class="progress-bar-fill" style="width:${subject.percentage}%;"></div>
             </div>
-            <div style="font-size: 10px; color: var(--text-muted); margin-top: 4px; font-weight: 500; text-transform: uppercase;">
-              ${subject.completed} / ${subject.total} Tasks
-            </div>
-          </a>
+          </div>
         `).join('');
-      }
-
-      function updateXPWidget() {
-        const xpState = Storage.loadData(Storage.KEYS.XP_STATE, Storage.DEFAULTS.xpState);
-        const level = Achievements.calculateLevel(xpState.totalXP);
-        const rank = Achievements.getRank(xpState.totalXP);
-
-        const currentLevelXP = Achievements.getXPForLevel(level);
-        const nextLevelXP = Achievements.getXPForLevel(level + 1);
-        const xpInLevel = xpState.totalXP - currentLevelXP;
-        const xpRequired = nextLevelXP - currentLevelXP;
-        const percentage = Math.min(100, Math.round((xpInLevel / xpRequired) * 100));
-
-        let fillWidth = percentage;
-        if (xpState.totalXP > 0 && fillWidth < 2) {
-          fillWidth = 2; // thin sliver for low XP
-        }
-
-        document.getElementById('xp-level').textContent = level;
-        document.getElementById('xp-rank-name').textContent = rank.title;
-        document.getElementById('xp-value-display').textContent = `${xpState.totalXP} / ${nextLevelXP} XP`;
-        document.getElementById('xp-progress-fill').style.width = `${fillWidth}%`;
-
-        const rankIcons = {
-          'Novice': '🛡️',
-          'Apprentice': '⚔️',
-          'Scholar': '📜',
-          'Sage': '✨',
-          'Archmage': '🔮',
-          'Transcendent': '💎'
-        };
-        document.getElementById('xp-rank-icon').textContent = rankIcons[rank.title] || '🛡️';
       }
 
       function updateTodayPlan() {
         const plan = Scheduler.generatePlan();
         const planList = document.getElementById('today-plan-list');
-
         if (plan.length === 0) {
-          planList.innerHTML = '<p class="text-secondary text-center py-md">No sessions scheduled for today. Rest and recover!</p>';
+          planList.innerHTML = '<p class="text-muted text-center py-sm" style="font-size:12px;">No sessions scheduled for today.</p>';
           return;
         }
-
-        planList.innerHTML = plan.map(block => {
-          let icon = '🎯';
-          if (block.type === 'subject_review') icon = '📖';
-
-          const href = block.taskId ? `timer.html?taskId=${App.escapeHtml(block.taskId)}` : 'timer.html';
-
-          return `
-            <a href="${href}" class="flex items-center gap-sm p-sm u-no-underline" style="border-radius:8px; background:var(--bg-tertiary);">
-              <div style="font-size: 11px; font-weight: 500; color: var(--accent-text); min-width: 75px;">${App.escapeHtml(block.startTime)} - ${App.escapeHtml(block.endTime)}</div>
-              <div style="font-size: 1.1rem;">${icon}</div>
-              <div class="flex-1 min-w-0">
-                <div style="font-size: 13px; font-weight: 500; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${App.escapeHtml(block.label)}</div>
-                <div style="font-size: 10px; color: var(--text-muted); text-transform: uppercase;">${App.escapeHtml(block.subject || 'General')}</div>
-              </div>
-            </a>
-          `;
-        }).join('');
-      }
-
-      function updateDeadlines() {
-        const deadlinesEl = document.getElementById('deadlines-list');
-        const upcomingTasks = Storage.getUpcomingTasks(7);
-        if (upcomingTasks.length === 0) {
-          deadlinesEl.innerHTML = '<div class="empty-state" style="padding: 1rem;"><p class="text-secondary text-center">Clear timeline</p></div>';
-          return;
-        }
-        deadlinesEl.innerHTML = upcomingTasks.slice(0, 5).map(task => {
-          const isOverdue = !task.completed && task.dueDate && Storage.isDateOverdue(task.dueDate);
-          return `
-            <a href="timer.html?taskId=${App.escapeHtml(task.id)}" class="timeline-item ${isOverdue ? 'overdue' : ''} u-block u-no-underline">
-              <div class="timeline-dot"></div>
-              <div class="flex items-center justify-between">
-                <div style="font-size: 10px; font-weight: 500; color: ${isOverdue ? 'var(--danger)' : 'var(--accent-text)'}; text-transform: uppercase;">
-                  ${Storage.formatDisplayDate(task.dueDate)}
-                </div>
-                ${isOverdue ? '<span class="badge" style="color:var(--danger);">MISSED</span>' : ''}
-              </div>
-              <div style="font-size: 13px; font-weight: 500; color: var(--text-primary);">${App.escapeHtml(task.title)}</div>
-              <div style="font-size: 11px; color: var(--text-muted);">${App.escapeHtml(task.subject)}</div>
-            </a>
-          `;
-        }).join('');
-      }
-
-      function init() {
-        PWAManager.init();
-        updateGreeting();
-        updateDateDisplay();
-        updateStats();
-        updateProgress();
-        updateMasteryOverview();
-        updateDeadlines();
-        updateXPWidget();
-        updateTodayPlan();
-        checkReflectionStatus();
-        Achievements.init();
+        planList.innerHTML = plan.map(block => `
+          <div class="flex items-center gap-sm p-xs" style="border-radius:8px;background:var(--bg-raised);">
+            <span style="font-size:11px;color:var(--accent-text);min-width:70px;">${App.escapeHtml(block.startTime)}</span>
+            <span style="font-size:12px;color:var(--text-primary);flex:1;">${App.escapeHtml(block.label)}</span>
+          </div>
+        `).join('');
       }
 
       function checkReflectionStatus() {
@@ -383,6 +373,18 @@
         }
       }
 
+      function init() {
+        PWAManager.init();
+        updateHeaderUser();
+        renderNextUpHero();
+        renderUpcomingList();
+        updateStatsAndTiles();
+        updateMasteryOverview();
+        updateTodayPlan();
+        checkReflectionStatus();
+        Achievements.init();
+      }
+
       document.getElementById('save-reflection-btn')?.addEventListener('click', () => {
         const inputEl = document.getElementById('reflection-input');
         const text = inputEl ? inputEl.value.trim() : '';
@@ -394,20 +396,21 @@
             timestamp: new Date().toISOString()
           });
           Storage.saveData(Storage.KEYS.REFLECTIONS, reflections);
-          App.showToast('Reflection stored in history', 'success');
+          App.showToast('Reflection saved!', 'success');
           document.getElementById('reflection-card').style.display = 'none';
         } else {
           App.showToast('Please enter a reflection before saving', 'warning');
           inputEl?.focus();
         }
       });
+
       init();
 
       window.addEventListener('studyflow_taskDataChanged', () => {
-        updateStats();
+        renderNextUpHero();
+        renderUpcomingList();
+        updateStatsAndTiles();
         updateMasteryOverview();
-        updateDeadlines();
-        updateXPWidget();
         updateTodayPlan();
       });
     })();

@@ -210,17 +210,17 @@ const History = (function() {
     const summaryGridEl = document.getElementById('summary-stats-grid');
 
     if (periodCompletedCount === 0 && studyMinutes === 0) {
-      if (noActivityEl && noActivityEl.style) noActivityEl.style.display = 'block';
-      if (graphSectionEl && graphSectionEl.style) graphSectionEl.style.display = 'none';
-      if (summaryGridEl && summaryGridEl.style) summaryGridEl.style.display = 'none';
+      if (noActivityEl) { if (!noActivityEl.style) noActivityEl.style = {}; noActivityEl.style.display = 'block'; }
+      if (graphSectionEl) { if (!graphSectionEl.style) graphSectionEl.style = {}; graphSectionEl.style.display = 'none'; }
+      if (summaryGridEl) { if (!summaryGridEl.style) summaryGridEl.style = {}; summaryGridEl.style.display = 'none'; }
     } else {
-      if (noActivityEl && noActivityEl.style) noActivityEl.style.display = 'none';
-      if (graphSectionEl && graphSectionEl.style) graphSectionEl.style.display = 'block';
-      if (summaryGridEl && summaryGridEl.style) summaryGridEl.style.display = 'grid';
+      if (noActivityEl) { if (!noActivityEl.style) noActivityEl.style = {}; noActivityEl.style.display = 'none'; }
+      if (graphSectionEl) { if (!graphSectionEl.style) graphSectionEl.style = {}; graphSectionEl.style.display = 'block'; }
+      if (summaryGridEl) { if (!summaryGridEl.style) summaryGridEl.style = {}; summaryGridEl.style.display = 'grid'; }
     }
 
     if (elements.totalCompletedTasks) elements.totalCompletedTasks.textContent = periodCompletedCount;
-    const safeHours = Number.isFinite(studyMinutes) ? Math.round(studyMinutes / 60) : 0;
+    const safeHours = Number.isFinite(studyMinutes) ? (studyMinutes / 60).toFixed(1) : '0';
     if (elements.totalStudyHours) elements.totalStudyHours.textContent = safeHours + 'h';
     if (elements.allTimeStreak) elements.allTimeStreak.textContent = stats.bestStreak;
 
@@ -228,6 +228,38 @@ const History = (function() {
       const rate = filteredTasks.length > 0 ? Math.round((periodCompletedCount / filteredTasks.length) * 100) : 0;
       elements.completionRate.textContent = `${rate}%`;
     }
+
+    const streakChip = document.getElementById('streak-delta-chip');
+    if (streakChip && streakChip.style) {
+      if (stats.streak > 0 && stats.streak === stats.bestStreak) {
+        streakChip.style.display = 'inline-block';
+        streakChip.textContent = 'Personal record';
+      } else {
+        streakChip.style.display = 'none';
+      }
+    }
+
+    const tasksChip = document.getElementById('tasks-delta-chip');
+    if (tasksChip && tasksChip.style) {
+      if (statsPeriodDays === 7) {
+        tasksChip.style.display = 'inline-block';
+        tasksChip.textContent = `+${periodCompletedCount} this week`;
+      } else {
+        tasksChip.style.display = 'none';
+      }
+    }
+
+    const hoursChip = document.getElementById('hours-delta-chip');
+    if (hoursChip && hoursChip.style) {
+      if (statsPeriodDays === 7) {
+        hoursChip.style.display = 'inline-block';
+        hoursChip.textContent = `+${safeHours}h this week`;
+      } else {
+        hoursChip.style.display = 'none';
+      }
+    }
+
+    renderDeepWorkInsight();
 
     if (elements.productiveDay) {
       const isWeekly = statsPeriodDays === 7;
@@ -309,22 +341,101 @@ const History = (function() {
     }
   }
 
-  function updateMasteryOverview() {
-    if (!elements.masteryOverview) return;
-    const stats = Storage.getSubjectMasteryStats();
-    if (stats.length === 0) {
-      elements.masteryOverview.innerHTML = `<div style="grid-column:1/-1">${App.createEmptyStateHtml({ title: 'No Subjects', text: 'Define your subjects in Settings to begin tracking mastery.', icon: 'settings', padding: '2rem' })}</div>`;
+  function renderDeepWorkInsight() {
+    const card = document.getElementById('deep-work-insight-card');
+    if (!card) return;
+    const workSessions = Storage.getSessions().filter(s => s.type === 'work' && s.completedAt);
+    if (workSessions.length < 5) {
+      if (card.style) card.style.display = 'none';
       return;
     }
-    elements.masteryOverview.innerHTML = stats.map(subject => `
-      <a href="tasks.html?subject=${encodeURIComponent(subject.name)}" class="mastery-card u-no-underline" style="border-left: 3px solid ${App.escapeHtml(subject.color)};">
-        <div class="mastery-subject-name" title="${App.escapeHtml(subject.name)}">${App.escapeHtml(subject.name)}</div>
-        <div class="mastery-progress-mini">
-          <div class="mastery-progress-mini-fill" style="width:${subject.percentage}%;background-color:${App.escapeHtml(subject.color)};"></div>
+
+    const hourCounts = new Array(24).fill(0);
+    workSessions.forEach(s => {
+      const d = new Date(s.completedAt);
+      if (!isNaN(d.getTime())) {
+        hourCounts[d.getHours()]++;
+      }
+    });
+
+    let maxWindowCount = -1;
+    let peakStartHour = 9;
+    for (let h = 0; h < 24; h++) {
+      const windowCount = hourCounts[h] + hourCounts[(h + 1) % 24];
+      if (windowCount > maxWindowCount) {
+        maxWindowCount = windowCount;
+        peakStartHour = h;
+      }
+    }
+
+    const formatHour = (h) => {
+      const period = h >= 12 ? 'PM' : 'AM';
+      const hour12 = h % 12 === 0 ? 12 : h % 12;
+      return `${hour12}:00 ${period}`;
+    };
+
+    const startLabel = formatHour(peakStartHour);
+    const endLabel = formatHour((peakStartHour + 2) % 24);
+
+    card.style.display = 'block';
+    card.innerHTML = `
+      <div class="flex items-center gap-sm mb-xs">
+        <span style="font-size:16px;">💡</span>
+        <h3 style="font-size:14px;margin:0;color:var(--text-primary);">Optimal Deep Work Window</h3>
+      </div>
+      <p style="font-size:12px;color:var(--text-secondary);margin:0;">
+        Your peak focus time is <strong>${startLabel} - ${endLabel}</strong> based on ${workSessions.length} completed sessions.
+      </p>
+    `;
+  }
+
+  function updateMasteryOverview() {
+    if (!elements.masteryOverview) return;
+    const subjects = Storage.getSubjects();
+    const sessions = getFilteredSessions().filter(s => s.type === 'work');
+    const tasks = Storage.getTasks();
+
+    if (subjects.length === 0) {
+      elements.masteryOverview.innerHTML = `<p class="text-muted text-center py-sm" style="font-size:12px;">No subjects defined.</p>`;
+      return;
+    }
+
+    const subjectMinutes = {};
+    subjects.forEach(s => subjectMinutes[s.name] = 0);
+    let totalWorkMins = 0;
+
+    sessions.forEach(s => {
+      const task = s.taskId ? tasks.find(t => t.id === s.taskId) : null;
+      const subName = task ? task.subject : 'Other';
+      const dur = Number.isFinite(Number(s.duration)) ? Number(s.duration) : 0;
+      if (subjectMinutes[subName] !== undefined) {
+        subjectMinutes[subName] += dur;
+      }
+      totalWorkMins += dur;
+    });
+
+    elements.masteryOverview.innerHTML = subjects.map(s => {
+      const mins = subjectMinutes[s.name] || 0;
+      const hours = (mins / 60).toFixed(1);
+      const share = totalWorkMins > 0 ? Math.round((mins / totalWorkMins) * 100) : 0;
+      return `
+        <div class="card p-xs mb-xs" style="background:var(--bg-raised);">
+          <div class="flex items-center justify-between mb-xs">
+            <div class="flex items-center gap-xs">
+              <span class="priority-dot" style="background:${App.escapeHtml(s.color)};"></span>
+              <span style="font-size:13px;font-weight:600;color:var(--text-primary);">${App.escapeHtml(s.name)}</span>
+            </div>
+            <div class="flex items-center gap-sm">
+              <span style="font-size:11px;color:var(--text-muted);">${hours}h</span>
+              <span style="font-size:12px;font-weight:600;color:var(--accent-text);">${share}%</span>
+            </div>
+          </div>
+          <div class="progress-bar-bg" style="height:4px;">
+            <div class="progress-bar-fill" style="width:${share}%;background-color:${App.escapeHtml(s.color)} !important;"></div>
+          </div>
         </div>
-        <div class="mastery-stats"><span>${subject.percentage}%</span><span>${subject.completed}/${subject.total}</span></div>
-      </a>
-    `).join('');
+      `;
+    }).join('');
   }
 
   function updateWeeklyProgress() {

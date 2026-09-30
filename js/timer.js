@@ -115,20 +115,28 @@ const Timer = (function() {
   }
 
   function toggleAmbientSound(type) {
+    const offBtn = document.getElementById('ambient-off-btn');
     const pinkBtn = document.getElementById('ambient-pink-btn');
     const brownBtn = document.getElementById('ambient-brown-btn');
+
+    const allBtns = [offBtn, pinkBtn, brownBtn].filter(Boolean);
+    allBtns.forEach(b => {
+      b.classList.remove('active');
+      b.setAttribute('aria-pressed', 'false');
+    });
 
     if (ambientNoise) {
       ambientNoise.stop();
       ambientNoise = null;
+    }
 
-      if (pinkBtn) { pinkBtn.classList.remove('active'); pinkBtn.setAttribute('aria-pressed', 'false'); }
-      if (brownBtn) { brownBtn.classList.remove('active'); brownBtn.setAttribute('aria-pressed', 'false'); }
-
-      if (currentAmbientType === type) {
-        currentAmbientType = null;
-        return false;
+    if (type === 'off' || currentAmbientType === type) {
+      currentAmbientType = null;
+      if (offBtn) {
+        offBtn.classList.add('active');
+        offBtn.setAttribute('aria-pressed', 'true');
       }
+      return false;
     }
 
     currentAmbientType = type;
@@ -174,6 +182,10 @@ const Timer = (function() {
     } catch (e) {
       console.error(e);
       currentAmbientType = null;
+      if (offBtn) {
+        offBtn.classList.add('active');
+        offBtn.setAttribute('aria-pressed', 'true');
+      }
       return false;
     }
   }

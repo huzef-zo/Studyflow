@@ -12,7 +12,7 @@ const Calendar = (function() {
   let selectedDate = null;
   let elements = {};
 
-  const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const DAY_NAMES = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
   function initElements() {
@@ -103,7 +103,7 @@ const Calendar = (function() {
 
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
-    const startingDay = firstDay.getDay();
+    const startingDay = (firstDay.getDay() + 6) % 7;
     const totalDays = lastDay.getDate();
     const prevMonthLastDay = new Date(year, month, 0).getDate();
     const monthTasks = getTasksForMonth(year, month);
@@ -160,10 +160,15 @@ const Calendar = (function() {
   }
 
   function renderSelectedDayTasks() {
+    const badgeEl = document.getElementById('day-tasks-badge');
+    const paceFooter = document.getElementById('daily-pace-footer');
+
     if (!selectedDate) {
       elements.selectedDateTitle.textContent = 'Select a date';
+      if (badgeEl) badgeEl.style.display = 'none';
       if (elements.addTaskBtn) elements.addTaskBtn.style.display = 'none';
-      elements.dayTasks.innerHTML = App.createEmptyStateHtml({ title: 'Select a Date', text: 'Choose a date from the calendar to view scheduled missions.', icon: 'calendar', padding: '2rem' });
+      elements.dayTasks.innerHTML = App.createEmptyStateHtml({ title: 'Select a Date', text: 'Choose a date from the calendar to view scheduled tasks.', icon: 'calendar', padding: '2rem' });
+      if (paceFooter) paceFooter.innerHTML = '';
       return;
     }
 
@@ -173,11 +178,23 @@ const Calendar = (function() {
     }
 
     const date = new Date(selectedDate);
-    elements.selectedDateTitle.textContent = date.toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric', year:'numeric' });
+    elements.selectedDateTitle.textContent = date.toLocaleDateString('en-US', { weekday:'long', month:'short', day:'numeric' });
 
     const tasks = getTasksForDate(selectedDate);
+    if (badgeEl) {
+      badgeEl.style.display = 'inline-block';
+      badgeEl.textContent = `${tasks.length} task${tasks.length === 1 ? '' : 's'}`;
+    }
+
+    const doneCount = tasks.filter(t => t.type === 'repeating' ? Storage.isRepeatingTaskCompletedOnDate(t.id, selectedDate) : t.completed).length;
+    const remainingCount = tasks.length - doneCount;
+
+    if (paceFooter) {
+      paceFooter.innerHTML = `<span style="font-size:12px;color:var(--text-secondary);">Daily Pace: <strong>${remainingCount} tasks remaining</strong> (${doneCount}/${tasks.length} done)</span>`;
+    }
+
     if (tasks.length === 0) {
-      elements.dayTasks.innerHTML = App.createEmptyStateHtml({ title: 'Clear Schedule', text: 'No missions scheduled for this day.', icon: 'check', actionText: 'Schedule Mission', actionId: 'add-task-day', padding: '2rem' });
+      elements.dayTasks.innerHTML = App.createEmptyStateHtml({ title: 'Clear Schedule', text: 'No tasks scheduled for this day.', icon: 'check', actionText: 'Schedule Task', actionId: 'add-task-day', padding: '2rem' });
       document.getElementById('add-task-day')?.addEventListener('click', () => openAddTaskForDate(selectedDate));
       return;
     }
@@ -186,20 +203,49 @@ const Calendar = (function() {
       const subjectColor = App.getSubjectColor(task.subject);
       const isDone = task.type === 'repeating' ? Storage.isRepeatingTaskCompletedOnDate(task.id, selectedDate) : task.completed;
       return `
-        <div class="task-card priority-${App.escapeHtml(task.priority)} ${isDone ? 'completed' : ''}" data-id="${App.escapeHtml(task.id)}" style="--priority-color:${App.hexToRgb(subjectColor)};">
-          <div class="flex items-start gap-md w-full">
-            <div class="task-checkbox ${isDone ? 'checked' : ''}" data-id="${App.escapeHtml(task.id)}" tabindex="0" role="checkbox" aria-checked="${isDone}" aria-label="${isDone ? 'Mark as incomplete' : 'Mark as complete'}: ${App.escapeHtml(task.title)}"></div>
-            <div class="flex-1">
-              <div class="flex items-center gap-md mb-xs">
-                <div class="subject-pill" style="--tag-color:${App.hexToRgb(subjectColor)}">${App.escapeHtml(task.subject)}</div>
+        <div class="card p-sm mb-xs" data-id="${App.escapeHtml(task.id)}">
+          <div class="flex items-center justify-between gap-sm">
+            <div class="flex items-center gap-sm flex-1 min-w-0">
+              <div class="task-checkbox ${isDone ? 'checked' : ''}" data-id="${App.escapeHtml(task.id)}" tabindex="0" role="checkbox" aria-checked="${isDone}" aria-label="${isDone ? 'Mark incomplete' : 'Mark complete'}: ${App.escapeHtml(task.title)}"></div>
+              <div class="flex-1 min-w-0">
+                <div style="font-size:14px;font-weight:500;color:var(--text-primary);${isDone ? 'text-decoration:line-through;opacity:0.5;' : ''}">${App.escapeHtml(task.title)}</div>
+                <div class="flex items-center gap-xs mt-xs">
+                  <span class="priority-dot priority-${App.escapeHtml(task.priority)}"></span>
+                  <span class="subject-tag" style="background:rgba(${App.hexToRgb(subjectColor)}, 0.12);color:${subjectColor};font-size:10px;padding:2px 8px;">${App.escapeHtml(task.subject)}</span>
+                  <span style="font-size:11px;color:var(--text-muted);">${task.dueTime ? App.escapeHtml(task.dueTime) : 'All day'}</span>
+                </div>
               </div>
-              <div class="task-title-text" style="${isDone ? 'text-decoration:line-through;opacity:0.5;' : ''}">${App.escapeHtml(task.title)}</div>
-              <div class="task-meta-text">${task.dueTime ? `Time: ${App.escapeHtml(task.dueTime)}` : 'All Day'}</div>
+            </div>
+            <div class="flex items-center gap-xs">
+              <button class="btn btn-ghost btn-icon btn-sm cal-edit-task" data-id="${App.escapeHtml(task.id)}" aria-label="Edit task">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              </button>
+              <button class="btn btn-ghost btn-icon btn-sm cal-del-task" data-id="${App.escapeHtml(task.id)}" aria-label="Delete task">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+              </button>
             </div>
           </div>
         </div>
       `;
     }).join('');
+
+    elements.dayTasks.querySelectorAll('.cal-edit-task').forEach(btn => {
+      btn.onclick = () => {
+        if (typeof Tasks !== 'undefined' && Tasks.openTaskModal) {
+          Tasks.openTaskModal(btn.dataset.id);
+        }
+      };
+    });
+
+    elements.dayTasks.querySelectorAll('.cal-del-task').forEach(btn => {
+      btn.onclick = async () => {
+        if (await App.confirm({ title: 'Delete Task?', message: 'This task will be deleted.', confirmText: 'Delete', danger: true })) {
+          Storage.deleteTask(btn.dataset.id);
+          renderCalendar();
+          renderSelectedDayTasks();
+        }
+      };
+    });
 
     elements.dayTasks.querySelectorAll('.task-checkbox').forEach(cb => {
       const toggleFn = (e) => {
@@ -211,7 +257,6 @@ const Calendar = (function() {
         const task = Storage.getTaskById(id);
 
         if (task.type === 'repeating') {
-          // Use per-day tracking for repeating tasks
           const isCurrentlyDone = Storage.isRepeatingTaskCompletedOnDate(id, selectedDate);
           Storage.setRepeatingTaskCompletedOnDate(id, selectedDate, !isCurrentlyDone);
           if (!isCurrentlyDone) App.showToast('Task completed!', 'success');

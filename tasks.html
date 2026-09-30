@@ -21,7 +21,7 @@
   <meta name="msapplication-TileColor" content="#5B9BF0">
   
   <title>Tasks - StudyFlow</title>
-  <link rel="stylesheet" href="css/style.css?v=v2026-09-29-01">
+  <link rel="stylesheet" href="css/style.css?v=v2026-09-30-01">
 </head>
 <body>
   <!-- Navigation Containers -->
@@ -35,59 +35,78 @@
 
   <!-- Main Content -->
   <main class="main-container">
+    <!-- Top Bar Header -->
+    <div id="global-top-bar" class="flex items-center justify-between w-full mb-md">
+      <div class="top-bar-brand">
+        <div class="top-bar-logo">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+        </div>
+        <span class="top-bar-title">StudyFlow</span>
+      </div>
+      <a href="settings.html" class="user-avatar-circle" id="top-user-avatar" title="Settings" aria-label="User settings">
+        SF
+      </a>
+    </div>
+
     <!-- Page Header -->
     <header class="page-header animate-fade-in">
       <div class="page-header-title-group">
-        <h1>Tasks</h1>
-        <p class="subtitle">Strategize and achieve your study targets</p>
+        <div class="flex items-center gap-sm">
+          <h1>Tasks</h1>
+          <span class="badge" id="pending-tasks-badge">0 pending</span>
+        </div>
       </div>
       <div class="page-header-actions flex items-center gap-sm flex-wrap">
         <div class="form-group mb-0">
-          <input type="text" id="search-tasks" class="form-input glass-pill-input" placeholder="Search tasks... (Ctrl+K)" aria-label="Search tasks">
+          <input type="text" id="search-tasks" class="form-input" placeholder="Search tasks... (Ctrl+K)" aria-label="Search tasks">
         </div>
         <button class="btn btn-primary" id="add-task-btn" aria-label="Add new task">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
-          New Task
+          + New Task
         </button>
       </div>
     </header>
 
-    <!-- Filter Bar -->
-    <div class="flex flex-wrap items-center justify-between gap-md mb-sm animate-fade-in">
-      <div class="filter-tabs" style="margin: 0;" role="tablist" aria-label="Filter tasks">
-        <div class="filter-tab active" data-filter="all" role="tab" aria-selected="true" tabindex="0">All Tasks</div>
-        <div class="filter-tab" data-filter="pending" role="tab" aria-selected="false" tabindex="0">Active</div>
-        <div class="filter-tab" data-filter="completed" role="tab" aria-selected="false" tabindex="0">Completed</div>
-      </div>
+    <!-- Progress Strip -->
+    <section class="card mb-md animate-fade-in p-sm" id="task-progress-strip">
+      <!-- Populated by JS -->
+    </section>
 
-      <div class="flex items-center gap-sm flex-wrap">
-        <select id="filter-priority" class="form-input glass-pill-input" style="width: auto; min-width: 130px;" aria-label="Filter by priority">
-          <option value="all">All Priorities</option>
-          <option value="critical">Critical</option>
-          <option value="high">High</option>
-          <option value="medium">Medium</option>
-          <option value="low">Low</option>
-        </select>
-        <select id="filter-subject" class="form-input glass-pill-input" style="width: auto; min-width: 130px;" aria-label="Filter by subject">
-          <option value="all">All Subjects</option>
-          <!-- Populated by JS -->
-        </select>
-      </div>
+    <!-- Filter Bar (Horizontally Scrolling Chips) -->
+    <div class="flex items-center gap-sm mb-md animate-fade-in filter-tabs" role="tablist" aria-label="Filter tasks">
+      <button type="button" class="filter-tab active" data-filter="all" role="tab" aria-selected="true" tabindex="0">All</button>
+      <button type="button" class="filter-tab" data-filter="pending" role="tab" aria-selected="false" tabindex="0">Active</button>
+      <button type="button" class="filter-tab" data-filter="completed" role="tab" aria-selected="false" tabindex="0">Done</button>
+      <select id="filter-priority" class="form-select" style="width: auto; min-width: 120px; font-size:12px; height:36px; padding: 0 28px 0 12px; border-radius:9999px;" aria-label="Filter by priority">
+        <option value="all">Priority</option>
+        <option value="critical">Critical</option>
+        <option value="high">High</option>
+        <option value="medium">Medium</option>
+        <option value="low">Low</option>
+      </select>
+      <select id="filter-subject" class="form-select" style="width: auto; min-width: 120px; font-size:12px; height:36px; padding: 0 28px 0 12px; border-radius:9999px;" aria-label="Filter by subject">
+        <option value="all">Subject</option>
+        <!-- Populated by JS -->
+      </select>
     </div>
 
     <!-- Task List -->
-    <section id="task-list" class="animate-fade-in">
+    <section id="task-list" class="animate-fade-in mb-md">
+      <!-- Populated by JS -->
+    </section>
+
+    <!-- Deep Focus Sprint Bottom Card -->
+    <section id="sprint-card" class="card animate-fade-in" style="display:none;">
       <!-- Populated by JS -->
     </section>
   </main>
 
   <!-- Scripts -->
-  <script src="js/storage.js?v=v2026-09-29-01"></script>
-  <script src="js/subtask-utils.js?v=v2026-09-29-01"></script>
-  <script src="js/pwa-manager.js?v=v2026-09-29-01"></script>
-  <script src="js/achievements.js?v=v2026-09-29-01"></script>
-  <script src="js/app.js?v=v2026-09-29-01"></script>
-  <script src="js/tasks.js?v=v2026-09-29-01"></script>
+  <script src="js/storage.js?v=v2026-09-30-01"></script>
+  <script src="js/subtask-utils.js?v=v2026-09-30-01"></script>
+  <script src="js/pwa-manager.js?v=v2026-09-30-01"></script>
+  <script src="js/achievements.js?v=v2026-09-30-01"></script>
+  <script src="js/app.js?v=v2026-09-30-01"></script>
+  <script src="js/tasks.js?v=v2026-09-30-01"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       PWAManager.init();
@@ -97,6 +116,13 @@
           Tasks.openTaskModal();
         }
       });
+      const user = Storage.getUser();
+      const avatarEl = document.getElementById('top-user-avatar');
+      if (avatarEl && user) {
+        const parts = (user.name || 'SF').trim().split(/\s+/).filter(Boolean);
+        const initials = parts.length === 1 ? parts[0].substring(0, 2).toUpperCase() : (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+        avatarEl.textContent = initials;
+      }
     });
   </script>
 </body>
