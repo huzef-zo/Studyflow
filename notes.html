@@ -20,11 +20,11 @@
   <meta name="msapplication-TileColor" content="#5B9BF0">
 
   <title>Notes - StudyFlow</title>
-  <link rel="stylesheet" href="css/style.css?v=v2026-09-30-01">
+  <link rel="stylesheet" href="css/style.css?v=v2026-09-29-01">
   <style>
     .notes-layout {
       display: grid;
-      grid-template-columns: 320px 1fr;
+      grid-template-columns: 280px 1fr;
       gap: var(--spacing-md);
       min-height: 500px;
     }
@@ -37,8 +37,7 @@
 
     .notes-sidebar {
       background: var(--bg-surface);
-      border-radius: var(--radius-card);
-      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-lg);
       display: flex;
       flex-direction: column;
       overflow: hidden;
@@ -47,37 +46,34 @@
     .notes-list {
       flex: 1;
       overflow-y: auto;
-      padding: 12px;
+      padding: var(--spacing-sm);
     }
 
-    .note-card {
-      padding: 12px 14px;
-      border-radius: var(--radius-md);
+    .note-item {
+      padding: 10px 12px;
+      border-radius: var(--radius-sm);
       cursor: pointer;
       transition: var(--transition);
-      margin-bottom: 8px;
-      background: var(--bg-raised);
-      border: 1px solid var(--glass-border);
-      position: relative;
+      margin-bottom: 6px;
+      background: var(--bg-tertiary);
     }
 
-    .note-card:hover {
-      border-color: var(--accent-fill);
+    .note-item:hover {
+      opacity: 0.9;
     }
 
-    .note-card.active {
-      border-color: var(--accent-fill);
-      background: rgba(91, 155, 240, 0.12);
+    .note-item.active {
+      background: var(--accent-fill);
+      color: #FFFFFF;
     }
 
     .note-editor {
       display: flex;
       flex-direction: column;
-      gap: 14px;
+      gap: var(--spacing-md);
       background: var(--bg-surface);
-      border: 1px solid var(--glass-border);
-      border-radius: var(--radius-card);
-      padding: 20px;
+      border-radius: var(--radius-lg);
+      padding: var(--spacing-md);
     }
 
     .note-content-area {
@@ -85,11 +81,6 @@
       min-height: 350px;
       font-family: inherit;
       line-height: 1.5;
-      background: var(--bg-deep);
-      border: 1px solid var(--glass-border);
-      border-radius: var(--radius-md);
-      padding: 14px;
-      color: var(--text-primary);
     }
   </style>
 </head>
@@ -98,45 +89,24 @@
   <div id="bottom-nav-container"></div>
 
   <main class="main-container">
-    <!-- Top Bar Header -->
-    <div id="global-top-bar" class="flex items-center justify-between w-full mb-md">
-      <div class="top-bar-brand">
-        <div class="top-bar-logo">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
-        </div>
-        <span class="top-bar-title">StudyFlow</span>
-      </div>
-      <a href="settings.html" class="user-avatar-circle" id="top-user-avatar" title="Settings" aria-label="User settings">
-        SF
-      </a>
-    </div>
-
-    <!-- Page Header -->
     <header class="page-header animate-fade-in">
       <div class="page-header-title-group">
-        <div class="flex items-center gap-sm">
-          <h1>Notes</h1>
-          <span class="badge" id="notes-count-badge">0 notes</span>
-        </div>
+        <h1>Notes</h1>
         <p class="subtitle">Secure storage for academic intelligence</p>
       </div>
       <div class="page-header-actions flex items-center gap-sm flex-wrap">
         <button class="btn btn-primary" id="new-note-btn" aria-label="Create new note entry">
-          + New Note
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
+          New Entry
         </button>
       </div>
     </header>
 
-    <!-- Search Bar & Filter Chips -->
-    <div class="flex flex-col gap-sm mb-md animate-fade-in">
-      <input type="text" id="search-notes" class="form-input" placeholder="Search title, content, or tags... (Ctrl+K)" aria-label="Search notes">
-      <div class="filter-tabs flex gap-xs" id="notes-subject-filters" role="tablist" aria-label="Filter notes by subject">
-        <!-- Populated by JS -->
-      </div>
-    </div>
-
     <div class="notes-layout animate-fade-in">
       <aside class="notes-sidebar">
+        <div class="p-sm" style="border-bottom: 1px solid var(--border-color);">
+          <input type="text" id="search-notes" class="form-input glass-pill-input" placeholder="Search vault... (Ctrl+K)" aria-label="Search vault">
+        </div>
         <div class="notes-list" id="notes-list">
           <!-- Populated by JS -->
         </div>
@@ -144,32 +114,31 @@
 
       <section class="note-editor" id="note-editor" style="display: none;">
         <div class="flex items-center justify-between gap-md flex-wrap">
-          <input type="text" id="note-title" class="form-input" style="font-size: 16px; font-weight: 600; border: none; background: none; padding-left: 0; flex:1;" placeholder="Note Title" maxlength="200" aria-label="Note Title">
+          <input type="text" id="note-title" class="form-input" style="font-size: 15px; font-weight: 500; border: none; background: none; padding-left: 0;" placeholder="Note Title" maxlength="200" aria-label="Note Title">
           <div class="flex items-center gap-sm">
-            <select id="note-subject" class="form-select" style="width: auto; font-size:12px; height:36px; padding:0 28px 0 12px; border-radius:9999px;" aria-label="Note Subject"></select>
-            <button class="btn btn-danger btn-sm" id="delete-note-btn" aria-label="Delete note">Delete</button>
-            <button class="btn btn-primary btn-sm" id="save-note-btn" aria-label="Save note (Ctrl+S)" title="Save note (Ctrl+S)">Save</button>
+            <select id="note-subject" class="form-input" style="width: auto;" aria-label="Note Subject"></select>
+            <button class="btn btn-danger btn-sm" id="delete-note-btn" aria-label="Delete note entry">Delete</button>
+            <button class="btn btn-primary" id="save-note-btn" aria-label="Save note entry (Ctrl+S)" title="Save transmission (Ctrl+S)">Save</button>
           </div>
         </div>
-        <textarea id="note-content" class="form-input note-content-area" placeholder="Write your notes... (Markdown supported)" maxlength="10000" aria-label="Note Content"></textarea>
+        <textarea id="note-content" class="form-input note-content-area" placeholder="Begin transmission... (Markdown supported)" maxlength="10000" aria-label="Note Content"></textarea>
       </section>
 
       <div id="empty-editor-state" class="flex-1 flex items-center justify-center card">
         <div class="text-center p-lg">
-          <div style="font-size: 2rem; color: var(--text-muted); margin-bottom: 0.5rem;">📝</div>
-          <h3 style="color: var(--text-muted);">Select or create a note</h3>
+          <div style="font-size: 2rem; color: var(--text-muted); margin-bottom: 0.5rem;">📑</div>
+          <h3 style="color: var(--text-muted);">Select or create an entry</h3>
         </div>
       </div>
     </div>
   </main>
 
-  <!-- Scripts -->
-  <script src="js/storage.js?v=v2026-09-30-01"></script>
-  <script src="js/subtask-utils.js?v=v2026-09-30-01"></script>
-  <script src="js/pwa-manager.js?v=v2026-09-30-01"></script>
-  <script src="js/achievements.js?v=v2026-09-30-01"></script>
-  <script src="js/app.js?v=v2026-09-30-01"></script>
-  <script src="js/notes.js?v=v2026-09-30-01"></script>
+  <script src="js/storage.js?v=v2026-09-29-01"></script>
+  <script src="js/subtask-utils.js?v=v2026-09-29-01"></script>
+  <script src="js/pwa-manager.js?v=v2026-09-29-01"></script>
+  <script src="js/achievements.js?v=v2026-09-29-01"></script>
+  <script src="js/app.js?v=v2026-09-29-01"></script>
+  <script src="js/notes.js?v=v2026-09-29-01"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       PWAManager.init();

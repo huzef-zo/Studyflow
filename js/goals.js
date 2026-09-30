@@ -128,7 +128,6 @@ const Goals = (function() {
     const weekStart = Storage.getWeekStart(new Date());
     const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     const today = Storage.formatDate(new Date());
-    const goals = Storage.getGoals();
     
     let html = '';
     for (let i = 0; i < 7; i++) {
@@ -137,27 +136,16 @@ const Goals = (function() {
       const dateStr = Storage.formatDate(date);
       const isToday = dateStr === today;
       const dayNum = date.getDate();
-
-      const d = new Date(dateStr + 'T00:00:00');
-      const isWeekend = d.getDay() === 0 || d.getDay() === 6;
-      const dailyTaskTarget = isWeekend ? (goals.weekend_daily_tasks || 1) : goals.daily_tasks;
-      const tasksToday = Storage.getTasksByDate(dateStr).filter(t => t.completed).length;
-      const metGoal = tasksToday >= dailyTaskTarget;
       
       html += `
-        <div class="filter-tab ${isToday ? 'active' : ''}" style="flex:1;text-align:center;padding:8px 4px;flex-direction:column;gap:2px;">
-          <span style="font-size:10px;text-transform:uppercase;">${days[i]}</span>
-          <span style="font-size:14px;font-weight:700;">${dayNum} ${metGoal ? '✓' : ''}</span>
+        <div class="week-day ${isToday ? 'today' : ''}">
+          <div class="week-day-name">${days[i]}</div>
+          <div class="week-day-number">${dayNum}</div>
         </div>
       `;
     }
     
     elements.weekDates.innerHTML = html;
-
-    const weekBadge = document.getElementById('week-number-badge');
-    if (weekBadge) {
-      weekBadge.textContent = `Week ${Storage.getWeekNumber(new Date())}`;
-    }
   }
 
   /**
@@ -221,8 +209,6 @@ const Goals = (function() {
     
     // Use goals from storage
     const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    let totalAvg = 0;
-    let daysCount = 0;
     
     let html = '';
     Object.keys(dailyData).forEach((dateStr, index) => {
@@ -251,11 +237,6 @@ const Goals = (function() {
       // Average progress
       const rawAvg = (taskPercent + minutePercent) / 2;
       const avgPercent = Number.isFinite(rawAvg) ? Math.round(rawAvg) : 0;
-
-      if (!day.isFuture) {
-        totalAvg += avgPercent;
-        daysCount++;
-      }
       
       let statusClass = '';
       if (avgPercent >= 100) {
@@ -269,29 +250,43 @@ const Goals = (function() {
       }
       
       html += `
-        <div class="card p-sm text-center daily-progress-item ${statusClass} ${day.isToday ? 'today' : ''}" style="flex:0 0 110px;">
-          <div class="daily-progress-day" style="font-size:12px;font-weight:600;color:var(--text-muted);">${days[index]}</div>
-          <div class="daily-progress-circle my-xs" style="position:relative;display:inline-block;">
-            <svg viewBox="0 0 36 36" style="width:50px;height:50px;">
-              <circle cx="18" cy="18" r="15.9155" fill="none" stroke="var(--progress-track)" stroke-width="3"/>
-              <circle cx="18" cy="18" r="15.9155" fill="none" stroke="${avgPercent >= 100 ? 'var(--success)' : 'var(--accent-fill)'}" stroke-width="3" stroke-dasharray="100" stroke-dashoffset="${100 - avgPercent}" stroke-linecap="round" transform="rotate(-90 18 18)" style="transition: stroke-dashoffset 0.5s ease;"/>
+        <div class="daily-progress-item ${statusClass} ${day.isToday ? 'today' : ''}">
+          <div class="daily-progress-day">${days[index]}</div>
+          <div class="daily-progress-circle">
+            <svg viewBox="0 0 36 36">
+              <circle 
+                cx="18" 
+                cy="18" 
+                r="15.9155" 
+                fill="none" 
+                stroke="var(--bg-tertiary)" 
+                stroke-width="3"
+              />
+              <circle 
+                cx="18" 
+                cy="18" 
+                r="15.9155" 
+                fill="none" 
+                stroke="${avgPercent >= 100 ? 'var(--success)' : 'var(--primary)'}" 
+                stroke-width="3"
+                stroke-dasharray="100"
+                stroke-dashoffset="${100 - avgPercent}"
+                stroke-linecap="round"
+                transform="rotate(-90 18 18)"
+                style="transition: stroke-dashoffset 0.5s ease;"
+              />
             </svg>
-            <span class="daily-progress-value" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:11px;font-weight:700;">${day.isFuture ? '-' : avgPercent + '%'}</span>
+            <span class="daily-progress-value">${day.isFuture ? '-' : avgPercent + '%'}</span>
           </div>
-          <div class="daily-progress-label" style="font-size:10px;color:var(--text-muted);">
-            ${day.tasks}/${dailyTaskTarget} tasks<br>${Math.round(day.minutes / 60 * 10) / 10}h
+          <div class="daily-progress-label">
+            ${day.tasks}/${dailyTaskTarget} tasks<br>
+            ${Math.round(day.minutes / 60 * 10) / 10}h
           </div>
         </div>
       `;
     });
     
     elements.dailyProgress.innerHTML = html;
-
-    const avgBadge = document.getElementById('daily-avg-badge');
-    if (avgBadge) {
-      const overallAvg = daysCount > 0 ? Math.round(totalAvg / daysCount) : 0;
-      avgBadge.textContent = `Avg ${overallAvg}%`;
-    }
   }
 
   /**
