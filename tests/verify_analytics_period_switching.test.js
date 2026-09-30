@@ -49,7 +49,7 @@ global.App = {
 const historyCode = fs.readFileSync(path.join(__dirname, '../js/history.js'), 'utf8');
 
 // Re-evaluating History to expose internal state for testing
-let historyTestCode = historyCode.replace('return { init };', 'return { init, updateSummaryStats, renderFrequencyGraph, getStatsPeriod: () => statsPeriodDays, setStatsPeriod: (v) => { statsPeriodDays = v; }, setElements: (e) => { elements = e; } };');
+let historyTestCode = historyCode.replace('return { init, renderAnalytics };', 'return { init, renderAnalytics, updateSummaryStats, getStatsPeriod: () => statsPeriodDays, setStatsPeriod: (v) => { statsPeriodDays = v; }, setElements: (e) => { elements = e; } };');
 eval(historyTestCode);
 const History = global.window.History;
 

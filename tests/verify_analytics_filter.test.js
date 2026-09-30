@@ -45,7 +45,7 @@ global.App = {
 const historyCode = fs.readFileSync(path.join(__dirname, '../js/history.js'), 'utf8');
 
 // Re-evaluating History to expose getFilteredSessions for testing
-let historyTestCode = historyCode.replace('return { init };', 'return { init, updateSummaryStats, getFilteredSessions, setStatsPeriod: (v) => { statsPeriodDays = v; }, setElements: (e) => { elements = e; } };');
+let historyTestCode = historyCode.replace('return { init, renderAnalytics };', 'return { init, renderAnalytics, updateSummaryStats, getFilteredSessions, setStatsPeriod: (v) => { statsPeriodDays = v; }, setElements: (e) => { elements = e; } };');
 eval(historyTestCode);
 const History = global.window.History;
 
@@ -133,27 +133,19 @@ function runTests() {
             completionRate: {}
         });
 
-        // All time - should show formatted date with year
+        // Productive day consistently displays the weekday name with highest focus volume
         History.setStatsPeriod(null);
         History.updateSummaryStats();
-        const dateLongAgo = new Date();
-        dateLongAgo.setDate(dateLongAgo.getDate() - 40);
-        const expectedLongAgo = dateLongAgo.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-        if (productiveDayEl.textContent !== expectedLongAgo) {
-            throw new Error(`Expected ${expectedLongAgo}, got ${productiveDayEl.textContent}`);
+        if (productiveDayEl.textContent !== dayNames[dayLongAgo]) {
+            throw new Error(`Expected ${dayNames[dayLongAgo]}, got ${productiveDayEl.textContent}`);
         }
 
-        // Last 30 days - should show formatted date without year
         History.setStatsPeriod(30);
         History.updateSummaryStats();
-        const dateRecently = new Date();
-        dateRecently.setDate(dateRecently.getDate() - 2);
-        const expectedRecently = dateRecently.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-        if (productiveDayEl.textContent !== expectedRecently) {
-            throw new Error(`Expected ${expectedRecently}, got ${productiveDayEl.textContent}`);
+        if (productiveDayEl.textContent !== dayNames[dayRecently]) {
+            throw new Error(`Expected ${dayNames[dayRecently]}, got ${productiveDayEl.textContent}`);
         }
 
-        // Last 7 days - should show day name
         History.setStatsPeriod(7);
         History.updateSummaryStats();
         if (productiveDayEl.textContent !== dayNames[dayRecently]) {

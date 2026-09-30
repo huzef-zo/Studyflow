@@ -1,415 +1,445 @@
 <!DOCTYPE html>
-<html lang="en">
+<html class="dark" lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
-  <meta name="description" content="StudyFlow - Your personal study organizer and productivity hub">
-  <meta name="theme-color" content="#0A0B0F">
-  
-  <!-- Standalone PWA Configuration -->
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-title" content="StudyFlow">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-touch-fullscreen" content="yes">
-  <meta name="web-app-capable" content="yes">
-  
-  <!-- Icons -->
-  <link rel="icon" type="image/png" href="./icon-192.png">
-  <link rel="apple-touch-icon" href="./icon-192.png">
-  <link rel="shortcut icon" type="image/png" href="./icon-192.png">
-  
-  <!-- Manifest -->
-  <link rel="manifest" href="./manifest.json">
-  <link rel="msapplication-config" href="browserconfig.xml">
-  <meta name="msapplication-TileColor" content="#5B9BF0">
-  
-  <title>Dashboard - StudyFlow</title>
-  <link rel="stylesheet" href="css/style.css?v=v2026-09-29-01">
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover"/>
+  <meta name="description" content="StudyFlow - Your personal study organizer and productivity hub"/>
+  <meta name="theme-color" content="#090D12"/>
+
+  <!-- PWA Configuration -->
+  <meta name="mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-title" content="StudyFlow"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+
+  <link rel="icon" type="image/png" href="./icon-192.png"/>
+  <link rel="apple-touch-icon" href="./icon-192.png"/>
+  <link rel="manifest" href="./manifest.json"/>
+
+  <title>Home - StudyFlow</title>
+  <link rel="stylesheet" href="css/tailwind.css?v=v2026-09-30-01"/>
+  <link rel="stylesheet" href="css/app.css?v=v2026-09-30-01"/>
 </head>
-<body>
-  <!-- Navigation Containers -->
+<body class="bg-surface-base text-on-surface font-body-md text-body-md flex flex-col relative antialiased selection:bg-primary-container selection:text-surface-base min-h-dvh">
+  <!-- Radial Ambient Glow -->
+  <div class="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-lg h-80 bg-[radial-gradient(ellipse_at_top,rgba(91,155,240,0.14),transparent_70%)] pointer-events-none z-0"></div>
+
+  <!-- Shell Containers -->
+  <div id="header-container"></div>
   <div id="sidebar-container"></div>
   <div id="bottom-nav-container"></div>
+  <div id="fab-container"></div>
 
-  <!-- Floating Add Task Button -->
-  <a href="tasks.html?action=add" class="fab-btn" aria-label="Add task" title="Add task">
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
-  </a>
+  <!-- Main Content Area -->
+  <main class="flex-1 flex flex-col relative w-full max-w-lg lg:max-w-3xl mx-auto pt-20 pb-28 px-margin bg-surface-base z-10">
+    <div class="flex flex-col w-full gap-space-xl">
 
-  <!-- Main Content -->
-  <main class="main-container">
-    <!-- Page Header -->
-    <header class="page-header animate-fade-in">
-      <div class="page-header-title-group">
-        <h1 id="greeting">Good morning!</h1>
-        <p class="subtitle" id="date-display"></p>
-      </div>
-    </header>
+      <!-- Greeting & Date Context Header -->
+      <section class="flex items-center justify-between pt-space-xs">
+        <div class="flex flex-col gap-0.5">
+          <span class="font-label-sm text-label-sm text-text-secondary" id="today-date-label">Today</span>
+          <h1 class="font-headline-lg-mobile text-headline-lg-mobile text-text-primary tracking-tight" id="greeting-title">Good day</h1>
+        </div>
+      </section>
 
-    <!-- XP Progress Widget -->
-    <section class="xp-widget animate-fade-in mb-md">
-      <div class="card">
-        <div class="flex items-center justify-between mb-xs">
-          <div class="flex items-center gap-sm">
-            <div id="xp-rank-icon" style="font-size: 1.25rem;">🛡️</div>
-            <div>
-              <div id="xp-rank-name" style="font-weight: 500; font-size: 13px; text-transform: uppercase; color: var(--accent-text);">Novice</div>
-              <div style="font-size: 11px; color: var(--text-muted);">Level <span id="xp-level">1</span></div>
+      <!-- Hero Glass Card: Next Up Focus Block -->
+      <section class="relative rounded-lg bg-surface-container/70 backdrop-blur-xl shadow-2xl p-6 overflow-hidden" id="hero-focus-card">
+        <div class="absolute -right-12 -top-12 w-48 h-48 bg-primary-container/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="relative z-10 flex flex-col gap-space-md" id="hero-card-content">
+          <!-- Populated by JS -->
+        </div>
+      </section>
+
+      <!-- Metric / Stats Row: 3 Glass Tiles -->
+      <section class="grid grid-cols-3 gap-gutter-sm">
+        <!-- Tile 1: Streak -->
+        <div class="rounded-DEFAULT bg-surface-container/60 backdrop-blur-md p-3.5 flex flex-col justify-between shadow-md">
+          <div class="flex items-center justify-between mb-2">
+            <span class="material-symbols-outlined text-primary text-[20px]" style="font-variation-settings: 'FILL' 1;">local_fire_department</span>
+            <span class="font-label-sm text-[10px] text-primary bg-primary/10 px-1.5 py-0.5 rounded-full hidden" id="streak-active-chip">+1</span>
+          </div>
+          <div class="flex flex-col">
+            <span class="font-headline-sm text-headline-sm text-text-primary leading-tight" id="streak-value">0 days</span>
+            <span class="font-label-sm text-[11px] text-text-secondary mt-0.5">Active streak</span>
+          </div>
+        </div>
+
+        <!-- Tile 2: Level / XP -->
+        <div class="rounded-DEFAULT bg-surface-container/60 backdrop-blur-md p-3.5 flex flex-col justify-between shadow-md">
+          <div class="flex items-center justify-between mb-2">
+            <span class="material-symbols-outlined text-primary text-[20px]">military_tech</span>
+            <span class="font-label-sm text-[10px] text-text-secondary" id="xp-percentage-label">0%</span>
+          </div>
+          <div class="flex flex-col gap-1.5">
+            <span class="font-headline-sm text-[15px] font-semibold text-text-primary leading-tight" id="xp-level-label">Lvl 1</span>
+            <div class="w-full h-1.5 rounded-full bg-surface-container-highest overflow-hidden">
+              <div class="h-full bg-primary-container rounded-full transition-all duration-300" id="xp-progress-bar" style="width: 0%;"></div>
             </div>
-          </div>
-          <div style="text-align: right;">
-            <div id="xp-value-display" style="font-weight: 500; font-size: 13px; color: var(--accent-text);">0 / 100 XP</div>
+            <span class="font-label-sm text-[11px] text-text-secondary" id="xp-total-label">0 XP</span>
           </div>
         </div>
-        <div class="progress-bar-bg" style="height: 6px;">
-          <div id="xp-progress-fill" class="progress-bar-fill" style="width: 0%;"></div>
-        </div>
-      </div>
-    </section>
 
-    <!-- Dense 2x2 Stats Grid -->
-    <section class="grid-2-dense animate-fade-in mb-md">
-      <div class="stat-pill">
-        <div class="stat-pill-icon"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
-        <div>
-          <div class="data-number" id="stat-today">0</div>
-          <div class="stat-pill-label">Tasks Today</div>
-        </div>
-      </div>
-      <div class="stat-pill">
-        <div class="stat-pill-icon"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
-        <div>
-          <div class="data-number" id="stat-pending">0</div>
-          <div class="stat-pill-label">Pending</div>
-        </div>
-      </div>
-      <div class="stat-pill">
-        <div class="stat-pill-icon"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
-        <div>
-          <div class="data-number" id="stat-week">0</div>
-          <div class="stat-pill-label">Completed Today</div>
-        </div>
-      </div>
-      <div class="stat-pill">
-        <div class="stat-pill-icon"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg></div>
-        <div>
-          <div class="data-number" id="streak-count">0</div>
-          <div class="stat-pill-label">Streak</div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Bento Grid -->
-    <div class="bento-grid">
-
-      <!-- Mastery Overview -->
-      <section class="card animate-fade-in col-span-3 md:col-span-2">
-        <div class="flex items-center justify-between mb-md">
-          <h2 class="flex items-center gap-sm">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-fill)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
-            Mastery Overview
-          </h2>
-          <a href="settings.html" class="btn btn-secondary btn-sm">Manage</a>
-        </div>
-        <div id="mastery-overview" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px;">
-          <!-- Populated by JS -->
+        <!-- Tile 3: Weekly Goal -->
+        <div class="rounded-DEFAULT bg-surface-container/60 backdrop-blur-md p-3.5 flex flex-col justify-between shadow-md">
+          <div class="flex items-center justify-between mb-2">
+            <span class="material-symbols-outlined text-primary text-[20px]">task_alt</span>
+            <span class="font-label-sm text-[10px] text-text-secondary" id="goal-percentage-label">0%</span>
+          </div>
+          <div class="flex flex-col">
+            <span class="font-headline-sm text-headline-sm text-text-primary leading-tight" id="goal-count-label">0 of 0</span>
+            <span class="font-label-sm text-[11px] text-text-secondary mt-0.5">Weekly goal</span>
+          </div>
         </div>
       </section>
 
-      <!-- Upcoming Deadlines -->
-      <section class="card animate-fade-in row-span-2">
-        <div class="flex items-center justify-between mb-md">
-          <h2 class="flex items-center gap-sm">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-fill)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
-            Upcoming
-          </h2>
-          <a href="tasks.html" class="btn btn-secondary btn-sm">View All</a>
+      <!-- Upcoming Tasks Section -->
+      <section class="flex flex-col gap-space-md">
+        <div class="flex items-center justify-between px-0.5">
+          <div class="flex items-center gap-2">
+            <h3 class="font-headline-sm text-headline-sm text-text-primary">Upcoming</h3>
+            <span class="font-label-sm text-[11px] px-2 py-0.5 rounded-full bg-surface-container-high text-text-secondary" id="upcoming-count-badge">0</span>
+          </div>
+          <a href="tasks.html" class="font-label-sm text-label-sm text-primary hover:text-accent-hover transition-colors">View all</a>
         </div>
-        <div id="deadlines-list" class="timeline">
-          <!-- Populated by JS -->
-        </div>
-      </section>
-
-      <!-- Weekly Progress -->
-      <section class="card animate-fade-in col-span-2 md:col-span-2">
-        <div class="flex items-center justify-between mb-md">
-          <h2 class="flex items-center gap-sm">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-fill)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-            Weekly Progress
-          </h2>
-          <span class="badge" id="progress-percentage">0%</span>
-        </div>
-        <div id="tasks-progress" class="progress-container"></div>
-        <div id="hours-progress" class="progress-container" style="margin-top: var(--spacing-sm);"></div>
-      </section>
-
-      <!-- Today's Plan -->
-      <section class="card animate-fade-in col-span-3 md:col-span-2">
-        <h2 class="flex items-center gap-sm mb-md">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-fill)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M12 18h.01"/><path d="M16 18h.01"/></svg>
-          Today's Optimized Plan
-        </h2>
-        <div id="today-plan-list" class="flex flex-col gap-xs">
-          <!-- Populated by Scheduler -->
+        <div class="flex flex-col gap-space-sm" id="upcoming-task-list">
+          <!-- Task items populated by JS -->
         </div>
       </section>
 
-      <!-- Daily Reflection -->
-      <section id="reflection-card" class="card animate-fade-in col-span-3" style="display:none;">
-        <div class="flex items-center justify-between mb-md">
-          <h2 class="flex items-center gap-sm" style="margin: 0;">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-fill)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-            Daily Reflection
-          </h2>
-          <button class="btn btn-ghost btn-sm" onclick="this.closest('#reflection-card').style.display='none'" aria-label="Dismiss daily reflection prompt">Dismiss</button>
-        </div>
-        <p class="text-secondary mb-md">Take a moment to record your progress today.</p>
-        <textarea id="reflection-input" class="form-input mb-md" placeholder="How was your progress today? What could be optimized?" style="height:80px;" aria-label="Daily Reflection"></textarea>
-        <button class="btn btn-primary" id="save-reflection-btn">Save Reflection</button>
-      </section>
+      <!-- Auxiliary Details Cards: Today's Plan, Mastery, 9pm Reflection -->
+      <section class="flex flex-col gap-space-md">
+        <!-- Today's Plan (Scheduler) -->
+        <details class="group bg-surface-container/60 backdrop-blur-md rounded-DEFAULT p-4 shadow-sm border border-glass-border-subtle" open>
+          <summary class="flex items-center justify-between cursor-pointer list-none font-headline-sm text-headline-sm text-text-primary">
+            <div class="flex items-center gap-2">
+              <span class="material-symbols-outlined text-primary text-[20px]">calendar_clock</span>
+              <span>Today's Plan</span>
+            </div>
+            <span class="material-symbols-outlined text-text-secondary transition-transform group-open:rotate-180">expand_more</span>
+          </summary>
+          <div class="flex flex-col gap-2 mt-3 pt-3 border-t border-glass-border-subtle" id="today-plan-container">
+            <!-- Populated by JS -->
+          </div>
+        </details>
 
-      <!-- Quick Actions -->
-      <section class="card animate-fade-in">
-        <h2 class="flex items-center gap-sm mb-md">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-fill)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-          Quick Actions
-        </h2>
-        <div class="flex flex-col gap-xs">
-          <a href="tasks.html?action=add" class="btn btn-primary">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
-            Add Task
-          </a>
-          <a href="timer.html" class="btn btn-secondary">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            Focus
-          </a>
-        </div>
+        <!-- Mastery Overview -->
+        <details class="group bg-surface-container/60 backdrop-blur-md rounded-DEFAULT p-4 shadow-sm border border-glass-border-subtle">
+          <summary class="flex items-center justify-between cursor-pointer list-none font-headline-sm text-headline-sm text-text-primary">
+            <div class="flex items-center gap-2">
+              <span class="material-symbols-outlined text-primary text-[20px]">pie_chart</span>
+              <span>Mastery Overview</span>
+            </div>
+            <span class="material-symbols-outlined text-text-secondary transition-transform group-open:rotate-180">expand_more</span>
+          </summary>
+          <div class="grid grid-cols-2 gap-2 mt-3 pt-3 border-t border-glass-border-subtle" id="mastery-container">
+            <!-- Populated by JS -->
+          </div>
+        </details>
+
+        <!-- Daily Reflection Card -->
+        <details class="group bg-surface-container/60 backdrop-blur-md rounded-DEFAULT p-4 shadow-sm border border-glass-border-subtle" id="reflection-details-card">
+          <summary class="flex items-center justify-between cursor-pointer list-none font-headline-sm text-headline-sm text-text-primary">
+            <div class="flex items-center gap-2">
+              <span class="material-symbols-outlined text-primary text-[20px]">edit_note</span>
+              <span>Daily Reflection</span>
+            </div>
+            <span class="material-symbols-outlined text-text-secondary transition-transform group-open:rotate-180">expand_more</span>
+          </summary>
+          <div class="flex flex-col gap-3 mt-3 pt-3 border-t border-glass-border-subtle">
+            <p class="font-body-sm text-body-sm text-text-secondary">Take a moment to record your progress and thoughts today.</p>
+            <textarea id="reflection-input" class="w-full h-20 bg-surface-container-lowest/80 rounded-xl p-3 text-text-primary font-body-sm text-body-sm outline-none border border-glass-border focus:border-primary-container" placeholder="How was your progress today?" aria-label="Daily reflection"></textarea>
+            <button class="self-end px-4 py-2 rounded-full bg-primary-container text-surface-base font-label-md text-label-md font-semibold hover:bg-accent-hover transition-colors" id="save-reflection-btn">Save reflection</button>
+          </div>
+        </details>
       </section>
 
     </div>
   </main>
 
-  <!-- Scripts -->
-  <script src="js/storage.js?v=v2026-09-29-01"></script>
-  <script src="js/subtask-utils.js?v=v2026-09-29-01"></script>
-  <script src="js/pwa-manager.js?v=v2026-09-29-01"></script>
-  <script src="js/achievements.js?v=v2026-09-29-01"></script>
-  <script src="js/scheduler.js?v=v2026-09-29-01"></script>
-  <script src="js/app.js?v=v2026-09-29-01"></script>
-  
+  <!-- Core Scripts -->
+  <script src="version.js"></script>
+  <script src="js/storage.js?v=v2026-09-30-01"></script>
+  <script src="js/subtask-utils.js?v=v2026-09-30-01"></script>
+  <script src="js/pwa-manager.js?v=v2026-09-30-01"></script>
+  <script src="js/achievements.js?v=v2026-09-30-01"></script>
+  <script src="js/scheduler.js?v=v2026-09-30-01"></script>
+  <script src="js/app.js?v=v2026-09-30-01"></script>
+
   <script>
-    (function() {
+    (function initHome() {
       'use strict';
 
-      function updateGreeting() {
-        const hour = new Date().getHours();
-        const greetingEl = document.getElementById('greeting');
-        const user = Storage.getUser();
-        let greeting = hour < 12 ? 'Good morning' : (hour < 18 ? 'Good afternoon' : 'Good evening');
-        greetingEl.textContent = `${greeting}, ${user.name}!`;
+      function renderGreeting() {
+        const dateLabel = document.getElementById('today-date-label');
+        const titleEl = document.getElementById('greeting-title');
+        const user = Storage.getUser ? Storage.getUser() : { name: 'Student' };
+        const now = new Date();
+
+        if (dateLabel) {
+          dateLabel.textContent = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+        }
+        if (titleEl) {
+          const hour = now.getHours();
+          const greetingStr = hour < 12 ? 'Good morning' : (hour < 18 ? 'Good afternoon' : 'Good evening');
+          titleEl.textContent = `${greetingStr}, ${user.name || 'Student'}`;
+        }
       }
 
-      function updateDateDisplay() {
-        const dateEl = document.getElementById('date-display');
-        const options = { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' };
-        dateEl.textContent = new Date().toLocaleDateString('en-US', options);
-      }
+      function renderHeroFocusCard() {
+        const cardContent = document.getElementById('hero-card-content');
+        if (!cardContent) return;
 
-      function updateStats() {
-        const stats = Storage.getStats();
-        document.getElementById('stat-today').textContent = stats.tasks.today || 0;
-        document.getElementById('stat-pending').textContent = stats.tasks.todayPending || 0;
-        document.getElementById('stat-week').textContent = stats.tasks.todayCompleted || 0;
-        document.getElementById('streak-count').textContent = stats.streak || 0;
-      }
+        const todayTasks = Storage.getTodayTasks ? Storage.getTodayTasks() : [];
+        const upcomingTasks = Storage.getUpcomingTasks ? Storage.getUpcomingTasks() : [];
+        const pendingTasks = [...todayTasks, ...upcomingTasks].filter(t => !t.completed);
 
-      function updateProgress() {
-        const goals = Storage.getGoals();
-        
-        const tasksPercentage = goals.weekly_tasks > 0 ? Math.round((goals.current_tasks / goals.weekly_tasks) * 100) : 0;
-        document.getElementById('tasks-progress').innerHTML = createProgressBar(goals.current_tasks, goals.weekly_tasks, 'Missions');
-        
-        const currentHours = Math.round(goals.current_hours * 10) / 10;
-        document.getElementById('hours-progress').innerHTML = createProgressBar(currentHours, goals.weekly_hours, 'Focus Hours');
-        const hoursPercentage = goals.weekly_hours > 0 ? (goals.current_hours / goals.weekly_hours * 100) : 0;
-        const avgPercentage = Math.round((tasksPercentage + hoursPercentage) / 2);
-        document.getElementById('progress-percentage').textContent = `${Math.min(100, avgPercentage)}%`;
-      }
-
-      function createProgressBar(current, max, label) {
-        const percentage = max > 0 ? Math.min(100, Math.round((current / max) * 100)) : 0;
-        return `
-          <div class="progress-header">
-            <span class="progress-label">${App.escapeHtml(label)}</span>
-            <span class="progress-percent">${current} / ${max}</span>
-          </div>
-          <div class="progress-bar-bg">
-            <div class="progress-bar-fill" style="width: ${percentage}%;"></div>
-          </div>
-        `;
-      }
-
-      function updateMasteryOverview() {
-        const masteryEl = document.getElementById('mastery-overview');
-        const stats = Storage.getSubjectMasteryStats();
-        if (stats.length === 0) {
-          masteryEl.innerHTML = '<div class="empty-state" style="padding: 1rem; grid-column: 1 / -1;"><p class="text-secondary text-center">No sectors defined</p></div>';
+        if (pendingTasks.length === 0) {
+          cardContent.innerHTML = `
+            <div class="flex items-center justify-between">
+              <span class="font-label-sm text-[11px] uppercase tracking-wider text-primary px-2.5 py-1 rounded-full bg-primary/10">All Done</span>
+            </div>
+            <div class="flex flex-col gap-1.5">
+              <h2 class="font-headline-md text-headline-md text-text-primary tracking-tight leading-snug">No pending tasks for now</h2>
+              <p class="font-body-sm text-body-sm text-text-secondary">Take a break or schedule a new task to stay in flow.</p>
+            </div>
+            <div class="pt-2 flex items-center gap-3">
+              <a href="timer.html" class="flex-1 h-12 rounded-full bg-primary-container text-surface-base font-label-md text-label-md flex items-center justify-center gap-2 shadow-lg hover:bg-accent-hover transition-all">
+                <span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+                <span>Open timer</span>
+              </a>
+            </div>
+          `;
           return;
         }
-        masteryEl.innerHTML = stats.map(subject => `
-          <a href="tasks.html?subject=${encodeURIComponent(subject.name)}" class="card u-no-underline" style="padding: 10px 12px; background: var(--bg-tertiary);">
-            <div class="flex items-center justify-between mb-xs">
-              <span style="font-size: 13px; font-weight: 500; color: var(--text-primary);">${App.escapeHtml(subject.name)}</span>
-              <span style="font-size: 13px; font-weight: 500; color: var(--accent-text);">${subject.percentage}%</span>
+
+        const topTask = pendingTasks[0];
+        const dueLabel = topTask.dueTime ? `Due ${topTask.dueTime}` : (topTask.dueDate ? Storage.getRelativeDays(topTask.dueDate) : 'Today');
+
+        cardContent.innerHTML = `
+          <div class="flex items-center justify-between">
+            <span class="font-label-sm text-[11px] uppercase tracking-wider text-primary px-2.5 py-1 rounded-full bg-primary/10">Next Up</span>
+            <div class="flex items-center gap-1 text-text-secondary">
+              <span class="material-symbols-outlined text-[16px]">schedule</span>
+              <span class="font-body-sm text-body-sm">${App.escapeHtml(dueLabel)}</span>
             </div>
-            <div class="progress-bar-bg" style="height: 5px;">
-              <div class="progress-bar-fill" style="width: ${subject.percentage}%;"></div>
+          </div>
+          <div class="flex flex-col gap-1.5">
+            <h2 class="font-headline-md text-headline-md text-text-primary tracking-tight leading-snug">${App.escapeHtml(topTask.title)}</h2>
+            <div class="flex items-center gap-2 mt-0.5">
+              <span class="font-label-sm text-[11px] px-2.5 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-medium">${App.escapeHtml(topTask.subject || 'General')}</span>
             </div>
-            <div style="font-size: 10px; color: var(--text-muted); margin-top: 4px; font-weight: 500; text-transform: uppercase;">
-              ${subject.completed} / ${subject.total} Tasks
+          </div>
+          <div class="pt-2 flex items-center gap-3">
+            <a href="timer.html?taskId=${App.escapeHtml(topTask.id)}" id="start-focus-btn" class="flex-1 h-12 rounded-full bg-primary-container text-surface-base font-label-md text-label-md flex items-center justify-center gap-2 shadow-lg shadow-primary-container/20 hover:bg-accent-hover active:scale-[0.98] transition-all">
+              <span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+              <span>Start focus</span>
+            </a>
+            <button aria-label="Task options" class="w-12 h-12 rounded-full bg-surface-container-high/80 text-text-primary flex items-center justify-center hover:bg-surface-bright active:scale-95 transition-all" id="hero-options-btn">
+              <span class="material-symbols-outlined text-[20px]">more_horiz</span>
+            </button>
+          </div>
+        `;
+
+        const optionsBtn = cardContent.querySelector('#hero-options-btn');
+        if (optionsBtn) {
+          optionsBtn.addEventListener('click', () => {
+            App.openAddTaskModal(topTask);
+          });
+        }
+      }
+
+      function renderMetrics() {
+        const stats = Storage.getStats ? Storage.getStats() : { streak: 0 };
+        const streakVal = document.getElementById('streak-value');
+        const activeChip = document.getElementById('streak-active-chip');
+        if (streakVal) streakVal.textContent = `${stats.streak || 0} days`;
+        if (activeChip) {
+          const todaySessions = Storage.getTodayWorkSessions ? Storage.getTodayWorkSessions() : [];
+          activeChip.classList.toggle('hidden', todaySessions.length === 0);
+        }
+
+        const xpState = Storage.getXPState ? Storage.getXPState() : { totalXP: 0 };
+        const level = Achievements && Achievements.calculateLevel ? Achievements.calculateLevel(xpState.totalXP) : 1;
+        const currentLevelXP = Achievements && Achievements.getXPForLevel ? Achievements.getXPForLevel(level) : 0;
+        const nextLevelXP = Achievements && Achievements.getXPForLevel ? Achievements.getXPForLevel(level + 1) : 100;
+        const xpInLevel = xpState.totalXP - currentLevelXP;
+        const xpRequired = Math.max(1, nextLevelXP - currentLevelXP);
+        const xpPct = Math.min(100, Math.round((xpInLevel / xpRequired) * 100));
+
+        document.getElementById('xp-level-label').textContent = `Lvl ${level}`;
+        document.getElementById('xp-percentage-label').textContent = `${xpPct}%`;
+        document.getElementById('xp-progress-bar').style.width = `${xpPct}%`;
+        document.getElementById('xp-total-label').textContent = `${xpState.totalXP} XP`;
+
+        const goals = Storage.getGoals ? Storage.getGoals() : { current_tasks: 0, weekly_tasks: 10 };
+        const goalPct = goals.weekly_tasks > 0 ? Math.min(100, Math.round((goals.current_tasks / goals.weekly_tasks) * 100)) : 0;
+        document.getElementById('goal-percentage-label').textContent = `${goalPct}%`;
+        document.getElementById('goal-count-label').textContent = `${goals.current_tasks} of ${goals.weekly_tasks}`;
+      }
+
+      function renderUpcomingTasks() {
+        const listEl = document.getElementById('upcoming-task-list');
+        const badgeEl = document.getElementById('upcoming-count-badge');
+        if (!listEl) return;
+
+        const upcoming = Storage.getUpcomingTasks ? Storage.getUpcomingTasks(14).slice(0, 3) : [];
+        if (badgeEl) badgeEl.textContent = upcoming.length;
+
+        if (upcoming.length === 0) {
+          listEl.innerHTML = App.createEmptyStateHtml({
+            title: 'No upcoming tasks',
+            text: 'All clear! Add a task to stay ahead.',
+            icon: 'check_circle'
+          });
+          return;
+        }
+
+        listEl.innerHTML = upcoming.map(task => {
+          const dueText = task.dueDate ? Storage.getRelativeDays(task.dueDate) : 'No due date';
+          return `
+            <article class="task-item group rounded-DEFAULT bg-surface-container/50 backdrop-blur-md p-4 flex items-center justify-between shadow-sm hover:bg-surface-container/70 transition-all cursor-pointer" data-id="${App.escapeHtml(task.id)}">
+              <div class="flex items-center gap-3.5 min-w-0 flex-1 pr-2">
+                <button aria-label="Mark completed" class="task-checkbox flex-shrink-0 w-6 h-6 rounded-full bg-surface-container-highest flex items-center justify-center text-transparent hover:text-surface-base transition-colors" data-id="${App.escapeHtml(task.id)}">
+                  <span class="material-symbols-outlined text-[16px]">check</span>
+                </button>
+                <div class="flex flex-col min-w-0">
+                  <span class="task-title font-body-md text-body-md text-text-primary font-medium truncate">${App.escapeHtml(task.title)}</span>
+                  <div class="flex items-center gap-2 mt-0.5">
+                    <span class="font-label-sm text-[11px] text-text-secondary">${App.escapeHtml(task.subject || 'General')}</span>
+                    <span class="text-text-muted text-xs">•</span>
+                    <span class="font-body-sm text-body-sm text-text-secondary">${App.escapeHtml(dueText)}</span>
+                  </div>
+                </div>
+              </div>
+              <span class="material-symbols-outlined text-text-muted text-[18px] group-hover:text-text-secondary transition-colors">chevron_right</span>
+            </article>
+          `;
+        }).join('');
+
+        // Wire checkbox 5s staged completion
+        listEl.querySelectorAll('.task-checkbox').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const taskId = btn.getAttribute('data-id');
+            const article = btn.closest('.task-item');
+            const titleEl = article?.querySelector('.task-title');
+
+            btn.classList.remove('bg-surface-container-highest', 'text-transparent');
+            btn.classList.add('bg-primary-container', 'text-surface-base');
+            if (titleEl) titleEl.classList.add('line-through', 'text-text-muted');
+
+            const cancelFn = Storage.stageTaskCompletion(taskId, 5000, () => {
+              Storage.completeTask(taskId);
+              renderHome();
+            });
+
+            App.showUndoToast('Task marked complete', () => {
+              cancelFn();
+              btn.classList.add('bg-surface-container-highest', 'text-transparent');
+              btn.classList.remove('bg-primary-container', 'text-surface-base');
+              if (titleEl) titleEl.classList.remove('line-through', 'text-text-muted');
+            });
+          });
+        });
+
+        // Wire row click to open edit modal
+        listEl.querySelectorAll('.task-item').forEach(item => {
+          item.addEventListener('click', (e) => {
+            if (e.target.closest('.task-checkbox')) return;
+            const taskId = item.getAttribute('data-id');
+            const task = Storage.getTaskById(taskId);
+            if (task) App.openAddTaskModal(task);
+          });
+        });
+      }
+
+      function renderTodayPlan() {
+        const planContainer = document.getElementById('today-plan-container');
+        if (!planContainer) return;
+
+        const plan = Scheduler && Scheduler.generatePlan ? Scheduler.generatePlan() : [];
+        if (plan.length === 0) {
+          planContainer.innerHTML = '<p class="font-body-sm text-body-sm text-text-muted">No scheduled blocks for today.</p>';
+          return;
+        }
+
+        planContainer.innerHTML = plan.map(block => `
+          <a href="${block.taskId ? 'timer.html?taskId=' + App.escapeHtml(block.taskId) : 'timer.html'}" class="flex items-center justify-between p-2.5 rounded-xl bg-surface-container-lowest/60 hover:bg-surface-container-lowest transition-colors">
+            <div class="flex items-center gap-3 min-w-0">
+              <span class="font-label-sm text-[11px] text-primary font-medium w-24 flex-shrink-0">${App.escapeHtml(block.startTime)} - ${App.escapeHtml(block.endTime)}</span>
+              <span class="font-body-sm text-body-sm text-text-primary truncate">${App.escapeHtml(block.label)}</span>
             </div>
+            <span class="font-label-sm text-[11px] text-text-secondary px-2 py-0.5 rounded-full bg-surface-container-high">${App.escapeHtml(block.subject || 'General')}</span>
           </a>
         `).join('');
       }
 
-      function updateXPWidget() {
-        const xpState = Storage.loadData(Storage.KEYS.XP_STATE, Storage.DEFAULTS.xpState);
-        const level = Achievements.calculateLevel(xpState.totalXP);
-        const rank = Achievements.getRank(xpState.totalXP);
+      function renderMastery() {
+        const masteryContainer = document.getElementById('mastery-container');
+        if (!masteryContainer) return;
 
-        const currentLevelXP = Achievements.getXPForLevel(level);
-        const nextLevelXP = Achievements.getXPForLevel(level + 1);
-        const xpInLevel = xpState.totalXP - currentLevelXP;
-        const xpRequired = nextLevelXP - currentLevelXP;
-        const percentage = Math.min(100, Math.round((xpInLevel / xpRequired) * 100));
-
-        let fillWidth = percentage;
-        if (xpState.totalXP > 0 && fillWidth < 2) {
-          fillWidth = 2; // thin sliver for low XP
-        }
-
-        document.getElementById('xp-level').textContent = level;
-        document.getElementById('xp-rank-name').textContent = rank.title;
-        document.getElementById('xp-value-display').textContent = `${xpState.totalXP} / ${nextLevelXP} XP`;
-        document.getElementById('xp-progress-fill').style.width = `${fillWidth}%`;
-
-        const rankIcons = {
-          'Novice': '🛡️',
-          'Apprentice': '⚔️',
-          'Scholar': '📜',
-          'Sage': '✨',
-          'Archmage': '🔮',
-          'Transcendent': '💎'
-        };
-        document.getElementById('xp-rank-icon').textContent = rankIcons[rank.title] || '🛡️';
-      }
-
-      function updateTodayPlan() {
-        const plan = Scheduler.generatePlan();
-        const planList = document.getElementById('today-plan-list');
-
-        if (plan.length === 0) {
-          planList.innerHTML = '<p class="text-secondary text-center py-md">No sessions scheduled for today. Rest and recover!</p>';
+        const stats = Storage.getSubjectMasteryStats ? Storage.getSubjectMasteryStats() : [];
+        if (stats.length === 0) {
+          masteryContainer.innerHTML = '<p class="font-body-sm text-body-sm text-text-muted col-span-2">No subjects configured.</p>';
           return;
         }
 
-        planList.innerHTML = plan.map(block => {
-          let icon = '🎯';
-          if (block.type === 'subject_review') icon = '📖';
-
-          const href = block.taskId ? `timer.html?taskId=${App.escapeHtml(block.taskId)}` : 'timer.html';
-
-          return `
-            <a href="${href}" class="flex items-center gap-sm p-sm u-no-underline" style="border-radius:8px; background:var(--bg-tertiary);">
-              <div style="font-size: 11px; font-weight: 500; color: var(--accent-text); min-width: 75px;">${App.escapeHtml(block.startTime)} - ${App.escapeHtml(block.endTime)}</div>
-              <div style="font-size: 1.1rem;">${icon}</div>
-              <div class="flex-1 min-w-0">
-                <div style="font-size: 13px; font-weight: 500; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${App.escapeHtml(block.label)}</div>
-                <div style="font-size: 10px; color: var(--text-muted); text-transform: uppercase;">${App.escapeHtml(block.subject || 'General')}</div>
-              </div>
-            </a>
-          `;
-        }).join('');
+        masteryContainer.innerHTML = stats.map(s => `
+          <div class="flex flex-col gap-1 p-2.5 rounded-xl bg-surface-container-lowest/60">
+            <div class="flex items-center justify-between font-label-sm text-label-sm">
+              <span class="text-text-primary font-medium truncate">${App.escapeHtml(s.name)}</span>
+              <span class="text-primary font-semibold">${s.percentage}%</span>
+            </div>
+            <div class="w-full h-1.5 rounded-full bg-surface-container-highest overflow-hidden">
+              <div class="h-full bg-primary-container rounded-full" style="width:${s.percentage}%;"></div>
+            </div>
+          </div>
+        `).join('');
       }
 
-      function updateDeadlines() {
-        const deadlinesEl = document.getElementById('deadlines-list');
-        const upcomingTasks = Storage.getUpcomingTasks(7);
-        if (upcomingTasks.length === 0) {
-          deadlinesEl.innerHTML = '<div class="empty-state" style="padding: 1rem;"><p class="text-secondary text-center">Clear timeline</p></div>';
-          return;
-        }
-        deadlinesEl.innerHTML = upcomingTasks.slice(0, 5).map(task => {
-          const isOverdue = !task.completed && task.dueDate && Storage.isDateOverdue(task.dueDate);
-          return `
-            <a href="timer.html?taskId=${App.escapeHtml(task.id)}" class="timeline-item ${isOverdue ? 'overdue' : ''} u-block u-no-underline">
-              <div class="timeline-dot"></div>
-              <div class="flex items-center justify-between">
-                <div style="font-size: 10px; font-weight: 500; color: ${isOverdue ? 'var(--danger)' : 'var(--accent-text)'}; text-transform: uppercase;">
-                  ${Storage.formatDisplayDate(task.dueDate)}
-                </div>
-                ${isOverdue ? '<span class="badge" style="color:var(--danger);">MISSED</span>' : ''}
-              </div>
-              <div style="font-size: 13px; font-weight: 500; color: var(--text-primary);">${App.escapeHtml(task.title)}</div>
-              <div style="font-size: 11px; color: var(--text-muted);">${App.escapeHtml(task.subject)}</div>
-            </a>
-          `;
-        }).join('');
-      }
+      function renderReflection() {
+        const btn = document.getElementById('save-reflection-btn');
+        const input = document.getElementById('reflection-input');
+        if (!btn || !input) return;
 
-      function init() {
-        PWAManager.init();
-        updateGreeting();
-        updateDateDisplay();
-        updateStats();
-        updateProgress();
-        updateMasteryOverview();
-        updateDeadlines();
-        updateXPWidget();
-        updateTodayPlan();
-        checkReflectionStatus();
-        Achievements.init();
-      }
-
-      function checkReflectionStatus() {
-        const now = new Date();
-        if (now.getHours() >= 21) {
-          const todayStr = Storage.formatDate(now);
-          const reflections = Storage.loadData(Storage.KEYS.REFLECTIONS, []);
-          if (!reflections.some(r => r.date === todayStr)) {
-            document.getElementById('reflection-card').style.display = 'block';
+        btn.addEventListener('click', () => {
+          const text = input.value.trim();
+          if (!text) {
+            App.showToast('Please enter a reflection before saving', 'warning');
+            input.focus();
+            return;
           }
-        }
-      }
-
-      document.getElementById('save-reflection-btn')?.addEventListener('click', () => {
-        const inputEl = document.getElementById('reflection-input');
-        const text = inputEl ? inputEl.value.trim() : '';
-        if (text) {
-          const reflections = Storage.loadData(Storage.KEYS.REFLECTIONS, []);
+          const reflections = Storage.getReflections ? Storage.getReflections() : [];
           reflections.push({
             date: Storage.formatDate(new Date()),
-            text: text,
+            text,
             timestamp: new Date().toISOString()
           });
           Storage.saveData(Storage.KEYS.REFLECTIONS, reflections);
-          App.showToast('Reflection stored in history', 'success');
-          document.getElementById('reflection-card').style.display = 'none';
-        } else {
-          App.showToast('Please enter a reflection before saving', 'warning');
-          inputEl?.focus();
-        }
-      });
-      init();
+          App.showToast('Reflection saved to history', 'success');
+          input.value = '';
+        });
+      }
 
-      window.addEventListener('studyflow_taskDataChanged', () => {
-        updateStats();
-        updateMasteryOverview();
-        updateDeadlines();
-        updateXPWidget();
-        updateTodayPlan();
-      });
+      function renderHome() {
+        renderGreeting();
+        renderHeroFocusCard();
+        renderMetrics();
+        renderUpcomingTasks();
+        renderTodayPlan();
+        renderMastery();
+      }
+
+      function init() {
+        if (typeof PWAManager !== 'undefined' && PWAManager.init) PWAManager.init();
+        renderHome();
+        renderReflection();
+
+        window.addEventListener('studyflow_taskDataChanged', renderHome);
+        window.addEventListener('studyflow_task_updated', renderHome);
+      }
+
+      init();
     })();
   </script>
 </body>

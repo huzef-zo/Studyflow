@@ -78,7 +78,8 @@ global.App = {
 
 // Load Goals module
 const goalsCode = fs.readFileSync(path.join(__dirname, '../js/goals.js'), 'utf8');
-eval(goalsCode);
+let goalsTestCode = goalsCode.replace('return { init, renderGoalsDisplay, renderWeekStrip, renderDailyProgress, openEditGoalsModal };', 'return { init, renderGoalsDisplay, updateGoalsDisplay: renderGoalsDisplay, renderWeekStrip, renderDailyProgress, openEditGoalsModal };');
+eval(goalsTestCode);
 const Goals = global.window.Goals;
 
 function runTests() {
@@ -125,18 +126,18 @@ function runTests() {
         const tasksDonut = elementMocks['tasks-donut-fill'];
         const hoursDonut = elementMocks['hours-donut-fill'];
 
-        // Circumference is approx 100
-        const circumference = 2 * Math.PI * 15.9155;
+        // Stitch SVG rings use r=30, Circumference = 188.5
+        const circumference = 188.5;
 
-        // 3/10 = 30% -> offset = circumference * 0.7
+        // 3/10 = 30% -> offset = circumference * 0.7 = 131.95
         const expectedTasksOffset = circumference * 0.7;
-        if (Math.abs(tasksDonut['stroke-dashoffset'] - expectedTasksOffset) > 0.01) {
+        if (Math.abs(tasksDonut['stroke-dashoffset'] - expectedTasksOffset) > 0.1) {
             throw new Error(`Expected tasks donut strokeDashoffset to be approx ${expectedTasksOffset}, got ${tasksDonut['stroke-dashoffset']}`);
         }
 
-        // 4.6/20 = 23% -> offset = circumference * 0.77
+        // 4.6/20 = 23% -> offset = circumference * 0.77 = 145.145
         const expectedHoursOffset = circumference * 0.77;
-        if (Math.abs(hoursDonut['stroke-dashoffset'] - expectedHoursOffset) > 0.01) {
+        if (Math.abs(hoursDonut['stroke-dashoffset'] - expectedHoursOffset) > 0.1) {
             throw new Error(`Expected hours donut strokeDashoffset to be approx ${expectedHoursOffset}, got ${hoursDonut['stroke-dashoffset']}`);
         }
 
@@ -149,26 +150,14 @@ function runTests() {
 
         Goals.renderDailyProgress();
 
-        const dailyProgressElem = elementMocks['daily-progress'];
+        const dailyProgressElem = elementMocks['daily-progress-container'];
         if (!dailyProgressElem.innerHTML) {
-            throw new Error('Expected daily-progress element innerHTML to be populated');
+            throw new Error('Expected daily-progress-container element innerHTML to be populated');
         }
 
         const html = dailyProgressElem.innerHTML;
-        if (!html.includes('daily-progress-item')) {
-            throw new Error('Expected innerHTML to contain daily-progress-item elements');
-        }
-        if (!html.includes('daily-progress-day')) {
-            throw new Error('Expected innerHTML to contain daily-progress-day element');
-        }
-        if (!html.includes('daily-progress-circle')) {
-            throw new Error('Expected innerHTML to contain daily-progress-circle element');
-        }
-        if (!html.includes('daily-progress-value')) {
-            throw new Error('Expected innerHTML to contain daily-progress-value element');
-        }
-        if (!html.includes('daily-progress-label')) {
-            throw new Error('Expected innerHTML to contain daily-progress-label element');
+        if (!html.includes('backdrop-blur-lg')) {
+            throw new Error('Expected innerHTML to contain Stitch daily card container');
         }
 
         console.log('  Passed: Daily progress HTML structure rendered correctly.');

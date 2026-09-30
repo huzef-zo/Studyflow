@@ -1,512 +1,721 @@
 <!DOCTYPE html>
-<html lang="en">
+<html class="dark" lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
-  <meta name="description" content="StudyFlow - Settings and preferences">
-  <meta name="theme-color" content="#0A0B0F">
-  <meta name="color-scheme" content="dark">
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-title" content="StudyFlow">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-touch-fullscreen" content="yes">
-  <link rel="icon" type="image/png" href="./icon-192.png">
-  <link rel="apple-touch-icon" href="./icon-192.png">
-  <link rel="manifest" href="./manifest.json">
-  <link rel="msapplication-config" href="browserconfig.xml">
-  <meta name="msapplication-TileColor" content="#5B9BF0">
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover"/>
+  <meta name="description" content="StudyFlow - Preferences & Settings"/>
+  <meta name="theme-color" content="#090D12"/>
+
+  <link rel="icon" type="image/png" href="./icon-192.png"/>
+  <link rel="apple-touch-icon" href="./icon-192.png"/>
+  <link rel="manifest" href="./manifest.json"/>
+
   <title>Settings - StudyFlow</title>
-  <link rel="stylesheet" href="css/style.css?v=v2026-09-29-01">
+  <link rel="stylesheet" href="css/tailwind.css?v=v2026-09-30-01"/>
+  <link rel="stylesheet" href="css/app.css?v=v2026-09-30-01"/>
 </head>
-<body>
+<body class="bg-surface-base text-on-surface font-body-md text-body-md flex flex-col relative antialiased selection:bg-primary-container selection:text-surface-base min-h-dvh">
+  <!-- Radial Ambient Glow -->
+  <div class="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-lg h-80 bg-[radial-gradient(ellipse_at_top,rgba(91,155,240,0.14),transparent_70%)] pointer-events-none z-0"></div>
+
+  <!-- Shell Containers -->
+  <div id="header-container"></div>
   <div id="sidebar-container"></div>
   <div id="bottom-nav-container"></div>
 
-  <main class="main-container">
-    <header class="page-header animate-fade-in">
-      <div class="page-header-title-group">
-        <h1>Settings</h1>
-        <p class="subtitle">Configure your study environment</p>
+  <!-- Main Content -->
+  <main class="flex-1 flex flex-col relative w-full max-w-lg lg:max-w-3xl mx-auto pt-20 pb-28 px-margin bg-surface-base z-10">
+    <div class="flex flex-col w-full pb-16 space-y-6 select-none">
+
+      <!-- Header Title -->
+      <div class="flex items-end justify-between pt-2">
+        <div>
+          <h1 class="font-headline-lg-mobile text-headline-lg-mobile text-text-primary tracking-tight">Settings</h1>
+          <p class="font-body-sm text-body-sm text-text-secondary mt-0.5">Preferences & study rhythm tuning</p>
+        </div>
       </div>
-    </header>
 
-    <div class="narrow-layout">
-      <!-- Profile -->
-      <section class="card animate-fade-in">
-        <div class="card-header"><h3 class="card-title">Profile Configuration</h3></div>
-        <div class="form-group">
-          <label class="form-label" for="display-name">Display Name</label>
-          <input type="text" class="form-input" id="display-name" placeholder="Enter operative name">
-        </div>
-        <div class="form-group mb-0">
-          <label class="form-label" for="user-email">Communication ID (Email)</label>
-          <input type="email" class="form-input" id="user-email" placeholder="id@studyflow.io">
-        </div>
-      </section>
-
-      <!-- Timer -->
-      <section class="card animate-fade-in mt-md">
-        <div class="card-header"><h3 class="card-title">Focus Parameters</h3></div>
-        <div class="grid-2-dense-gap-lg">
-          <div class="form-group mb-xs">
-            <label class="form-label" for="work-duration">Deep Work (Min)</label>
-            <input type="number" class="form-input" id="work-duration" min="1" max="60">
-          </div>
-          <div class="form-group mb-xs">
-            <label class="form-label" for="short-break">Cooldown (Min)</label>
-            <input type="number" class="form-input" id="short-break" min="1" max="30">
-          </div>
-          <div class="form-group mb-xs">
-            <label class="form-label" for="long-break">Deep Rest (Min)</label>
-            <input type="number" class="form-input" id="long-break" min="1" max="60">
-          </div>
-          <div class="form-group mb-xs">
-            <label class="form-label" for="sessions-until-long-break">Sessions per Cycle</label>
-            <input type="number" class="form-input" id="sessions-until-long-break" min="1" max="10">
-          </div>
-        </div>
-      </section>
-
-      <!-- Notifications -->
-      <section class="card animate-fade-in mt-md">
-        <div class="card-header"><h3 class="card-title">Notifications</h3></div>
-
-        <div class="flex items-center justify-between mb-md">
-          <div style="flex:1;">
-            <div style="font-weight:500;font-size:13px;">System Notifications</div>
-            <div style="font-size:11px;color:var(--text-muted);">Push alerts for session transitions</div>
-          </div>
-          <label class="toggle"><input type="checkbox" id="notifications-enabled"><span class="toggle-slider"></span></label>
-        </div>
-
-        <div class="flex items-center justify-between mb-md">
-          <div style="flex:1;">
-            <div style="font-weight:500;font-size:13px;">Task Reminders</div>
-            <div style="font-size:11px;color:var(--text-muted);">Alerts when objectives reach target time</div>
-          </div>
-          <label class="toggle"><input type="checkbox" id="task-notifications-enabled"><span class="toggle-slider"></span></label>
-        </div>
-
-        <div class="flex items-center justify-between mb-md">
-          <div style="flex:1;">
-            <div style="font-weight:500;font-size:13px;">Audio Feedback</div>
-            <div style="font-size:11px;color:var(--text-muted);">Sound cues on mission events</div>
-          </div>
-          <div class="flex items-center gap-md">
-            <button class="btn btn-secondary btn-sm" id="test-sound-btn" style="padding:2px 10px;font-size:10px;">TEST</button>
-            <label class="toggle"><input type="checkbox" id="sound-enabled"><span class="toggle-slider"></span></label>
-          </div>
-        </div>
-
-        <div class="flex items-center justify-between mb-md">
-          <div>
-            <div style="font-weight:500;font-size:13px;">Auto-start Cooldown</div>
-            <div style="font-size:11px;color:var(--text-muted);">Begin break immediately after work</div>
-          </div>
-          <label class="toggle"><input type="checkbox" id="auto-start-break"><span class="toggle-slider"></span></label>
-        </div>
-
-        <div class="flex items-center justify-between mb-md">
-          <div>
-            <div style="font-weight:500;font-size:13px;">Auto-start Deep Work</div>
-            <div style="font-size:11px;color:var(--text-muted);">Begin focus session immediately after break</div>
-          </div>
-          <label class="toggle"><input type="checkbox" id="auto-start-work"><span class="toggle-slider"></span></label>
-        </div>
-
-        <div id="notification-permission-item" class="mt-md p-md card" style="background:var(--bg-tertiary);display:none;">
-          <div class="flex items-center justify-between gap-md">
-            <div style="flex:1;">
-              <p style="margin:0;font-size:12px;font-weight:500;" id="permission-status">System permissions required</p>
-              <p style="margin:2px 0 0 0;font-size:10px;color:var(--text-muted);display:none;" id="permission-hint">Check browser settings if blocked.</p>
-            </div>
-            <button class="btn btn-primary btn-sm" id="request-permission-btn">Enable</button>
-          </div>
-        </div>
-      </section>
-
-      <!-- Study Schedule -->
-      <section class="card animate-fade-in mt-md">
-        <div class="card-header">
-          <h3 class="card-title">Study Windows</h3>
-          <button class="btn btn-ghost btn-icon btn-sm" id="add-window-btn" aria-label="Add Study Window">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
-          </button>
-        </div>
-        <div id="windows-list" style="display:grid;gap:6px;"></div>
-      </section>
-
-      <!-- Subjects -->
-      <section class="card animate-fade-in mt-md">
-        <div class="card-header">
-          <h3 class="card-title">Knowledge Sectors</h3>
-          <button class="btn btn-ghost btn-icon btn-sm" id="add-subject-btn" aria-label="Add Knowledge Sector">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
-          </button>
-        </div>
-        <div id="subjects-list" style="display:grid;gap:6px;"></div>
-      </section>
-
-      <!-- Data -->
-      <section class="card animate-fade-in mt-md">
-        <div class="card-header"><h3 class="card-title">Data Core</h3></div>
-        <div class="grid-2-dense-gap-lg">
-          <button class="btn btn-secondary" id="export-btn" aria-label="Export backup data">Export</button>
-          <button class="btn btn-secondary" id="import-btn" aria-label="Import backup data">Import</button>
-          <input type="file" id="import-input" accept=".json" style="display:none;" aria-label="Select backup JSON file to import">
-        </div>
-        <div class="mt-md pt-md" style="border-top:1px solid var(--border-color);">
+      <!-- PROFILE SECTION -->
+      <div class="flex flex-col space-y-2">
+        <span class="font-label-sm text-label-sm uppercase tracking-widest text-text-muted px-1">Profile</span>
+        <div class="relative overflow-hidden rounded-2xl bg-surface-glass backdrop-blur-xl p-4 shadow-sm">
           <div class="flex items-center justify-between">
-            <div>
-              <div style="font-weight:500;font-size:13px;color:var(--danger);">Delete All Data</div>
-              <div style="font-size:11px;color:var(--text-muted);">Permanently erase all local intelligence</div>
+            <div class="flex items-center gap-3.5">
+              <div class="w-12 h-12 rounded-full bg-primary-container text-surface-base flex items-center justify-center font-headline-sm text-headline-sm font-bold" id="profile-initials">
+                SF
+              </div>
+              <div class="flex flex-col min-w-0">
+                <span class="font-label-md text-label-md text-text-primary font-semibold truncate" id="profile-name">Student</span>
+                <span class="font-body-sm text-body-sm text-text-secondary truncate" id="profile-email">student@studyflow.app</span>
+              </div>
             </div>
-            <button class="btn btn-danger btn-sm" id="clear-data-btn" aria-label="Erase all local data">Erase All Data</button>
+            <button aria-label="Edit Profile" class="flex items-center justify-center w-9 h-9 rounded-full bg-surface-container-high text-text-secondary hover:text-text-primary active:scale-95 transition-all" id="edit-profile-btn" type="button">
+              <span class="material-symbols-outlined text-[20px]">edit</span>
+            </button>
+          </div>
+          <div class="mt-3.5 pt-3 flex items-center justify-between text-text-muted font-body-sm text-body-sm bg-surface-container-lowest/40 -mx-4 -mb-4 px-4 py-2.5 border-t border-glass-border-subtle">
+            <span class="flex items-center gap-1.5 text-text-secondary">
+              <span class="material-symbols-outlined text-[15px] text-primary-container">check_circle</span>
+              All data saved locally
+            </span>
           </div>
         </div>
-      </section>
+      </div>
+
+      <!-- FOCUS TIMER SETTINGS -->
+      <div class="flex flex-col space-y-2">
+        <div class="flex items-center justify-between px-1">
+          <span class="font-label-sm text-label-sm uppercase tracking-widest text-text-muted">Focus Timer</span>
+        </div>
+        <div class="rounded-2xl bg-surface-glass backdrop-blur-xl overflow-hidden shadow-sm">
+          <!-- Work Duration -->
+          <div class="flex items-center justify-between p-4 bg-surface-container-low/40">
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 rounded-xl bg-primary-container/15 flex items-center justify-center text-primary-container">
+                <span class="material-symbols-outlined text-[18px]">timelapse</span>
+              </div>
+              <div class="flex flex-col">
+                <span class="font-label-md text-label-md text-text-primary">Work duration</span>
+                <span class="font-body-sm text-body-sm text-text-muted">Primary focus block</span>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <button aria-label="Decrease work duration" class="w-8 h-8 rounded-full bg-surface-container-high text-text-secondary hover:text-text-primary active:scale-90 transition-all flex items-center justify-center" data-action="dec" data-stepper="work_duration" type="button">
+                <span class="material-symbols-outlined text-[16px]">remove</span>
+              </button>
+              <span class="font-headline-sm text-headline-sm text-text-primary w-14 text-center" id="work-val">25<span class="text-body-sm text-text-secondary ml-0.5">m</span></span>
+              <button aria-label="Increase work duration" class="w-8 h-8 rounded-full bg-surface-container-high text-text-secondary hover:text-text-primary active:scale-90 transition-all flex items-center justify-center" data-action="inc" data-stepper="work_duration" type="button">
+                <span class="material-symbols-outlined text-[16px]">add</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Short Break -->
+          <div class="flex items-center justify-between p-4 bg-surface-container-low/20">
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 rounded-xl bg-surface-container-highest flex items-center justify-center text-text-secondary">
+                <span class="material-symbols-outlined text-[18px]">coffee</span>
+              </div>
+              <div class="flex flex-col">
+                <span class="font-label-md text-label-md text-text-primary">Short break</span>
+                <span class="font-body-sm text-body-sm text-text-muted">Light breath pause</span>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <button aria-label="Decrease short break duration" class="w-8 h-8 rounded-full bg-surface-container-high text-text-secondary hover:text-text-primary active:scale-90 transition-all flex items-center justify-center" data-action="dec" data-stepper="short_break" type="button">
+                <span class="material-symbols-outlined text-[16px]">remove</span>
+              </button>
+              <span class="font-headline-sm text-headline-sm text-text-primary w-14 text-center" id="short-val">5<span class="text-body-sm text-text-secondary ml-0.5">m</span></span>
+              <button aria-label="Increase short break duration" class="w-8 h-8 rounded-full bg-surface-container-high text-text-secondary hover:text-text-primary active:scale-90 transition-all flex items-center justify-center" data-action="inc" data-stepper="short_break" type="button">
+                <span class="material-symbols-outlined text-[16px]">add</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Long Break -->
+          <div class="flex items-center justify-between p-4 bg-surface-container-low/40">
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 rounded-xl bg-surface-container-highest flex items-center justify-center text-text-secondary">
+                <span class="material-symbols-outlined text-[18px]">self_improvement</span>
+              </div>
+              <div class="flex flex-col">
+                <span class="font-label-md text-label-md text-text-primary">Long break</span>
+                <span class="font-body-sm text-body-sm text-text-muted">Deep recovery window</span>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <button aria-label="Decrease long break duration" class="w-8 h-8 rounded-full bg-surface-container-high text-text-secondary hover:text-text-primary active:scale-90 transition-all flex items-center justify-center" data-action="dec" data-stepper="long_break" type="button">
+                <span class="material-symbols-outlined text-[16px]">remove</span>
+              </button>
+              <span class="font-headline-sm text-headline-sm text-text-primary w-14 text-center" id="long-val">15<span class="text-body-sm text-text-secondary ml-0.5">m</span></span>
+              <button aria-label="Increase long break duration" class="w-8 h-8 rounded-full bg-surface-container-high text-text-secondary hover:text-text-primary active:scale-90 transition-all flex items-center justify-center" data-action="inc" data-stepper="long_break" type="button">
+                <span class="material-symbols-outlined text-[16px]">add</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Sessions per cycle -->
+          <div class="flex items-center justify-between p-4 bg-surface-container-low/20">
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 rounded-xl bg-surface-container-highest flex items-center justify-center text-text-secondary">
+                <span class="material-symbols-outlined text-[18px]">repeat</span>
+              </div>
+              <div class="flex flex-col">
+                <span class="font-label-md text-label-md text-text-primary">Sessions per cycle</span>
+                <span class="font-body-sm text-body-sm text-text-muted">Intervals before long break</span>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <button aria-label="Decrease sessions per cycle" class="w-8 h-8 rounded-full bg-surface-container-high text-text-secondary hover:text-text-primary active:scale-90 transition-all flex items-center justify-center" data-action="dec" data-stepper="sessions_until_long_break" type="button">
+                <span class="material-symbols-outlined text-[16px]">remove</span>
+              </button>
+              <span class="font-headline-sm text-headline-sm text-text-primary w-14 text-center" id="cycles-val">4</span>
+              <button aria-label="Increase sessions per cycle" class="w-8 h-8 rounded-full bg-surface-container-high text-text-secondary hover:text-text-primary active:scale-90 transition-all flex items-center justify-center" data-action="inc" data-stepper="sessions_until_long_break" type="button">
+                <span class="material-symbols-outlined text-[16px]">add</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- NOTIFICATIONS -->
+      <div class="flex flex-col space-y-2">
+        <span class="font-label-sm text-label-sm uppercase tracking-widest text-text-muted px-1">Notifications</span>
+        <div class="rounded-2xl bg-surface-glass backdrop-blur-xl overflow-hidden shadow-sm">
+          <!-- Notifications toggle -->
+          <div class="flex items-center justify-between p-4 bg-surface-container-low/40">
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 rounded-xl bg-surface-container-high flex items-center justify-center text-text-secondary">
+                <span class="material-symbols-outlined text-[18px]">notification_important</span>
+              </div>
+              <div class="flex flex-col pr-2">
+                <span class="font-label-md text-label-md text-text-primary">Timer alerts</span>
+                <span class="font-body-sm text-body-sm text-text-muted">Sound & banner when interval ends</span>
+              </div>
+            </div>
+            <button aria-checked="true" aria-label="Toggle timer alerts" class="w-12 h-6 rounded-full bg-primary-container p-0.5 flex items-center justify-end transition-colors cursor-pointer shrink-0" data-setting="notifications" role="switch" type="button">
+              <span class="w-5 h-5 rounded-full bg-surface-base shadow-md"></span>
+            </button>
+          </div>
+
+          <!-- Task reminders -->
+          <div class="flex items-center justify-between p-4 bg-surface-container-low/20">
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 rounded-xl bg-surface-container-high flex items-center justify-center text-text-secondary">
+                <span class="material-symbols-outlined text-[18px]">alarm</span>
+              </div>
+              <div class="flex flex-col pr-2">
+                <span class="font-label-md text-label-md text-text-primary">Task reminders</span>
+                <span class="font-body-sm text-body-sm text-text-muted">Daily study schedule prompts</span>
+              </div>
+            </div>
+            <button aria-checked="true" aria-label="Toggle task reminders" class="w-12 h-6 rounded-full bg-primary-container p-0.5 flex items-center justify-end transition-colors cursor-pointer shrink-0" data-setting="task_notifications" role="switch" type="button">
+              <span class="w-5 h-5 rounded-full bg-surface-base shadow-md"></span>
+            </button>
+          </div>
+
+          <!-- Sound effects -->
+          <div class="flex items-center justify-between p-4 bg-surface-container-low/40">
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 rounded-xl bg-surface-container-high flex items-center justify-center text-text-secondary">
+                <span class="material-symbols-outlined text-[18px]">volume_up</span>
+              </div>
+              <div class="flex flex-col pr-2">
+                <span class="font-label-md text-label-md text-text-primary">Sound effects</span>
+                <span class="font-body-sm text-body-sm text-text-muted">Subtle ambient chime cues</span>
+              </div>
+            </div>
+            <button aria-checked="true" aria-label="Toggle sound effects" class="w-12 h-6 rounded-full bg-primary-container p-0.5 flex items-center justify-end transition-colors cursor-pointer shrink-0" data-setting="sound" role="switch" type="button">
+              <span class="w-5 h-5 rounded-full bg-surface-base shadow-md"></span>
+            </button>
+          </div>
+
+          <!-- Auto-start Break -->
+          <div class="flex items-center justify-between p-4 bg-surface-container-low/20">
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 rounded-xl bg-surface-container-high flex items-center justify-center text-text-secondary">
+                <span class="material-symbols-outlined text-[18px]">play_arrow</span>
+              </div>
+              <div class="flex flex-col pr-2">
+                <span class="font-label-md text-label-md text-text-primary">Auto-start break</span>
+                <span class="font-body-sm text-body-sm text-text-muted">Automatically begin break timers</span>
+              </div>
+            </div>
+            <button aria-checked="true" aria-label="Toggle auto-start break" class="w-12 h-6 rounded-full bg-primary-container p-0.5 flex items-center justify-end transition-colors cursor-pointer shrink-0" data-setting="auto_start_break" role="switch" type="button">
+              <span class="w-5 h-5 rounded-full bg-surface-base shadow-md"></span>
+            </button>
+          </div>
+
+          <!-- Auto-start Work -->
+          <div class="flex items-center justify-between p-4 bg-surface-container-low/40">
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 rounded-xl bg-surface-container-high flex items-center justify-center text-text-secondary">
+                <span class="material-symbols-outlined text-[18px]">bolt</span>
+              </div>
+              <div class="flex flex-col pr-2">
+                <span class="font-label-md text-label-md text-text-primary">Auto-start work</span>
+                <span class="font-body-sm text-body-sm text-text-muted">Automatically begin focus timers</span>
+              </div>
+            </div>
+            <button aria-checked="true" aria-label="Toggle auto-start work" class="w-12 h-6 rounded-full bg-primary-container p-0.5 flex items-center justify-end transition-colors cursor-pointer shrink-0" data-setting="auto_start_work" role="switch" type="button">
+              <span class="w-5 h-5 rounded-full bg-surface-base shadow-md"></span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- SUBJECTS -->
+      <div class="flex flex-col space-y-2">
+        <div class="flex items-center justify-between px-1">
+          <span class="font-label-sm text-label-sm uppercase tracking-widest text-text-muted">Subjects</span>
+          <span class="font-body-sm text-body-sm text-text-secondary" id="subjects-count-label">0 active</span>
+        </div>
+        <div class="rounded-2xl bg-surface-glass backdrop-blur-xl overflow-hidden shadow-sm flex flex-col">
+          <div class="flex flex-col" id="subjects-list-container">
+            <!-- Populated by JS -->
+          </div>
+          <button class="flex items-center justify-center gap-2 p-3.5 m-2.5 rounded-xl bg-surface-container-high/60 text-primary hover:bg-surface-container-high hover:text-text-primary active:scale-[0.99] transition-all" id="add-subject-btn" type="button">
+            <span class="material-symbols-outlined text-[18px]">add</span>
+            <span class="font-label-md text-label-md">Add Subject</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- STUDY WINDOWS -->
+      <div class="flex flex-col space-y-2">
+        <div class="flex items-center justify-between px-1">
+          <span class="font-label-sm text-label-sm uppercase tracking-widest text-text-muted">Study Windows</span>
+        </div>
+        <div class="rounded-2xl bg-surface-glass backdrop-blur-xl overflow-hidden shadow-sm flex flex-col p-4 gap-3">
+          <div class="flex flex-col gap-2" id="study-windows-list">
+            <!-- Populated by JS -->
+          </div>
+          <button class="flex items-center justify-center gap-2 p-3 rounded-xl bg-surface-container-high/60 text-primary hover:bg-surface-container-high active:scale-[0.99] transition-all" id="add-study-window-btn" type="button">
+            <span class="material-symbols-outlined text-[18px]">add</span>
+            <span class="font-label-md text-label-md">Add Study Window</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- DATA & STORAGE -->
+      <div class="flex flex-col space-y-2">
+        <span class="font-label-sm text-label-sm uppercase tracking-widest text-text-muted px-1">Data & Storage</span>
+        <div class="rounded-2xl bg-surface-glass backdrop-blur-xl overflow-hidden shadow-sm">
+          <!-- Export -->
+          <button class="w-full flex items-center justify-between p-4 bg-surface-container-low/40 hover:bg-surface-container-high/40 active:bg-surface-container-high text-left transition-colors" id="export-btn" type="button">
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 rounded-xl bg-surface-container-high flex items-center justify-center text-text-secondary">
+                <span class="material-symbols-outlined text-[18px]">download</span>
+              </div>
+              <div class="flex flex-col">
+                <span class="font-label-md text-label-md text-text-primary">Export study data</span>
+                <span class="font-body-sm text-body-sm text-text-muted">JSON backup archive</span>
+              </div>
+            </div>
+            <span class="material-symbols-outlined text-[20px] text-text-muted">chevron_right</span>
+          </button>
+
+          <!-- Import -->
+          <label class="w-full flex items-center justify-between p-4 bg-surface-container-low/20 hover:bg-surface-container-high/40 active:bg-surface-container-high text-left transition-colors cursor-pointer">
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 rounded-xl bg-surface-container-high flex items-center justify-center text-text-secondary">
+                <span class="material-symbols-outlined text-[18px]">upload</span>
+              </div>
+              <div class="flex flex-col">
+                <span class="font-label-md text-label-md text-text-primary">Import backup</span>
+                <span class="font-body-sm text-body-sm text-text-muted">Restore previous session logs</span>
+              </div>
+            </div>
+            <span class="material-symbols-outlined text-[20px] text-text-muted">chevron_right</span>
+            <input type="file" id="import-input" accept=".json" class="hidden"/>
+          </label>
+
+          <!-- Erase Data -->
+          <div class="p-2.5 bg-surface-container-lowest/60">
+            <button class="w-full flex items-center justify-center gap-2 p-3 rounded-xl bg-error-container/20 text-error hover:bg-error-container/30 active:scale-[0.98] transition-all" id="erase-btn" type="button">
+              <span class="material-symbols-outlined text-[18px]">delete_forever</span>
+              <span class="font-label-md text-label-md font-semibold">Erase all data</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
     </div>
   </main>
 
-  <script src="js/storage.js?v=v2026-09-29-01"></script>
-  <script src="js/subtask-utils.js?v=v2026-09-29-01"></script>
-  <script src="js/pwa-manager.js?v=v2026-09-29-01"></script>
-  <script src="js/achievements.js?v=v2026-09-29-01"></script>
-  <script src="js/app.js?v=v2026-09-29-01"></script>
+  <!-- Core Scripts -->
+  <script src="version.js"></script>
+  <script src="js/storage.js?v=v2026-09-30-01"></script>
+  <script src="js/subtask-utils.js?v=v2026-09-30-01"></script>
+  <script src="js/pwa-manager.js?v=v2026-09-30-01"></script>
+  <script src="js/app.js?v=v2026-09-30-01"></script>
+
   <script>
-    (function() {
+    (function initSettings() {
       'use strict';
-      const elements = {
-        displayName: document.getElementById('display-name'),
-        userEmail: document.getElementById('user-email'),
-        workDuration: document.getElementById('work-duration'),
-        shortBreak: document.getElementById('short-break'),
-        longBreak: document.getElementById('long-break'),
-        sessionsUntilLongBreak: document.getElementById('sessions-until-long-break'),
-        notificationsEnabled: document.getElementById('notifications-enabled'),
-        taskNotificationsEnabled: document.getElementById('task-notifications-enabled'),
-        soundEnabled: document.getElementById('sound-enabled'),
-        autoStartBreak: document.getElementById('auto-start-break'),
-        autoStartWork: document.getElementById('auto-start-work'),
-        testSoundBtn: document.getElementById('test-sound-btn'),
-        requestPermissionBtn: document.getElementById('request-permission-btn'),
-        permissionStatus: document.getElementById('permission-status'),
-        subjectsList: document.getElementById('subjects-list'),
-        addSubjectBtn: document.getElementById('add-subject-btn'),
-        addWindowBtn: document.getElementById('add-window-btn'),
-        windowsList: document.getElementById('windows-list'),
-        exportBtn: document.getElementById('export-btn'),
-        importBtn: document.getElementById('import-btn'),
-        importInput: document.getElementById('import-input'),
-        clearDataBtn: document.getElementById('clear-data-btn')
-      };
 
-      function loadSettings() {
-        const user = Storage.getUser();
-        const settings = Storage.getSettings();
-        elements.displayName.value = user.name || '';
-        elements.userEmail.value = user.email || '';
-        elements.workDuration.value = settings.work_duration || 25;
-        elements.shortBreak.value = settings.short_break || 5;
-        elements.longBreak.value = settings.long_break || 15;
-        elements.sessionsUntilLongBreak.value = settings.sessions_until_long_break || 4;
-        elements.notificationsEnabled.checked = settings.notifications !== false;
-        elements.taskNotificationsEnabled.checked = settings.task_notifications !== false;
-        elements.soundEnabled.checked = settings.sound !== false;
-        elements.autoStartBreak.checked = settings.auto_start_break !== false;
-        elements.autoStartWork.checked = settings.auto_start_work !== false;
-        updatePermissionStatus();
+      function renderProfile() {
+        const user = Storage.getUser ? Storage.getUser() : { name: 'Student', email: '' };
+        const nameEl = document.getElementById('profile-name');
+        const emailEl = document.getElementById('profile-email');
+        const initialsEl = document.getElementById('profile-initials');
+
+        if (nameEl) nameEl.textContent = user.name || 'Student';
+        if (emailEl) emailEl.textContent = user.email || 'student@studyflow.app';
+        if (initialsEl) initialsEl.textContent = App.getUserInitials();
       }
 
-      function updatePermissionStatus() {
-        if (!('Notification' in window)) return;
-        const item = document.getElementById('notification-permission-item');
-        if (Notification.permission === 'granted') {
-          item.style.display = 'none';
-        } else {
-          item.style.display = 'block';
-          const isDenied = Notification.permission === 'denied';
-          elements.permissionStatus.textContent = isDenied
-            ? 'Permission denied by system'
-            : 'Allow notifications for mission alerts';
-          document.getElementById('permission-hint').style.display = isDenied ? 'block' : 'none';
-          if (isDenied) elements.requestPermissionBtn.style.display = 'none';
-        }
+      function renderSteppers() {
+        const settings = Storage.getSettings ? Storage.getSettings() : {};
+        const map = {
+          work_duration: { id: 'work-val', unit: 'm' },
+          short_break: { id: 'short-val', unit: 'm' },
+          long_break: { id: 'long-val', unit: 'm' },
+          sessions_until_long_break: { id: 'cycles-val', unit: '' }
+        };
+
+        Object.keys(map).forEach(key => {
+          const valEl = document.getElementById(map[key].id);
+          if (valEl) {
+            const val = settings[key] || 0;
+            if (map[key].unit) {
+              valEl.innerHTML = `${val}<span class="text-body-sm text-text-secondary ml-0.5">${map[key].unit}</span>`;
+            } else {
+              valEl.textContent = val;
+            }
+          }
+        });
       }
 
-      function saveSettings() {
-        Storage.updateUserName(elements.displayName.value.trim() || 'Operative');
-        Storage.updateUserEmail(elements.userEmail.value.trim());
-        Storage.updateSetting('work_duration', Math.max(1, parseInt(elements.workDuration.value, 10)) || 25);
-        Storage.updateSetting('short_break', Math.max(1, parseInt(elements.shortBreak.value, 10)) || 5);
-        Storage.updateSetting('long_break', Math.max(1, parseInt(elements.longBreak.value, 10)) || 15);
-        Storage.updateSetting('sessions_until_long_break', Math.max(1, parseInt(elements.sessionsUntilLongBreak.value, 10)) || 4);
-        Storage.updateSetting('notifications', elements.notificationsEnabled.checked);
-        Storage.updateSetting('task_notifications', elements.taskNotificationsEnabled.checked);
-        Storage.updateSetting('sound', elements.soundEnabled.checked);
-        Storage.updateSetting('auto_start_break', elements.autoStartBreak.checked);
-        Storage.updateSetting('auto_start_work', elements.autoStartWork.checked);
+      function renderToggles() {
+        const settings = Storage.getSettings ? Storage.getSettings() : {};
+        document.querySelectorAll('[data-setting]').forEach(btn => {
+          const key = btn.getAttribute('data-setting');
+          const isChecked = !!settings[key];
+          btn.setAttribute('aria-checked', String(isChecked));
+          if (isChecked) {
+            btn.className = 'w-12 h-6 rounded-full bg-primary-container p-0.5 flex items-center justify-end transition-colors cursor-pointer shrink-0';
+          } else {
+            btn.className = 'w-12 h-6 rounded-full bg-surface-container-high p-0.5 flex items-center justify-start transition-colors cursor-pointer shrink-0';
+          }
+        });
       }
 
       function renderSubjects() {
-        const subjects = Storage.getSubjectMasteryStats();
-        elements.subjectsList.innerHTML = subjects.map(s => `
-          <div class="card" style="padding:8px 12px;background:var(--bg-tertiary);display:flex;align-items:center;justify-content:space-between;">
-            <div class="flex items-center gap-md">
-              <div class="badge">
-                <div style="width:8px;height:8px;border-radius:50%;background:${App.escapeHtml(s.color)};"></div>
-                ${App.escapeHtml(s.name)}
+        const container = document.getElementById('subjects-list-container');
+        const countLabel = document.getElementById('subjects-count-label');
+        if (!container) return;
+
+        const subjects = Storage.getSubjects ? Storage.getSubjects() : [];
+        if (countLabel) countLabel.textContent = `${subjects.length} active`;
+
+        if (subjects.length === 0) {
+          container.innerHTML = '<p class="font-body-sm text-body-sm text-text-muted p-4">No subjects added.</p>';
+          return;
+        }
+
+        container.innerHTML = subjects.map(s => `
+          <div class="flex items-center justify-between p-4 bg-surface-container-low/40 border-b border-glass-border-subtle last:border-b-0">
+            <div class="flex items-center gap-3">
+              <span class="w-3 h-3 rounded-full shrink-0" style="background-color: ${App.escapeHtml(s.color)};"></span>
+              <span class="font-label-md text-label-md text-text-primary font-medium">${App.escapeHtml(s.name)}</span>
+            </div>
+            <div class="flex items-center gap-1">
+              <button class="edit-subject-btn p-1 rounded-lg text-text-muted hover:text-text-primary transition-colors" data-id="${App.escapeHtml(s.id)}" aria-label="Edit ${App.escapeHtml(s.name)}">
+                <span class="material-symbols-outlined text-[18px]">edit</span>
+              </button>
+              <button class="delete-subject-btn p-1 rounded-lg text-text-muted hover:text-error transition-colors" data-id="${App.escapeHtml(s.id)}" aria-label="Delete ${App.escapeHtml(s.name)}">
+                <span class="material-symbols-outlined text-[18px]">delete_forever</span>
+              </button>
+            </div>
+          </div>
+        `).join('');
+
+        // Wire edit/delete
+        container.querySelectorAll('.edit-subject-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const id = btn.getAttribute('data-id');
+            const sub = subjects.find(s => s.id === id);
+            if (sub) openSubjectModal(sub);
+          });
+        });
+
+        container.querySelectorAll('.delete-subject-btn').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            const id = btn.getAttribute('data-id');
+            const sub = subjects.find(s => s.id === id);
+            if (sub && await App.confirm({
+              title: 'Delete Subject',
+              message: `Delete subject "${sub.name}"?`,
+              confirmText: 'Delete',
+              danger: true
+            })) {
+              Storage.deleteSubject(id);
+              App.showToast('Subject deleted', 'info');
+              renderSubjects();
+            }
+          });
+        });
+      }
+
+      function renderStudyWindows() {
+        const container = document.getElementById('study-windows-list');
+        if (!container) return;
+
+        const windows = Storage.getStudyWindows ? Storage.getStudyWindows() : [];
+        if (windows.length === 0) {
+          container.innerHTML = '<p class="font-body-sm text-body-sm text-text-muted">No study windows configured.</p>';
+          return;
+        }
+
+        const daysMap = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+        container.innerHTML = windows.map(w => `
+          <div class="flex items-center justify-between p-3 rounded-xl bg-surface-container-low/60">
+            <div class="flex flex-col min-w-0">
+              <span class="font-label-md text-label-md text-text-primary font-medium truncate">${App.escapeHtml(w.label || 'Study Session')}</span>
+              <span class="font-body-sm text-body-sm text-text-muted">${daysMap[w.dayOfWeek] || 'Mon'} · ${App.escapeHtml(w.startTime)} - ${App.escapeHtml(w.endTime)}</span>
+            </div>
+            <button class="delete-sw-btn text-text-muted hover:text-error p-1" data-id="${App.escapeHtml(w.id)}" aria-label="Delete study window">
+              <span class="material-symbols-outlined text-[18px]">delete_forever</span>
+            </button>
+          </div>
+        `).join('');
+
+        container.querySelectorAll('.delete-sw-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const id = btn.getAttribute('data-id');
+            const updated = windows.filter(w => w.id !== id);
+            Storage.saveData(Storage.KEYS.STUDY_WINDOWS, updated);
+            renderStudyWindows();
+          });
+        });
+      }
+
+      function openSubjectModal(existing = null) {
+        const isEdit = !!existing;
+        const name = existing?.name || '';
+        const color = existing?.color || '#5B9BF0';
+
+        const content = `
+          <div class="flex flex-col gap-3">
+            <div class="flex flex-col gap-1">
+              <label class="font-label-sm text-label-sm text-text-secondary" for="subj-name-input">Subject Name</label>
+              <input type="text" id="subj-name-input" class="w-full bg-surface-container-lowest/80 rounded-xl px-3 py-2 text-text-primary text-body-md border border-glass-border outline-none focus:border-primary-container" value="${App.escapeHtml(name)}" placeholder="e.g. Neuroscience"/>
+            </div>
+            <div class="flex flex-col gap-1">
+              <label class="font-label-sm text-label-sm text-text-secondary" for="subj-color-input">Color Accent</label>
+              <input type="color" id="subj-color-input" class="w-12 h-10 rounded-xl bg-transparent border-none cursor-pointer p-0" value="${App.escapeHtml(color)}"/>
+            </div>
+          </div>
+        `;
+
+        const modal = App.createModal({
+          title: isEdit ? 'Edit Subject' : 'Add Subject',
+          content,
+          footer: `
+            <button class="px-4 py-2 rounded-full font-label-md text-text-secondary hover:text-text-primary transition-colors" data-action="cancel">Cancel</button>
+            <button class="px-4 py-2 rounded-full font-label-md bg-primary-container text-surface-base hover:bg-accent-hover font-semibold transition-colors" id="save-subj-btn">Save</button>
+          `
+        });
+
+        modal.querySelector('#save-subj-btn').addEventListener('click', () => {
+          const nameInput = modal.querySelector('#subj-name-input');
+          const colorInput = modal.querySelector('#subj-color-input');
+          const newName = nameInput.value.trim();
+          const newColor = colorInput.value;
+
+          if (!newName) {
+            App.showToast('Please enter a subject name', 'warning');
+            nameInput.focus();
+            return;
+          }
+
+          if (isEdit) {
+            Storage.updateSubject(existing.id, { name: newName, color: newColor });
+          } else {
+            Storage.addSubject(newName, newColor);
+          }
+
+          App.showToast('Subject saved', 'success');
+          App.closeModal(modal);
+          renderSubjects();
+        });
+
+        modal.querySelector('[data-action="cancel"]').addEventListener('click', () => App.closeModal(modal));
+        App.openModal(modal);
+      }
+
+      function setupEventListeners() {
+        // Edit Profile
+        document.getElementById('edit-profile-btn')?.addEventListener('click', () => {
+          const user = Storage.getUser();
+          const content = `
+            <div class="flex flex-col gap-3">
+              <div class="flex flex-col gap-1">
+                <label class="font-label-sm text-label-sm text-text-secondary" for="prof-name-input">Name</label>
+                <input type="text" id="prof-name-input" class="w-full bg-surface-container-lowest/80 rounded-xl px-3 py-2 text-text-primary text-body-md border border-glass-border outline-none focus:border-primary-container" value="${App.escapeHtml(user.name || '')}"/>
+              </div>
+              <div class="flex flex-col gap-1">
+                <label class="font-label-sm text-label-sm text-text-secondary" for="prof-email-input">Email</label>
+                <input type="email" id="prof-email-input" class="w-full bg-surface-container-lowest/80 rounded-xl px-3 py-2 text-text-primary text-body-md border border-glass-border outline-none focus:border-primary-container" value="${App.escapeHtml(user.email || '')}"/>
               </div>
             </div>
-            <div class="flex gap-xs">
-              <button class="btn btn-ghost btn-icon btn-sm edit-sub" data-id="${App.escapeHtml(s.id)}" aria-label="Edit Knowledge Sector">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-              </button>
-              <button class="btn btn-ghost btn-icon btn-sm del-sub" data-id="${App.escapeHtml(s.id)}" aria-label="Delete Knowledge Sector">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-              </button>
-            </div>
-          </div>
-        `).join('');
-        elements.subjectsList.querySelectorAll('.edit-sub').forEach(b => b.addEventListener('click', () => openSubjectModal(b.dataset.id)));
-        elements.subjectsList.querySelectorAll('.del-sub').forEach(b => b.addEventListener('click', () => deleteSubject(b.dataset.id)));
-      }
+          `;
 
-      function openSubjectModal(id = null) {
-        const isEdit = !!id;
-        const s = isEdit ? Storage.getSubjectById(id) : null;
-        const content = `
-          <div class="form-group">
-            <label class="form-label">Sector Name</label>
-            <input type="text" id="sub-name" class="form-input" value="${s ? App.escapeHtml(s.name) : ''}" placeholder="e.g. Astrophysics">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Sector Color</label>
-            <input type="color" id="sub-color" class="form-input" value="${s ? s.color : '#5B9BF0'}" style="height:40px;padding:2px;">
-          </div>
-        `;
-        const modal = App.createModal({
-          title: isEdit ? 'Modify Sector' : 'New Sector',
-          content,
-          footer: `<button class="btn btn-secondary" data-action="cancel">Cancel</button><button class="btn btn-primary" id="save-sub">Save</button>`
+          const modal = App.createModal({
+            title: 'Edit Profile',
+            content,
+            footer: `
+              <button class="px-4 py-2 rounded-full font-label-md text-text-secondary hover:text-text-primary transition-colors" data-action="cancel">Cancel</button>
+              <button class="px-4 py-2 rounded-full font-label-md bg-primary-container text-surface-base hover:bg-accent-hover font-semibold transition-colors" id="save-prof-btn">Save</button>
+            `
+          });
+
+          modal.querySelector('#save-prof-btn').addEventListener('click', () => {
+            const newName = modal.querySelector('#prof-name-input').value.trim();
+            const newEmail = modal.querySelector('#prof-email-input').value.trim();
+            Storage.updateUserName(newName);
+            Storage.updateUserEmail(newEmail);
+            App.showToast('Profile updated', 'success');
+            App.closeModal(modal);
+            renderProfile();
+          });
+
+          modal.querySelector('[data-action="cancel"]').addEventListener('click', () => App.closeModal(modal));
+          App.openModal(modal);
         });
-        modal.querySelector('#save-sub').onclick = () => {
-          const name = modal.querySelector('#sub-name').value.trim();
-          const color = modal.querySelector('#sub-color').value;
-          if (name) {
-            if (App.isValidHexColor(color)) {
-              isEdit ? Storage.updateSubject(id, { name, color }) : Storage.addSubject(name, color);
-              App.closeModal();
-              renderSubjects();
-            } else {
-              App.showToast('Invalid color format. Please use hex (e.g. #5B9BF0)', 'error');
-            }
-          }
-        };
-        modal.querySelector('[data-action="cancel"]').onclick = () => App.closeModal();
-        App.openModal(modal);
-      }
 
-      async function deleteSubject(id) {
-        if (await App.confirm({ title: 'Delete Sector?', message: 'Tasks in this sector will persist without categorization.', confirmText: 'Delete', danger: true })) {
-          Storage.deleteSubject(id);
-          renderSubjects();
-        }
-      }
+        // Steppers
+        document.querySelectorAll('[data-stepper]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const key = btn.getAttribute('data-stepper');
+            const action = btn.getAttribute('data-action');
+            const settings = Storage.getSettings();
+            let current = settings[key] || 0;
 
-      function setupListeners() {
-        [elements.displayName, elements.userEmail, elements.workDuration, elements.shortBreak,
-         elements.longBreak, elements.sessionsUntilLongBreak, elements.notificationsEnabled,
-         elements.taskNotificationsEnabled, elements.soundEnabled,
-         elements.autoStartBreak, elements.autoStartWork
-        ].forEach(el => el.addEventListener('change', saveSettings));
+            if (action === 'inc') current += (key === 'work_duration' ? 5 : 1);
+            else current -= (key === 'work_duration' ? 5 : 1);
 
-        elements.testSoundBtn.onclick = () => {
-          try {
-            const ctx = new (window.AudioContext || window.webkitAudioContext)();
-            const osc = ctx.createOscillator();
-            const gain = ctx.createGain();
-            osc.connect(gain); gain.connect(ctx.destination);
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(440, ctx.currentTime);
-            gain.gain.setValueAtTime(0, ctx.currentTime);
-            gain.gain.linearRampToValueAtTime(0.2, ctx.currentTime + 0.1);
-            gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.5);
-            osc.start(); osc.stop(ctx.currentTime + 0.5);
-            App.showToast('Audio frequency verified', 'success');
-          } catch (e) {
-            console.error('Audio test failed:', e);
-            App.showToast('Audio system failure', 'error');
-          }
-        };
+            Storage.updateSetting(key, current);
+            renderSteppers();
+          });
+        });
 
-        elements.requestPermissionBtn.onclick = () => {
-          if (typeof PWAManager !== 'undefined' && PWAManager.requestNotificationPermission) {
-            PWAManager.requestNotificationPermission().then(updatePermissionStatus);
-          } else {
-            Notification.requestPermission().then(updatePermissionStatus);
-          }
-        };
-        elements.addSubjectBtn.onclick = () => openSubjectModal();
-        elements.addWindowBtn.onclick = () => openWindowModal();
+        // Toggles
+        document.querySelectorAll('[data-setting]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const key = btn.getAttribute('data-setting');
+            const settings = Storage.getSettings();
+            const newState = !settings[key];
+            Storage.updateSetting(key, newState);
+            renderToggles();
+          });
+        });
 
-        elements.exportBtn.onclick = () => {
+        // Add Subject
+        document.getElementById('add-subject-btn')?.addEventListener('click', () => openSubjectModal());
+
+        // Add Study Window
+        document.getElementById('add-study-window-btn')?.addEventListener('click', () => {
+          const content = `
+            <div class="flex flex-col gap-3">
+              <div class="flex flex-col gap-1">
+                <label class="font-label-sm text-label-sm text-text-secondary" for="sw-label-input">Label</label>
+                <input type="text" id="sw-label-input" class="w-full bg-surface-container-lowest/80 rounded-xl px-3 py-2 text-text-primary text-body-md border border-glass-border outline-none focus:border-primary-container" placeholder="e.g. Morning Focus"/>
+              </div>
+              <div class="flex flex-col gap-1">
+                <label class="font-label-sm text-label-sm text-text-secondary" for="sw-day-select">Day of Week</label>
+                <select id="sw-day-select" class="w-full bg-surface-container-lowest/80 rounded-xl px-3 py-2 text-text-primary text-body-md border border-glass-border outline-none">
+                  <option value="1">Monday</option>
+                  <option value="2">Tuesday</option>
+                  <option value="3">Wednesday</option>
+                  <option value="4">Thursday</option>
+                  <option value="5">Friday</option>
+                  <option value="6">Saturday</option>
+                  <option value="0">Sunday</option>
+                </select>
+              </div>
+              <div class="grid grid-cols-2 gap-2">
+                <div class="flex flex-col gap-1">
+                  <label class="font-label-sm text-label-sm text-text-secondary" for="sw-start-time">Start Time</label>
+                  <input type="time" id="sw-start-time" class="w-full bg-surface-container-lowest/80 rounded-xl px-3 py-2 text-text-primary text-body-md border border-glass-border outline-none" value="09:00"/>
+                </div>
+                <div class="flex flex-col gap-1">
+                  <label class="font-label-sm text-label-sm text-text-secondary" for="sw-end-time">End Time</label>
+                  <input type="time" id="sw-end-time" class="w-full bg-surface-container-lowest/80 rounded-xl px-3 py-2 text-text-primary text-body-md border border-glass-border outline-none" value="12:00"/>
+                </div>
+              </div>
+            </div>
+          `;
+
+          const modal = App.createModal({
+            title: 'Add Study Window',
+            content,
+            footer: `
+              <button class="px-4 py-2 rounded-full font-label-md text-text-secondary hover:text-text-primary transition-colors" data-action="cancel">Cancel</button>
+              <button class="px-4 py-2 rounded-full font-label-md bg-primary-container text-surface-base hover:bg-accent-hover font-semibold transition-colors" id="save-sw-btn">Save</button>
+            `
+          });
+
+          modal.querySelector('#save-sw-btn').addEventListener('click', () => {
+            const label = modal.querySelector('#sw-label-input').value.trim() || 'Study Session';
+            const dayOfWeek = parseInt(modal.querySelector('#sw-day-select').value, 10);
+            const startTime = modal.querySelector('#sw-start-time').value || '09:00';
+            const endTime = modal.querySelector('#sw-end-time').value || '12:00';
+
+            const windows = Storage.getStudyWindows ? Storage.getStudyWindows() : [];
+            windows.push({
+              id: 'sw_' + Storage.generateId(),
+              dayOfWeek,
+              startTime,
+              endTime,
+              label
+            });
+            Storage.saveData(Storage.KEYS.STUDY_WINDOWS, windows);
+            App.showToast('Study window added', 'success');
+            App.closeModal(modal);
+            renderStudyWindows();
+          });
+
+          modal.querySelector('[data-action="cancel"]').addEventListener('click', () => App.closeModal(modal));
+          App.openModal(modal);
+        });
+
+        // Export
+        document.getElementById('export-btn')?.addEventListener('click', () => {
+          const data = Storage.exportData ? Storage.exportData() : {};
+          const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
           const a = document.createElement('a');
-          a.href = URL.createObjectURL(new Blob([JSON.stringify(Storage.exportData(), null, 2)], { type: 'application/json' }));
-          a.download = `studyflow-backup-${new Date().toISOString().slice(0,10)}.json`;
+          a.href = url;
+          a.download = `studyflow-backup-${Storage.formatDate(new Date())}.json`;
           a.click();
-        };
+          URL.revokeObjectURL(url);
+          App.showToast('Backup archive exported', 'success');
+        });
 
-        if (elements.importBtn && elements.importInput) {
-          elements.importBtn.onclick = () => {
-            elements.importInput.click();
-          };
-        }
-
-        elements.importInput.onchange = (e) => {
-          const file = e.target.files[0];
+        // Import
+        document.getElementById('import-input')?.addEventListener('change', (e) => {
+          const file = e.target.files?.[0];
           if (!file) return;
           const reader = new FileReader();
-          reader.onload = (ev) => {
+          reader.onload = (evt) => {
             try {
-              const parsed = JSON.parse(ev.target.result);
-              if (typeof parsed !== 'object' || parsed === null) {
-                throw new Error('File does not contain a valid JSON object.');
+              const data = JSON.parse(evt.target.result);
+              if (Storage.importData && Storage.importData(data)) {
+                App.showToast('Backup restored successfully', 'success');
+                setTimeout(() => window.location.reload(), 800);
+              } else {
+                App.showToast('Failed to parse backup file', 'error');
               }
-              const hasKnownKey = parsed.tasks || parsed.sessions || parsed.goals || parsed.subjects || parsed.settings || parsed.user;
-              if (!hasKnownKey) {
-                throw new Error('File does not appear to be a StudyFlow backup.');
-              }
-              Storage.importData(parsed);
-              App.showToast('Data imported successfully!', 'success');
-              setTimeout(() => location.reload(), 800);
             } catch (err) {
-              console.error('Import failed:', err);
-              App.showToast(`Import failed: ${err.message}`, 'error');
-              elements.importInput.value = '';
+              App.showToast('Invalid JSON backup file', 'error');
             }
-          };
-          reader.onerror = () => {
-            App.showToast('Could not read the file. Please try again.', 'error');
-            elements.importInput.value = '';
           };
           reader.readAsText(file);
-        };
-
-        elements.clearDataBtn.onclick = async () => {
-          if (await App.confirm({ title: 'PURGE CORE?', message: 'All data will be permanently vaporized. This cannot be undone.', confirmText: 'PURGE', danger: true })) {
-            Storage.clearAllData();
-            location.reload();
-          }
-        };
-      }
-
-      function renderWindows() {
-        const windows = Storage.loadData(Storage.KEYS.STUDY_WINDOWS, Storage.DEFAULTS.studyWindows);
-        const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-
-        elements.windowsList.innerHTML = windows.sort((a, b) => {
-          if (a.dayOfWeek !== b.dayOfWeek) return a.dayOfWeek - b.dayOfWeek;
-          return a.startTime.localeCompare(b.startTime);
-        }).map(w => `
-          <div class="card" style="padding:8px 12px;background:var(--bg-tertiary);display:flex;align-items:center;justify-content:space-between;">
-            <div class="flex items-center gap-md">
-              <div class="badge">${dayNames[w.dayOfWeek]}</div>
-              <div style="font-size:13px;font-weight:500;">${w.startTime} - ${w.endTime}</div>
-              <div style="font-size:11px;color:var(--text-muted);">${App.escapeHtml(w.label)}</div>
-            </div>
-            <div class="flex gap-xs">
-              <button class="btn btn-ghost btn-icon btn-sm edit-window" data-id="${App.escapeHtml(w.id)}" aria-label="Edit Study Window">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-              </button>
-              <button class="btn btn-ghost btn-icon btn-sm del-window" data-id="${App.escapeHtml(w.id)}" aria-label="Delete Study Window">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-              </button>
-            </div>
-          </div>
-        `).join('');
-
-        elements.windowsList.querySelectorAll('.edit-window').forEach(b => b.addEventListener('click', () => openWindowModal(b.dataset.id)));
-        elements.windowsList.querySelectorAll('.del-window').forEach(b => b.addEventListener('click', () => deleteWindow(b.dataset.id)));
-      }
-
-      function openWindowModal(id = null) {
-        const isEdit = !!id;
-        const windows = Storage.loadData(Storage.KEYS.STUDY_WINDOWS, Storage.DEFAULTS.studyWindows);
-        const w = isEdit ? windows.find(x => x.id === id) : null;
-
-        const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-        const content = `
-          <div class="form-group">
-            <label class="form-label">Day of Week</label>
-            <select id="win-day" class="form-input">
-              ${dayNames.map((n, i) => `<option value="${i}" ${w && w.dayOfWeek === i ? 'selected' : ''}>${n}</option>`).join('')}
-            </select>
-          </div>
-          <div class="grid-2">
-            <div class="form-group">
-              <label class="form-label">Start Time</label>
-              <input type="time" id="win-start" class="form-input" value="${w ? App.escapeHtml(w.startTime) : '09:00'}">
-            </div>
-            <div class="form-group">
-              <label class="form-label">End Time</label>
-              <input type="time" id="win-end" class="form-input" value="${w ? App.escapeHtml(w.endTime) : '12:00'}">
-            </div>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Label</label>
-            <input type="text" id="win-label" class="form-input" value="${w ? App.escapeHtml(w.label) : ''}" placeholder="e.g. Deep Work Morning">
-          </div>
-        `;
-        const modal = App.createModal({
-          title: isEdit ? 'Modify Study Window' : 'Add Study Window',
-          content,
-          footer: `<button class="btn btn-secondary" data-action="cancel">Cancel</button><button class="btn btn-primary" id="save-window">${isEdit ? 'Save' : 'Add'}</button>`
         });
-        modal.querySelector('#save-window').onclick = () => {
-          const dayOfWeek = parseInt(modal.querySelector('#win-day').value, 10);
-          const startTime = modal.querySelector('#win-start').value;
-          const endTime = modal.querySelector('#win-end').value;
-          const label = modal.querySelector('#win-label').value.trim() || 'Study Session';
 
-          if (startTime && endTime) {
-            if (startTime >= endTime) {
-              App.showToast('Start time must be before end time', 'error');
-              return;
-            }
-            const currentWindows = Storage.loadData(Storage.KEYS.STUDY_WINDOWS, Storage.DEFAULTS.studyWindows);
-            if (isEdit) {
-              const updatedWindows = currentWindows.map(x => x.id === id ? { ...x, dayOfWeek, startTime, endTime, label } : x);
-              Storage.saveData(Storage.KEYS.STUDY_WINDOWS, updatedWindows);
-              App.showToast('Study window updated successfully', 'success');
-            } else {
-              currentWindows.push({ id: 'sw_' + Storage.generateId(), dayOfWeek, startTime, endTime, label });
-              Storage.saveData(Storage.KEYS.STUDY_WINDOWS, currentWindows);
-              App.showToast('Study window added successfully', 'success');
-            }
-            App.closeModal();
-            renderWindows();
+        // Erase
+        document.getElementById('erase-btn')?.addEventListener('click', async () => {
+          const confirmed = await App.confirm({
+            title: 'Erase All Data',
+            message: 'Are you sure you want to erase all study sessions, tasks, notes, and settings? This action cannot be undone.',
+            confirmText: 'Erase Everything',
+            danger: true
+          });
+          if (confirmed) {
+            Storage.clearAllData();
           }
-        };
-        modal.querySelector('[data-action="cancel"]').onclick = () => App.closeModal();
-        App.openModal(modal);
+        });
       }
 
-      function deleteWindow(id) {
-        const windows = Storage.loadData(Storage.KEYS.STUDY_WINDOWS, Storage.DEFAULTS.studyWindows);
-        Storage.saveData(Storage.KEYS.STUDY_WINDOWS, windows.filter(w => w.id !== id));
-        renderWindows();
-      }
-
-      function init() {
-        PWAManager.init();
-        loadSettings();
-        renderSubjects();
-        renderWindows();
-        setupListeners();
-      }
-      init();
+      renderProfile();
+      renderSteppers();
+      renderToggles();
+      renderSubjects();
+      renderStudyWindows();
+      setupEventListeners();
     })();
   </script>
 </body>
