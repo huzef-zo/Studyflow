@@ -143,55 +143,6 @@ const Tasks = (function() {
 
   function renderTasks() {
     let tasks = Storage.getTasks();
-    const allTasks = [...tasks];
-    const todayStr = Storage.formatDate(new Date());
-
-    const pendingCount = allTasks.filter(t => {
-      if (t.type === 'repeating') return !Storage.isRepeatingTaskCompletedOnDate(t.id, todayStr);
-      return !t.completed;
-    }).length;
-
-    const badgeEl = document.getElementById('pending-tasks-badge');
-    if (badgeEl) badgeEl.textContent = `${pendingCount} pending`;
-
-    const completedToday = allTasks.filter(t => {
-      if (t.type === 'repeating') return Storage.isRepeatingTaskCompletedOnDate(t.id, todayStr);
-      return t.completed;
-    }).length;
-    const totalToday = allTasks.length;
-    const pctToday = totalToday > 0 ? Math.round((completedToday / totalToday) * 100) : 0;
-
-    const stripEl = document.getElementById('task-progress-strip');
-    if (stripEl) {
-      stripEl.innerHTML = `
-        <div class="flex items-center justify-between mb-xs">
-          <span style="font-size:12px;color:var(--text-secondary);">${completedToday} of ${totalToday} completed today</span>
-          <span style="font-size:12px;color:var(--accent-text);font-weight:600;">${pctToday}%</span>
-        </div>
-        <div class="progress-bar-bg" style="height:6px;">
-          <div class="progress-bar-fill" style="width:${pctToday}%;"></div>
-        </div>
-      `;
-    }
-
-    const sprintEl = document.getElementById('sprint-card');
-    if (sprintEl) {
-      const topPending = allTasks.find(t => !t.completed);
-      if (topPending) {
-        sprintEl.style.display = 'block';
-        sprintEl.innerHTML = `
-          <div class="flex items-center justify-between">
-            <div>
-              <div style="font-size:10px;text-transform:uppercase;color:var(--text-muted);font-weight:600;letter-spacing:0.04em;">Deep Focus Sprint</div>
-              <div style="font-size:14px;font-weight:600;color:var(--text-primary);">${App.escapeHtml(topPending.title)}</div>
-            </div>
-            <a href="timer.html?taskId=${App.escapeHtml(topPending.id)}" class="btn btn-primary btn-sm">Start Sprint</a>
-          </div>
-        `;
-      } else {
-        sprintEl.style.display = 'none';
-      }
-    }
 
     if (elements.subjectFilter && elements.subjectFilter.options.length === 1) {
       Storage.getSubjects().forEach(s => {
@@ -201,6 +152,8 @@ const Tasks = (function() {
         elements.subjectFilter.appendChild(option);
       });
     }
+
+    const todayStr = Storage.formatDate(new Date());
     if (currentFilter === 'pending') tasks = tasks.filter(t => {
       if (t.type === 'repeating') return !Storage.isRepeatingTaskCompletedOnDate(t.id, todayStr);
       return !t.completed;
@@ -544,132 +497,69 @@ const Tasks = (function() {
     const isEdit = !!id;
     const task = isEdit ? Storage.getTaskById(id) : null;
     const subjects = Storage.getSubjects();
-    let selectedPriority = task ? task.priority : 'medium';
 
     const content = `
       <form id="task-form">
         <div class="form-group">
-          <label class="form-label" for="task-title-input">Task Title *</label>
-          <input type="text" id="task-title-input" name="title" class="form-input" placeholder="What needs to be done?" value="${task ? App.escapeHtml(task.title) : ''}" required>
+          <label class="form-label">Task Title</label>
+          <input type="text" name="title" class="form-input" value="${task ? App.escapeHtml(task.title) : ''}" required>
         </div>
-
         <div class="form-group">
-          <label class="form-label">Scheduled for</label>
-          <div class="grid-2">
-            <input type="date" name="dueDate" class="form-input" value="${task ? App.escapeHtml(task.dueDate || Storage.formatDate(new Date())) : Storage.formatDate(new Date())}" required>
-            <input type="time" name="dueTime" class="form-input" value="${task ? App.escapeHtml(task.dueTime || '') : ''}">
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label" for="task-subject-select">Subject</label>
-          <select id="task-subject-select" name="subject" class="form-select">
-            ${subjects.map(s => `<option value="${App.escapeHtml(s.name)}" ${task && task.subject === s.name ? 'selected' : ''}>${App.escapeHtml(s.name)}</option>`).join('')}
+          <label class="form-label">Task Type</label>
+          <select name="type" class="form-select">
+            <option value="one-time" ${!task || task.type === 'one-time' ? 'selected' : ''}>One-time</option>
+            <option value="repeating" ${task && task.type === 'repeating' ? 'selected' : ''}>Repeating</option>
+            <option value="date-range" ${task && task.type === 'date-range' ? 'selected' : ''}>Date Range</option>
           </select>
         </div>
-
-        <div class="form-group">
-          <label class="form-label">Priority</label>
-          <div class="priority-chips flex gap-xs flex-wrap" role="radiogroup" aria-label="Task Priority">
-            ${['low', 'medium', 'high', 'critical'].map(p => `
-              <button type="button" class="filter-tab priority-chip ${selectedPriority === p ? 'active' : ''}" data-priority="${p}">
-                <span class="priority-dot priority-${p}"></span>
-                ${p.charAt(0).toUpperCase() + p.slice(1)}
-              </button>
-            `).join('')}
+        <div id="date-inputs-container"></div>
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label">Sector</label>
+            <select name="subject" class="form-input">
+              ${subjects.map(s => `<option value="${App.escapeHtml(s.name)}" ${task && task.subject === s.name ? 'selected' : ''}>${App.escapeHtml(s.name)}</option>`).join('')}
+            </select>
           </div>
-          <input type="hidden" name="priority" value="${selectedPriority}">
+          <div class="form-group">
+            <label class="form-label">Priority</label>
+            <select name="priority" class="form-input">
+              <option value="low" ${task && task.priority === 'low' ? 'selected' : ''}>Low</option>
+              <option value="medium" ${task && task.priority === 'medium' ? 'selected' : ''}>Medium</option>
+              <option value="high" ${task && task.priority === 'high' ? 'selected' : ''}>High</option>
+              <option value="critical" ${task && task.priority === 'critical' ? 'selected' : ''}>Critical</option>
+            </select>
+          </div>
         </div>
-
-        <details class="more-options-expander mb-md" ${task && (task.type !== 'one-time' || (task.subtasks && task.subtasks.length > 0)) ? 'open' : ''}>
-          <summary class="form-label" style="cursor:pointer;color:var(--accent-text);padding:4px 0;user-select:none;">More options</summary>
-          <div class="mt-sm">
-            <div class="form-group">
-              <label class="form-label">Task Type</label>
-              <select name="type" class="form-select">
-                <option value="one-time" ${!task || task.type === 'one-time' ? 'selected' : ''}>One-time</option>
-                <option value="repeating" ${task && task.type === 'repeating' ? 'selected' : ''}>Repeating</option>
-                <option value="date-range" ${task && task.type === 'date-range' ? 'selected' : ''}>Date Range</option>
-              </select>
-            </div>
-
-            <div id="type-extra-container"></div>
-
-            <div id="subtasks-editor" class="mt-md">
-              <label class="form-label">Subtasks</label>
-              <div id="modal-subtasks-list">
-                ${task && task.subtasks ? task.subtasks.map((s) => `
-                  <div class="flex items-center gap-sm mb-sm">
-                    <input type="text" class="form-input subtask-input" value="${App.escapeHtml(s.title)}" placeholder="Subtask title">
-                    <button type="button" class="btn btn-ghost btn-icon remove-subtask-row" style="color:var(--danger);" aria-label="Remove subtask">&times;</button>
-                  </div>
-                `).join('') : ''}
+        <div id="subtasks-editor">
+          <label class="form-label">Subtasks</label>
+          <div id="modal-subtasks-list">
+            ${task && task.subtasks ? task.subtasks.map((s) => `
+              <div class="flex items-center gap-sm mb-sm">
+                <input type="text" class="form-input subtask-input" value="${App.escapeHtml(s.title)}" placeholder="Subtask title">
+                <button type="button" class="btn btn-ghost btn-icon remove-subtask-row" style="color:var(--danger);" aria-label="Remove sub-mission">&times;</button>
               </div>
-              <button type="button" class="btn btn-secondary btn-sm mt-xs" id="add-subtask-row">+ Add Subtask</button>
-            </div>
+            `).join('') : ''}
           </div>
-        </details>
-
-        <button type="submit" class="btn btn-primary w-full" id="save-task">${isEdit ? 'Update Task' : 'Add Task'}</button>
+          <button type="button" class="btn btn-secondary btn-sm" id="add-subtask-row">+ Add Subtask</button>
+        </div>
       </form>
     `;
 
     const modal = App.createModal({
       title: isEdit ? 'Edit Task' : 'Add Task',
       content,
-      id: 'add-task-sheet'
+      footer: `
+        <button class="btn btn-secondary" data-action="cancel">Cancel</button>
+        <button class="btn btn-primary" id="save-task">${isEdit ? 'Update' : 'Launch'}</button>
+      `
     });
-
-    modal.classList.add('modal-bottom-sheet');
-
-    modal.querySelectorAll('.priority-chip').forEach(chip => {
-      chip.onclick = () => {
-        modal.querySelectorAll('.priority-chip').forEach(c => c.classList.remove('active'));
-        chip.classList.add('active');
-        selectedPriority = chip.dataset.priority;
-        modal.querySelector('input[name="priority"]').value = selectedPriority;
-      };
-    });
-
-    const typeSelect = modal.querySelector('select[name="type"]');
-    const typeExtra = modal.querySelector('#type-extra-container');
-
-    function updateTypeExtra(type) {
-      if (type === 'repeating') {
-        const days = ['S','M','T','W','T','F','S'];
-        const repeatDays = task && task.repeatDays ? task.repeatDays : [new Date().getDay()];
-        typeExtra.innerHTML = `
-          <div class="form-group">
-            <label class="form-label">Repeat On:</label>
-            <div class="repeat-days-grid">
-              ${days.map((day, i) => `<div class="day-toggle ${repeatDays.includes(i) ? 'active' : ''}" data-day="${i}">${day}</div>`).join('')}
-            </div>
-            <button type="button" class="btn btn-ghost btn-sm mt-sm" id="select-every-day">Select Every Day</button>
-          </div>
-        `;
-        typeExtra.querySelectorAll('.day-toggle').forEach(el => el.addEventListener('click', () => el.classList.toggle('active')));
-        typeExtra.querySelector('#select-every-day')?.addEventListener('click', () => typeExtra.querySelectorAll('.day-toggle').forEach(el => el.classList.add('active')));
-      } else if (type === 'date-range') {
-        typeExtra.innerHTML = `
-          <div class="form-group">
-            <label class="form-label">Start Date</label>
-            <input type="date" name="startDate" class="form-input" value="${task ? App.escapeHtml(task.startDate || task.dueDate) : Storage.formatDate(new Date())}">
-          </div>
-        `;
-      } else {
-        typeExtra.innerHTML = '';
-      }
-    }
-
-    typeSelect.addEventListener('change', (e) => updateTypeExtra(e.target.value));
-    updateTypeExtra(task ? task.type : 'one-time');
 
     modal.querySelector('#add-subtask-row').onclick = () => {
       const row = document.createElement('div');
       row.className = 'flex items-center gap-sm mb-sm';
       row.innerHTML = `
         <input type="text" class="form-input subtask-input" placeholder="Subtask title">
-        <button type="button" class="btn btn-ghost btn-icon remove-subtask-row" style="color:var(--danger);" aria-label="Remove subtask">&times;</button>
+        <button type="button" class="btn btn-ghost btn-icon remove-subtask-row" style="color:var(--danger);" aria-label="Remove sub-mission">&times;</button>
       `;
       row.querySelector('.remove-subtask-row').onclick = () => row.remove();
       modal.querySelector('#modal-subtasks-list').appendChild(row);
@@ -679,16 +569,10 @@ const Tasks = (function() {
       btn.onclick = () => btn.parentElement.remove();
     });
 
-    const form = modal.querySelector('#task-form');
-    form.onsubmit = (e) => {
-      e.preventDefault();
+    modal.querySelector('#save-task').onclick = () => {
+      const form = modal.querySelector('#task-form');
       const data = App.getFormData(form);
-      const type = data.type || 'one-time';
-
-      if (!data.title || !data.title.trim()) {
-        App.showToast('Please enter a task title', 'warning');
-        return;
-      }
+      const type = form.querySelector('select[name="type"]').value;
 
       const subtaskInputs = modal.querySelectorAll('.subtask-input');
       const subtasks = [];
@@ -699,6 +583,7 @@ const Tasks = (function() {
             id: existing.id || Storage.generateId(),
             title: input.value.trim(),
             isCompleted: existing.isCompleted || false,
+            estimatedCycles: existing.estimatedCycles || 1,
             completedCycles: existing.completedCycles || 0
           });
         }
@@ -717,7 +602,7 @@ const Tasks = (function() {
         title: data.title.trim(),
         type,
         subject: data.subject,
-        priority: data.priority || selectedPriority,
+        priority: data.priority,
         dueTime: data.dueTime || null,
         subtasks,
         repeatDays,
@@ -725,12 +610,70 @@ const Tasks = (function() {
         dueDate: type === 'repeating' ? null : (data.dueDate || data.startDate)
       };
 
-      isEdit ? Storage.updateTask(id, taskData) : Storage.addTask(taskData);
-      App.showToast(isEdit ? 'Task updated' : 'Task added', 'success');
-      App.closeModal(modal);
-      renderTasks();
+      if (taskData.title) {
+        isEdit ? Storage.updateTask(id, taskData) : Storage.addTask(taskData);
+        App.closeModal();
+        renderTasks();
+      }
     };
 
+    const dateContainer = modal.querySelector('#date-inputs-container');
+
+    function updateDateInputs(type) {
+      if (type === 'repeating') {
+        const days = ['S','M','T','W','T','F','S'];
+        const repeatDays = task && task.repeatDays ? task.repeatDays : [new Date().getDay()];
+        dateContainer.innerHTML = `
+          <div class="form-group">
+            <label class="form-label">Repeat On:</label>
+            <div class="repeat-days-grid">
+              ${days.map((day, i) => `<div class="day-toggle ${repeatDays.includes(i) ? 'active' : ''}" data-day="${i}">${day}</div>`).join('')}
+            </div>
+            <button type="button" class="btn btn-ghost btn-sm mt-sm" id="select-every-day">Select Every Day</button>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Target Time (Optional)</label>
+            <input type="time" name="dueTime" class="form-input" value="${task ? App.escapeHtml(task.dueTime || '') : ''}">
+          </div>
+        `;
+        dateContainer.querySelectorAll('.day-toggle').forEach(el => el.addEventListener('click', () => el.classList.toggle('active')));
+        dateContainer.querySelector('#select-every-day').addEventListener('click', () => dateContainer.querySelectorAll('.day-toggle').forEach(el => el.classList.add('active')));
+      } else if (type === 'date-range') {
+        dateContainer.innerHTML = `
+          <div class="grid-2">
+            <div class="form-group">
+              <label class="form-label">Start Date</label>
+              <input type="date" name="startDate" class="form-input" value="${task ? App.escapeHtml(task.startDate || task.dueDate) : Storage.formatDate(new Date())}" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Due Date</label>
+              <input type="date" name="dueDate" class="form-input" value="${task ? App.escapeHtml(task.dueDate) : Storage.formatDate(new Date())}" required>
+            </div>
+          </div>
+        `;
+      } else {
+        dateContainer.innerHTML = `
+          <div class="grid-2">
+            <div class="form-group">
+              <label class="form-label">Target Date</label>
+              <input type="date" name="dueDate" class="form-input" value="${task ? App.escapeHtml(task.dueDate) : Storage.formatDate(new Date())}" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Target Time (Optional)</label>
+              <input type="time" name="dueTime" class="form-input" value="${task ? App.escapeHtml(task.dueTime || '') : ''}">
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    modal.querySelector('select[name="type"]').addEventListener('change', (e) => {
+      updateDateInputs(e.target.value);
+    });
+
+    updateDateInputs(task ? task.type : 'one-time');
+
+    modal.querySelector('[data-action="cancel"]').onclick = () => App.closeModal();
     App.openModal(modal);
   }
 
