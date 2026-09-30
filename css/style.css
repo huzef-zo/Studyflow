@@ -1190,6 +1190,133 @@ body.focus-mode .timer-main-time {
   color: #FFFFFF !important;
 }
 
+/* Calendar Components */
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+
+.calendar-day-header {
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  padding: 6px 0;
+  letter-spacing: 0.05em;
+}
+
+.calendar-day {
+  aspect-ratio: 1 / 1;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  position: relative;
+  user-select: none;
+}
+
+.calendar-day:hover {
+  background: var(--glass-bg-strong);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.calendar-day:focus-visible {
+  outline: 2px solid var(--accent-fill);
+  outline-offset: 2px;
+}
+
+.calendar-day.other-month {
+  opacity: 0.3;
+  cursor: default;
+  background: transparent;
+  border-color: transparent;
+}
+
+.calendar-day.other-month:hover {
+  background: transparent;
+  border-color: transparent;
+}
+
+.calendar-day.today {
+  border-color: var(--accent-fill);
+  box-shadow: 0 0 10px rgba(91, 155, 240, 0.2);
+}
+
+.calendar-day.today .calendar-day-number {
+  color: var(--accent-fill);
+  font-weight: 700;
+}
+
+.calendar-day.selected {
+  background: rgba(91, 155, 240, 0.15);
+  border-color: var(--accent-fill);
+}
+
+.calendar-day-number {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  line-height: 1;
+}
+
+.calendar-day-indicators {
+  display: flex;
+  gap: 3px;
+  justify-content: center;
+  align-items: center;
+  min-height: 6px;
+}
+
+.calendar-task-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* Repeat Days Input Controls */
+.repeat-days-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.day-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 0;
+  border-radius: var(--radius-sm);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  user-select: none;
+}
+
+.day-toggle:hover {
+  background: var(--glass-bg-strong);
+  color: var(--text-primary);
+}
+
+.day-toggle.active {
+  background: var(--accent-fill);
+  border-color: var(--accent-fill);
+  color: #FFFFFF;
+}
+
 /* Focus Ring */
 :focus-visible {
   outline: 2px solid var(--accent-fill);
