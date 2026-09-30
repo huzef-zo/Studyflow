@@ -215,7 +215,8 @@ const Storage = (function() {
           ...n,
           title: n.title ? String(n.title).substring(0, 200) : 'Untitled',
           content: n.content ? String(n.content).substring(0, 10000) : '',
-          subject: n.subject ? String(n.subject).substring(0, 100) : 'Other'
+          subject: n.subject ? String(n.subject).substring(0, 100) : 'Other',
+          pinned: Boolean(n.pinned)
         } : n);
       } else if (key === KEYS.TASKS && Array.isArray(data)) {
         sanitizedData = data.map(t => t ? {
@@ -497,6 +498,7 @@ const Storage = (function() {
           title: String(n.title || 'Untitled Note').substring(0, 200),
           content: String(n.content || '').substring(0, 10000),
           subject: String(n.subject || 'Other').substring(0, 100),
+          pinned: Boolean(n.pinned),
           createdAt: String(n.createdAt || new Date().toISOString()),
           updatedAt: String(n.updatedAt || new Date().toISOString())
         }));

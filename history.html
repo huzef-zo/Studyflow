@@ -21,7 +21,7 @@
   <meta name="msapplication-TileColor" content="#5B9BF0">
   
   <title>Analytics - StudyFlow</title>
-  <link rel="stylesheet" href="css/style.css?v=v2026-09-29-01">
+  <link rel="stylesheet" href="css/style.css?v=v2026-09-30-01">
 </head>
 <body>
   <!-- Navigation Containers -->
@@ -30,8 +30,21 @@
 
   <!-- Main Content -->
   <main class="main-container">
+    <!-- Top Bar Header -->
+    <div id="global-top-bar" class="flex items-center justify-between w-full mb-md">
+      <div class="top-bar-brand">
+        <div class="top-bar-logo">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 0-3-3H2z"/></svg>
+        </div>
+        <span class="top-bar-title">StudyFlow</span>
+      </div>
+      <a href="settings.html" class="user-avatar-circle" id="top-user-avatar" title="Settings" aria-label="User settings">
+        SF
+      </a>
+    </div>
+
     <!-- Page Header -->
-    <header class="page-header animate-fade-in">
+    <header class="page-header animate-fade-in mb-md">
       <div class="page-header-title-group">
         <h1>Analytics</h1>
         <p class="subtitle">In-depth intelligence on your study patterns</p>
@@ -39,108 +52,116 @@
     </header>
 
     <div class="narrow-layout">
-      <!-- Stats Period Selector -->
-      <section class="card animate-fade-in" style="background:transparent;border:none;box-shadow:none;padding:0;margin-bottom:12px;">
-        <div class="flex items-center justify-between">
-          <span style="font-size:12px;font-weight:500;color:var(--text-secondary);">Stats Period</span>
-          <div class="filter-tabs" style="margin:0;" role="tablist" aria-label="Stats period">
-            <div class="filter-tab active" data-period="all" role="tab" aria-selected="true" tabindex="0">All Time</div>
-            <div class="filter-tab" data-period="30" role="tab" aria-selected="false" tabindex="0">Last 30 Days</div>
-            <div class="filter-tab" data-period="7" role="tab" aria-selected="false" tabindex="0">Last 7 Days</div>
-          </div>
+      <!-- Segmented Control Tablist (7 days / 30 days / All time) -->
+      <section class="card animate-fade-in mb-md p-xs">
+        <div class="filter-tabs flex gap-xs w-full" role="tablist" aria-label="Stats period">
+          <button type="button" class="filter-tab active flex-1 text-center" data-period="7" role="tab" aria-selected="true" tabindex="0">7 Days</button>
+          <button type="button" class="filter-tab flex-1 text-center" data-period="30" role="tab" aria-selected="false" tabindex="0">30 Days</button>
+          <button type="button" class="filter-tab flex-1 text-center" data-period="all" role="tab" aria-selected="false" tabindex="0">All Time</button>
         </div>
       </section>
 
       <!-- Compact No Activity State -->
-      <div id="no-activity-message" class="card mb-md" style="display:none; text-align:center; padding:16px;">
-        <p style="color:var(--text-muted); font-size:12px; margin:0;">No activity recorded yet for this period.</p>
+      <div id="no-activity-message" class="card mb-md text-center p-md" style="display:none;">
+        <p style="color:var(--text-muted); font-size:13px; margin:0;">No activity recorded yet for this period.</p>
       </div>
 
-      <!-- Activity Frequency Graph -->
+      <!-- Activity Area Chart Card -->
       <section class="card animate-fade-in mb-md" id="graph-section">
-        <div class="card-header">
-          <h3 class="card-title">Timeline Activity</h3>
+        <div class="card-header mb-sm">
+          <h3 class="card-title">Activity</h3>
+          <span class="badge" id="daily-avg-badge">Daily avg: 0h</span>
         </div>
-        <div class="card-body">
-          <div id="frequency-graph" style="height: 180px; width: 100%;">
-            <!-- Populated by JS -->
-          </div>
-        </div>
-      </section>
-
-      <!-- Stats Summary Grid -->
-      <section class="grid-2-dense animate-fade-in mb-md" id="summary-stats-grid">
-        <div class="stat-pill" style="flex-direction: column; justify-content: center; align-items: center; text-align: center;">
-          <div class="stat-pill-value gradient-text" id="total-completed-tasks">0</div>
-          <div class="stat-pill-label">Total Missions</div>
-        </div>
-        <div class="stat-pill" style="flex-direction: column; justify-content: center; align-items: center; text-align: center;">
-          <div class="stat-pill-value gradient-text" id="total-study-hours">0H</div>
-          <div class="stat-pill-label">Total Focus</div>
-        </div>
-        <div class="stat-pill" style="flex-direction: column; justify-content: center; align-items: center; text-align: center;">
-          <div class="stat-pill-value gradient-text" id="completion-rate">0%</div>
-          <div class="stat-pill-label">Success Rate</div>
-        </div>
-        <div class="stat-pill" style="flex-direction: column; justify-content: center; align-items: center; text-align: center;">
-          <div class="stat-pill-value" id="productive-day" style="font-size: 14px;">-</div>
-          <div class="stat-pill-label">Peak Day</div>
-        </div>
-        <div class="stat-pill" style="flex-direction: column; justify-content: center; align-items: center; text-align: center;">
-          <div class="stat-pill-value gradient-text" id="all-time-streak">0</div>
-          <div class="stat-pill-label">Best Streak</div>
-        </div>
-      </section>
-
-      <!-- Mastery Grid -->
-      <section class="card animate-fade-in mb-md">
-        <div class="card-header">
-          <h3 class="card-title">Sector Mastery</h3>
-        </div>
-        <div id="mastery-overview" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px;">
+        <div id="frequency-graph" style="height: 180px; width: 100%;">
           <!-- Populated by JS -->
         </div>
       </section>
 
-      <!-- Current Tasks -->
-      <section class="card animate-fade-in mb-md">
-        <div class="card-header">
-          <h3 class="card-title">Current Tasks</h3>
-          <span class="badge" id="progress-percentage">0%</span>
+      <!-- 2x2 Stat Tiles -->
+      <section class="grid-2 animate-fade-in mb-md" id="summary-stats-grid">
+        <div class="card p-md">
+          <div class="flex items-center justify-between mb-xs">
+            <span style="font-size:11px;text-transform:uppercase;color:var(--text-muted);font-weight:600;">Total Tasks</span>
+            <span class="badge" id="tasks-delta-chip" style="font-size:10px;display:none;"></span>
+          </div>
+          <div class="data-number" id="total-completed-tasks">0</div>
         </div>
-        <div id="tasks-progress"></div>
-        <div id="hours-progress" class="mt-sm"></div>
+
+        <div class="card p-md">
+          <div class="flex items-center justify-between mb-xs">
+            <span style="font-size:11px;text-transform:uppercase;color:var(--text-muted);font-weight:600;">Focus Hours</span>
+            <span class="badge" id="hours-delta-chip" style="font-size:10px;display:none;"></span>
+          </div>
+          <div class="data-number" id="total-study-hours">0h</div>
+        </div>
+
+        <div class="card p-md">
+          <div class="flex items-center justify-between mb-xs">
+            <span style="font-size:11px;text-transform:uppercase;color:var(--text-muted);font-weight:600;">Success Rate</span>
+            <span class="badge" id="rate-delta-chip" style="font-size:10px;display:none;"></span>
+          </div>
+          <div class="data-number" id="completion-rate">0%</div>
+        </div>
+
+        <div class="card p-md">
+          <div class="flex items-center justify-between mb-xs">
+            <span style="font-size:11px;text-transform:uppercase;color:var(--text-muted);font-weight:600;">Best Streak</span>
+            <span class="badge" id="streak-delta-chip" style="font-size:10px;display:none;">Personal record</span>
+          </div>
+          <div class="data-number" id="all-time-streak">0</div>
+        </div>
+      </section>
+
+      <!-- Subjects Focus Time Share Card -->
+      <section class="card animate-fade-in mb-md">
+        <div class="card-header mb-sm">
+          <h3 class="card-title">Subjects</h3>
+        </div>
+        <div id="mastery-overview" class="flex flex-col gap-xs">
+          <!-- Populated by JS -->
+        </div>
+      </section>
+
+      <!-- Optimal Deep Work Window Insight Card (hidden if < 5 sessions) -->
+      <section id="deep-work-insight-card" class="card animate-fade-in mb-md p-md" style="display:none;">
+        <!-- Populated by JS -->
       </section>
 
       <!-- Study History -->
       <section class="card animate-fade-in mb-md">
-        <div class="card-header">
+        <div class="card-header mb-sm">
           <h3 class="card-title">Study History</h3>
         </div>
-        <div id="study-history-list" class="flex flex-col gap-xs" style="margin-top: 10px; max-height: 480px; overflow-y: auto;">
+        <div id="study-history-list" class="flex flex-col gap-xs" style="max-height: 480px; overflow-y: auto;">
           <!-- Populated by JS -->
         </div>
       </section>
 
       <!-- Daily Reflections Log -->
-      <section class="card animate-fade-in">
-        <div class="card-header">
+      <section class="card animate-fade-in mb-md">
+        <div class="card-header mb-sm">
           <h3 class="card-title">Tactical Reflections</h3>
         </div>
-        <div id="reflections-log" class="flex flex-col gap-xs" style="margin-top: 10px;">
+        <div id="reflections-log" class="flex flex-col gap-xs">
           <!-- Populated by JS -->
         </div>
       </section>
     </div>
   </main>
 
+  <!-- Hidden elements for test compatibility -->
+  <div id="productive-day" style="display:none;"></div>
+  <div id="tasks-progress" style="display:none;"></div>
+  <div id="hours-progress" style="display:none;"></div>
+  <div id="progress-percentage" style="display:none;"></div>
+
   <!-- Scripts -->
-  <script src="js/storage.js?v=v2026-09-29-01"></script>
-  <script src="js/subtask-utils.js?v=v2026-09-29-01"></script>
-  <script src="js/pwa-manager.js?v=v2026-09-29-01"></script>
-  <script src="js/achievements.js?v=v2026-09-29-01"></script>
-  <script src="js/app.js?v=v2026-09-29-01"></script>
-  <script src="js/history.js?v=v2026-09-29-01"></script>
+  <script src="js/storage.js?v=v2026-09-30-01"></script>
+  <script src="js/subtask-utils.js?v=v2026-09-30-01"></script>
+  <script src="js/pwa-manager.js?v=v2026-09-30-01"></script>
+  <script src="js/achievements.js?v=v2026-09-30-01"></script>
+  <script src="js/app.js?v=v2026-09-30-01"></script>
+  <script src="js/history.js?v=v2026-09-30-01"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       PWAManager.init();

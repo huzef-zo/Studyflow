@@ -238,14 +238,25 @@ const App = (function() {
     });
   }
 
+  function getUserInitials(name) {
+    if (!name || typeof name !== 'string') return 'SF';
+    const parts = name.trim().split(/\s+/).filter(Boolean);
+    if (parts.length === 0) return 'SF';
+    if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  }
+
   function openMoreMenu() {
     const currentPage = getCurrentPage();
+    const sessions = Storage.getSessions();
+    const totalWorkMinutes = sessions.filter(s => s.type === 'work').reduce((sum, s) => sum + (s.duration || 0), 0);
+    const hoursLoggedStr = (totalWorkMinutes / 60).toFixed(1) + 'h logged';
 
     const menuItems = [
-      { id: 'notes', label: 'Notes', icon: 'edit', href: 'notes.html' },
-      { id: 'goals', label: 'Goals', icon: 'goals', href: 'goals.html' },
-      { id: 'history', label: 'Analytics', icon: 'history', href: 'history.html' },
-      { id: 'settings', label: 'Settings', icon: 'settings', href: 'settings.html' }
+      { id: 'notes', label: 'Notes', subtitle: 'Vault & Knowledge', icon: 'edit', href: 'notes.html' },
+      { id: 'goals', label: 'Goals', subtitle: 'Targets & Quotas', icon: 'goals', href: 'goals.html' },
+      { id: 'history', label: 'Analytics', subtitle: hoursLoggedStr, icon: 'history', href: 'history.html' },
+      { id: 'settings', label: 'Settings', subtitle: 'Preferences & Data', icon: 'settings', href: 'settings.html' }
     ];
 
     const content = `
@@ -256,11 +267,18 @@ const App = (function() {
             <div class="more-menu-item-wrapper">
               <a href="${item.href}" class="more-menu-item ${isActive ? 'active' : ''}">
                 <div class="more-menu-icon">${Icons[item.icon]}</div>
-                <span class="more-menu-label">${item.label}</span>
+                <div>
+                  <div class="more-menu-label" style="font-weight:600;font-size:14px;color:var(--text-primary);">${item.label}</div>
+                  <div class="more-menu-subtitle" style="font-size:11px;color:var(--text-muted);">${escapeHtml(item.subtitle)}</div>
+                </div>
               </a>
             </div>
           `;
         }).join('')}
+      </div>
+      <div style="margin-top:20px;padding-top:14px;border-top:1px solid var(--glass-border);text-align:center;">
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">StudyFlow ${APP_VERSION}</div>
+        <button class="btn btn-primary w-full" data-action="done">Done</button>
       </div>
     `;
 
@@ -272,6 +290,8 @@ const App = (function() {
 
     modal.classList.add('modal-bottom-sheet');
     openModal(modal);
+    const doneBtn = modal.querySelector('[data-action="done"]');
+    if (doneBtn) doneBtn.onclick = () => closeModal(modal);
   }
 
   // ── Modal system ──────────────────────────────────────────────────────────

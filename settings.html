@@ -17,108 +17,144 @@
   <link rel="msapplication-config" href="browserconfig.xml">
   <meta name="msapplication-TileColor" content="#5B9BF0">
   <title>Settings - StudyFlow</title>
-  <link rel="stylesheet" href="css/style.css?v=v2026-09-29-01">
+  <link rel="stylesheet" href="css/style.css?v=v2026-09-30-01">
 </head>
 <body>
   <div id="sidebar-container"></div>
   <div id="bottom-nav-container"></div>
 
   <main class="main-container">
-    <header class="page-header animate-fade-in">
+    <!-- Top Bar Header -->
+    <div id="global-top-bar" class="flex items-center justify-between w-full mb-md">
+      <div class="top-bar-brand">
+        <div class="top-bar-logo">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+        </div>
+        <span class="top-bar-title">StudyFlow</span>
+      </div>
+      <a href="settings.html" class="user-avatar-circle" id="top-user-avatar" title="Settings" aria-label="User settings">
+        SF
+      </a>
+    </div>
+
+    <!-- Page Header -->
+    <header class="page-header animate-fade-in mb-md">
       <div class="page-header-title-group">
         <h1>Settings</h1>
         <p class="subtitle">Configure your study environment</p>
       </div>
     </header>
 
-    <div class="narrow-layout">
+    <div class="narrow-layout flex flex-col gap-md">
       <!-- Profile -->
-      <section class="card animate-fade-in">
-        <div class="card-header"><h3 class="card-title">Profile Configuration</h3></div>
-        <div class="form-group">
+      <section class="card animate-fade-in p-md">
+        <div class="card-header mb-sm">
+          <span style="font-size:11px;text-transform:uppercase;color:var(--text-muted);font-weight:700;letter-spacing:0.06em;">PROFILE</span>
+          <span class="badge" style="font-size:10px;">All data saved locally</span>
+        </div>
+        <div class="flex items-center gap-md mb-md">
+          <div class="user-avatar-circle" id="profile-avatar" style="width:48px;height:48px;font-size:18px;">SF</div>
+          <div class="flex-1">
+            <div style="font-size:14px;font-weight:600;color:var(--text-primary);" id="profile-name-display">Student</div>
+            <div style="font-size:11px;color:var(--text-muted);" id="profile-email-display">Local Operative</div>
+          </div>
+        </div>
+        <div class="form-group mb-sm">
           <label class="form-label" for="display-name">Display Name</label>
-          <input type="text" class="form-input" id="display-name" placeholder="Enter operative name">
+          <input type="text" class="form-input" id="display-name" placeholder="Enter name">
         </div>
         <div class="form-group mb-0">
-          <label class="form-label" for="user-email">Communication ID (Email)</label>
-          <input type="email" class="form-input" id="user-email" placeholder="id@studyflow.io">
+          <label class="form-label" for="user-email">Email Address</label>
+          <input type="email" class="form-input" id="user-email" placeholder="user@studyflow.io">
         </div>
       </section>
 
-      <!-- Timer -->
-      <section class="card animate-fade-in mt-md">
-        <div class="card-header"><h3 class="card-title">Focus Parameters</h3></div>
-        <div class="grid-2-dense-gap-lg">
-          <div class="form-group mb-xs">
-            <label class="form-label" for="work-duration">Deep Work (Min)</label>
-            <input type="number" class="form-input" id="work-duration" min="1" max="60">
+      <!-- Focus Timer -->
+      <section class="card animate-fade-in p-md">
+        <div class="card-header mb-sm">
+          <span style="font-size:11px;text-transform:uppercase;color:var(--text-muted);font-weight:700;letter-spacing:0.06em;">FOCUS TIMER</span>
+        </div>
+        <div class="grid-2 gap-sm">
+          <div class="form-group mb-0">
+            <label class="form-label" for="work-duration">Work Duration (mins)</label>
+            <div class="flex items-center gap-xs">
+              <input type="number" class="form-input" id="work-duration" min="1" max="180">
+            </div>
           </div>
-          <div class="form-group mb-xs">
-            <label class="form-label" for="short-break">Cooldown (Min)</label>
-            <input type="number" class="form-input" id="short-break" min="1" max="30">
+          <div class="form-group mb-0">
+            <label class="form-label" for="short-break">Short Break (mins)</label>
+            <div class="flex items-center gap-xs">
+              <input type="number" class="form-input" id="short-break" min="1" max="60">
+            </div>
           </div>
-          <div class="form-group mb-xs">
-            <label class="form-label" for="long-break">Deep Rest (Min)</label>
-            <input type="number" class="form-input" id="long-break" min="1" max="60">
+          <div class="form-group mb-0">
+            <label class="form-label" for="long-break">Long Break (mins)</label>
+            <div class="flex items-center gap-xs">
+              <input type="number" class="form-input" id="long-break" min="1" max="120">
+            </div>
           </div>
-          <div class="form-group mb-xs">
-            <label class="form-label" for="sessions-until-long-break">Sessions per Cycle</label>
-            <input type="number" class="form-input" id="sessions-until-long-break" min="1" max="10">
+          <div class="form-group mb-0">
+            <label class="form-label" for="sessions-until-long-break">Sessions per Long Break</label>
+            <div class="flex items-center gap-xs">
+              <input type="number" class="form-input" id="sessions-until-long-break" min="1" max="20">
+            </div>
           </div>
         </div>
       </section>
 
       <!-- Notifications -->
-      <section class="card animate-fade-in mt-md">
-        <div class="card-header"><h3 class="card-title">Notifications</h3></div>
+      <section class="card animate-fade-in p-md">
+        <div class="card-header mb-sm">
+          <span style="font-size:11px;text-transform:uppercase;color:var(--text-muted);font-weight:700;letter-spacing:0.06em;">NOTIFICATIONS</span>
+        </div>
 
-        <div class="flex items-center justify-between mb-md">
+        <div class="flex items-center justify-between mb-sm">
           <div style="flex:1;">
-            <div style="font-weight:500;font-size:13px;">System Notifications</div>
-            <div style="font-size:11px;color:var(--text-muted);">Push alerts for session transitions</div>
+            <div style="font-weight:500;font-size:13px;">Timer Alerts</div>
+            <div style="font-size:11px;color:var(--text-muted);">Push alerts on session transitions</div>
           </div>
           <label class="toggle"><input type="checkbox" id="notifications-enabled"><span class="toggle-slider"></span></label>
         </div>
 
-        <div class="flex items-center justify-between mb-md">
+        <div class="flex items-center justify-between mb-sm">
           <div style="flex:1;">
             <div style="font-weight:500;font-size:13px;">Task Reminders</div>
-            <div style="font-size:11px;color:var(--text-muted);">Alerts when objectives reach target time</div>
+            <div style="font-size:11px;color:var(--text-muted);">Alerts when tasks reach target time</div>
           </div>
           <label class="toggle"><input type="checkbox" id="task-notifications-enabled"><span class="toggle-slider"></span></label>
         </div>
 
-        <div class="flex items-center justify-between mb-md">
+        <div class="flex items-center justify-between mb-sm">
           <div style="flex:1;">
-            <div style="font-weight:500;font-size:13px;">Audio Feedback</div>
-            <div style="font-size:11px;color:var(--text-muted);">Sound cues on mission events</div>
+            <div style="font-weight:500;font-size:13px;">Sound Effects</div>
+            <div style="font-size:11px;color:var(--text-muted);">Audio feedback on timer transitions</div>
           </div>
-          <div class="flex items-center gap-md">
-            <button class="btn btn-secondary btn-sm" id="test-sound-btn" style="padding:2px 10px;font-size:10px;">TEST</button>
+          <div class="flex items-center gap-sm">
+            <button class="btn btn-secondary btn-sm" id="test-sound-btn" style="padding:2px 10px;font-size:10px;">Test</button>
             <label class="toggle"><input type="checkbox" id="sound-enabled"><span class="toggle-slider"></span></label>
           </div>
         </div>
 
-        <div class="flex items-center justify-between mb-md">
+        <div class="flex items-center justify-between mb-sm">
           <div>
-            <div style="font-weight:500;font-size:13px;">Auto-start Cooldown</div>
+            <div style="font-weight:500;font-size:13px;">Auto-start Break</div>
             <div style="font-size:11px;color:var(--text-muted);">Begin break immediately after work</div>
           </div>
           <label class="toggle"><input type="checkbox" id="auto-start-break"><span class="toggle-slider"></span></label>
         </div>
 
-        <div class="flex items-center justify-between mb-md">
+        <div class="flex items-center justify-between mb-sm">
           <div>
-            <div style="font-weight:500;font-size:13px;">Auto-start Deep Work</div>
-            <div style="font-size:11px;color:var(--text-muted);">Begin focus session immediately after break</div>
+            <div style="font-weight:500;font-size:13px;">Auto-start Work</div>
+            <div style="font-size:11px;color:var(--text-muted);">Begin work session immediately after break</div>
           </div>
           <label class="toggle"><input type="checkbox" id="auto-start-work"><span class="toggle-slider"></span></label>
         </div>
 
-        <div id="notification-permission-item" class="mt-md p-md card" style="background:var(--bg-tertiary);display:none;">
+        <div id="notification-permission-item" class="mt-sm p-sm card" style="background:var(--bg-raised);display:none;">
           <div class="flex items-center justify-between gap-md">
             <div style="flex:1;">
-              <p style="margin:0;font-size:12px;font-weight:500;" id="permission-status">System permissions required</p>
+              <p style="margin:0;font-size:12px;font-weight:500;" id="permission-status">Notifications Permission</p>
               <p style="margin:2px 0 0 0;font-size:10px;color:var(--text-muted);display:none;" id="permission-hint">Check browser settings if blocked.</p>
             </div>
             <button class="btn btn-primary btn-sm" id="request-permission-btn">Enable</button>
@@ -126,54 +162,61 @@
         </div>
       </section>
 
-      <!-- Study Schedule -->
-      <section class="card animate-fade-in mt-md">
-        <div class="card-header">
-          <h3 class="card-title">Study Windows</h3>
-          <button class="btn btn-ghost btn-icon btn-sm" id="add-window-btn" aria-label="Add Study Window">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
-          </button>
-        </div>
-        <div id="windows-list" style="display:grid;gap:6px;"></div>
-      </section>
-
       <!-- Subjects -->
-      <section class="card animate-fade-in mt-md">
-        <div class="card-header">
-          <h3 class="card-title">Knowledge Sectors</h3>
-          <button class="btn btn-ghost btn-icon btn-sm" id="add-subject-btn" aria-label="Add Knowledge Sector">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
+      <section class="card animate-fade-in p-md">
+        <div class="card-header mb-sm">
+          <span style="font-size:11px;text-transform:uppercase;color:var(--text-muted);font-weight:700;letter-spacing:0.06em;">SUBJECTS</span>
+          <button class="btn btn-ghost btn-sm" id="add-subject-btn" aria-label="Add Subject">
+            + Add Subject
           </button>
         </div>
-        <div id="subjects-list" style="display:grid;gap:6px;"></div>
+        <div id="subjects-list" class="flex flex-col gap-xs"></div>
       </section>
 
-      <!-- Data -->
-      <section class="card animate-fade-in mt-md">
-        <div class="card-header"><h3 class="card-title">Data Core</h3></div>
-        <div class="grid-2-dense-gap-lg">
-          <button class="btn btn-secondary" id="export-btn" aria-label="Export backup data">Export</button>
-          <button class="btn btn-secondary" id="import-btn" aria-label="Import backup data">Import</button>
+      <!-- Study Windows -->
+      <section class="card animate-fade-in p-md">
+        <div class="card-header mb-sm">
+          <span style="font-size:11px;text-transform:uppercase;color:var(--text-muted);font-weight:700;letter-spacing:0.06em;">STUDY WINDOWS</span>
+          <button class="btn btn-ghost btn-sm" id="add-window-btn" aria-label="Add Study Window">
+            + Add Window
+          </button>
+        </div>
+        <div id="windows-list" class="flex flex-col gap-xs"></div>
+      </section>
+
+      <!-- Data Management -->
+      <section class="card animate-fade-in p-md">
+        <div class="card-header mb-sm">
+          <span style="font-size:11px;text-transform:uppercase;color:var(--text-muted);font-weight:700;letter-spacing:0.06em;">DATA</span>
+        </div>
+        <div class="grid-2 gap-sm mb-md">
+          <button class="btn btn-secondary" id="export-btn" aria-label="Export backup data">Export JSON</button>
+          <button class="btn btn-secondary" id="import-btn" aria-label="Import backup data">Import JSON</button>
           <input type="file" id="import-input" accept=".json" style="display:none;" aria-label="Select backup JSON file to import">
         </div>
-        <div class="mt-md pt-md" style="border-top:1px solid var(--border-color);">
+        <div class="pt-sm" style="border-top:1px solid var(--glass-border);">
           <div class="flex items-center justify-between">
             <div>
-              <div style="font-weight:500;font-size:13px;color:var(--danger);">Delete All Data</div>
-              <div style="font-size:11px;color:var(--text-muted);">Permanently erase all local intelligence</div>
+              <div style="font-weight:500;font-size:13px;color:var(--danger);">Erase All Data</div>
+              <div style="font-size:11px;color:var(--text-muted);">Permanently delete all local study data</div>
             </div>
             <button class="btn btn-danger btn-sm" id="clear-data-btn" aria-label="Erase all local data">Erase All Data</button>
           </div>
         </div>
       </section>
+
+      <!-- Footer line -->
+      <footer class="text-center py-md" style="font-size:12px;color:var(--text-muted);">
+        Designed for calm and undistracted focus
+      </footer>
     </div>
   </main>
 
-  <script src="js/storage.js?v=v2026-09-29-01"></script>
-  <script src="js/subtask-utils.js?v=v2026-09-29-01"></script>
-  <script src="js/pwa-manager.js?v=v2026-09-29-01"></script>
-  <script src="js/achievements.js?v=v2026-09-29-01"></script>
-  <script src="js/app.js?v=v2026-09-29-01"></script>
+  <script src="js/storage.js?v=v2026-09-30-01"></script>
+  <script src="js/subtask-utils.js?v=v2026-09-30-01"></script>
+  <script src="js/pwa-manager.js?v=v2026-09-30-01"></script>
+  <script src="js/achievements.js?v=v2026-09-30-01"></script>
+  <script src="js/app.js?v=v2026-09-30-01"></script>
   <script>
     (function() {
       'use strict';
@@ -202,6 +245,14 @@
         clearDataBtn: document.getElementById('clear-data-btn')
       };
 
+      function getUserInitials(name) {
+        if (!name || typeof name !== 'string') return 'SF';
+        const parts = name.trim().split(/\s+/).filter(Boolean);
+        if (parts.length === 0) return 'SF';
+        if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
+        return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+      }
+
       function loadSettings() {
         const user = Storage.getUser();
         const settings = Storage.getSettings();
@@ -216,6 +267,18 @@
         elements.soundEnabled.checked = settings.sound !== false;
         elements.autoStartBreak.checked = settings.auto_start_break !== false;
         elements.autoStartWork.checked = settings.auto_start_work !== false;
+
+        const profileAvatar = document.getElementById('profile-avatar');
+        const profileName = document.getElementById('profile-name-display');
+        const profileEmail = document.getElementById('profile-email-display');
+        const topAvatar = document.getElementById('top-user-avatar');
+
+        const initials = getUserInitials(user.name);
+        if (profileAvatar) profileAvatar.textContent = initials;
+        if (topAvatar) topAvatar.textContent = initials;
+        if (profileName) profileName.textContent = user.name || 'Student';
+        if (profileEmail) profileEmail.textContent = user.email || 'Local Operative';
+
         updatePermissionStatus();
       }
 
@@ -228,16 +291,18 @@
           item.style.display = 'block';
           const isDenied = Notification.permission === 'denied';
           elements.permissionStatus.textContent = isDenied
-            ? 'Permission denied by system'
-            : 'Allow notifications for mission alerts';
+            ? 'Permission denied by browser'
+            : 'Allow notifications for task & timer alerts';
           document.getElementById('permission-hint').style.display = isDenied ? 'block' : 'none';
           if (isDenied) elements.requestPermissionBtn.style.display = 'none';
         }
       }
 
       function saveSettings() {
-        Storage.updateUserName(elements.displayName.value.trim() || 'Operative');
-        Storage.updateUserEmail(elements.userEmail.value.trim());
+        const newName = elements.displayName.value.trim() || 'Student';
+        const newEmail = elements.userEmail.value.trim();
+        Storage.updateUserName(newName);
+        Storage.updateUserEmail(newEmail);
         Storage.updateSetting('work_duration', Math.max(1, parseInt(elements.workDuration.value, 10)) || 25);
         Storage.updateSetting('short_break', Math.max(1, parseInt(elements.shortBreak.value, 10)) || 5);
         Storage.updateSetting('long_break', Math.max(1, parseInt(elements.longBreak.value, 10)) || 15);
@@ -247,28 +312,47 @@
         Storage.updateSetting('sound', elements.soundEnabled.checked);
         Storage.updateSetting('auto_start_break', elements.autoStartBreak.checked);
         Storage.updateSetting('auto_start_work', elements.autoStartWork.checked);
+
+        loadSettings();
       }
 
       function renderSubjects() {
-        const subjects = Storage.getSubjectMasteryStats();
-        elements.subjectsList.innerHTML = subjects.map(s => `
-          <div class="card" style="padding:8px 12px;background:var(--bg-tertiary);display:flex;align-items:center;justify-content:space-between;">
-            <div class="flex items-center gap-md">
-              <div class="badge">
-                <div style="width:8px;height:8px;border-radius:50%;background:${App.escapeHtml(s.color)};"></div>
-                ${App.escapeHtml(s.name)}
+        const subjects = Storage.getSubjects();
+        const sessions = Storage.getSessions().filter(s => s.type === 'work');
+        const tasks = Storage.getTasks();
+
+        const subjectMinutes = {};
+        subjects.forEach(s => subjectMinutes[s.name] = 0);
+        sessions.forEach(s => {
+          const task = s.taskId ? tasks.find(t => t.id === s.taskId) : null;
+          const subName = task ? task.subject : 'Other';
+          const dur = Number.isFinite(Number(s.duration)) ? Number(s.duration) : 0;
+          if (subjectMinutes[subName] !== undefined) {
+            subjectMinutes[subName] += dur;
+          }
+        });
+
+        elements.subjectsList.innerHTML = subjects.map(s => {
+          const hoursLogged = ((subjectMinutes[s.name] || 0) / 60).toFixed(1);
+          return `
+            <div class="card p-xs flex items-center justify-between" style="background:var(--bg-raised);">
+              <div class="flex items-center gap-sm">
+                <span class="priority-dot" style="background:${App.escapeHtml(s.color)};"></span>
+                <span style="font-size:13px;font-weight:600;color:var(--text-primary);">${App.escapeHtml(s.name)}</span>
+                <span style="font-size:11px;color:var(--text-muted);">${hoursLogged}h logged</span>
+              </div>
+              <div class="flex items-center gap-xs">
+                <button class="btn btn-ghost btn-icon btn-sm edit-sub" data-id="${App.escapeHtml(s.id)}" aria-label="Edit subject">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                </button>
+                <button class="btn btn-ghost btn-icon btn-sm del-sub" data-id="${App.escapeHtml(s.id)}" aria-label="Delete subject">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                </button>
               </div>
             </div>
-            <div class="flex gap-xs">
-              <button class="btn btn-ghost btn-icon btn-sm edit-sub" data-id="${App.escapeHtml(s.id)}" aria-label="Edit Knowledge Sector">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-              </button>
-              <button class="btn btn-ghost btn-icon btn-sm del-sub" data-id="${App.escapeHtml(s.id)}" aria-label="Delete Knowledge Sector">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-              </button>
-            </div>
-          </div>
-        `).join('');
+          `;
+        }).join('');
+
         elements.subjectsList.querySelectorAll('.edit-sub').forEach(b => b.addEventListener('click', () => openSubjectModal(b.dataset.id)));
         elements.subjectsList.querySelectorAll('.del-sub').forEach(b => b.addEventListener('click', () => deleteSubject(b.dataset.id)));
       }
@@ -278,16 +362,16 @@
         const s = isEdit ? Storage.getSubjectById(id) : null;
         const content = `
           <div class="form-group">
-            <label class="form-label">Sector Name</label>
-            <input type="text" id="sub-name" class="form-input" value="${s ? App.escapeHtml(s.name) : ''}" placeholder="e.g. Astrophysics">
+            <label class="form-label" for="sub-name">Subject Name</label>
+            <input type="text" id="sub-name" class="form-input" value="${s ? App.escapeHtml(s.name) : ''}" placeholder="e.g. Mathematics">
           </div>
           <div class="form-group">
-            <label class="form-label">Sector Color</label>
+            <label class="form-label" for="sub-color">Subject Color</label>
             <input type="color" id="sub-color" class="form-input" value="${s ? s.color : '#5B9BF0'}" style="height:40px;padding:2px;">
           </div>
         `;
         const modal = App.createModal({
-          title: isEdit ? 'Modify Sector' : 'New Sector',
+          title: isEdit ? 'Edit Subject' : 'Add Subject',
           content,
           footer: `<button class="btn btn-secondary" data-action="cancel">Cancel</button><button class="btn btn-primary" id="save-sub">Save</button>`
         });
@@ -300,7 +384,7 @@
               App.closeModal();
               renderSubjects();
             } else {
-              App.showToast('Invalid color format. Please use hex (e.g. #5B9BF0)', 'error');
+              App.showToast('Invalid color format', 'error');
             }
           }
         };
@@ -309,7 +393,7 @@
       }
 
       async function deleteSubject(id) {
-        if (await App.confirm({ title: 'Delete Sector?', message: 'Tasks in this sector will persist without categorization.', confirmText: 'Delete', danger: true })) {
+        if (await App.confirm({ title: 'Delete Subject?', message: 'Tasks in this subject will persist without categorization.', confirmText: 'Delete', danger: true })) {
           Storage.deleteSubject(id);
           renderSubjects();
         }
@@ -334,10 +418,10 @@
             gain.gain.linearRampToValueAtTime(0.2, ctx.currentTime + 0.1);
             gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.5);
             osc.start(); osc.stop(ctx.currentTime + 0.5);
-            App.showToast('Audio frequency verified', 'success');
+            App.showToast('Sound test played', 'success');
           } catch (e) {
             console.error('Audio test failed:', e);
-            App.showToast('Audio system failure', 'error');
+            App.showToast('Audio test failed', 'error');
           }
         };
 
@@ -395,7 +479,7 @@
         };
 
         elements.clearDataBtn.onclick = async () => {
-          if (await App.confirm({ title: 'PURGE CORE?', message: 'All data will be permanently vaporized. This cannot be undone.', confirmText: 'PURGE', danger: true })) {
+          if (await App.confirm({ title: 'Erase All Data?', message: 'All local study data will be permanently erased. This cannot be undone.', confirmText: 'Erase Data', danger: true })) {
             Storage.clearAllData();
             location.reload();
           }
@@ -410,13 +494,13 @@
           if (a.dayOfWeek !== b.dayOfWeek) return a.dayOfWeek - b.dayOfWeek;
           return a.startTime.localeCompare(b.startTime);
         }).map(w => `
-          <div class="card" style="padding:8px 12px;background:var(--bg-tertiary);display:flex;align-items:center;justify-content:space-between;">
-            <div class="flex items-center gap-md">
-              <div class="badge">${dayNames[w.dayOfWeek]}</div>
-              <div style="font-size:13px;font-weight:500;">${w.startTime} - ${w.endTime}</div>
-              <div style="font-size:11px;color:var(--text-muted);">${App.escapeHtml(w.label)}</div>
+          <div class="card p-xs flex items-center justify-between" style="background:var(--bg-raised);">
+            <div class="flex items-center gap-sm">
+              <span class="badge" style="font-size:10px;">${dayNames[w.dayOfWeek]}</span>
+              <span style="font-size:13px;font-weight:600;">${w.startTime} - ${w.endTime}</span>
+              <span style="font-size:11px;color:var(--text-muted);">${App.escapeHtml(w.label)}</span>
             </div>
-            <div class="flex gap-xs">
+            <div class="flex items-center gap-xs">
               <button class="btn btn-ghost btn-icon btn-sm edit-window" data-id="${App.escapeHtml(w.id)}" aria-label="Edit Study Window">
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
               </button>
@@ -439,23 +523,23 @@
         const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
         const content = `
           <div class="form-group">
-            <label class="form-label">Day of Week</label>
-            <select id="win-day" class="form-input">
+            <label class="form-label" for="win-day">Day of Week</label>
+            <select id="win-day" class="form-select">
               ${dayNames.map((n, i) => `<option value="${i}" ${w && w.dayOfWeek === i ? 'selected' : ''}>${n}</option>`).join('')}
             </select>
           </div>
-          <div class="grid-2">
+          <div class="grid-2 gap-sm">
             <div class="form-group">
-              <label class="form-label">Start Time</label>
+              <label class="form-label" for="win-start">Start Time</label>
               <input type="time" id="win-start" class="form-input" value="${w ? App.escapeHtml(w.startTime) : '09:00'}">
             </div>
             <div class="form-group">
-              <label class="form-label">End Time</label>
+              <label class="form-label" for="win-end">End Time</label>
               <input type="time" id="win-end" class="form-input" value="${w ? App.escapeHtml(w.endTime) : '12:00'}">
             </div>
           </div>
           <div class="form-group">
-            <label class="form-label">Label</label>
+            <label class="form-label" for="win-label">Label</label>
             <input type="text" id="win-label" class="form-input" value="${w ? App.escapeHtml(w.label) : ''}" placeholder="e.g. Deep Work Morning">
           </div>
         `;
