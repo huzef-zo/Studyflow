@@ -71,15 +71,17 @@ const Goals = (function() {
     const stats = Storage.getStats();
     
     // Tasks goal progress
-    const tasksPercent = goals.weekly_tasks > 0 
-      ? Math.min(100, Math.round((goals.current_tasks / goals.weekly_tasks) * 100)) 
+    const currentTasks = Number.isFinite(Number(goals.current_tasks)) ? Number(goals.current_tasks) : 0;
+    const weeklyTasksTarget = Number.isFinite(Number(goals.weekly_tasks)) ? Number(goals.weekly_tasks) : 0;
+    const tasksPercent = weeklyTasksTarget > 0
+      ? Math.min(100, Math.round((currentTasks / weeklyTasksTarget) * 100))
       : 0;
     
     if (elements.tasksGoalValue) {
-      elements.tasksGoalValue.textContent = goals.current_tasks;
+      elements.tasksGoalValue.textContent = currentTasks;
     }
     if (elements.tasksGoalMax) {
-      elements.tasksGoalMax.textContent = goals.weekly_tasks;
+      elements.tasksGoalMax.textContent = weeklyTasksTarget;
     }
 
     updateCircle(elements.tasksProgressBar, tasksPercent);
@@ -89,9 +91,11 @@ const Goals = (function() {
     }
     
     // Hours goal progress
-    const currentHours = Math.round(goals.current_hours * 10) / 10;
-    const hoursPercent = goals.weekly_hours > 0 
-      ? Math.min(100, Math.round((currentHours / goals.weekly_hours) * 100)) 
+    const rawHours = Number.isFinite(Number(goals.current_hours)) ? Number(goals.current_hours) : 0;
+    const currentHours = Math.round(rawHours * 10) / 10;
+    const weeklyHoursTarget = Number.isFinite(Number(goals.weekly_hours)) ? Number(goals.weekly_hours) : 0;
+    const hoursPercent = weeklyHoursTarget > 0
+      ? Math.min(100, Math.round((currentHours / weeklyHoursTarget) * 100))
       : 0;
     
     if (elements.hoursGoalValue) {
@@ -212,21 +216,27 @@ const Goals = (function() {
       const d = new Date(dateStr + 'T00:00:00');
       const isWeekend = d.getDay() === 0 || d.getDay() === 6;
 
-      const dailyTaskTarget = isWeekend ? goals.weekend_daily_tasks : goals.daily_tasks;
-      const dailyMinuteTarget = (isWeekend ? goals.weekend_daily_hours : goals.daily_hours) * 60;
+      const rawDailyTaskTarget = isWeekend ? goals.weekend_daily_tasks : goals.daily_tasks;
+      const dailyTaskTarget = Number.isFinite(Number(rawDailyTaskTarget)) ? Number(rawDailyTaskTarget) : 0;
+
+      const rawDailyHoursTarget = isWeekend ? goals.weekend_daily_hours : goals.daily_hours;
+      const dailyMinuteTarget = Number.isFinite(Number(rawDailyHoursTarget)) ? Number(rawDailyHoursTarget) * 60 : 0;
 
       // Task progress
+      const dayTasks = Number.isFinite(Number(day.tasks)) ? Number(day.tasks) : 0;
       const taskPercent = dailyTaskTarget > 0 
-        ? Math.min(100, (day.tasks / dailyTaskTarget) * 100) 
+        ? Math.min(100, (dayTasks / dailyTaskTarget) * 100)
         : 0;
       
       // Hours progress
+      const dayMinutes = Number.isFinite(Number(day.minutes)) ? Number(day.minutes) : 0;
       const minutePercent = dailyMinuteTarget > 0 
-        ? Math.min(100, (day.minutes / dailyMinuteTarget) * 100) 
+        ? Math.min(100, (dayMinutes / dailyMinuteTarget) * 100)
         : 0;
       
       // Average progress
-      const avgPercent = Math.round((taskPercent + minutePercent) / 2);
+      const rawAvg = (taskPercent + minutePercent) / 2;
+      const avgPercent = Number.isFinite(rawAvg) ? Math.round(rawAvg) : 0;
       
       let statusClass = '';
       if (avgPercent >= 100) {

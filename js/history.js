@@ -201,7 +201,9 @@ const History = (function() {
     const stats = Storage.getStats();
 
     const periodCompletedCount = completedTasksInPeriod.length;
-    const studyMinutes = filteredSessions.filter(s => s.type === 'work').reduce((total, s) => total + s.duration, 0);
+    const studyMinutes = filteredSessions
+      .filter(s => s.type === 'work')
+      .reduce((total, s) => total + (Number.isFinite(Number(s.duration)) ? Number(s.duration) : 0), 0);
 
     const noActivityEl = document.getElementById('no-activity-message');
     const graphSectionEl = document.getElementById('graph-section');
@@ -218,7 +220,8 @@ const History = (function() {
     }
 
     if (elements.totalCompletedTasks) elements.totalCompletedTasks.textContent = periodCompletedCount;
-    if (elements.totalStudyHours) elements.totalStudyHours.textContent = Math.round(studyMinutes / 60) + 'h';
+    const safeHours = Number.isFinite(studyMinutes) ? Math.round(studyMinutes / 60) : 0;
+    if (elements.totalStudyHours) elements.totalStudyHours.textContent = safeHours + 'h';
     if (elements.allTimeStreak) elements.allTimeStreak.textContent = stats.bestStreak;
 
     if (elements.completionRate) {
@@ -237,12 +240,18 @@ const History = (function() {
           // OPTIMIZATION: Use string slicing for date and reusableDate for getDay()
           let key;
           if (isWeekly) {
-            reusableDate.setTime(typeof s.completedAt === 'number' ? s.completedAt : Date.parse(s.completedAt));
-            key = reusableDate.getDay();
+            const timeVal = typeof s.completedAt === 'number' ? s.completedAt : Date.parse(s.completedAt);
+            if (!isNaN(timeVal)) {
+              reusableDate.setTime(timeVal);
+              key = reusableDate.getDay();
+            }
           } else {
             key = (typeof s.completedAt === 'string') ? s.completedAt.slice(0, 10) : Storage.formatDate(s.completedAt);
           }
-          activity[key] = (activity[key] || 0) + Math.max(1, Math.round(s.duration / 15));
+          if (key !== undefined && key !== null) {
+            const dur = Number.isFinite(Number(s.duration)) ? Number(s.duration) : 0;
+            activity[key] = (activity[key] || 0) + Math.max(1, Math.round(dur / 15));
+          }
         }
       });
 
@@ -252,17 +261,22 @@ const History = (function() {
           // OPTIMIZATION: Use string slicing for date and reusableDate for getDay()
           let key;
           if (isWeekly) {
-            if (t._date.length === 10) {
+            if (typeof t._date === 'string' && t._date.length === 10) {
               const d = Storage.parseLocalDate(t._date);
               key = d ? d.getDay() : 0;
             } else {
-              reusableDate.setTime(typeof t._date === 'number' ? t._date : Date.parse(t._date));
-              key = reusableDate.getDay();
+              const timeVal = typeof t._date === 'number' ? t._date : Date.parse(t._date);
+              if (!isNaN(timeVal)) {
+                reusableDate.setTime(timeVal);
+                key = reusableDate.getDay();
+              }
             }
           } else {
             key = (typeof t._date === 'string') ? t._date.slice(0, 10) : Storage.formatDate(t._date);
           }
-          activity[key] = (activity[key] || 0) + 1;
+          if (key !== undefined && key !== null) {
+            activity[key] = (activity[key] || 0) + 1;
+          }
         }
       });
 
@@ -277,13 +291,17 @@ const History = (function() {
       if (maxVal > 0 && peakKey !== null) {
         if (isWeekly) {
           const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-          elements.productiveDay.textContent = dayNames[peakKey];
+          elements.productiveDay.textContent = dayNames[peakKey] || 'N/A';
         } else {
-          const date = new Date(peakKey + 'T00:00:00');
-          const options = statsPeriodDays === 30
-            ? { month: 'short', day: 'numeric' }
-            : { month: 'short', day: 'numeric', year: 'numeric' };
-          elements.productiveDay.textContent = date.toLocaleDateString('en-US', options);
+          const date = Storage.parseLocalDate(peakKey) || new Date(peakKey);
+          if (date && !isNaN(date.getTime())) {
+            const options = statsPeriodDays === 30
+              ? { month: 'short', day: 'numeric' }
+              : { month: 'short', day: 'numeric', year: 'numeric' };
+            elements.productiveDay.textContent = date.toLocaleDateString('en-US', options);
+          } else {
+            elements.productiveDay.textContent = 'N/A';
+          }
         }
       } else {
         elements.productiveDay.textContent = 'N/A';
@@ -408,8 +426,10 @@ const History = (function() {
       const subjectColor = App.getSubjectColor(subjectName);
 
       const completeDate = new Date(session.completedAt);
-      const timeStr = completeDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
-      const fullDateStr = completeDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      const isValidDate = !isNaN(completeDate.getTime());
+      const timeStr = isValidDate ? completeDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }) : 'N/A';
+      const fullDateStr = isValidDate ? completeDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'No date';
+      const safeDuration = Number.isFinite(Number(session.duration)) ? Number(session.duration) : 0;
 
       const notesHtml = session.notes ? `
         <div style="font-size: 0.8rem; color: var(--text-muted); font-style: italic; margin-top: 8px; border-left: 2px solid var(--glass-border); padding-left: 8px; line-height: 1.4;">
@@ -424,7 +444,7 @@ const History = (function() {
               <div class="flex items-center gap-sm mb-xs flex-wrap">
                 <div class="subject-pill" style="--tag-color:${App.hexToRgb(subjectColor)}">${App.escapeHtml(subjectName)}</div>
                 <span class="badge" style="background: rgba(255,255,255,0.05); color: var(--text-secondary); font-size: 9px; text-shadow: none;">
-                  ${App.escapeHtml(session.duration)} mins
+                  ${App.escapeHtml(safeDuration)} mins
                 </span>
               </div>
               <div class="task-title-text" style="font-size: 1rem; word-break: break-word;">${App.escapeHtml(taskTitle)}</div>

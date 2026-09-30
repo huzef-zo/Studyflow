@@ -1874,8 +1874,11 @@ const Storage = (function() {
 
   function formatDisplayDate(dateStr) {
     if (!dateStr) return 'No date';
-    const date = parseLocalDate(dateStr);
-    if (!date) return 'Invalid date';
+    let date = parseLocalDate(dateStr);
+    if (!date) {
+      date = new Date(dateStr);
+    }
+    if (!date || isNaN(date.getTime())) return 'No date';
     return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
   }
 

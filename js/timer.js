@@ -510,7 +510,8 @@ const Timer = (function() {
   function updateStats() {
     const stats = Storage.getStats();
     elements.sessionsToday.textContent = stats.sessions.today;
-    elements.totalTimeToday.textContent = `${stats.sessions.minutesToday}m`;
+    const safeMins = Number.isFinite(Number(stats.sessions.minutesToday)) ? Math.max(0, Math.floor(Number(stats.sessions.minutesToday))) : 0;
+    elements.totalTimeToday.textContent = `${safeMins}m`;
     elements.streakCount.textContent = stats.streak;
   }
 
