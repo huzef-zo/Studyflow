@@ -15,7 +15,8 @@ const ASSETS_TO_CACHE = [
   './notes.html',
   './version.js',
   './browserconfig.xml',
-  `./css/style.css?v=${APP_VERSION}`,
+  `./css/tailwind.css?v=${APP_VERSION}`,
+  `./css/app.css?v=${APP_VERSION}`,
   `./js/app.js?v=${APP_VERSION}`,
   `./js/storage.js?v=${APP_VERSION}`,
   `./js/pwa-manager.js?v=${APP_VERSION}`,
@@ -29,8 +30,9 @@ const ASSETS_TO_CACHE = [
   `./js/achievements.js?v=${APP_VERSION}`,
   `./js/scheduler.js?v=${APP_VERSION}`,
   `./js/notes.js?v=${APP_VERSION}`,
-  './fonts/inter-latin-wght-normal.woff2',
-  './fonts/bricolage-grotesque-latin-wght-normal.woff2',
+  './fonts/inter.woff2',
+  './fonts/plus-jakarta-sans.woff2',
+  './fonts/material-symbols-outlined.woff2',
   './manifest.json',
   './icon-192.png',
   './icon-512.png'
@@ -140,10 +142,6 @@ function matchCacheWithFallback(request) {
 // CACHING STRATEGIES
 // ============================================
 
-/**
- * Network-first strategy with timeout fallback to cache
- * Used for HTML pages to ensure fresh content
- */
 function networkFirstStrategy(request, timeout = 3000) {
   return new Promise((resolve) => {
     let timeoutId = setTimeout(() => {
@@ -165,7 +163,6 @@ function networkFirstStrategy(request, timeout = 3000) {
           return;
         }
         
-        // Update cache in background
         const responseToCache = networkResponse.clone();
         caches.open(CACHE_NAME).then((cache) => {
           cache.put(request, responseToCache);
@@ -183,10 +180,6 @@ function networkFirstStrategy(request, timeout = 3000) {
   });
 }
 
-/**
- * Cache-first strategy
- * Used for assets that don't change frequently (CSS, JS, images)
- */
 function cacheFirstStrategy(request) {
   return matchCacheWithFallback(request)
     .then((cachedResponse) => {
@@ -201,7 +194,6 @@ function cacheFirstStrategy(request) {
             return networkResponse;
           }
           
-          // Cache successful responses
           const responseToCache = networkResponse.clone();
           caches.open(CACHE_NAME).then((cache) => {
             cache.put(request, responseToCache);
@@ -216,10 +208,6 @@ function cacheFirstStrategy(request) {
     });
 }
 
-/**
- * Stale-while-revalidate strategy
- * Return cache immediately, update in background
- */
 function staleWhileRevalidateStrategy(request) {
   return matchCacheWithFallback(request)
     .then((cachedResponse) => {
@@ -242,9 +230,6 @@ function staleWhileRevalidateStrategy(request) {
     });
 }
 
-/**
- * Offline fallback handler
- */
 function getOfflineFallback(request) {
   const url = new URL(request.url);
   const isDocument = request.destination === 'document' ||
@@ -269,12 +254,7 @@ function getOfflineFallback(request) {
   return new Response('Resource unavailable offline', { status: 503, headers: { 'Content-Type': 'text/plain' } });
 }
 
-// ============================================
-// BACKGROUND SYNC
-// ============================================
 self.addEventListener('sync', (event) => {
-  console.log('[SW] Background sync event:', event.tag);
-  
   if (event.tag === 'sync-tasks') {
     event.waitUntil(syncTasks());
   }
@@ -283,26 +263,19 @@ self.addEventListener('sync', (event) => {
 async function syncTasks() {
   try {
     const allClients = await self.clients.matchAll();
-    
     for (const client of allClients) {
       client.postMessage({
         type: 'BACKGROUND_SYNC',
         data: { synced: true, timestamp: Date.now() }
       });
     }
-    console.log('[SW] Background sync completed');
   } catch (error) {
     console.error('[SW] Background sync error:', error);
     throw error;
   }
 }
 
-// ============================================
-// PUSH NOTIFICATIONS
-// ============================================
 self.addEventListener('push', (event) => {
-  console.log('[SW] Push event received');
-  
   const options = {
     body: event.data ? event.data.text() : 'StudyFlow notification',
     icon: './icon-192.png',
@@ -314,19 +287,13 @@ self.addEventListener('push', (event) => {
       { action: 'dismiss', title: 'Dismiss' }
     ]
   };
-  
   event.waitUntil(
     self.registration.showNotification('StudyFlow', options)
   );
 });
 
-// ============================================
-// NOTIFICATION CLICK HANDLER
-// ============================================
 self.addEventListener('notificationclick', (event) => {
-  console.log('[SW] Notification clicked:', event.action);
   event.notification.close();
-  
   if (event.action === 'open' || !event.action) {
     event.waitUntil(
       self.clients.matchAll({ type: 'window' }).then((clientList) => {
@@ -335,7 +302,6 @@ self.addEventListener('notificationclick', (event) => {
             return client.focus();
           }
         }
-        
         if (self.clients.openWindow) {
           return self.clients.openWindow('./');
         }
@@ -344,16 +310,10 @@ self.addEventListener('notificationclick', (event) => {
   }
 });
 
-// ============================================
-// MESSAGE HANDLER (for client communication)
-// ============================================
 self.addEventListener('message', (event) => {
-  console.log('[SW] Message received from client:', event.data);
-  
   if (event.data && event.data.type === 'SKIP_WAITING') {
     self.skipWaiting();
   }
-  
   if (event.data && event.data.type === 'CHECK_UPDATE') {
     event.ports[0].postMessage({ updated: false });
   }

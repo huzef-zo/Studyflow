@@ -1,143 +1,146 @@
 <!DOCTYPE html>
-<html lang="en">
+<html class="dark" lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
-  <meta name="description" content="StudyFlow - Weekly goals and progress tracking">
-  <meta name="theme-color" content="#0A0B0F">
-  
-  <!-- Standalone PWA Configuration -->
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-title" content="StudyFlow">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-touch-fullscreen" content="yes">
-  
-  <!-- Icons and Manifest -->
-  <link rel="icon" type="image/png" href="./icon-192.png">
-  <link rel="apple-touch-icon" href="./icon-192.png">
-  <link rel="manifest" href="./manifest.json">
-  <link rel="msapplication-config" href="browserconfig.xml">
-  <meta name="msapplication-TileColor" content="#5B9BF0">
-  
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover"/>
+  <meta name="description" content="StudyFlow - Strategic Goals"/>
+  <meta name="theme-color" content="#090D12"/>
+
+  <link rel="icon" type="image/png" href="./icon-192.png"/>
+  <link rel="apple-touch-icon" href="./icon-192.png"/>
+  <link rel="manifest" href="./manifest.json"/>
+
   <title>Goals - StudyFlow</title>
-  <link rel="stylesheet" href="css/style.css?v=v2026-09-29-01">
+  <link rel="stylesheet" href="css/tailwind.css?v=v2026-09-30-01"/>
+  <link rel="stylesheet" href="css/app.css?v=v2026-09-30-01"/>
 </head>
-<body>
-  <!-- Navigation Containers -->
+<body class="bg-surface-base text-on-surface font-body-md text-body-md flex flex-col relative antialiased selection:bg-primary-container selection:text-surface-base min-h-dvh">
+  <!-- Radial Ambient Glow -->
+  <div class="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-lg h-80 bg-[radial-gradient(ellipse_at_top,rgba(91,155,240,0.14),transparent_70%)] pointer-events-none z-0"></div>
+
+  <!-- Shell Containers -->
+  <div id="header-container"></div>
   <div id="sidebar-container"></div>
   <div id="bottom-nav-container"></div>
 
   <!-- Main Content -->
-  <main class="main-container">
-    <!-- Page Header -->
-    <header class="page-header animate-fade-in">
-      <div class="page-header-title-group">
-        <h1>Goals</h1>
-        <p class="subtitle">Chart your path to academic mastery</p>
-      </div>
-      <div class="page-header-actions flex items-center gap-sm flex-wrap">
-        <button class="btn btn-secondary" id="edit-goals-btn" aria-label="Edit weekly and daily target goals" title="Edit weekly and daily target goals">
-          Edit Targets
+  <main class="flex-1 flex flex-col relative w-full max-w-lg lg:max-w-3xl mx-auto pt-20 pb-28 px-margin bg-surface-base z-10">
+    <div class="flex flex-col w-full pb-10 space-y-space-lg select-none">
+
+      <!-- Top Bar: Title & Edit Button -->
+      <div class="flex items-center justify-between pt-space-xs">
+        <div>
+          <h1 class="font-headline-lg-mobile text-headline-lg-mobile font-bold text-text-primary tracking-tight">Goals</h1>
+          <p class="font-body-sm text-body-sm text-text-secondary mt-0.5" id="week-number-subtitle">Week 1</p>
+        </div>
+        <button class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-glass backdrop-blur-md shadow-sm active:scale-95 transition-all text-text-primary hover:bg-surface-container-high" id="edit-goals-btn" type="button">
+          <span class="material-symbols-outlined text-[15px] text-primary-container">tune</span>
+          <span class="font-label-sm text-label-sm font-medium">Edit targets</span>
         </button>
       </div>
-    </header>
 
-    <!-- Calendar Strip -->
-    <section class="mb-lg animate-fade-in">
-      <div class="calendar-strip" id="week-dates">
+      <!-- Horizontal Week Calendar Strip -->
+      <div class="w-full bg-surface-glass backdrop-blur-xl rounded-lg p-space-sm shadow-sm flex items-center justify-between" id="week-strip-container">
         <!-- Populated by JS -->
       </div>
-    </section>
 
-    <!-- Goals Visualization -->
-    <div class="grid animate-fade-in" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: var(--spacing-md);">
-      <!-- Tasks Donut -->
-      <section class="card">
-        <div class="card-header">
-          <h3 class="card-title">Mission Quota</h3>
-        </div>
-        <div class="donut-container">
-          <svg viewBox="0 0 36 36" style="width: 120px; height: 120px;">
-            <circle cx="18" cy="18" r="15.9155" fill="none" stroke="var(--progress-track)" stroke-width="3" />
-            <circle id="tasks-donut-fill" cx="18" cy="18" r="15.9155" fill="none" stroke="var(--accent-fill)" stroke-width="3.5" stroke-dasharray="100" stroke-dashoffset="100" stroke-linecap="round" transform="rotate(-90 18 18)" style="transition: stroke-dashoffset 0.8s ease;" />
-          </svg>
-          <div class="donut-center">
-            <div id="tasks-percent" class="gradient-text" style="font-size: 1.5rem; font-weight: 500;">0%</div>
+      <!-- Key Target Cards: 2 Columns Bento -->
+      <div class="grid grid-cols-2 gap-gutter">
+        <!-- Tasks Target Card -->
+        <div class="bg-surface-glass backdrop-blur-xl rounded-lg p-space-md flex flex-col items-center justify-between text-center relative overflow-hidden shadow-sm">
+          <div class="w-full flex items-center justify-between text-text-secondary mb-2">
+            <span class="font-label-sm text-label-sm font-medium">Tasks</span>
+            <span class="material-symbols-outlined text-[18px] text-primary-container">task_alt</span>
+          </div>
+          <div class="relative w-24 h-24 my-1 flex items-center justify-center">
+            <svg class="w-full h-full -rotate-90 transform" viewBox="0 0 72 72">
+              <circle class="text-surface-container-high" cx="36" cy="36" fill="none" r="30" stroke="currentColor" stroke-width="5"></circle>
+              <circle class="text-primary-container transition-all duration-500 ease-out" cx="36" cy="36" fill="none" id="tasks-donut-fill" r="30" stroke="currentColor" stroke-dasharray="188.5" stroke-dashoffset="188.5" stroke-linecap="round" stroke-width="5"></circle>
+            </svg>
+            <div class="absolute inset-0 flex flex-col items-center justify-center">
+              <span class="font-headline-sm text-headline-sm font-bold text-text-primary leading-none"><span id="tasks-goal-value">0</span><span class="text-text-muted text-[13px] font-normal">/<span id="tasks-goal-max">0</span></span></span>
+            </div>
+          </div>
+          <div class="mt-2 flex flex-col items-center">
+            <span class="font-label-sm text-label-sm font-semibold text-text-primary">Weekly Tasks</span>
+            <span class="font-body-sm text-[11px] text-text-secondary mt-0.5" id="tasks-percent-label">0% target reached</span>
           </div>
         </div>
-        <div class="text-center">
-          <div style="font-size: 1.1rem; font-weight: 500; margin-bottom: 2px;">
-            <span id="tasks-goal-value" class="gradient-text">0</span> / <span id="tasks-goal-max">10</span>
-          </div>
-          <p style="color: var(--text-muted); font-size: 10px; text-transform: uppercase;">Missions Completed</p>
-        </div>
-      </section>
 
-      <!-- Hours Donut -->
-      <section class="card">
-        <div class="card-header">
-          <h3 class="card-title">Focus Quota</h3>
-        </div>
-        <div class="donut-container">
-          <svg viewBox="0 0 36 36" style="width: 120px; height: 120px;">
-            <circle cx="18" cy="18" r="15.9155" fill="none" stroke="var(--progress-track)" stroke-width="3" />
-            <circle id="hours-donut-fill" cx="18" cy="18" r="15.9155" fill="none" stroke="var(--accent-fill)" stroke-width="3.5" stroke-dasharray="100" stroke-dashoffset="100" stroke-linecap="round" transform="rotate(-90 18 18)" style="transition: stroke-dashoffset 0.8s ease;" />
-          </svg>
-          <div class="donut-center">
-            <div id="hours-percent" class="gradient-text" style="font-size: 1.5rem; font-weight: 500;">0%</div>
+        <!-- Focus Hours Target Card -->
+        <div class="bg-surface-glass backdrop-blur-xl rounded-lg p-space-md flex flex-col items-center justify-between text-center relative overflow-hidden shadow-sm">
+          <div class="w-full flex items-center justify-between text-text-secondary mb-2">
+            <span class="font-label-sm text-label-sm font-medium">Deep Work</span>
+            <span class="material-symbols-outlined text-[18px] text-primary-container">timer</span>
+          </div>
+          <div class="relative w-24 h-24 my-1 flex items-center justify-center">
+            <svg class="w-full h-full -rotate-90 transform" viewBox="0 0 72 72">
+              <circle class="text-surface-container-high" cx="36" cy="36" fill="none" r="30" stroke="currentColor" stroke-width="5"></circle>
+              <circle class="text-primary-container transition-all duration-500 ease-out" cx="36" cy="36" fill="none" id="hours-donut-fill" r="30" stroke="currentColor" stroke-dasharray="188.5" stroke-dashoffset="188.5" stroke-linecap="round" stroke-width="5"></circle>
+            </svg>
+            <div class="absolute inset-0 flex flex-col items-center justify-center">
+              <span class="font-headline-sm text-headline-sm font-bold text-text-primary leading-none"><span id="hours-goal-value">0</span><span class="text-text-muted text-[12px] font-normal">h</span></span>
+            </div>
+          </div>
+          <div class="mt-2 flex flex-col items-center">
+            <span class="font-label-sm text-label-sm font-semibold text-text-primary">Focus Target</span>
+            <span class="font-body-sm text-[11px] text-text-secondary mt-0.5" id="hours-percent-label">0 of 0h logged</span>
           </div>
         </div>
-        <div class="text-center">
-          <div style="font-size: 1.1rem; font-weight: 500; margin-bottom: 2px;">
-            <span id="hours-goal-value" class="gradient-text">0</span> / <span id="hours-goal-max">20</span>H
-          </div>
-          <p style="color: var(--text-muted); font-size: 10px; text-transform: uppercase;">Deep Work Logged</p>
-        </div>
-      </section>
-    </div>
-
-    <!-- Daily Progress Bar Chart -->
-    <section class="card mt-md animate-fade-in">
-      <div class="card-header">
-        <h3 class="card-title">Daily Performance</h3>
       </div>
-      <div class="daily-bar-scroll">
-        <div class="daily-bar-container" id="daily-progress">
+
+      <!-- Daily Progress Carousel -->
+      <div class="flex flex-col space-y-space-sm">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="font-headline-sm text-headline-sm font-semibold text-text-primary">Daily progress</h2>
+            <p class="font-body-sm text-body-sm text-text-secondary">Consistency against day goals</p>
+          </div>
+          <span class="font-label-sm text-label-sm text-primary-container font-medium" id="avg-daily-pct">Avg 0%</span>
+        </div>
+        <div class="flex gap-2.5 overflow-x-auto pb-1 -mx-margin px-margin" id="daily-progress-container">
           <!-- Populated by JS -->
         </div>
       </div>
-    </section>
 
-    <!-- Motivation -->
-    <section class="card mt-md animate-fade-in">
-      <div class="flex items-center justify-between w-full">
-        <div class="flex items-center gap-md">
-          <div class="stat-icon" style="margin: 0;">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-fill)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>
+      <!-- Streak Card -->
+      <div class="w-full bg-surface-glass backdrop-blur-2xl rounded-lg p-space-md shadow-md flex flex-col space-y-space-sm relative overflow-hidden">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <div class="w-9 h-9 rounded-full bg-secondary-container/70 flex items-center justify-center text-primary-container">
+              <span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">local_fire_department</span>
+            </div>
+            <div>
+              <h3 class="font-headline-sm text-headline-sm font-bold text-text-primary leading-tight" id="streak-card-title">0-day streak</h3>
+              <p class="font-body-sm text-[11px] text-text-secondary">Keep the momentum going</p>
+            </div>
           </div>
-          <div>
-            <h4 style="font-size: 14px; margin-bottom: 2px;">Streak: <span id="streak-count">0</span> Days</h4>
-            <p id="motivation-message" style="margin: 0; font-size: 12px; color: var(--text-secondary);">Keep the momentum!</p>
-          </div>
+          <span class="px-2.5 py-1 rounded-full bg-surface-container text-[11px] font-label-sm text-text-primary font-medium flex items-center gap-1 shadow-sm">
+            <span class="material-symbols-outlined text-[13px] text-primary-container">ac_unit</span>
+            <span id="freeze-count-label">0 freezes left</span>
+          </span>
         </div>
-        <div id="freeze-badge-container" class="badge">
-          Freezes: <span id="freeze-count">1</span>
+        <p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed" id="motivational-copy">
+          You're building consistency! Complete your planned focus sessions today to protect your streak.
+        </p>
+        <div class="pt-1 flex items-center justify-between px-1" id="streak-dots-container">
+          <!-- Populated by JS -->
         </div>
       </div>
-    </section>
+
+    </div>
   </main>
 
-  <!-- Scripts -->
-  <script src="js/storage.js?v=v2026-09-29-01"></script>
-  <script src="js/subtask-utils.js?v=v2026-09-29-01"></script>
-  <script src="js/pwa-manager.js?v=v2026-09-29-01"></script>
-  <script src="js/achievements.js?v=v2026-09-29-01"></script>
-  <script src="js/app.js?v=v2026-09-29-01"></script>
-  <script src="js/goals.js?v=v2026-09-29-01"></script>
+  <!-- Core Scripts -->
+  <script src="version.js"></script>
+  <script src="js/storage.js?v=v2026-09-30-01"></script>
+  <script src="js/subtask-utils.js?v=v2026-09-30-01"></script>
+  <script src="js/pwa-manager.js?v=v2026-09-30-01"></script>
+  <script src="js/app.js?v=v2026-09-30-01"></script>
+  <script src="js/goals.js?v=v2026-09-30-01"></script>
+
   <script>
     document.addEventListener('DOMContentLoaded', () => {
-      PWAManager.init();
       Goals.init();
     });
   </script>

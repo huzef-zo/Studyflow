@@ -1,102 +1,134 @@
 <!DOCTYPE html>
-<html lang="en">
+<html class="dark" lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
-  <meta name="description" content="StudyFlow - Task Manager and study objectives tracker">
-  <meta name="theme-color" content="#0A0B0F">
-  
-  <!-- Standalone PWA Configuration -->
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-title" content="StudyFlow">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-touch-fullscreen" content="yes">
-  
-  <!-- Icons and Manifest -->
-  <link rel="icon" type="image/png" href="./icon-192.png">
-  <link rel="apple-touch-icon" href="./icon-192.png">
-  <link rel="manifest" href="./manifest.json">
-  <link rel="msapplication-config" href="browserconfig.xml">
-  <meta name="msapplication-TileColor" content="#5B9BF0">
-  
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover"/>
+  <meta name="description" content="StudyFlow - Tasks and Missions"/>
+  <meta name="theme-color" content="#090D12"/>
+
+  <link rel="icon" type="image/png" href="./icon-192.png"/>
+  <link rel="apple-touch-icon" href="./icon-192.png"/>
+  <link rel="manifest" href="./manifest.json"/>
+
   <title>Tasks - StudyFlow</title>
-  <link rel="stylesheet" href="css/style.css?v=v2026-09-29-01">
+  <link rel="stylesheet" href="css/tailwind.css?v=v2026-09-30-01"/>
+  <link rel="stylesheet" href="css/app.css?v=v2026-09-30-01"/>
 </head>
-<body>
-  <!-- Navigation Containers -->
+<body class="bg-surface-base text-on-surface font-body-md text-body-md flex flex-col relative antialiased selection:bg-primary-container selection:text-surface-base min-h-dvh">
+  <!-- Radial Ambient Glow -->
+  <div class="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-lg h-80 bg-[radial-gradient(ellipse_at_top,rgba(91,155,240,0.14),transparent_70%)] pointer-events-none z-0"></div>
+
+  <!-- Shell Containers -->
+  <div id="header-container"></div>
   <div id="sidebar-container"></div>
   <div id="bottom-nav-container"></div>
-
-  <!-- Floating Add Task Button -->
-  <button class="fab-btn" id="fab-add-task" aria-label="Add task" title="Add task">
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
-  </button>
+  <div id="fab-container"></div>
 
   <!-- Main Content -->
-  <main class="main-container">
-    <!-- Page Header -->
-    <header class="page-header animate-fade-in">
-      <div class="page-header-title-group">
-        <h1>Tasks</h1>
-        <p class="subtitle">Strategize and achieve your study targets</p>
-      </div>
-      <div class="page-header-actions flex items-center gap-sm flex-wrap">
-        <div class="form-group mb-0">
-          <input type="text" id="search-tasks" class="form-input glass-pill-input" placeholder="Search tasks... (Ctrl+K)" aria-label="Search tasks">
+  <main class="flex-1 flex flex-col relative w-full max-w-lg lg:max-w-3xl mx-auto pt-20 pb-28 px-margin bg-surface-base z-10">
+    <div class="flex flex-col w-full gap-space-lg select-none">
+
+      <!-- Header & Search Controls -->
+      <div class="flex flex-col gap-space-md pt-space-xs">
+        <div class="flex items-center justify-between">
+          <div class="flex items-baseline gap-space-sm">
+            <h1 class="font-headline-lg-mobile text-headline-lg-mobile text-text-primary tracking-tight">Tasks</h1>
+            <span class="font-label-sm text-label-sm text-text-muted bg-surface-container-high px-2 py-0.5 rounded-full" id="pending-count-badge">0 pending</span>
+          </div>
+          <div class="flex items-center gap-space-xs">
+            <button aria-label="Search tasks" class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center text-text-secondary active:scale-95 transition-all" id="search-toggle-btn">
+              <span class="material-symbols-outlined text-[20px]">search</span>
+            </button>
+          </div>
         </div>
-        <button class="btn btn-primary" id="add-task-btn" aria-label="Add new task">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
-          New Task
+
+        <!-- Search Input Bar (Togglable) -->
+        <div class="hidden w-full transition-all" id="search-bar-container">
+          <div class="flex items-center gap-2 px-3.5 py-2.5 rounded-2xl bg-surface-container-lowest/90 border border-glass-border">
+            <span class="material-symbols-outlined text-[18px] text-text-muted">search</span>
+            <input type="text" id="search-tasks" placeholder="Search tasks..." class="w-full bg-transparent border-none outline-none font-body-sm text-body-sm text-text-primary placeholder:text-text-muted p-0" aria-label="Search tasks"/>
+          </div>
+        </div>
+
+        <!-- Momentum Progress Tracker -->
+        <div class="flex items-center justify-between px-space-md py-space-sm rounded-DEFAULT bg-surface-container-low shadow-sm">
+          <div class="flex items-center gap-2.5">
+            <span class="material-symbols-outlined text-primary-container text-[18px]">check_circle</span>
+            <span class="font-body-sm text-body-sm text-on-surface" id="completion-ratio-text">0 of 0 completed today</span>
+          </div>
+          <div class="w-24 h-1.5 bg-surface-container-highest rounded-full overflow-hidden">
+            <div class="h-full bg-primary-container rounded-full transition-all duration-300" id="completion-ratio-bar" style="width: 0%;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filter Chips -->
+      <div class="flex items-center gap-2 overflow-x-auto no-scrollbar -mx-margin px-margin py-0.5" role="tablist" aria-label="Task filters">
+        <button class="task-chip flex items-center justify-center px-4 py-1.5 rounded-full bg-primary-container text-surface-base font-label-md text-label-md font-semibold transition-all shrink-0 shadow-sm" data-filter="all" role="tab" aria-selected="true">All</button>
+        <button class="task-chip flex items-center justify-center px-4 py-1.5 rounded-full bg-surface-container-high text-text-secondary font-label-md text-label-md transition-all shrink-0 hover:text-text-primary" data-filter="active" role="tab" aria-selected="false">Active</button>
+        <button class="task-chip flex items-center justify-center px-4 py-1.5 rounded-full bg-surface-container-high text-text-secondary font-label-md text-label-md transition-all shrink-0 hover:text-text-primary" data-filter="done" role="tab" aria-selected="false">Done</button>
+        <button class="task-chip flex items-center gap-1 px-3.5 py-1.5 rounded-full bg-surface-container-high text-text-secondary font-label-md text-label-md transition-all shrink-0 hover:text-text-primary" data-filter="priority" role="tab" aria-selected="false">High Priority</button>
+      </div>
+
+      <!-- Task List Stream -->
+      <div class="flex flex-col gap-space-sm" id="task-list">
+        <!-- Populated by JS -->
+      </div>
+
+      <!-- Focused Sprint Card -->
+      <div class="mt-space-md p-space-md rounded-DEFAULT bg-surface-container-low flex items-center justify-between shadow-sm" id="sprint-card">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-primary-container">
+            <span class="material-symbols-outlined text-[20px]">self_improvement</span>
+          </div>
+          <div class="flex flex-col">
+            <span class="font-label-md text-label-md text-text-primary">Deep Focus Sprint</span>
+            <span class="font-body-sm text-body-sm text-text-secondary">Start a focus session on your top task</span>
+          </div>
+        </div>
+        <button class="px-3.5 py-1.5 rounded-full bg-surface-container-high text-primary-container hover:bg-surface-bright font-label-md text-label-md transition-colors" id="start-sprint-btn">
+          Start
         </button>
       </div>
-    </header>
 
-    <!-- Filter Bar -->
-    <div class="flex flex-wrap items-center justify-between gap-md mb-sm animate-fade-in">
-      <div class="filter-tabs" style="margin: 0;" role="tablist" aria-label="Filter tasks">
-        <div class="filter-tab active" data-filter="all" role="tab" aria-selected="true" tabindex="0">All Tasks</div>
-        <div class="filter-tab" data-filter="pending" role="tab" aria-selected="false" tabindex="0">Active</div>
-        <div class="filter-tab" data-filter="completed" role="tab" aria-selected="false" tabindex="0">Completed</div>
-      </div>
-
-      <div class="flex items-center gap-sm flex-wrap">
-        <select id="filter-priority" class="form-input glass-pill-input" style="width: auto; min-width: 130px;" aria-label="Filter by priority">
-          <option value="all">All Priorities</option>
-          <option value="critical">Critical</option>
-          <option value="high">High</option>
-          <option value="medium">Medium</option>
-          <option value="low">Low</option>
-        </select>
-        <select id="filter-subject" class="form-input glass-pill-input" style="width: auto; min-width: 130px;" aria-label="Filter by subject">
-          <option value="all">All Subjects</option>
-          <!-- Populated by JS -->
-        </select>
-      </div>
     </div>
-
-    <!-- Task List -->
-    <section id="task-list" class="animate-fade-in">
-      <!-- Populated by JS -->
-    </section>
   </main>
 
-  <!-- Scripts -->
-  <script src="js/storage.js?v=v2026-09-29-01"></script>
-  <script src="js/subtask-utils.js?v=v2026-09-29-01"></script>
-  <script src="js/pwa-manager.js?v=v2026-09-29-01"></script>
-  <script src="js/achievements.js?v=v2026-09-29-01"></script>
-  <script src="js/app.js?v=v2026-09-29-01"></script>
-  <script src="js/tasks.js?v=v2026-09-29-01"></script>
+  <!-- Core Scripts -->
+  <script src="version.js"></script>
+  <script src="js/storage.js?v=v2026-09-30-01"></script>
+  <script src="js/subtask-utils.js?v=v2026-09-30-01"></script>
+  <script src="js/pwa-manager.js?v=v2026-09-30-01"></script>
+  <script src="js/app.js?v=v2026-09-30-01"></script>
+  <script src="js/tasks.js?v=v2026-09-30-01"></script>
+
   <script>
     document.addEventListener('DOMContentLoaded', () => {
-      PWAManager.init();
       Tasks.init();
-      document.getElementById('fab-add-task')?.addEventListener('click', () => {
-        if (typeof Tasks !== 'undefined' && Tasks.openTaskModal) {
-          Tasks.openTaskModal();
-        }
-      });
+
+      const searchToggleBtn = document.getElementById('search-toggle-btn');
+      const searchBarContainer = document.getElementById('search-bar-container');
+      if (searchToggleBtn && searchBarContainer) {
+        searchToggleBtn.addEventListener('click', () => {
+          searchBarContainer.classList.toggle('hidden');
+          const input = searchBarContainer.querySelector('input');
+          if (input && !searchBarContainer.classList.contains('hidden')) {
+            input.focus();
+          }
+        });
+      }
+
+      const sprintBtn = document.getElementById('start-sprint-btn');
+      if (sprintBtn) {
+        sprintBtn.addEventListener('click', () => {
+          const upcoming = Storage.getUpcomingTasks ? Storage.getUpcomingTasks(7) : [];
+          if (upcoming.length > 0) {
+            window.location.href = `timer.html?taskId=${encodeURIComponent(upcoming[0].id)}`;
+          } else {
+            window.location.href = 'timer.html';
+          }
+        });
+      }
     });
   </script>
 </body>

@@ -1,104 +1,118 @@
 <!DOCTYPE html>
-<html lang="en">
+<html class="dark" lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
-  <meta name="description" content="StudyFlow - Calendar View for your study schedule">
-  <meta name="theme-color" content="#0A0B0F">
-  
-  <!-- Standalone PWA Configuration -->
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-title" content="StudyFlow">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-touch-fullscreen" content="yes">
-  
-  <!-- Icons and Manifest -->
-  <link rel="icon" type="image/png" href="./icon-192.png">
-  <link rel="apple-touch-icon" href="./icon-192.png">
-  <link rel="manifest" href="./manifest.json">
-  <link rel="msapplication-config" href="browserconfig.xml">
-  <meta name="msapplication-TileColor" content="#5B9BF0">
-  
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover"/>
+  <meta name="description" content="StudyFlow - Calendar & Temporal Map"/>
+  <meta name="theme-color" content="#090D12"/>
+
+  <link rel="icon" type="image/png" href="./icon-192.png"/>
+  <link rel="apple-touch-icon" href="./icon-192.png"/>
+  <link rel="manifest" href="./manifest.json"/>
+
   <title>Calendar - StudyFlow</title>
-  <link rel="stylesheet" href="css/style.css?v=v2026-09-29-01">
+  <link rel="stylesheet" href="css/tailwind.css?v=v2026-09-30-01"/>
+  <link rel="stylesheet" href="css/app.css?v=v2026-09-30-01"/>
 </head>
-<body>
-  <!-- Navigation Containers -->
+<body class="bg-surface-base text-on-surface font-body-md text-body-md flex flex-col relative antialiased selection:bg-primary-container selection:text-surface-base min-h-dvh">
+  <!-- Radial Ambient Glow -->
+  <div class="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-lg h-80 bg-[radial-gradient(ellipse_at_top,rgba(91,155,240,0.14),transparent_70%)] pointer-events-none z-0"></div>
+
+  <!-- Shell Containers -->
+  <div id="header-container"></div>
   <div id="sidebar-container"></div>
   <div id="bottom-nav-container"></div>
+  <div id="fab-container"></div>
 
   <!-- Main Content -->
-  <main class="main-container">
-    <!-- Page Header -->
-    <header class="page-header animate-fade-in">
-      <div class="page-header-title-group">
-        <h1>Calendar</h1>
-        <p class="subtitle">Navigate your study timeline</p>
-      </div>
-    </header>
+  <main class="flex-1 flex flex-col relative w-full max-w-lg lg:max-w-3xl mx-auto pt-20 pb-28 px-margin bg-surface-base z-10">
+    <div class="flex flex-col w-full gap-space-lg select-none">
 
-    <!-- Calendar and Tasks Layout -->
-    <div class="narrow-layout calendar-layout">
-      
-      <!-- Calendar Card -->
-      <section class="calendar-container animate-fade-in">
-        <div class="flex items-center justify-between mb-md">
-          <h2 id="calendar-title" style="font-size: 14px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.04em;">March 2026</h2>
-          <div class="flex gap-xs">
-            <button class="btn btn-ghost btn-icon btn-sm" id="prev-month" aria-label="Previous Month">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-            </button>
-            <button class="btn btn-secondary btn-sm" id="today-btn" style="border-radius: 9999px; padding: 0 12px;">Today</button>
-            <button class="btn btn-ghost btn-icon btn-sm" id="next-month" aria-label="Next Month">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-            </button>
-          </div>
-        </div>
-        <div class="calendar-grid" id="calendar-grid">
-          <!-- Populated by JS -->
-        </div>
-      </section>
-
-      <!-- Selected Day Tasks -->
-      <section class="card animate-fade-in">
-        <div class="card-header">
-          <h3 class="card-title" id="selected-date-title">Target Date</h3>
-          <button class="btn btn-ghost btn-icon btn-sm" id="add-task-btn" style="display: none;" aria-label="Add task for selected date" title="Add task for selected date">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
+      <!-- Month Switcher Header -->
+      <div class="flex items-center justify-between gap-space-sm">
+        <div class="flex items-center gap-space-sm">
+          <h1 class="font-headline-lg-mobile text-headline-lg-mobile text-text-primary tracking-tight" id="calendar-title">October 2026</h1>
+          <button class="px-3 py-1 rounded-full bg-surface-container-high text-primary font-label-sm text-label-sm transition-all active:scale-95 flex items-center gap-1 shadow-sm" id="today-snap-btn" type="button">
+            <span class="w-1.5 h-1.5 rounded-full bg-primary-container"></span>
+            Today
           </button>
         </div>
-        <div id="day-tasks" class="timeline">
-          <!-- Populated by JS -->
+        <div class="flex items-center gap-space-xs bg-surface-container-low rounded-full p-1 shadow-inner">
+          <button aria-label="Previous Month" class="w-8 h-8 rounded-full flex items-center justify-center text-text-secondary hover:text-text-primary hover:bg-surface-container transition-colors" id="prev-month" type="button">
+            <span class="material-symbols-outlined text-[18px]">chevron_left</span>
+          </button>
+          <button aria-label="Next Month" class="w-8 h-8 rounded-full flex items-center justify-center text-text-secondary hover:text-text-primary hover:bg-surface-container transition-colors" id="next-month" type="button">
+            <span class="material-symbols-outlined text-[18px]">chevron_right</span>
+          </button>
         </div>
-      </section>
+      </div>
 
-      <!-- Legend (Pills) -->
-      <section class="animate-fade-in">
-        <div class="flex flex-wrap gap-sm justify-center">
-          <div class="glass-pill">
-            <div style="width: 6px; height: 6px; border-radius: 50%; background: var(--accent-fill);"></div>
-            <span>Pending Mission</span>
+      <!-- Calendar Month Grid Card -->
+      <div class="flex flex-col w-full bg-surface-container-low/70 backdrop-blur-xl rounded-2xl p-space-md shadow-xl relative overflow-hidden">
+        <div class="absolute -top-12 -right-12 w-36 h-36 bg-ambient-glow rounded-full blur-2xl pointer-events-none"></div>
+
+        <!-- Monday-First Weekday Headers -->
+        <div class="grid grid-cols-7 mb-space-sm text-center">
+          <span class="font-label-sm text-label-sm text-text-muted">M</span>
+          <span class="font-label-sm text-label-sm text-text-muted">T</span>
+          <span class="font-label-sm text-label-sm text-text-muted">W</span>
+          <span class="font-label-sm text-label-sm text-text-muted">T</span>
+          <span class="font-label-sm text-label-sm text-text-muted">F</span>
+          <span class="font-label-sm text-label-sm text-text-muted">S</span>
+          <span class="font-label-sm text-label-sm text-text-muted">S</span>
+        </div>
+
+        <!-- Calendar Days Grid -->
+        <div class="grid grid-cols-7 gap-y-1 text-center items-center justify-items-center" id="calendar-grid">
+          <!-- Injected by JS -->
+        </div>
+      </div>
+
+      <!-- Agenda Header for Selected Date -->
+      <div class="flex items-center justify-between mt-space-xs">
+        <div class="flex items-center gap-space-sm">
+          <h2 class="font-headline-md text-headline-md text-text-primary tracking-tight" id="selected-date-title">Select a Date</h2>
+          <span class="px-2.5 py-0.5 rounded-full bg-surface-container-high text-primary font-label-sm text-label-sm shadow-sm" id="selected-count-badge">0 tasks</span>
+        </div>
+        <button aria-label="Add task for this date" class="w-8 h-8 rounded-full bg-surface-container-high hover:bg-surface-container text-text-primary flex items-center justify-center transition-transform active:scale-90 shadow-sm" id="add-task-btn" type="button">
+          <span class="material-symbols-outlined text-[18px]">add</span>
+        </button>
+      </div>
+
+      <!-- Agenda Tasks Stream -->
+      <div class="flex flex-col w-full gap-space-sm" id="day-tasks">
+        <!-- Populated by JS -->
+      </div>
+
+      <!-- Daily Pace Summary Footer -->
+      <div class="flex items-center justify-between p-space-md rounded-2xl bg-surface-container-lowest/80 backdrop-blur-sm mt-space-xs" id="daily-pace-card">
+        <div class="flex items-center gap-space-sm">
+          <div class="w-7 h-7 rounded-full bg-primary-container/20 flex items-center justify-center text-primary-container">
+            <span class="material-symbols-outlined text-[18px]">check_circle</span>
           </div>
-          <div class="glass-pill">
-            <div style="width: 6px; height: 6px; border-radius: 50%; background: var(--success);"></div>
-            <span>Accomplished</span>
+          <div class="flex flex-col">
+            <span class="font-label-md text-label-md text-text-primary">Daily Pace</span>
+            <span class="font-body-sm text-body-sm text-text-secondary" id="daily-pace-subtext">0 remaining today</span>
           </div>
         </div>
-      </section>
+        <div class="flex items-center gap-1 text-primary font-headline-sm text-headline-sm" id="daily-pace-ratio">
+          <span>0</span><span class="text-text-muted font-body-md text-body-md">/0</span>
+        </div>
+      </div>
+
     </div>
   </main>
 
-  <!-- Scripts -->
-  <script src="js/storage.js?v=v2026-09-29-01"></script>
-  <script src="js/subtask-utils.js?v=v2026-09-29-01"></script>
-  <script src="js/pwa-manager.js?v=v2026-09-29-01"></script>
-  <script src="js/achievements.js?v=v2026-09-29-01"></script>
-  <script src="js/app.js?v=v2026-09-29-01"></script>
-  <script src="js/calendar.js?v=v2026-09-29-01"></script>
+  <!-- Core Scripts -->
+  <script src="version.js"></script>
+  <script src="js/storage.js?v=v2026-09-30-01"></script>
+  <script src="js/subtask-utils.js?v=v2026-09-30-01"></script>
+  <script src="js/pwa-manager.js?v=v2026-09-30-01"></script>
+  <script src="js/app.js?v=v2026-09-30-01"></script>
+  <script src="js/calendar.js?v=v2026-09-30-01"></script>
+
   <script>
     document.addEventListener('DOMContentLoaded', () => {
-      PWAManager.init();
       Calendar.init();
     });
   </script>

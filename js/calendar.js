@@ -1,8 +1,6 @@
 /**
  * StudyFlow - Calendar Module
- * FIX: After adding a task from the calendar "add task" modal, the selected
- *      date is now preserved and the day task list re-renders automatically.
- *      Previously the date was cleared and the user had to re-click to confirm.
+ * Monday-first grid implementation matching Stitch design.
  */
 
 const Calendar = (function() {
@@ -12,7 +10,6 @@ const Calendar = (function() {
   let selectedDate = null;
   let elements = {};
 
-  const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
   const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
   function initElements() {
@@ -21,24 +18,22 @@ const Calendar = (function() {
       calendarTitle: document.getElementById('calendar-title'),
       prevMonthBtn: document.getElementById('prev-month'),
       nextMonthBtn: document.getElementById('next-month'),
-      todayBtn: document.getElementById('today-btn'),
+      todayBtn: document.getElementById('today-snap-btn'),
       selectedDateTitle: document.getElementById('selected-date-title'),
+      selectedCountBadge: document.getElementById('selected-count-badge'),
       dayTasks: document.getElementById('day-tasks'),
-      addTaskBtn: document.getElementById('add-task-btn')
+      addTaskBtn: document.getElementById('add-task-btn'),
+      dailyPaceRatio: document.getElementById('daily-pace-ratio'),
+      dailyPaceSubtext: document.getElementById('daily-pace-subtext')
     };
   }
 
   function getTasksForDate(dateStr) {
-    return Storage.getTasksByDate(dateStr);
+    return Storage.getTasksByDate ? Storage.getTasksByDate(dateStr) : [];
   }
 
-  /**
-   * Expands tasks into a map of dates for the given month.
-   * OPTIMIZATION: Uses a single-pass date loop for repeating tasks and skips defensive copies.
-   * Reduces complexity from O(Tasks * Days) to O(Tasks + Days) by grouping.
-   */
   function getTasksForMonth(year, month) {
-    const tasks = Storage.getTasks();
+    const tasks = Storage.getTasks ? Storage.getTasks() : [];
     const monthTasks = {};
     const monthEndDate = new Date(year, month + 1, 0);
     const numDays = monthEndDate.getDate();
@@ -46,7 +41,6 @@ const Calendar = (function() {
     const monthStartStr = monthPrefix + '01';
     const monthEndStr = Storage.formatDate(monthEndDate);
 
-    // Pre-initialize month map
     for (let day = 1; day <= numDays; day++) {
       monthTasks[monthPrefix + String(day).padStart(2, '0')] = [];
     }
@@ -54,7 +48,6 @@ const Calendar = (function() {
     const repeatingByDay = [[], [], [], [], [], [], []]; // 0=Sun, 1=Mon...
     const inRangeTasks = [];
 
-    // Categorize tasks in one pass
     tasks.forEach(task => {
       if (task.type === 'repeating') {
         if (task.repeatDays) task.repeatDays.forEach(d => {
@@ -62,16 +55,12 @@ const Calendar = (function() {
         });
       } else if (task.dueDate) {
         const taskStart = task.startDate || task.dueDate;
-        // Basic range overlap check
         if (!(task.dueDate < monthStartStr || taskStart > monthEndStr)) {
-          if (!(task.startDate && task.dueDate && task.startDate > task.dueDate)) {
-            inRangeTasks.push(task);
-          }
+          inRangeTasks.push(task);
         }
       }
     });
 
-    // Expand repeating tasks using a single loop over the month's days
     const iterDate = new Date(year, month, 1);
     for (let day = 1; day <= numDays; day++) {
       iterDate.setDate(day);
@@ -83,7 +72,6 @@ const Calendar = (function() {
       }
     }
 
-    // Expand one-time and range tasks
     inRangeTasks.forEach(task => {
       const taskStart = task.startDate || task.dueDate;
       const startDay = Math.max(1, taskStart > monthStartStr ? parseInt(taskStart.split('-')[2], 10) : 1);
@@ -97,251 +85,229 @@ const Calendar = (function() {
   }
 
   function renderCalendar() {
+    if (!elements.calendarGrid) return;
+
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
-    elements.calendarTitle.textContent = `${MONTH_NAMES[month]} ${year}`;
+    if (elements.calendarTitle) {
+      elements.calendarTitle.textContent = `${MONTH_NAMES[month]} ${year}`;
+    }
 
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
-    const startingDay = firstDay.getDay();
+
+    // Monday-first offset: Mon=0, Tue=1, Wed=2, Thu=3, Fri=4, Sat=5, Sun=6
+    const firstDayOfWeek = firstDay.getDay(); // 0=Sun, 1=Mon...
+    const mondayOffset = (firstDayOfWeek + 6) % 7;
+
     const totalDays = lastDay.getDate();
     const prevMonthLastDay = new Date(year, month, 0).getDate();
     const monthTasks = getTasksForMonth(year, month);
+    const today = Storage.formatDate(new Date());
 
     let html = '';
-    DAY_NAMES.forEach(day => { html += `<div class="calendar-day-header">${day}</div>`; });
 
-    for (let i = startingDay - 1; i >= 0; i--) {
-      html += `<div class="calendar-day other-month"><span class="calendar-day-number">${prevMonthLastDay - i}</span></div>`;
+    // Prev month padding
+    for (let i = mondayOffset - 1; i >= 0; i--) {
+      const prevDayNum = prevMonthLastDay - i;
+      html += `
+        <div class="flex flex-col items-center justify-center w-9 h-11 py-1 opacity-25">
+          <span class="font-label-md text-label-md text-text-secondary">${prevDayNum}</span>
+          <span class="w-1 h-1 rounded-full mt-1 opacity-0"></span>
+        </div>
+      `;
     }
 
-    const today = Storage.formatDate(new Date());
+    // Days of current month
     for (let day = 1; day <= totalDays; day++) {
-      const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+      const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
       const tasks = monthTasks[dateStr] || [];
       const isToday = dateStr === today;
       const isSelected = selectedDate === dateStr;
-      let classes = 'calendar-day';
-      if (isToday) classes += ' today';
-      if (isSelected) classes += ' selected';
-      let indicatorsHtml = '';
-      if (tasks.length > 0) {
-        indicatorsHtml = `<div class="calendar-day-indicators">${tasks.slice(0,3).map(t => {
-          const color = t.completed ? 'var(--success)' : App.getSubjectColor(t.subject);
-          return `<div class="calendar-task-dot" style="background-color:${App.escapeHtml(color)};"></div>`;
-        }).join('')}</div>`;
+      const hasTasks = tasks.length > 0;
+
+      if (isSelected) {
+        html += `
+          <button class="flex flex-col items-center justify-center w-9 h-11 py-1 rounded-xl bg-primary-container text-surface-base shadow-[0_4px_12px_rgba(91,155,240,0.35)] transition-all duration-150 active:scale-95" data-date="${dateStr}" type="button">
+            <span class="font-headline-sm text-headline-sm leading-none font-bold text-surface-base">${day}</span>
+            <span class="w-1 h-1 rounded-full ${hasTasks ? 'bg-surface-base' : 'opacity-0'} mt-1"></span>
+          </button>
+        `;
+      } else if (isToday) {
+        html += `
+          <button class="flex flex-col items-center justify-center w-9 h-11 py-1 rounded-xl bg-secondary-container/30 text-primary font-bold shadow-sm transition-all duration-150 active:scale-95" data-date="${dateStr}" type="button">
+            <span class="font-label-md text-label-md text-primary">${day}</span>
+            <span class="w-1 h-1 rounded-full bg-primary mt-1"></span>
+          </button>
+        `;
+      } else {
+        html += `
+          <button class="flex flex-col items-center justify-center w-9 h-11 py-1 rounded-xl transition-all duration-150 active:scale-95 text-text-secondary hover:text-text-primary hover:bg-surface-container" data-date="${dateStr}" type="button">
+            <span class="font-label-md text-label-md">${day}</span>
+            <span class="w-1 h-1 rounded-full ${hasTasks ? 'bg-primary-container' : 'opacity-0'} mt-1"></span>
+          </button>
+        `;
       }
-      const ariaLabel = `${day} ${MONTH_NAMES[month]} ${year}${isToday ? ', Today' : ''}${tasks.length > 0 ? `, ${tasks.length} missions` : ''}`;
-      html += `<div class="${classes}" data-date="${dateStr}" tabindex="0" role="button" aria-label="${ariaLabel}"><span class="calendar-day-number">${day}</span>${indicatorsHtml}</div>`;
     }
 
-    const remainingCells = 42 - (startingDay + totalDays);
+    // Next month padding to fill grid
+    const totalCells = mondayOffset + totalDays;
+    const remainingCells = totalCells % 7 === 0 ? 0 : 7 - (totalCells % 7);
     for (let day = 1; day <= remainingCells; day++) {
-      html += `<div class="calendar-day other-month"><span class="calendar-day-number">${day}</span></div>`;
+      html += `
+        <div class="flex flex-col items-center justify-center w-9 h-11 py-1 opacity-25">
+          <span class="font-label-md text-label-md text-text-secondary">${day}</span>
+          <span class="w-1 h-1 rounded-full mt-1 opacity-0"></span>
+        </div>
+      `;
     }
 
     elements.calendarGrid.innerHTML = html;
-    elements.calendarGrid.querySelectorAll('.calendar-day:not(.other-month)').forEach(dayEl => {
-      const clickHandler = () => handleDayClick(dayEl.dataset.date);
-      dayEl.addEventListener('click', clickHandler);
-      dayEl.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          clickHandler();
-        }
+
+    // Attach click listeners to day buttons
+    elements.calendarGrid.querySelectorAll('button[data-date]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        selectedDate = btn.getAttribute('data-date');
+        renderCalendar();
+        renderSelectedDayTasks();
       });
     });
   }
 
-  function handleDayClick(dateStr) {
-    selectedDate = dateStr;
-    renderCalendar();
-    renderSelectedDayTasks();
-  }
-
   function renderSelectedDayTasks() {
+    if (!elements.dayTasks) return;
+
     if (!selectedDate) {
-      elements.selectedDateTitle.textContent = 'Select a date';
-      if (elements.addTaskBtn) elements.addTaskBtn.style.display = 'none';
-      elements.dayTasks.innerHTML = App.createEmptyStateHtml({ title: 'Select a Date', text: 'Choose a date from the calendar to view scheduled missions.', icon: 'calendar', padding: '2rem' });
+      if (elements.selectedDateTitle) elements.selectedDateTitle.textContent = 'Select a date';
+      if (elements.selectedCountBadge) elements.selectedCountBadge.textContent = '0 tasks';
+      elements.dayTasks.innerHTML = App.createEmptyStateHtml({
+        title: 'Select a date',
+        text: 'Choose a date from the calendar to view scheduled tasks.',
+        icon: 'calendar_today'
+      });
       return;
     }
 
-    if (elements.addTaskBtn) {
-      elements.addTaskBtn.style.display = 'block';
-      elements.addTaskBtn.onclick = () => openAddTaskForDate(selectedDate);
+    const date = Storage.parseLocalDate ? Storage.parseLocalDate(selectedDate) : new Date(selectedDate);
+    if (elements.selectedDateTitle) {
+      elements.selectedDateTitle.textContent = date.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
     }
-
-    const date = new Date(selectedDate);
-    elements.selectedDateTitle.textContent = date.toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric', year:'numeric' });
 
     const tasks = getTasksForDate(selectedDate);
+    if (elements.selectedCountBadge) {
+      elements.selectedCountBadge.textContent = `${tasks.length} task${tasks.length === 1 ? '' : 's'}`;
+    }
+
+    const todayStr = Storage.formatDate(new Date());
+    const doneTasks = tasks.filter(t => t.type === 'repeating' ? Storage.isRepeatingTaskCompletedOnDate(t.id, selectedDate) : t.completed);
+    const remainingCount = tasks.length - doneTasks.length;
+
+    if (elements.dailyPaceRatio) {
+      elements.dailyPaceRatio.innerHTML = `<span>${doneTasks.length}</span><span class="text-text-muted font-body-md text-body-md">/${tasks.length}</span>`;
+    }
+    if (elements.dailyPaceSubtext) {
+      elements.dailyPaceSubtext.textContent = `${remainingCount} task(s) remaining today`;
+    }
+
     if (tasks.length === 0) {
-      elements.dayTasks.innerHTML = App.createEmptyStateHtml({ title: 'Clear Schedule', text: 'No missions scheduled for this day.', icon: 'check', actionText: 'Schedule Mission', actionId: 'add-task-day', padding: '2rem' });
-      document.getElementById('add-task-day')?.addEventListener('click', () => openAddTaskForDate(selectedDate));
+      elements.dayTasks.innerHTML = App.createEmptyStateHtml({
+        title: 'Clear Schedule',
+        text: 'No tasks scheduled for this day.',
+        icon: 'check_circle',
+        actionText: 'Add task',
+        actionId: 'add-task-day-btn'
+      });
+      const emptyBtn = elements.dayTasks.querySelector('#add-task-day-btn');
+      if (emptyBtn) emptyBtn.addEventListener('click', () => openAddTaskForDate(selectedDate));
       return;
     }
 
+    const priorityDotColors = {
+      low: 'bg-outline-variant',
+      medium: 'bg-primary shadow-[0_0_6px_rgba(166,200,255,0.4)]',
+      high: 'bg-primary-container shadow-[0_0_8px_rgba(91,155,240,0.6)]',
+      critical: 'bg-error shadow-[0_0_8px_rgba(239,68,68,0.6)]'
+    };
+
     elements.dayTasks.innerHTML = tasks.map(task => {
-      const subjectColor = App.getSubjectColor(task.subject);
       const isDone = task.type === 'repeating' ? Storage.isRepeatingTaskCompletedOnDate(task.id, selectedDate) : task.completed;
+      const dueLabel = task.dueTime ? task.dueTime : 'All day';
+
       return `
-        <div class="task-card priority-${App.escapeHtml(task.priority)} ${isDone ? 'completed' : ''}" data-id="${App.escapeHtml(task.id)}" style="--priority-color:${App.hexToRgb(subjectColor)};">
-          <div class="flex items-start gap-md w-full">
-            <div class="task-checkbox ${isDone ? 'checked' : ''}" data-id="${App.escapeHtml(task.id)}" tabindex="0" role="checkbox" aria-checked="${isDone}" aria-label="${isDone ? 'Mark as incomplete' : 'Mark as complete'}: ${App.escapeHtml(task.title)}"></div>
-            <div class="flex-1">
-              <div class="flex items-center gap-md mb-xs">
-                <div class="subject-pill" style="--tag-color:${App.hexToRgb(subjectColor)}">${App.escapeHtml(task.subject)}</div>
+        <div class="group flex items-center justify-between p-space-md rounded-2xl ${isDone ? 'bg-surface-container-low/40 opacity-60' : 'bg-surface-container-low/60 hover:bg-surface-container-low/90'} backdrop-blur-md transition-all shadow-md" data-id="${App.escapeHtml(task.id)}">
+          <div class="flex items-center gap-space-md min-w-0 flex-1">
+            <button aria-label="${isDone ? 'Mark active' : 'Mark completed'}" class="task-checkbox flex-shrink-0 w-6 h-6 rounded-full ${isDone ? 'bg-primary-container text-surface-base' : 'bg-surface-container-high text-transparent hover:text-primary-container'} flex items-center justify-center transition-all" data-id="${App.escapeHtml(task.id)}">
+              <span class="material-symbols-outlined text-[16px] font-bold">check</span>
+            </button>
+            <div class="flex flex-col min-w-0 pr-space-xs">
+              <span class="task-title font-headline-sm text-headline-sm ${isDone ? 'text-text-muted line-through' : 'text-text-primary'} truncate">${App.escapeHtml(task.title)}</span>
+              <div class="flex items-center gap-space-sm mt-0.5">
+                <span class="px-2 py-0.5 rounded-full bg-surface-container-highest text-text-secondary font-label-sm text-label-sm">${App.escapeHtml(task.subject || 'General')}</span>
+                <div class="flex items-center gap-1 text-text-muted">
+                  <span class="material-symbols-outlined text-[14px]">schedule</span>
+                  <span class="font-body-sm text-body-sm">${App.escapeHtml(dueLabel)}</span>
+                </div>
               </div>
-              <div class="task-title-text" style="${isDone ? 'text-decoration:line-through;opacity:0.5;' : ''}">${App.escapeHtml(task.title)}</div>
-              <div class="task-meta-text">${task.dueTime ? `Time: ${App.escapeHtml(task.dueTime)}` : 'All Day'}</div>
             </div>
+          </div>
+          <div class="flex items-center gap-space-sm flex-shrink-0">
+            <span class="w-2 h-2 rounded-full ${priorityDotColors[task.priority] || priorityDotColors.medium}" title="Priority: ${App.escapeHtml(task.priority)}"></span>
+            <button aria-label="More options" class="task-options-btn text-text-muted hover:text-text-secondary p-1" data-id="${App.escapeHtml(task.id)}">
+              <span class="material-symbols-outlined text-[18px]">more_vert</span>
+            </button>
           </div>
         </div>
       `;
     }).join('');
 
-    elements.dayTasks.querySelectorAll('.task-checkbox').forEach(cb => {
-      const toggleFn = (e) => {
+    // Checkbox toggles
+    elements.dayTasks.querySelectorAll('.task-checkbox').forEach(btn => {
+      btn.addEventListener('click', (e) => {
         e.stopPropagation();
-        if (e.type === 'keydown' && e.key !== 'Enter' && e.key !== ' ') return;
-        if (e.type === 'keydown') e.preventDefault();
-
-        const id = cb.dataset.id;
-        const task = Storage.getTaskById(id);
+        const taskId = btn.getAttribute('data-id');
+        const task = Storage.getTaskById(taskId);
+        if (!task) return;
 
         if (task.type === 'repeating') {
-          // Use per-day tracking for repeating tasks
-          const isCurrentlyDone = Storage.isRepeatingTaskCompletedOnDate(id, selectedDate);
-          Storage.setRepeatingTaskCompletedOnDate(id, selectedDate, !isCurrentlyDone);
-          if (!isCurrentlyDone) App.showToast('Task completed!', 'success');
+          const isDone = Storage.isRepeatingTaskCompletedOnDate(taskId, selectedDate);
+          Storage.setRepeatingTaskCompletedOnDate(taskId, selectedDate, !isDone);
         } else {
-          task.completed ? Storage.uncompleteTask(id) : Storage.completeTask(id);
-          if (!task.completed) App.showToast('Task completed!', 'success');
+          task.completed ? Storage.uncompleteTask(taskId) : Storage.completeTask(taskId);
         }
         renderCalendar();
         renderSelectedDayTasks();
-      };
-      cb.onclick = toggleFn;
-      cb.onkeydown = toggleFn;
+      });
+    });
+
+    // Task options button
+    elements.dayTasks.querySelectorAll('.task-options-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const taskId = btn.getAttribute('data-id');
+        const task = Storage.getTaskById(taskId);
+        if (task) App.openAddTaskModal(task);
+      });
     });
   }
 
   function openAddTaskForDate(dateStr) {
-    const subjects = Storage.getSubjects();
-    const content = `
-      <form id="calendar-task-form">
-        <div class="form-group">
-          <label class="form-label" for="cal-task-title">Task Title *</label>
-          <input type="text" class="form-input" id="cal-task-title" name="title" placeholder="What needs to be done?" required>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Task Type</label>
-          <select name="type" class="form-select" id="cal-task-type">
-            <option value="one-time" selected>One-time Task</option>
-            <option value="repeating">Repeating Task</option>
-            <option value="date-range">Date Range Task</option>
-          </select>
-        </div>
-        <div id="cal-date-inputs-container"></div>
-        <div class="grid grid-2">
-          <div class="form-group">
-            <label class="form-label" for="cal-task-priority">Priority</label>
-            <select class="form-input" id="cal-task-priority" name="priority">
-              <option value="low">Low</option>
-              <option value="medium" selected>Medium</option>
-              <option value="high">High</option>
-              <option value="critical">Critical</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="cal-task-subject">Subject</label>
-            <select class="form-input" id="cal-task-subject" name="subject">
-              ${subjects.map(s => `<option value="${App.escapeHtml(s.name)}">${App.escapeHtml(s.name)}</option>`).join('')}
-            </select>
-          </div>
-        </div>
-      </form>
-    `;
-
-    const modal = App.createModal({
-      id: 'calendar-task-modal',
-      title: 'Add Task',
-      content,
-      footer: `<button type="button" class="btn btn-secondary" data-action="cancel">Cancel</button><button type="submit" form="calendar-task-form" class="btn btn-primary">Add Task</button>`
-    });
-
-    const form = modal.querySelector('#calendar-task-form');
-    const dateContainer = modal.querySelector('#cal-date-inputs-container');
-
-    function updateDateInputs(type) {
-      if (type === 'repeating') {
-        const days = ['S','M','T','W','T','F','S'];
-        const selectedDay = new Date(dateStr).getDay();
-        dateContainer.innerHTML = `
-          <div class="form-group">
-            <label class="form-label">Repeat On:</label>
-            <div class="repeat-days-grid">
-              ${days.map((day, i) => `<div class="day-toggle ${i===selectedDay?'active':''}" data-day="${i}">${day}</div>`).join('')}
-            </div>
-            <button type="button" class="btn btn-ghost btn-sm mt-sm" id="cal-select-every-day">Select Every Day</button>
-          </div>
-        `;
-        dateContainer.querySelectorAll('.day-toggle').forEach(el => el.addEventListener('click', () => el.classList.toggle('active')));
-        dateContainer.querySelector('#cal-select-every-day').addEventListener('click', () => dateContainer.querySelectorAll('.day-toggle').forEach(el => el.classList.add('active')));
-      } else if (type === 'date-range') {
-        dateContainer.innerHTML = `
-          <div class="grid grid-2">
-            <div class="form-group"><label class="form-label" for="cal-task-start-date">Start Date</label><input type="date" class="form-input" id="cal-task-start-date" name="startDate" value="${dateStr}"></div>
-            <div class="form-group"><label class="form-label" for="cal-task-due-date">Due Date</label><input type="date" class="form-input" id="cal-task-due-date" name="dueDate" value="${dateStr}"></div>
-          </div>
-        `;
-      } else {
-        dateContainer.innerHTML = `<div class="form-group"><label class="form-label" for="cal-task-due-date">Due Date</label><input type="date" class="form-input" id="cal-task-due-date" name="dueDate" value="${dateStr}"></div>`;
-      }
-    }
-
-    modal.querySelector('select[name="type"]').addEventListener('change', (e) => updateDateInputs(e.target.value));
-    updateDateInputs('one-time');
-
-    form.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const data = App.getFormData(form);
-      const type = form.querySelector('select[name="type"]').value;
-      if (!data.title.trim()) { App.showToast('Please enter a task title', 'error'); return; }
-      let repeatDays = [];
-      if (type === 'repeating') {
-        repeatDays = Array.from(form.querySelectorAll('.day-toggle.active')).map(el => parseInt(el.dataset.day));
-        if (repeatDays.length === 0) { App.showToast('Please select at least one day', 'error'); return; }
-      }
-      if (type === 'date-range' && data.startDate && data.dueDate && data.startDate > data.dueDate) {
-        App.showToast('Start date cannot be after due date', 'error'); return;
-      }
-
-      const savedTask = Storage.addTask({
-        title: data.title.trim(), type,
-        startDate: type === 'date-range' ? (data.startDate || data.dueDate) : (type === 'one-time' ? data.dueDate : null),
-        dueDate: type === 'repeating' ? null : (data.dueDate || data.startDate),
-        priority: data.priority, subject: data.subject, repeatDays
-      });
-
-      App.showToast('Task added', 'success');
-      App.closeModal();
-
-      // FIX: Preserve the selected date so the user sees the newly added task immediately
-      // Previously selectedDate was not re-set here and the list appeared empty.
-      selectedDate = savedTask.dueDate || dateStr;
-      renderCalendar();
-      renderSelectedDayTasks();
-    });
-
-    modal.querySelector('[data-action="cancel"]').addEventListener('click', () => App.closeModal(modal));
-    App.openModal(modal);
-    document.getElementById('cal-task-title').focus();
+    const defaultTask = {
+      dueDate: dateStr,
+      startDate: dateStr,
+      type: 'one-time'
+    };
+    App.openAddTaskModal(defaultTask);
   }
 
-  function prevMonth() { currentDate.setMonth(currentDate.getMonth() - 1); renderCalendar(); }
-  function nextMonth() { currentDate.setMonth(currentDate.getMonth() + 1); renderCalendar(); }
+  function prevMonth() {
+    currentDate.setMonth(currentDate.getMonth() - 1);
+    renderCalendar();
+  }
+
+  function nextMonth() {
+    currentDate.setMonth(currentDate.getMonth() + 1);
+    renderCalendar();
+  }
 
   function goToToday() {
     currentDate = new Date();
@@ -351,9 +317,21 @@ const Calendar = (function() {
   }
 
   function setupEventListeners() {
-    elements.prevMonthBtn?.addEventListener('click', prevMonth);
-    elements.nextMonthBtn?.addEventListener('click', nextMonth);
-    elements.todayBtn?.addEventListener('click', goToToday);
+    if (elements.prevMonthBtn) elements.prevMonthBtn.onclick = prevMonth;
+    if (elements.nextMonthBtn) elements.nextMonthBtn.onclick = nextMonth;
+    if (elements.todayBtn) elements.todayBtn.onclick = goToToday;
+    if (elements.addTaskBtn) {
+      elements.addTaskBtn.onclick = () => openAddTaskForDate(selectedDate || Storage.formatDate(new Date()));
+    }
+
+    window.addEventListener('studyflow_taskDataChanged', () => {
+      renderCalendar();
+      renderSelectedDayTasks();
+    });
+    window.addEventListener('studyflow_task_updated', () => {
+      renderCalendar();
+      renderSelectedDayTasks();
+    });
   }
 
   function init() {

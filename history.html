@@ -1,149 +1,182 @@
 <!DOCTYPE html>
-<html lang="en">
+<html class="dark" lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
-  <meta name="description" content="StudyFlow - Analytics and Progress Tracking">
-  <meta name="theme-color" content="#0A0B0F">
-  
-  <!-- Standalone PWA Configuration -->
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-title" content="StudyFlow">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-touch-fullscreen" content="yes">
-  
-  <!-- Icons and Manifest -->
-  <link rel="icon" type="image/png" href="./icon-192.png">
-  <link rel="apple-touch-icon" href="./icon-192.png">
-  <link rel="manifest" href="./manifest.json">
-  <link rel="msapplication-config" href="browserconfig.xml">
-  <meta name="msapplication-TileColor" content="#5B9BF0">
-  
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover"/>
+  <meta name="description" content="StudyFlow - Performance Analytics"/>
+  <meta name="theme-color" content="#090D12"/>
+
+  <link rel="icon" type="image/png" href="./icon-192.png"/>
+  <link rel="apple-touch-icon" href="./icon-192.png"/>
+  <link rel="manifest" href="./manifest.json"/>
+
   <title>Analytics - StudyFlow</title>
-  <link rel="stylesheet" href="css/style.css?v=v2026-09-29-01">
+  <link rel="stylesheet" href="css/tailwind.css?v=v2026-09-30-01"/>
+  <link rel="stylesheet" href="css/app.css?v=v2026-09-30-01"/>
 </head>
-<body>
-  <!-- Navigation Containers -->
+<body class="bg-surface-base text-on-surface font-body-md text-body-md flex flex-col relative antialiased selection:bg-primary-container selection:text-surface-base min-h-dvh">
+  <!-- Radial Ambient Glow -->
+  <div class="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-lg h-80 bg-[radial-gradient(ellipse_at_top,rgba(91,155,240,0.14),transparent_70%)] pointer-events-none z-0"></div>
+
+  <!-- Shell Containers -->
+  <div id="header-container"></div>
   <div id="sidebar-container"></div>
   <div id="bottom-nav-container"></div>
 
   <!-- Main Content -->
-  <main class="main-container">
-    <!-- Page Header -->
-    <header class="page-header animate-fade-in">
-      <div class="page-header-title-group">
-        <h1>Analytics</h1>
-        <p class="subtitle">In-depth intelligence on your study patterns</p>
-      </div>
-    </header>
+  <main class="flex-1 flex flex-col relative w-full max-w-lg lg:max-w-3xl mx-auto pt-20 pb-28 px-margin bg-surface-base z-10">
+    <div class="flex flex-col w-full space-y-gutter select-none">
 
-    <div class="narrow-layout">
-      <!-- Stats Period Selector -->
-      <section class="card animate-fade-in" style="background:transparent;border:none;box-shadow:none;padding:0;margin-bottom:12px;">
+      <!-- Screen Header -->
+      <div class="flex items-center justify-between pt-space-xs">
+        <div class="flex flex-col">
+          <h1 class="font-headline-lg-mobile text-headline-lg-mobile text-text-primary tracking-tight">Analytics</h1>
+          <span class="font-label-sm text-label-sm text-text-secondary">Track momentum & cognitive pacing</span>
+        </div>
+      </div>
+
+      <!-- Segmented Timeframe Control -->
+      <div class="p-1 rounded-full bg-surface-container-low flex items-center justify-between" role="tablist" aria-label="Timeframe select">
+        <button class="timeframe-btn flex-1 py-1.5 rounded-full font-label-md text-label-md text-surface-base bg-primary-container font-semibold transition-all text-center" id="tab-7d" data-period="7" role="tab" aria-selected="true">
+          7 days
+        </button>
+        <button class="timeframe-btn flex-1 py-1.5 rounded-full font-label-md text-label-md text-text-secondary hover:text-text-primary transition-all text-center" id="tab-30d" data-period="30" role="tab" aria-selected="false">
+          30 days
+        </button>
+        <button class="timeframe-btn flex-1 py-1.5 rounded-full font-label-md text-label-md text-text-secondary hover:text-text-primary transition-all text-center" id="tab-all" data-period="all" role="tab" aria-selected="false">
+          All time
+        </button>
+      </div>
+
+      <!-- Activity Area Line Chart Card -->
+      <div class="rounded-lg bg-surface-container p-space-md backdrop-blur-md relative overflow-hidden flex flex-col gap-space-sm shadow-xl" id="graph-section">
+        <div class="flex items-start justify-between">
+          <div>
+            <div class="flex items-center gap-space-xs">
+              <span class="material-symbols-outlined text-primary-container text-[18px]">insights</span>
+              <span class="font-headline-sm text-headline-sm text-text-primary">Activity</span>
+            </div>
+            <p class="font-label-sm text-label-sm text-text-secondary mt-0.5">Daily avg: <span class="text-text-primary font-medium" id="daily-avg-label">0 hrs</span></p>
+          </div>
+        </div>
+
+        <!-- Dynamic SVG Activity Chart -->
+        <div class="relative w-full h-44 mt-2" id="activity-chart-container">
+          <!-- Injected by JS -->
+        </div>
+      </div>
+
+      <!-- 2x2 Metric Stat Grid -->
+      <div class="grid grid-cols-2 gap-gutter-sm" id="summary-stats-grid">
+        <!-- Metric 1: Total Tasks -->
+        <div class="rounded-DEFAULT bg-surface-container p-space-md flex flex-col justify-between shadow-md">
+          <div class="flex items-center justify-between">
+            <span class="font-label-sm text-label-sm text-text-secondary">Total tasks</span>
+            <span class="material-symbols-outlined text-text-secondary text-[18px]">check_circle</span>
+          </div>
+          <div class="my-space-xs">
+            <span class="font-display-lg text-[32px] leading-tight text-text-primary" id="total-completed-tasks">0</span>
+          </div>
+          <div class="inline-flex items-center gap-1 self-start bg-surface-container-high px-2 py-0.5 rounded-full">
+            <span class="material-symbols-outlined text-primary-container text-[14px]">arrow_upward</span>
+            <span class="font-label-sm text-[11px] text-primary-container font-medium" id="tasks-delta-label">Completed</span>
+          </div>
+        </div>
+
+        <!-- Metric 2: Focus Hours -->
+        <div class="rounded-DEFAULT bg-surface-container p-space-md flex flex-col justify-between shadow-md">
+          <div class="flex items-center justify-between">
+            <span class="font-label-sm text-label-sm text-text-secondary">Focus hours</span>
+            <span class="material-symbols-outlined text-text-secondary text-[18px]">timelapse</span>
+          </div>
+          <div class="my-space-xs">
+            <span class="font-display-lg text-[32px] leading-tight text-text-primary" id="total-study-hours">0h</span>
+          </div>
+          <div class="inline-flex items-center gap-1 self-start bg-surface-container-high px-2 py-0.5 rounded-full">
+            <span class="material-symbols-outlined text-primary-container text-[14px]">trending_up</span>
+            <span class="font-label-sm text-[11px] text-primary-container font-medium" id="hours-delta-label">Logged</span>
+          </div>
+        </div>
+
+        <!-- Metric 3: Success Rate -->
+        <div class="rounded-DEFAULT bg-surface-container p-space-md flex flex-col justify-between shadow-md">
+          <div class="flex items-center justify-between">
+            <span class="font-label-sm text-label-sm text-text-secondary">Success rate</span>
+            <span class="material-symbols-outlined text-text-secondary text-[18px]">check_circle</span>
+          </div>
+          <div class="my-space-xs">
+            <span class="font-display-lg text-[32px] leading-tight text-text-primary" id="completion-rate">0%</span>
+          </div>
+          <div class="inline-flex items-center gap-1 self-start bg-surface-container-high px-2 py-0.5 rounded-full">
+            <span class="material-symbols-outlined text-primary text-[14px]">school</span>
+            <span class="font-label-sm text-[11px] text-primary font-medium" id="productive-day">N/A</span>
+          </div>
+        </div>
+
+        <!-- Metric 4: Best Streak -->
+        <div class="rounded-DEFAULT bg-surface-container p-space-md flex flex-col justify-between shadow-md">
+          <div class="flex items-center justify-between">
+            <span class="font-label-sm text-label-sm text-text-secondary">Best streak</span>
+            <span class="material-symbols-outlined text-primary-container text-[18px]">local_fire_department</span>
+          </div>
+          <div class="my-space-xs">
+            <span class="font-display-lg text-[32px] leading-tight text-text-primary"><span id="all-time-streak">0</span> <span class="text-label-md text-text-secondary font-normal">days</span></span>
+          </div>
+          <div class="inline-flex items-center gap-1 self-start bg-surface-container-high px-2 py-0.5 rounded-full">
+            <span class="material-symbols-outlined text-tertiary text-[14px]">stars</span>
+            <span class="font-label-sm text-[11px] text-tertiary-fixed font-medium" id="streak-delta-label">Personal record</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Subjects Breakdown Card -->
+      <div class="rounded-lg bg-surface-container p-space-md backdrop-blur-md flex flex-col gap-space-md shadow-xl">
         <div class="flex items-center justify-between">
-          <span style="font-size:12px;font-weight:500;color:var(--text-secondary);">Stats Period</span>
-          <div class="filter-tabs" style="margin:0;" role="tablist" aria-label="Stats period">
-            <div class="filter-tab active" data-period="all" role="tab" aria-selected="true" tabindex="0">All Time</div>
-            <div class="filter-tab" data-period="30" role="tab" aria-selected="false" tabindex="0">Last 30 Days</div>
-            <div class="filter-tab" data-period="7" role="tab" aria-selected="false" tabindex="0">Last 7 Days</div>
+          <div class="flex items-center gap-space-xs">
+            <span class="material-symbols-outlined text-primary-container text-[18px]">pie_chart</span>
+            <span class="font-headline-sm text-headline-sm text-text-primary">Subjects</span>
           </div>
+          <span class="font-label-sm text-label-sm text-text-secondary" id="subjects-total-hours">Focus share</span>
         </div>
-      </section>
-
-      <!-- Compact No Activity State -->
-      <div id="no-activity-message" class="card mb-md" style="display:none; text-align:center; padding:16px;">
-        <p style="color:var(--text-muted); font-size:12px; margin:0;">No activity recorded yet for this period.</p>
-      </div>
-
-      <!-- Activity Frequency Graph -->
-      <section class="card animate-fade-in mb-md" id="graph-section">
-        <div class="card-header">
-          <h3 class="card-title">Timeline Activity</h3>
-        </div>
-        <div class="card-body">
-          <div id="frequency-graph" style="height: 180px; width: 100%;">
-            <!-- Populated by JS -->
-          </div>
-        </div>
-      </section>
-
-      <!-- Stats Summary Grid -->
-      <section class="grid-2-dense animate-fade-in mb-md" id="summary-stats-grid">
-        <div class="stat-pill" style="flex-direction: column; justify-content: center; align-items: center; text-align: center;">
-          <div class="stat-pill-value gradient-text" id="total-completed-tasks">0</div>
-          <div class="stat-pill-label">Total Missions</div>
-        </div>
-        <div class="stat-pill" style="flex-direction: column; justify-content: center; align-items: center; text-align: center;">
-          <div class="stat-pill-value gradient-text" id="total-study-hours">0H</div>
-          <div class="stat-pill-label">Total Focus</div>
-        </div>
-        <div class="stat-pill" style="flex-direction: column; justify-content: center; align-items: center; text-align: center;">
-          <div class="stat-pill-value gradient-text" id="completion-rate">0%</div>
-          <div class="stat-pill-label">Success Rate</div>
-        </div>
-        <div class="stat-pill" style="flex-direction: column; justify-content: center; align-items: center; text-align: center;">
-          <div class="stat-pill-value" id="productive-day" style="font-size: 14px;">-</div>
-          <div class="stat-pill-label">Peak Day</div>
-        </div>
-        <div class="stat-pill" style="flex-direction: column; justify-content: center; align-items: center; text-align: center;">
-          <div class="stat-pill-value gradient-text" id="all-time-streak">0</div>
-          <div class="stat-pill-label">Best Streak</div>
-        </div>
-      </section>
-
-      <!-- Mastery Grid -->
-      <section class="card animate-fade-in mb-md">
-        <div class="card-header">
-          <h3 class="card-title">Sector Mastery</h3>
-        </div>
-        <div id="mastery-overview" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px;">
+        <div class="flex flex-col gap-space-sm" id="mastery-overview">
           <!-- Populated by JS -->
         </div>
-      </section>
+      </div>
 
-      <!-- Current Tasks -->
-      <section class="card animate-fade-in mb-md">
-        <div class="card-header">
-          <h3 class="card-title">Current Tasks</h3>
-          <span class="badge" id="progress-percentage">0%</span>
+      <!-- Optimal Deep Work Window Callout -->
+      <div class="hidden rounded-lg bg-surface-container-low p-space-md items-center justify-between shadow-sm" id="optimal-window-card">
+        <div class="flex items-center gap-space-sm min-w-0">
+          <div class="w-9 h-9 rounded-full bg-surface-container-high flex items-center justify-center shrink-0">
+            <span class="material-symbols-outlined text-primary text-[20px]">psychology</span>
+          </div>
+          <div class="flex flex-col min-w-0">
+            <span class="font-label-md text-label-md text-text-primary font-semibold truncate">Optimal Deep Work Window</span>
+            <span class="font-body-sm text-body-sm text-text-secondary truncate" id="optimal-window-text">Your peak retention happens between 9:00 AM – 12:00 PM</span>
+          </div>
         </div>
-        <div id="tasks-progress"></div>
-        <div id="hours-progress" class="mt-sm"></div>
-      </section>
+      </div>
 
       <!-- Study History -->
-      <section class="card animate-fade-in mb-md">
-        <div class="card-header">
-          <h3 class="card-title">Study History</h3>
-        </div>
-        <div id="study-history-list" class="flex flex-col gap-xs" style="margin-top: 10px; max-height: 480px; overflow-y: auto;">
+      <div class="flex flex-col gap-space-sm">
+        <h2 class="font-headline-sm text-headline-sm text-text-primary">Study History</h2>
+        <div class="flex flex-col gap-2" id="study-history-list">
           <!-- Populated by JS -->
         </div>
-      </section>
+      </div>
 
-      <!-- Daily Reflections Log -->
-      <section class="card animate-fade-in">
-        <div class="card-header">
-          <h3 class="card-title">Tactical Reflections</h3>
-        </div>
-        <div id="reflections-log" class="flex flex-col gap-xs" style="margin-top: 10px;">
-          <!-- Populated by JS -->
-        </div>
-      </section>
     </div>
   </main>
 
-  <!-- Scripts -->
-  <script src="js/storage.js?v=v2026-09-29-01"></script>
-  <script src="js/subtask-utils.js?v=v2026-09-29-01"></script>
-  <script src="js/pwa-manager.js?v=v2026-09-29-01"></script>
-  <script src="js/achievements.js?v=v2026-09-29-01"></script>
-  <script src="js/app.js?v=v2026-09-29-01"></script>
-  <script src="js/history.js?v=v2026-09-29-01"></script>
+  <!-- Core Scripts -->
+  <script src="version.js"></script>
+  <script src="js/storage.js?v=v2026-09-30-01"></script>
+  <script src="js/subtask-utils.js?v=v2026-09-30-01"></script>
+  <script src="js/pwa-manager.js?v=v2026-09-30-01"></script>
+  <script src="js/app.js?v=v2026-09-30-01"></script>
+  <script src="js/history.js?v=v2026-09-30-01"></script>
+
   <script>
     document.addEventListener('DOMContentLoaded', () => {
-      PWAManager.init();
       History.init();
     });
   </script>

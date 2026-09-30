@@ -1,136 +1,185 @@
 <!DOCTYPE html>
-<html lang="en">
+<html class="dark" lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
-  <meta name="description" content="StudyFlow - Pomodoro Timer for focused study sessions">
-  <meta name="theme-color" content="#0A0B0F">
-  <meta name="color-scheme" content="dark">
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-title" content="StudyFlow">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-touch-fullscreen" content="yes">
-  <link rel="icon" type="image/png" href="./icon-192.png">
-  <link rel="apple-touch-icon" href="./icon-192.png">
-  <link rel="manifest" href="./manifest.json">
-  <link rel="msapplication-config" href="browserconfig.xml">
-  <meta name="msapplication-TileColor" content="#5B9BF0">
-  <title>Timer - StudyFlow</title>
-  <link rel="stylesheet" href="css/style.css?v=v2026-09-29-01">
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover"/>
+  <meta name="description" content="StudyFlow - Focus Timer"/>
+  <meta name="theme-color" content="#090D12"/>
+
+  <link rel="icon" type="image/png" href="./icon-192.png"/>
+  <link rel="apple-touch-icon" href="./icon-192.png"/>
+  <link rel="manifest" href="./manifest.json"/>
+
+  <title>Focus - StudyFlow</title>
+  <link rel="stylesheet" href="css/tailwind.css?v=v2026-09-30-01"/>
+  <link rel="stylesheet" href="css/app.css?v=v2026-09-30-01"/>
 </head>
-<body>
+<body class="bg-surface-base text-on-surface font-body-md text-body-md flex flex-col relative antialiased selection:bg-primary-container selection:text-surface-base min-h-dvh">
+  <!-- Radial Ambient Glow -->
+  <div class="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-lg h-80 bg-[radial-gradient(ellipse_at_top,rgba(91,155,240,0.14),transparent_70%)] pointer-events-none z-0"></div>
+
+  <!-- Shell Containers -->
+  <div id="header-container"></div>
   <div id="sidebar-container"></div>
   <div id="bottom-nav-container"></div>
 
-  <main class="main-container">
-    <header class="page-header animate-fade-in">
-      <div class="page-header-title-group">
-        <h1>Focus</h1>
-        <p class="subtitle">Deep work state initialization</p>
+  <!-- Main Content -->
+  <main class="flex-1 flex flex-col relative w-full max-w-lg lg:max-w-3xl mx-auto pt-20 pb-28 px-margin bg-surface-base z-10" id="timer-container">
+    <div class="flex flex-col w-full items-center justify-between min-h-0 select-none pb-4">
+
+      <!-- Top Session Status & Controls -->
+      <div class="w-full flex items-center justify-between pt-1 pb-3">
+        <a href="index.html" aria-label="Minimize focus session" class="w-10 h-10 rounded-full bg-surface-container-low/70 backdrop-blur-md flex items-center justify-center text-text-secondary hover:text-text-primary active:scale-95 transition-all shadow-sm">
+          <span class="material-symbols-outlined text-[20px]">expand_more</span>
+        </a>
+        <div class="flex items-center gap-space-xs px-3 py-1 rounded-full bg-surface-container/60 backdrop-blur-md">
+          <span class="w-2 h-2 rounded-full bg-primary-container animate-pulse"></span>
+          <span class="font-label-sm text-label-sm text-primary tracking-wide uppercase" id="timer-label">Deep Work</span>
+        </div>
+        <a href="settings.html" aria-label="Timer settings" class="w-10 h-10 rounded-full bg-surface-container-low/70 backdrop-blur-md flex items-center justify-center text-text-secondary hover:text-text-primary active:scale-95 transition-all shadow-sm">
+          <span class="material-symbols-outlined text-[20px]">tune</span>
+        </a>
       </div>
-    </header>
 
-    <div class="narrow-layout">
+      <!-- Session Context Header -->
+      <div class="flex flex-col items-center justify-center my-2 text-center">
+        <p class="font-label-md text-label-md text-text-secondary" id="cycle-session-text">Session 1 of 4</p>
+        <h2 class="font-headline-sm text-headline-sm text-text-primary tracking-tight mt-0.5" id="active-mission-label">Focus Block</h2>
+        <span class="text-[11px] text-text-muted mt-1" id="wake-lock-indicator"></span>
+      </div>
 
-      <!-- Task Selection -->
-      <section class="animate-fade-in">
-        <div class="form-group">
-          <label class="form-label" for="timer-task" style="text-align:center;">Active Task Selection</label>
-          <select id="timer-task" class="form-input glass-pill-input" style="text-align:center;">
-            <option value="">GENERAL FOCUS</option>
+      <!-- Centerpiece Circular Timer -->
+      <div class="relative flex items-center justify-center my-4 group timer-ring-container">
+        <!-- Ambient Glow behind timer -->
+        <div class="absolute w-56 h-56 rounded-full bg-primary-container/10 blur-3xl pointer-events-none -z-10"></div>
+        <!-- Circular SVG Progress Ring -->
+        <div class="relative w-64 h-64 flex items-center justify-center">
+          <svg class="w-full h-full -rotate-90 transform timer-ring-svg" viewBox="0 0 240 240">
+            <!-- Track Circle -->
+            <circle cx="120" cy="120" fill="transparent" r="102" stroke="rgba(255, 255, 255, 0.07)" stroke-width="6"></circle>
+            <!-- Progress Active Circle (r=102, C=640.88) -->
+            <circle class="transition-all duration-300 ease-out" cx="120" cy="120" fill="transparent" id="timer-progress" r="102" stroke="#5B9BF0" stroke-dasharray="640.88" stroke-dashoffset="0" stroke-linecap="round" stroke-width="7"></circle>
+          </svg>
+          <!-- Center Countdown Readout -->
+          <div class="absolute flex flex-col items-center justify-center timer-center">
+            <span class="font-mono-timer text-mono-timer text-text-primary tracking-tighter drop-shadow-[0_4px_12px_rgba(0,0,0,0.5)] timer-main-time" id="timer-digits">25:00</span>
+            <div class="flex items-center gap-1.5 mt-1 px-2.5 py-0.5 rounded-full bg-surface-container-high/60 backdrop-blur-sm timer-status-badge">
+              <span class="material-symbols-outlined text-primary text-[14px]">bolt</span>
+              <span class="font-label-sm text-label-sm text-primary tracking-widest font-semibold uppercase">Pomodoro</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Task & Subtask Selector Dropdowns -->
+      <div class="w-full max-w-xs flex flex-col gap-2 mb-4">
+        <select id="timer-task" class="w-full px-4 py-2.5 rounded-full bg-surface-container-low/80 text-text-primary font-body-md text-body-md outline-none border border-glass-border cursor-pointer" aria-label="Select Task">
+          <option value="">General Focus</option>
+        </select>
+        <div id="subtask-select-container" class="hidden">
+          <select id="timer-subtask" class="w-full px-4 py-2 rounded-full bg-surface-container-low/80 text-text-secondary font-body-sm text-body-sm outline-none border border-glass-border cursor-pointer" aria-label="Select Subtask">
+            <option value="">Select Subtask</option>
           </select>
         </div>
-        <div class="form-group" id="subtask-select-container" style="display:none;margin-top:1rem;">
-          <label class="form-label" for="timer-subtask" style="text-align:center;">Subtask Focus</label>
-          <select id="timer-subtask" class="form-input glass-pill-input" style="text-align:center;">
-            <option value="">SELECT SUBTASK</option>
-          </select>
-        </div>
-        <div id="subtask-tracker-container" style="display:flex;justify-content:center;margin-top:1rem;"></div>
+        <div id="subtask-tracker-container" class="hidden justify-center my-1"></div>
+      </div>
 
-        <!-- Ambient Sound Mixer -->
-        <div style="display:flex;justify-content:center;gap:8px;margin-top:1rem;">
-          <button id="ambient-pink-btn" class="btn btn-secondary btn-sm" onclick="Timer.toggleAmbientSound('pink')" aria-pressed="false">Pink Noise</button>
-          <button id="ambient-brown-btn" class="btn btn-secondary btn-sm" onclick="Timer.toggleAmbientSound('brown')" aria-pressed="false">Brown Noise</button>
-        </div>
-      </section>
+      <!-- Cycle Progress Indicators -->
+      <div aria-label="Cycle progress" class="flex items-center gap-3 my-2" id="cycle-indicator">
+        <!-- Dots injected by JS -->
+      </div>
 
-      <!-- Timer Ring -->
-      <section class="timer-ring-container animate-fade-in" id="timer-container">
-        <svg class="timer-ring-svg" viewBox="0 0 300 300">
-          <circle class="timer-ring-bg" cx="150" cy="150" r="140"/>
-          <circle id="timer-progress" class="timer-ring-fill" cx="150" cy="150" r="140" stroke="var(--accent-fill)"/>
-        </svg>
-        <div class="timer-center">
-          <div class="active-mission" id="active-mission-label">Focusing on: General</div>
-          <div class="timer-status-badge" id="timer-label">Deep Work</div>
-          <div class="timer-main-time" id="timer-time">25:00</div>
-          <div id="cycle-indicator" style="display:flex;gap:4px;align-items:center;justify-content:center;margin:4px 0 2px;"></div>
-          <div class="timer-task-name" id="selected-task-display">Initializing...</div>
-        </div>
-      </section>
-
-      <!-- Session Notes -->
-      <section class="animate-fade-in" style="margin-top: 1rem;">
-        <div class="form-group">
-          <textarea id="session-notes" class="form-input" placeholder="Session notes..." aria-label="Session notes" style="height: 70px; resize: none; border-radius: var(--radius-sm); padding: 10px;"></textarea>
-        </div>
-      </section>
-
-      <!-- Controls -->
-      <section class="timer-controls-fab animate-fade-in">
-        <button class="btn-fab-sub" id="reset-btn" aria-label="Reset Timer" title="Reset Timer">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+      <!-- Playback & Session Controls -->
+      <div class="flex items-center justify-center gap-space-lg my-4 w-full timer-controls-fab">
+        <!-- Reset Button -->
+        <button aria-label="Reset current interval" title="Reset current interval" class="w-12 h-12 rounded-full bg-surface-container/70 backdrop-blur-lg text-text-secondary hover:text-text-primary active:scale-90 transition-all flex items-center justify-center shadow-md" id="btn-reset" type="button">
+          <span class="material-symbols-outlined text-[22px]">restart_alt</span>
         </button>
-        <button class="btn-fab-main" id="start-btn" aria-label="Start Focus" title="Start Focus">
-          <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" id="play-pause-icon" style="transform:translateX(2px);"><polygon points="6 3 20 12 6 21 6 3"/></svg>
+        <!-- Main Play/Pause Button -->
+        <button aria-label="Start or pause timer" title="Start or pause timer" class="w-[72px] h-[72px] rounded-full bg-primary-container text-surface-base flex items-center justify-center shadow-[0_12px_32px_rgba(91,155,240,0.45)] hover:bg-accent-hover active:scale-95 transition-all" id="btn-play" type="button">
+          <span class="material-symbols-outlined text-[36px] ml-0.5 fill-current" id="play-icon" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
         </button>
-        <button class="btn-fab-sub" id="skip-btn" aria-label="Skip Session" title="Skip Session">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>
+        <!-- Skip Button -->
+        <button aria-label="Skip to next interval" title="Skip to next interval" class="w-12 h-12 rounded-full bg-surface-container/70 backdrop-blur-lg text-text-secondary hover:text-text-primary active:scale-90 transition-all flex items-center justify-center shadow-md" id="btn-skip" type="button">
+          <span class="material-symbols-outlined text-[22px]">skip_next</span>
         </button>
-      </section>
+      </div>
 
-      <!-- Stats Carousel -->
-      <section class="animate-fade-in">
-        <h2 style="font-size:10px;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:0.75rem;text-align:center;color:var(--text-muted);">Session Intelligence</h2>
-        <div class="grid-3">
-          <div class="card text-center" style="padding: 10px;">
-            <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;">Sessions</div>
-            <div id="sessions-today" style="font-size:18px;font-weight:500;color:var(--text-primary);">0</div>
+      <!-- Ambient Sound & Session Notes Card -->
+      <div class="w-full mt-3 rounded-2xl bg-surface-container-low/70 backdrop-blur-xl p-3.5 shadow-lg flex flex-col gap-3">
+        <div class="flex items-center justify-between px-1">
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary text-[18px]">graphic_eq</span>
+            <span class="font-label-sm text-label-sm text-text-primary font-medium tracking-wide">Ambient Audio</span>
           </div>
-          <div class="card text-center" style="padding: 10px;">
-            <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;">Deep Work</div>
-            <div id="total-time-today" style="font-size:18px;font-weight:500;color:var(--text-primary);">0m</div>
-          </div>
-          <div class="card text-center" style="padding: 10px;">
-            <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;">Streak</div>
-            <div id="streak-count" style="font-size:18px;font-weight:500;color:var(--text-primary);">0</div>
-          </div>
+          <button class="flex items-center gap-1 text-text-secondary hover:text-text-primary transition-colors" id="toggle-notes-btn" type="button">
+            <span class="material-symbols-outlined text-[15px]">edit_note</span>
+            <span class="font-label-sm text-label-sm">Add note</span>
+          </button>
         </div>
 
-        <!-- Wake lock status indicator -->
-        <div style="text-align:center;margin-top:0.75rem;">
-          <span
-            id="wake-lock-indicator"
-            style="font-size:10px;font-weight:500;letter-spacing:0.04em;text-transform:uppercase;color:var(--text-muted);"
-          >⬤ Screen auto-off</span>
+        <!-- Ambient Sound Pills: Off / Brown / Pink -->
+        <div class="grid grid-cols-3 gap-2">
+          <button class="sound-toggle active py-1.5 px-2 rounded-full bg-primary-container text-surface-base font-label-md text-label-md font-semibold flex items-center justify-center transition-all" data-sound="off" aria-pressed="true" type="button">Off</button>
+          <button class="sound-toggle py-1.5 px-2 rounded-full bg-surface-container/60 hover:bg-surface-container text-text-secondary hover:text-text-primary font-label-md text-label-md flex items-center justify-center transition-all" id="ambient-brown-btn" data-sound="brown" aria-pressed="false" type="button">Brown</button>
+          <button class="sound-toggle py-1.5 px-2 rounded-full bg-surface-container/60 hover:bg-surface-container text-text-secondary hover:text-text-primary font-label-md text-label-md flex items-center justify-center transition-all" id="ambient-pink-btn" data-sound="pink" aria-pressed="false" type="button">Pink</button>
         </div>
-      </section>
+
+        <!-- Session Notes Area (Togglable) -->
+        <div class="hidden flex-col gap-2 pt-1" id="session-notes-container">
+          <textarea id="session-notes" class="w-full h-20 bg-surface-container-lowest/80 rounded-xl p-3 text-text-primary font-body-sm text-body-sm outline-none border border-glass-border focus:border-primary-container" placeholder="Reflections on this session..." aria-label="Session notes"></textarea>
+        </div>
+      </div>
 
     </div>
   </main>
 
-  <script src="js/storage.js?v=v2026-09-29-01"></script>
-  <script src="js/subtask-utils.js?v=v2026-09-29-01"></script>
-  <script src="js/pwa-manager.js?v=v2026-09-29-01"></script>
-  <script src="js/achievements.js?v=v2026-09-29-01"></script>
-  <script src="js/app.js?v=v2026-09-29-01"></script>
-  <script src="js/timer.js?v=v2026-09-29-01"></script>
+  <!-- Core Scripts -->
+  <script src="version.js"></script>
+  <script src="js/storage.js?v=v2026-09-30-01"></script>
+  <script src="js/subtask-utils.js?v=v2026-09-30-01"></script>
+  <script src="js/pwa-manager.js?v=v2026-09-30-01"></script>
+  <script src="js/app.js?v=v2026-09-30-01"></script>
+  <script src="js/timer.js?v=v2026-09-30-01"></script>
+
   <script>
     document.addEventListener('DOMContentLoaded', () => {
-      PWAManager.init();
       Timer.init();
+
+      // Ambient audio toggling
+      const soundPills = document.querySelectorAll('.sound-toggle');
+      soundPills.forEach(pill => {
+        pill.addEventListener('click', () => {
+          const type = pill.getAttribute('data-sound');
+          soundPills.forEach(p => {
+            p.className = 'sound-toggle py-1.5 px-2 rounded-full bg-surface-container/60 hover:bg-surface-container text-text-secondary hover:text-text-primary font-label-md text-label-md flex items-center justify-center transition-all';
+            p.setAttribute('aria-pressed', 'false');
+          });
+
+          pill.className = 'sound-toggle active py-1.5 px-2 rounded-full bg-primary-container text-surface-base font-label-md text-label-md font-semibold flex items-center justify-center transition-all';
+          pill.setAttribute('aria-pressed', 'true');
+
+          if (type !== 'off') {
+            Timer.toggleAmbientSound(type);
+          } else {
+            Timer.toggleAmbientSound(null);
+          }
+        });
+      });
+
+      // Notes toggle
+      const toggleNotesBtn = document.getElementById('toggle-notes-btn');
+      const notesContainer = document.getElementById('session-notes-container');
+      if (toggleNotesBtn && notesContainer) {
+        toggleNotesBtn.addEventListener('click', () => {
+          notesContainer.classList.toggle('hidden');
+          notesContainer.classList.toggle('flex');
+          const textarea = notesContainer.querySelector('textarea');
+          if (textarea && !notesContainer.classList.contains('hidden')) {
+            textarea.focus();
+          }
+        });
+      }
     });
   </script>
 </body>

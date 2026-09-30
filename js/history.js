@@ -1,61 +1,28 @@
 /**
- * StudyFlow - History Module
- * FIX: Added empty-points guard in renderFrequencyGraph() to prevent crash for new users.
+ * StudyFlow - History / Analytics Module
+ * Fully aligned with Stitch design system.
  */
 
 const History = (function() {
   'use strict';
 
   let elements = {};
-  let statsPeriodDays = null;  // null = all time, number = days
+  let statsPeriodDays = 7; // default 7 days
 
   function initElements() {
     elements = {
-      frequencyGraph: document.getElementById('frequency-graph'),
       totalCompletedTasks: document.getElementById('total-completed-tasks'),
       totalStudyHours: document.getElementById('total-study-hours'),
       allTimeStreak: document.getElementById('all-time-streak'),
       completionRate: document.getElementById('completion-rate'),
       productiveDay: document.getElementById('productive-day'),
+      dailyAvgLabel: document.getElementById('daily-avg-label'),
+      activityChartContainer: document.getElementById('activity-chart-container'),
       masteryOverview: document.getElementById('mastery-overview'),
-      tasksProgress: document.getElementById('tasks-progress'),
-      hoursProgress: document.getElementById('hours-progress'),
-      progressPercentage: document.getElementById('progress-percentage'),
-      reflectionsLog: document.getElementById('reflections-log'),
-      studyHistoryList: document.getElementById('study-history-list')
+      studyHistoryList: document.getElementById('study-history-list'),
+      optimalWindowCard: document.getElementById('optimal-window-card'),
+      optimalWindowText: document.getElementById('optimal-window-text')
     };
-  }
-
-  function init() {
-    initElements();
-
-    document.querySelectorAll('[data-period]').forEach(tab => {
-      const toggleFn = (e) => {
-        if (e.type === 'keydown' && e.key !== 'Enter' && e.key !== ' ') return;
-        if (e.type === 'keydown') e.preventDefault();
-
-        document.querySelectorAll('[data-period]').forEach(t => {
-          t.classList.remove('active');
-          t.setAttribute('aria-selected', 'false');
-        });
-        tab.classList.add('active');
-        tab.setAttribute('aria-selected', 'true');
-        statsPeriodDays = tab.dataset.period === 'all' ? null : parseInt(tab.dataset.period);
-        updateSummaryStats();
-        renderFrequencyGraph();
-        updateMasteryOverview();
-        renderStudyHistory();
-      };
-      tab.addEventListener('click', toggleFn);
-      tab.addEventListener('keydown', toggleFn);
-    });
-
-    updateSummaryStats();
-    renderFrequencyGraph();
-    updateMasteryOverview();
-    updateWeeklyProgress();
-    renderStudyHistory();
-    renderReflections();
   }
 
   function getCutoffDate() {
@@ -66,531 +33,344 @@ const History = (function() {
     return cutoff;
   }
 
-  /**
-   * Return sessions in the selected period.
-   * OPTIMIZATION: Uses Storage.getSessionsSince() which utilizes binary search.
-   * Reduces complexity from O(N) to O(log N).
-   */
   function getFilteredSessions() {
     const cutoff = getCutoffDate();
-    if (!cutoff) return Storage.getSessions();
-    // OPTIMIZATION: Use binary search via getSessionsSince for O(log N) retrieval
-    // We pass the formatted date string to ensure consistency with other Storage calls
-    return Storage.getSessionsSince(Storage.formatDate(cutoff));
+    if (!cutoff) return Storage.getSessions ? Storage.getSessions() : [];
+    return Storage.getSessionsSince ? Storage.getSessionsSince(Storage.formatDate(cutoff)) : [];
   }
 
   function getFilteredTasks() {
-    // OPTIMIZATION: Query raw tasks storage directly instead of Storage.getTasks() to avoid
-    // redundant today-completion resolutions across all repeating tasks.
-    const tasks = Storage.loadData(Storage.KEYS.TASKS, Storage.DEFAULTS.tasks);
+    const tasks = Storage.loadData ? Storage.loadData(Storage.KEYS.TASKS, Storage.DEFAULTS.tasks) : [];
     const cutoff = getCutoffDate();
-    if (!cutoff) {
-      // For "All Time", we need a reference start date for repeating tasks
-      const user = Storage.getUser();
-      const start = user && user.created_at ? new Date(user.created_at) : new Date();
-      start.setHours(0, 0, 0, 0);
-      return expandTaskOccurrences(tasks, start, new Date());
-    }
-    const today = new Date();
-    return expandTaskOccurrences(tasks, cutoff, today);
-  }
+    if (!cutoff) return tasks;
 
-  /**
-   * Expands repeating tasks into individual occurrences for the given period.
-   * OPTIMIZATION: Uses indexed for loops instead of callback iterations
-   * and Storage.formatDate for safe timezone-aware date comparison.
-   */
-  function expandTaskOccurrences(tasks, startDate, endDate) {
-    const occurrences = [];
-    const startStr = Storage.formatDate(startDate);
-    const endStr = Storage.formatDate(endDate);
+    const startStr = Storage.formatDate(cutoff);
+    const endStr = Storage.formatDate(new Date());
 
-    // Group repeating tasks by day of week for faster lookup
-    const repeatingByDay = [[], [], [], [], [], [], []]; // 0=Sun, 1=Mon...
-
-    for (let i = 0; i < tasks.length; i++) {
-      const t = tasks[i];
-      if (t.type !== 'repeating') {
-        const completedAt = t.completedAt ? Storage.formatDate(t.completedAt) : null;
-        const dueDate = t.dueDate;
-
-        // Include if completed in period OR due in period (and not completed before)
-        const completedInPeriod = completedAt && completedAt >= startStr && completedAt <= endStr;
-        const dueInPeriod = dueDate && dueDate >= startStr && dueDate <= endStr;
-
-        if (completedInPeriod || dueInPeriod) {
-          occurrences.push(t);
-        }
-      } else if (t.repeatDays && t.repeatDays.length > 0) {
-        for (let j = 0; j < t.repeatDays.length; j++) {
-          const day = t.repeatDays[j];
-          if (day >= 0 && day <= 6) repeatingByDay[day].push(t);
-        }
-      }
-    }
-
-    // Single pass through the date range to expand repeating tasks
-    const cur = new Date(startDate);
-    cur.setHours(0, 0, 0, 0);
-    const end = new Date(endDate);
-    end.setHours(0, 0, 0, 0);
-
-    while (cur <= end) {
-      const dayOfWeek = cur.getDay();
-      const scheduledTasks = repeatingByDay[dayOfWeek];
-      if (scheduledTasks.length > 0) {
-        const y = cur.getFullYear();
-        const m = cur.getMonth() + 1;
-        const d = cur.getDate();
-        const dateStr = y + '-' + (m < 10 ? '0' + m : m) + '-' + (d < 10 ? '0' + d : d);
-        for (let k = 0; k < scheduledTasks.length; k++) {
-          occurrences.push({
-            ...scheduledTasks[k],
-            _occurrenceDate: dateStr
-          });
-        }
-      }
-      cur.setDate(cur.getDate() + 1);
-    }
-
-    return occurrences;
-  }
-
-  function getCompletedTasksInPeriod() {
-    // OPTIMIZATION: Query raw task storage directly and use indexed for loops to eliminate intermediate array allocations.
-    const tasks = Storage.loadData(Storage.KEYS.TASKS, Storage.DEFAULTS.tasks);
-    const cutoff = getCutoffDate();
-    const cutoffTime = cutoff ? cutoff.getTime() : 0;
-    const cutoffStr = cutoff ? Storage.formatDate(cutoff) : null;
-
-    const result = [];
-
-    // One-time tasks
-    for (let i = 0; i < tasks.length; i++) {
-      const t = tasks[i];
-      if (t.type === 'repeating' || !t.completed) continue;
-
-      if (!cutoff) {
-        result.push({ ...t, _date: t.completedAt });
-      } else {
-        const compTime = typeof t.completedAt === 'number' ? t.completedAt : (t.completedAt ? Date.parse(t.completedAt) : 0);
-        if (compTime >= cutoffTime) {
-          result.push({ ...t, _date: t.completedAt });
-        }
-      }
-    }
-
-    // Repeating tasks
-    const repeatingCompletions = Storage.getRepeatingCompletions();
-    for (const key in repeatingCompletions) {
-      if (Object.prototype.hasOwnProperty.call(repeatingCompletions, key)) {
-        const dateStr = key.slice(-10);
-        if (!cutoffStr || dateStr >= cutoffStr) {
-          result.push({ _date: dateStr });
-        }
-      }
-    }
-
-    return result;
+    return tasks.filter(t => {
+      const compDate = t.completedAt ? t.completedAt.slice(0, 10) : null;
+      const dueDate = t.dueDate;
+      return (compDate && compDate >= startStr && compDate <= endStr) || (dueDate && dueDate >= startStr && dueDate <= endStr);
+    });
   }
 
   function updateSummaryStats() {
     const filteredTasks = getFilteredTasks();
-    const completedTasksInPeriod = getCompletedTasksInPeriod();
     const filteredSessions = getFilteredSessions();
-    const stats = Storage.getStats();
+    const workSessions = filteredSessions.filter(s => s.type === 'work');
+    const stats = Storage.getStats ? Storage.getStats() : { streak: 0, bestStreak: 0 };
 
-    const periodCompletedCount = completedTasksInPeriod.length;
-    const studyMinutes = filteredSessions
-      .filter(s => s.type === 'work')
-      .reduce((total, s) => total + (Number.isFinite(Number(s.duration)) ? Number(s.duration) : 0), 0);
+    const completedTasksCount = filteredTasks.filter(t => t.completed).length;
+    const studyMinutes = workSessions.reduce((acc, s) => acc + (s.duration || 0), 0);
+    const studyHours = (studyMinutes / 60).toFixed(1);
 
-    const noActivityEl = document.getElementById('no-activity-message');
-    const graphSectionEl = document.getElementById('graph-section');
-    const summaryGridEl = document.getElementById('summary-stats-grid');
+    if (elements.totalCompletedTasks) elements.totalCompletedTasks.textContent = completedTasksCount;
+    if (elements.totalStudyHours) elements.totalStudyHours.textContent = `${studyHours}h`;
+    if (elements.allTimeStreak) elements.allTimeStreak.textContent = stats.bestStreak || stats.streak || 0;
 
-    if (periodCompletedCount === 0 && studyMinutes === 0) {
-      if (noActivityEl && noActivityEl.style) noActivityEl.style.display = 'block';
-      if (graphSectionEl && graphSectionEl.style) graphSectionEl.style.display = 'none';
-      if (summaryGridEl && summaryGridEl.style) summaryGridEl.style.display = 'none';
-    } else {
-      if (noActivityEl && noActivityEl.style) noActivityEl.style.display = 'none';
-      if (graphSectionEl && graphSectionEl.style) graphSectionEl.style.display = 'block';
-      if (summaryGridEl && summaryGridEl.style) summaryGridEl.style.display = 'grid';
-    }
+    const rate = filteredTasks.length > 0 ? Math.round((completedTasksCount / filteredTasks.length) * 100) : 0;
+    if (elements.completionRate) elements.completionRate.textContent = `${rate}%`;
 
-    if (elements.totalCompletedTasks) elements.totalCompletedTasks.textContent = periodCompletedCount;
-    const safeHours = Number.isFinite(studyMinutes) ? Math.round(studyMinutes / 60) : 0;
-    if (elements.totalStudyHours) elements.totalStudyHours.textContent = safeHours + 'h';
-    if (elements.allTimeStreak) elements.allTimeStreak.textContent = stats.bestStreak;
-
-    if (elements.completionRate) {
-      const rate = filteredTasks.length > 0 ? Math.round((periodCompletedCount / filteredTasks.length) * 100) : 0;
-      elements.completionRate.textContent = `${rate}%`;
-    }
-
-    if (elements.productiveDay) {
-      const isWeekly = statsPeriodDays === 7;
-      const activity = {}; // Key: day index (0-6) for weekly, date string for others
-      const reusableDate = new Date();
-
-      // Aggregate focus sessions (weighted by 15-min intervals)
-      filteredSessions.forEach(s => {
-        if (s.type === 'work' && s.completedAt) {
-          // OPTIMIZATION: Use string slicing for date and reusableDate for getDay()
-          let key;
-          if (isWeekly) {
-            const timeVal = typeof s.completedAt === 'number' ? s.completedAt : Date.parse(s.completedAt);
-            if (!isNaN(timeVal)) {
-              reusableDate.setTime(timeVal);
-              key = reusableDate.getDay();
-            }
-          } else {
-            key = (typeof s.completedAt === 'string') ? s.completedAt.slice(0, 10) : Storage.formatDate(s.completedAt);
-          }
-          if (key !== undefined && key !== null) {
-            const dur = Number.isFinite(Number(s.duration)) ? Number(s.duration) : 0;
-            activity[key] = (activity[key] || 0) + Math.max(1, Math.round(dur / 15));
-          }
-        }
-      });
-
-      // Aggregate task completions (weighted as 1 unit)
-      completedTasksInPeriod.forEach(t => {
-        if (t._date) {
-          // OPTIMIZATION: Use string slicing for date and reusableDate for getDay()
-          let key;
-          if (isWeekly) {
-            if (typeof t._date === 'string' && t._date.length === 10) {
-              const d = Storage.parseLocalDate(t._date);
-              key = d ? d.getDay() : 0;
-            } else {
-              const timeVal = typeof t._date === 'number' ? t._date : Date.parse(t._date);
-              if (!isNaN(timeVal)) {
-                reusableDate.setTime(timeVal);
-                key = reusableDate.getDay();
-              }
-            }
-          } else {
-            key = (typeof t._date === 'string') ? t._date.slice(0, 10) : Storage.formatDate(t._date);
-          }
-          if (key !== undefined && key !== null) {
-            activity[key] = (activity[key] || 0) + 1;
-          }
-        }
-      });
-
-      let peakKey = null, maxVal = -1;
-      Object.keys(activity).forEach(key => {
-        if (activity[key] > maxVal) {
-          maxVal = activity[key];
-          peakKey = key;
-        }
-      });
-
-      if (maxVal > 0 && peakKey !== null) {
-        if (isWeekly) {
-          const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-          elements.productiveDay.textContent = dayNames[peakKey] || 'N/A';
-        } else {
-          const date = Storage.parseLocalDate(peakKey) || new Date(peakKey);
-          if (date && !isNaN(date.getTime())) {
-            const options = statsPeriodDays === 30
-              ? { month: 'short', day: 'numeric' }
-              : { month: 'short', day: 'numeric', year: 'numeric' };
-            elements.productiveDay.textContent = date.toLocaleDateString('en-US', options);
-          } else {
-            elements.productiveDay.textContent = 'N/A';
-          }
-        }
+    const streakDelta = document.getElementById('streak-delta-label');
+    if (streakDelta) {
+      if (stats.streak > 0 && stats.streak >= stats.bestStreak) {
+        streakDelta.textContent = 'Personal record';
       } else {
-        elements.productiveDay.textContent = 'N/A';
+        streakDelta.textContent = `Best: ${stats.bestStreak}d`;
       }
     }
+
+    // Daily Avg
+    const days = statsPeriodDays || 30;
+    const avgHours = (studyMinutes / 60 / days).toFixed(1);
+    if (elements.dailyAvgLabel) elements.dailyAvgLabel.textContent = `${avgHours} hrs`;
+
+    // Productive Day calculation
+    if (elements.productiveDay) {
+      const dayCounts = [0, 0, 0, 0, 0, 0, 0]; // Sun..Sat
+      const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+      workSessions.forEach(s => {
+        if (s.completedAt) {
+          const d = new Date(s.completedAt);
+          if (!isNaN(d.getTime())) dayCounts[d.getDay()] += (s.duration || 0);
+        }
+      });
+      let maxIdx = 0, maxVal = 0;
+      dayCounts.forEach((cnt, idx) => {
+        if (cnt > maxVal) { maxVal = cnt; maxIdx = idx; }
+      });
+      elements.productiveDay.textContent = maxVal > 0 ? dayNames[maxIdx] : 'N/A';
+    }
+
+    // Optimal Deep Work Window
+    if (elements.optimalWindowCard && elements.optimalWindowText) {
+      if (workSessions.length >= 5) {
+        const hourBins = new Array(24).fill(0);
+        workSessions.forEach(s => {
+          if (s.completedAt) {
+            const d = new Date(s.completedAt);
+            if (!isNaN(d.getTime())) hourBins[d.getHours()] += (s.duration || 0);
+          }
+        });
+        let peakHour = 9, maxMins = 0;
+        hourBins.forEach((mins, h) => {
+          if (mins > maxMins) { maxMins = mins; peakHour = h; }
+        });
+        const startAmPm = peakHour >= 12 ? `${peakHour === 12 ? 12 : peakHour - 12}:00 PM` : `${peakHour === 0 ? 12 : peakHour}:00 AM`;
+        const endHour = (peakHour + 2) % 24;
+        const endAmPm = endHour >= 12 ? `${endHour === 12 ? 12 : endHour - 12}:00 PM` : `${endHour === 0 ? 12 : endHour}:00 AM`;
+
+        elements.optimalWindowText.textContent = `Your peak retention happens between ${startAmPm} – ${endAmPm}`;
+        elements.optimalWindowCard.classList.remove('hidden');
+        elements.optimalWindowCard.classList.add('flex');
+      } else {
+        elements.optimalWindowCard.classList.add('hidden');
+        elements.optimalWindowCard.classList.remove('flex');
+      }
+    }
+  }
+
+  function renderActivityChart() {
+    if (!elements.activityChartContainer) return;
+
+    const daysCount = statsPeriodDays || 30;
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const cutoffDate = new Date(today);
+    cutoffDate.setDate(cutoffDate.getDate() - (daysCount - 1));
+
+    const workSessions = (Storage.getSessionsSince ? Storage.getSessionsSince(Storage.formatDate(cutoffDate)) : []).filter(s => s.type === 'work');
+
+    const dailyMinutes = {};
+    for (let i = 0; i < daysCount; i++) {
+      const d = new Date(cutoffDate);
+      d.setDate(d.getDate() + i);
+      const dateStr = Storage.formatDate(d);
+      dailyMinutes[dateStr] = { date: d, minutes: 0 };
+    }
+
+    workSessions.forEach(s => {
+      if (s.completedAt) {
+        const dateStr = s.completedAt.slice(0, 10);
+        if (dailyMinutes[dateStr]) {
+          dailyMinutes[dateStr].minutes += (s.duration || 0);
+        }
+      }
+    });
+
+    const dateKeys = Object.keys(dailyMinutes);
+    let maxMins = 0;
+    dateKeys.forEach(k => {
+      if (dailyMinutes[k].minutes > maxMins) maxMins = dailyMinutes[k].minutes;
+    });
+    if (maxMins === 0) maxMins = 120; // default 2h max scale
+
+    const width = 320, height = 140;
+    const paddingX = 15, paddingY = 20;
+    const chartW = width - (paddingX * 2);
+    const chartH = height - (paddingY * 2);
+
+    const points = dateKeys.map((k, idx) => {
+      const x = paddingX + (idx * (chartW / Math.max(1, dateKeys.length - 1)));
+      const mins = dailyMinutes[k].minutes;
+      const y = height - paddingY - ((mins / maxMins) * chartH);
+      return { x, y, mins, dateStr: k, date: dailyMinutes[k].date };
+    });
+
+    // Build curve path
+    let pathD = `M ${points[0].x} ${points[0].y}`;
+    for (let i = 0; i < points.length - 1; i++) {
+      const p0 = points[i];
+      const p1 = points[i + 1];
+      const cx = (p0.x + p1.x) / 2;
+      pathD += ` C ${cx} ${p0.y}, ${cx} ${p1.y}, ${p1.x} ${p1.y}`;
+    }
+
+    const last = points[points.length - 1];
+    const areaD = `${pathD} L ${last.x} ${height - paddingY} L ${points[0].x} ${height - paddingY} Z`;
+
+    // Find peak point
+    let peakPt = points[0];
+    points.forEach(p => {
+      if (p.mins > peakPt.mins) peakPt = p;
+    });
+
+    const dayLabels = daysCount === 7
+      ? points.map(p => p.date.toLocaleDateString('en-US', { weekday: 'short' }))
+      : [points[0].dateStr.slice(5), points[Math.floor(points.length / 2)].dateStr.slice(5), points[points.length - 1].dateStr.slice(5)];
+
+    elements.activityChartContainer.innerHTML = `
+      ${peakPt.mins > 0 ? `
+        <div class="absolute -top-1 px-2.5 py-0.5 rounded-full bg-surface-container-highest shadow-lg flex items-center gap-1 z-10 font-label-sm text-label-sm text-primary-container font-semibold" style="left: ${Math.min(80, Math.max(20, (peakPt.x / width) * 100))}%; transform: translateX(-50%);">
+          Peak: ${(peakPt.mins / 60).toFixed(1)}h
+        </div>
+      ` : ''}
+      <svg class="w-full h-full overflow-visible" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="blueGlowGradient" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#5b9bf0" stop-opacity="0.32"/>
+            <stop offset="65%" stop-color="#5b9bf0" stop-opacity="0.08"/>
+            <stop offset="100%" stop-color="#5b9bf0" stop-opacity="0"/>
+          </linearGradient>
+        </defs>
+        <line x1="0" y1="20" x2="${width}" y2="20" stroke="rgba(255, 255, 255, 0.05)" stroke-dasharray="3 3" stroke-width="1"/>
+        <line x1="0" y1="65" x2="${width}" y2="65" stroke="rgba(255, 255, 255, 0.05)" stroke-dasharray="3 3" stroke-width="1"/>
+        <line x1="0" y1="110" x2="${width}" y2="110" stroke="rgba(255, 255, 255, 0.05)" stroke-dasharray="3 3" stroke-width="1"/>
+
+        <path d="${areaD}" fill="url(#blueGlowGradient)"/>
+        <path d="${pathD}" fill="none" stroke="#5b9bf0" stroke-width="2.5" stroke-linecap="round"/>
+
+        ${points.map(p => `
+          <circle cx="${p.x}" cy="${p.y}" r="${p === peakPt && p.mins > 0 ? 4.5 : 2}" fill="#5b9bf0" stroke="#090D12" stroke-width="1.5">
+            <title>${p.dateStr}: ${(p.mins / 60).toFixed(1)} hrs</title>
+          </circle>
+        `).join('')}
+      </svg>
+      <div class="flex justify-between items-center px-1 font-label-sm text-label-sm text-text-secondary select-none mt-1">
+        ${dayLabels.map(l => `<span>${App.escapeHtml(l)}</span>`).join('')}
+      </div>
+    `;
   }
 
   function updateMasteryOverview() {
     if (!elements.masteryOverview) return;
-    const stats = Storage.getSubjectMasteryStats();
+
+    const stats = Storage.getSubjectMasteryStats ? Storage.getSubjectMasteryStats() : [];
     if (stats.length === 0) {
-      elements.masteryOverview.innerHTML = `<div style="grid-column:1/-1">${App.createEmptyStateHtml({ title: 'No Subjects', text: 'Define your subjects in Settings to begin tracking mastery.', icon: 'settings', padding: '2rem' })}</div>`;
+      elements.masteryOverview.innerHTML = App.createEmptyStateHtml({
+        title: 'No Subjects Configured',
+        text: 'Set up subjects in settings to track your focus distribution.',
+        icon: 'pie_chart'
+      });
       return;
     }
-    elements.masteryOverview.innerHTML = stats.map(subject => `
-      <a href="tasks.html?subject=${encodeURIComponent(subject.name)}" class="mastery-card u-no-underline" style="border-left: 3px solid ${App.escapeHtml(subject.color)};">
-        <div class="mastery-subject-name" title="${App.escapeHtml(subject.name)}">${App.escapeHtml(subject.name)}</div>
-        <div class="mastery-progress-mini">
-          <div class="mastery-progress-mini-fill" style="width:${subject.percentage}%;background-color:${App.escapeHtml(subject.color)};"></div>
+
+    const filteredSessions = getFilteredSessions().filter(s => s.type === 'work');
+    const totalMins = filteredSessions.reduce((acc, s) => acc + (s.duration || 0), 0);
+
+    const subjectMins = {};
+    filteredSessions.forEach(s => {
+      const task = s.taskId ? Storage.getTaskById(s.taskId) : null;
+      const subName = task ? task.subject : 'Other';
+      subjectMins[subName] = (subjectMins[subName] || 0) + (s.duration || 0);
+    });
+
+    elements.masteryOverview.innerHTML = stats.map(s => {
+      const mins = subjectMins[s.name] || 0;
+      const hours = (mins / 60).toFixed(1);
+      const sharePct = totalMins > 0 ? Math.round((mins / totalMins) * 100) : s.percentage;
+
+      return `
+        <div class="flex flex-col gap-1.5 p-2 rounded bg-surface-container-low/60 hover:bg-surface-container-high transition-colors">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full" style="background-color: ${App.escapeHtml(s.color)};"></span>
+              <span class="font-body-md text-body-md text-text-primary font-medium">${App.escapeHtml(s.name)}</span>
+            </div>
+            <span class="font-label-md text-label-md text-text-primary font-semibold">${sharePct}%</span>
+          </div>
+          <div class="flex items-center justify-between text-text-secondary font-label-sm text-[12px] mb-0.5">
+            <span>${hours}h logged</span>
+            <span class="text-primary-container">${s.completed}/${s.total} tasks</span>
+          </div>
+          <div class="w-full h-1.5 rounded-full bg-surface-container-highest overflow-hidden">
+            <div class="h-full rounded-full transition-all duration-500" style="width: ${sharePct}%; background-color: ${App.escapeHtml(s.color)};"></div>
+          </div>
         </div>
-        <div class="mastery-stats"><span>${subject.percentage}%</span><span>${subject.completed}/${subject.total}</span></div>
-      </a>
-    `).join('');
-  }
-
-  function updateWeeklyProgress() {
-    const goals = Storage.getGoals();
-    if (elements.tasksProgress) {
-      const tasksPercentage = goals.weekly_tasks > 0 ? Math.round((goals.current_tasks / goals.weekly_tasks) * 100) : 0;
-      elements.tasksProgress.innerHTML = App.createProgressBar(goals.current_tasks, goals.weekly_tasks, 'Tasks Completed');
-      if (elements.hoursProgress) {
-        const currentHours = Math.round(goals.current_hours * 10) / 10;
-        elements.hoursProgress.innerHTML = App.createProgressBar(currentHours, goals.weekly_hours, 'Study Hours');
-        if (elements.progressPercentage) {
-          const hoursPercentage = goals.weekly_hours > 0 ? (goals.current_hours / goals.weekly_hours * 100) : 0;
-          elements.progressPercentage.textContent = `${Math.min(100, Math.round((tasksPercentage + hoursPercentage) / 2))}%`;
-        }
-      }
-    }
-  }
-
-  function getActivityData(daysCount) {
-    // OPTIMIZATION: Query raw task storage directly to avoid repeating task resolutions,
-    // and format YYYY-MM-DD date strings inline to eliminate Date parsing and Storage.formatDate overhead.
-    const tasks = Storage.loadData(Storage.KEYS.TASKS, Storage.DEFAULTS.tasks);
-    const today = new Date(); today.setHours(0, 0, 0, 0);
-    const cutoffDate = new Date(today);
-    cutoffDate.setDate(cutoffDate.getDate() - daysCount);
-    const sessions = Storage.getSessionsSince(Storage.formatDate(cutoffDate));
-
-    const activityData = {};
-    const reusableDate = new Date(today);
-    for (let i = 0; i < daysCount; i++) {
-      reusableDate.setTime(today.getTime());
-      reusableDate.setDate(today.getDate() - i);
-      const y = reusableDate.getFullYear();
-      const m = reusableDate.getMonth() + 1;
-      const d = reusableDate.getDate();
-      const dateKey = y + '-' + (m < 10 ? '0' + m : m) + '-' + (d < 10 ? '0' + d : d);
-      activityData[dateKey] = { count: 0, notes: [] };
-    }
-
-    for (let i = 0; i < tasks.length; i++) {
-      const t = tasks[i];
-      if (t.type !== 'repeating' && t.completed && t.completedAt) {
-        const dateStr = Storage.formatDate(t.completedAt);
-        if (activityData[dateStr]) activityData[dateStr].count += 1;
-      }
-    }
-
-    const repeatingCompletions = Storage.getRepeatingCompletions();
-    for (const key in repeatingCompletions) {
-      if (Object.prototype.hasOwnProperty.call(repeatingCompletions, key)) {
-        const dateStr = key.slice(-10);
-        if (activityData[dateStr]) {
-          activityData[dateStr].count += 1;
-        }
-      }
-    }
-
-    for (let i = 0; i < sessions.length; i++) {
-      const s = sessions[i];
-      if (s.type === 'work' && s.completedAt) {
-        const dateStr = Storage.formatDate(s.completedAt);
-        if (activityData[dateStr]) {
-          activityData[dateStr].count += Math.max(1, Math.round(s.duration / 15));
-          if (s.notes) activityData[dateStr].notes.push(s.notes);
-        }
-      }
-    }
-    return activityData;
+      `;
+    }).join('');
   }
 
   function renderStudyHistory() {
     if (!elements.studyHistoryList) return;
 
-    const filteredSessions = getFilteredSessions() || [];
-    const workSessions = filteredSessions.filter(s => s.type === 'work' && s.completedAt);
-
-    // Sort newest first
-    const sortedSessions = [...workSessions].sort((a, b) => {
+    const filteredSessions = getFilteredSessions().filter(s => s.type === 'work' && s.completedAt);
+    const sorted = [...filteredSessions].sort((a, b) => {
       const aVal = a.completedAt || '';
       const bVal = b.completedAt || '';
       return bVal < aVal ? -1 : (bVal > aVal ? 1 : 0);
     });
 
-    if (sortedSessions.length === 0) {
-      const periodLabel = statsPeriodDays ? `last ${statsPeriodDays} days` : 'all time';
+    if (sorted.length === 0) {
       elements.studyHistoryList.innerHTML = App.createEmptyStateHtml({
         title: 'No Focus Sessions',
-        text: `No study focus sessions completed during ${periodLabel}.`,
-        icon: 'timer',
-        padding: '2rem'
+        text: 'Completed focus sessions will appear in your timeline.',
+        icon: 'timer'
       });
       return;
     }
 
-    const html = sortedSessions.map(session => {
-      const task = session.taskId ? Storage.getTaskById(session.taskId) : null;
-      const taskTitle = task ? task.title : 'General Focus';
-      const subjectName = task ? task.subject : 'Other';
-      const subjectColor = App.getSubjectColor(subjectName);
-
-      const completeDate = new Date(session.completedAt);
-      const isValidDate = !isNaN(completeDate.getTime());
-      const timeStr = isValidDate ? completeDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }) : 'N/A';
-      const fullDateStr = isValidDate ? completeDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'No date';
-      const safeDuration = Number.isFinite(Number(session.duration)) ? Number(session.duration) : 0;
-
-      const notesHtml = session.notes ? `
-        <div style="font-size: 0.8rem; color: var(--text-muted); font-style: italic; margin-top: 8px; border-left: 2px solid var(--glass-border); padding-left: 8px; line-height: 1.4;">
-          "${App.escapeHtml(session.notes)}"
-        </div>
-      ` : '';
+    elements.studyHistoryList.innerHTML = sorted.map(s => {
+      const task = s.taskId ? Storage.getTaskById(s.taskId) : null;
+      const title = task ? task.title : 'General Focus';
+      const subject = task ? task.subject : 'General';
+      const d = new Date(s.completedAt);
+      const timeStr = !isNaN(d.getTime()) ? d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : 'N/A';
+      const dateStr = !isNaN(d.getTime()) ? d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
 
       return `
-        <div class="task-card" style="margin-bottom: 12px; --priority-color:${App.hexToRgb(subjectColor)};">
-          <div class="flex items-start justify-between w-full gap-sm">
-            <div class="flex-1 min-w-0">
-              <div class="flex items-center gap-sm mb-xs flex-wrap">
-                <div class="subject-pill" style="--tag-color:${App.hexToRgb(subjectColor)}">${App.escapeHtml(subjectName)}</div>
-                <span class="badge" style="background: rgba(255,255,255,0.05); color: var(--text-secondary); font-size: 9px; text-shadow: none;">
-                  ${App.escapeHtml(safeDuration)} mins
-                </span>
-              </div>
-              <div class="task-title-text" style="font-size: 1rem; word-break: break-word;">${App.escapeHtml(taskTitle)}</div>
-              ${notesHtml}
+        <div class="p-3.5 rounded-2xl bg-surface-container-low/70 flex items-center justify-between gap-3 shadow-sm">
+          <div class="flex items-center gap-3 min-w-0 flex-1">
+            <div class="w-9 h-9 rounded-full bg-primary-container/20 text-primary-container flex items-center justify-center shrink-0">
+              <span class="material-symbols-outlined text-[18px]">timelapse</span>
             </div>
-            <div style="text-align: right; flex-shrink: 0;">
-              <div style="font-size: 11px; font-weight: 700; color: white;">${timeStr}</div>
-              <div style="font-size: 9px; color: var(--text-muted); font-weight: 600; margin-top: 2px;">${fullDateStr}</div>
+            <div class="flex flex-col min-w-0">
+              <span class="font-label-md text-label-md text-text-primary truncate">${App.escapeHtml(title)}</span>
+              <span class="font-label-sm text-[11px] text-text-secondary">${App.escapeHtml(subject)} · ${s.duration || 25} mins</span>
             </div>
+          </div>
+          <div class="flex flex-col items-end shrink-0 text-right">
+            <span class="font-label-sm text-label-sm text-text-primary font-medium">${App.escapeHtml(timeStr)}</span>
+            <span class="font-label-sm text-[11px] text-text-muted">${App.escapeHtml(dateStr)}</span>
           </div>
         </div>
       `;
     }).join('');
-
-    elements.studyHistoryList.innerHTML = html;
   }
 
-  function renderReflections() {
-    if (!elements.reflectionsLog) return;
-    const reflections = Storage.loadData(Storage.KEYS.REFLECTIONS, Storage.DEFAULTS.reflections || []);
+  function setupTimeframeTabs() {
+    const tabs = [
+      { id: 'tab-7d', period: 7 },
+      { id: 'tab-30d', period: 30 },
+      { id: 'tab-all', period: null }
+    ];
 
-    if (reflections.length === 0) {
-      elements.reflectionsLog.innerHTML = '<p class="text-secondary text-center">No tactical reflections recorded yet.</p>';
-      return;
-    }
+    tabs.forEach(t => {
+      const btn = document.getElementById(t.id);
+      if (btn) {
+        btn.addEventListener('click', () => {
+          tabs.forEach(other => {
+            const b = document.getElementById(other.id);
+            if (b) {
+              b.className = 'timeframe-btn flex-1 py-1.5 rounded-full font-label-md text-label-md text-text-secondary hover:text-text-primary transition-all text-center';
+              b.setAttribute('aria-selected', 'false');
+            }
+          });
+          btn.className = 'timeframe-btn flex-1 py-1.5 rounded-full font-label-md text-label-md text-surface-base bg-primary-container font-semibold transition-all text-center';
+          btn.setAttribute('aria-selected', 'true');
 
-    elements.reflectionsLog.innerHTML = reflections.sort((a, b) => {
-      // OPTIMIZATION: Use fast lexicographical string comparison instead of `new Date` to avoid allocations and parsing overhead.
-      const aVal = a.date || '';
-      const bVal = b.date || '';
-      return bVal < aVal ? -1 : (bVal > aVal ? 1 : 0);
-    }).map(r => `
-      <div class="card" style="padding: 1rem; background: rgba(255,255,255,0.02);">
-        <div style="font-size: 0.75rem; font-weight: 800; color: var(--primary); text-transform: uppercase; margin-bottom: 0.5rem;">
-          ${Storage.formatDisplayDate(r.date)}
-        </div>
-        <div style="font-size: 0.875rem; color: white; line-height: 1.5;">
-          ${App.escapeHtml(r.text)}
-        </div>
-      </div>
-    `).join('');
-  }
-
-  function renderFrequencyGraph() {
-    if (!elements.frequencyGraph) return;
-
-    let daysCount = statsPeriodDays || 30;
-
-    if (!statsPeriodDays) {
-      const user = Storage.getUser();
-      if (user && user.created_at) {
-        const createdDate = new Date(user.created_at);
-        createdDate.setHours(0, 0, 0, 0);
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const diffTime = Math.abs(today - createdDate);
-        daysCount = Math.max(7, Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1);
+          statsPeriodDays = t.period;
+          renderAnalytics();
+        });
       }
-    }
-
-    const data = getActivityData(daysCount);
-    const today = new Date(); today.setHours(0, 0, 0, 0);
-
-    let maxCount = 0;
-    const days = [];
-    const reusableDate = new Date(today);
-    for (let i = daysCount - 1; i >= 0; i--) {
-      reusableDate.setTime(today.getTime());
-      reusableDate.setDate(today.getDate() - i);
-      const y = reusableDate.getFullYear();
-      const m = reusableDate.getMonth() + 1;
-      const d = reusableDate.getDate();
-      const dateStr = y + '-' + (m < 10 ? '0' + m : m) + '-' + (d < 10 ? '0' + d : d);
-      const dayData = data[dateStr] || { count: 0, notes: [] };
-      const count = dayData.count;
-      if (count > maxCount) maxCount = count;
-      days.push({ date: new Date(reusableDate), count, notes: dayData.notes });
-    }
-
-    // FIX 5: Guard against empty or all-zero data — prevents crash on first launch
-    if (days.length === 0) {
-      elements.frequencyGraph.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:2rem 0;font-size:14px;">No activity data yet. Complete tasks or focus sessions to see your timeline.</p>';
-      return;
-    }
-
-    if (maxCount === 0) maxCount = 5;
-
-    const width = 800, height = 200, paddingX = 40, paddingY = 30;
-    const chartWidth = width - (paddingX * 2);
-    const chartHeight = height - (paddingY * 2);
-
-    const points = days.map((day, i) => ({
-      x: paddingX + (i * (chartWidth / (daysCount - 1))),
-      y: height - paddingY - (day.count / maxCount * chartHeight),
-      count: day.count,
-      date: day.date,
-      notes: day.notes
-    }));
-
-    // Build smoothed line path
-    let linePath = `M ${points[0].x},${points[0].y}`;
-    for (let i = 0; i < points.length - 1; i++) {
-      const p0 = points[i], p1 = points[i + 1];
-      const cpX = (p0.x + p1.x) / 2;
-      linePath += ` Q ${cpX},${p0.y} ${cpX},${(p0.y + p1.y) / 2} T ${p1.x},${p1.y}`;
-    }
-
-    const last = points[points.length - 1];
-    const areaPath = `${linePath} L ${last.x},${height - paddingY} L ${points[0].x},${height - paddingY} Z`;
-
-    elements.frequencyGraph.classList.add('line-graph-container');
-    elements.frequencyGraph.innerHTML = `
-      <div class="line-graph-wrapper">
-        <svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" class="line-graph-svg">
-          <defs>
-            <linearGradient id="areaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stop-color="var(--primary)" stop-opacity="0.3"/>
-              <stop offset="100%" stop-color="var(--primary)" stop-opacity="0.01"/>
-            </linearGradient>
-          </defs>
-          <line x1="${paddingX}" y1="${paddingY}" x2="${width-paddingX}" y2="${paddingY}" class="graph-grid-line"/>
-          <line x1="${paddingX}" y1="${paddingY+chartHeight/2}" x2="${width-paddingX}" y2="${paddingY+chartHeight/2}" class="graph-grid-line"/>
-          <line x1="${paddingX}" y1="${height-paddingY}" x2="${width-paddingX}" y2="${height-paddingY}" class="graph-grid-line"/>
-          <path d="${areaPath}" fill="url(#areaGradient)" class="graph-area-enhanced"/>
-          <path d="${linePath}" class="graph-line" fill="none" stroke="var(--primary)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-          ${points.map(p => {
-            const notesStr = p.notes && p.notes.length > 0 ? `\n\nNotes:\n- ${p.notes.join('\n- ')}` : '';
-            return `<circle cx="${p.x}" cy="${p.y}" r="4" class="graph-dot"><title>${p.count} activities on ${p.date.toLocaleDateString()}${App.escapeHtml(notesStr)}</title></circle>`;
-          }).join('')}
-        </svg>
-        <div class="graph-labels-x">
-          ${days.filter((_, i) => i % 5 === 0 || i === daysCount - 1).map(day => {
-            const index = days.indexOf(day);
-            const left = (paddingX + (index * (chartWidth / (daysCount - 1)))) / width * 100;
-            return `<span class="graph-label-x" style="left:${left}%">${day.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>`;
-          }).join('')}
-        </div>
-        <div class="graph-labels-y">
-          <span class="graph-label-y" style="bottom:${paddingY/height*100}%">0</span>
-          <span class="graph-label-y" style="bottom:50%">${Math.round(maxCount/2)}</span>
-          <span class="graph-label-y" style="top:${paddingY/height*100}%">${maxCount}</span>
-        </div>
-      </div>`;
+    });
   }
 
-  return { init };
+  function renderAnalytics() {
+    updateSummaryStats();
+    renderActivityChart();
+    updateMasteryOverview();
+    renderStudyHistory();
+  }
+
+  function init() {
+    initElements();
+    setupTimeframeTabs();
+    renderAnalytics();
+
+    window.addEventListener('studyflow_taskDataChanged', renderAnalytics);
+  }
+
+  return { init, renderAnalytics };
 })();
 
 window.History = History;
