@@ -879,7 +879,7 @@ const App = (function() {
 
   function getSubjectColor(subjectName) {
     const subject = Storage.getSubjectByName ? Storage.getSubjectByName(subjectName) : null;
-    return subject ? subject.color : '#5B9BF0';
+    return (subject && isValidHexColor(subject.color)) ? subject.color : '#5B9BF0';
   }
 
   function isValidHexColor(hex) {
