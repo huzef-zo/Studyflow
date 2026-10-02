@@ -598,8 +598,9 @@ const Storage = (function() {
   function setRepeatingSubtaskCyclesOnDate(taskId, subtaskId, dateStr, cycles) {
     const completions = getRepeatingCompletions();
     const key = `${taskId}_${subtaskId}_cycles_${dateStr}`;
-    if (cycles > 0) {
-      completions[key] = cycles;
+    const safeCycles = Number.isFinite(Number(cycles)) ? Math.max(0, Math.min(1000, Math.floor(cycles))) : 0;
+    if (safeCycles > 0) {
+      completions[key] = safeCycles;
     } else {
       delete completions[key];
     }
@@ -791,8 +792,8 @@ const Storage = (function() {
           id: String(st.id || generateId()),
           title: String(st.title || '').substring(0, 200),
           isCompleted: Boolean(st.isCompleted),
-          estimatedCycles: Number(st.estimatedCycles || 1),
-          completedCycles: Number(st.completedCycles || 0)
+          estimatedCycles: Number.isFinite(Number(st.estimatedCycles)) ? Math.max(1, Math.min(100, Math.floor(st.estimatedCycles))) : 1,
+          completedCycles: Number.isFinite(Number(st.completedCycles)) ? Math.max(0, Math.min(1000, Math.floor(st.completedCycles))) : 0
         }));
       }
       const task = { ...tasks[index], ...safeUpdates };
@@ -823,9 +824,9 @@ const Storage = (function() {
     const newSubtask = {
       id: generateId(),
       title: String(subtaskData.title || '').substring(0, 200),
-      isCompleted: subtaskData.isCompleted || false,
-      estimatedCycles: subtaskData.estimatedCycles || 1,
-      completedCycles: subtaskData.completedCycles || 0
+      isCompleted: Boolean(subtaskData.isCompleted),
+      estimatedCycles: Number.isFinite(Number(subtaskData.estimatedCycles)) ? Math.max(1, Math.min(100, Math.floor(subtaskData.estimatedCycles))) : 1,
+      completedCycles: Number.isFinite(Number(subtaskData.completedCycles)) ? Math.max(0, Math.min(1000, Math.floor(subtaskData.completedCycles))) : 0
     };
     subtasks.push(newSubtask);
     return updateTask(taskId, { subtasks });
@@ -887,7 +888,14 @@ const Storage = (function() {
     }
 
     if (!task.subtasks) return null;
-    const subtasks = task.subtasks.map(s => s.id === subtaskId ? { ...s, ...updates } : s);
+    const safeSubtaskUpdates = { ...updates };
+    if ('estimatedCycles' in safeSubtaskUpdates) {
+      safeSubtaskUpdates.estimatedCycles = Number.isFinite(Number(safeSubtaskUpdates.estimatedCycles)) ? Math.max(1, Math.min(100, Math.floor(safeSubtaskUpdates.estimatedCycles))) : 1;
+    }
+    if ('completedCycles' in safeSubtaskUpdates) {
+      safeSubtaskUpdates.completedCycles = Number.isFinite(Number(safeSubtaskUpdates.completedCycles)) ? Math.max(0, Math.min(1000, Math.floor(safeSubtaskUpdates.completedCycles))) : 0;
+    }
+    const subtasks = task.subtasks.map(s => s.id === subtaskId ? { ...s, ...safeSubtaskUpdates } : s);
     const result = updateTask(taskId, { subtasks });
 
     // Trigger callbacks if subtask was completed
