@@ -414,11 +414,12 @@ const Timer = (function() {
     }
     elements.subtaskTracker.classList.remove('hidden');
     elements.subtaskTracker.classList.add('flex');
+    const subtaskTitle = App.escapeHtml(subtask.title || 'subtask');
     elements.subtaskTracker.innerHTML = `
       <div class="flex items-center gap-2 text-body-sm text-text-secondary bg-surface-container-high px-3 py-1 rounded-full">
-        <button class="px-1 font-bold text-text-muted hover:text-text-primary" id="dec-cycle" aria-label="Decrease session count">-</button>
+        <button class="px-1 font-bold text-text-muted hover:text-text-primary" id="dec-cycle" aria-label="Decrease session count for ${subtaskTitle}" title="Decrease session count for ${subtaskTitle}">-</button>
         <span>${subtask.completedCycles || 0} session(s)</span>
-        <button class="px-1 font-bold text-text-muted hover:text-text-primary" id="inc-cycle" aria-label="Increase session count">+</button>
+        <button class="px-1 font-bold text-text-muted hover:text-text-primary" id="inc-cycle" aria-label="Increase session count for ${subtaskTitle}" title="Increase session count for ${subtaskTitle}">+</button>
       </div>
     `;
 
