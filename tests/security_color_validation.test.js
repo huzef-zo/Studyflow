@@ -99,4 +99,19 @@ if (imported.color.includes(';')) {
     console.log('✅ Malicious imported color was blocked');
 }
 
+// 4. Test App.getSubjectColor defense-in-depth against malicious raw subjects in storage
+console.log('\n--- Testing App.getSubjectColor validation ---');
+Storage.saveData('studyflow_subjects', [
+  { id: 'sub_bypass', name: 'Bypass Subject', color: 'red; background-image: url("javascript:alert(1)");' }
+]);
+
+const bypassColor = App.getSubjectColor('Bypass Subject');
+console.log('App.getSubjectColor result for bypassed subject:', bypassColor);
+if (bypassColor.includes(';') || !App.isValidHexColor(bypassColor)) {
+  console.log('❌ App.getSubjectColor returned invalid/injected color payload!');
+  process.exit(1);
+} else {
+  console.log('✅ App.getSubjectColor successfully returned safe fallback hex color');
+}
+
 console.log('\nResult: ALL COLOR SECURITY TESTS PASSED');

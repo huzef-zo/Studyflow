@@ -265,12 +265,13 @@ const History = (function() {
       const mins = subjectMins[s.name] || 0;
       const hours = (mins / 60).toFixed(1);
       const sharePct = totalMins > 0 ? Math.round((mins / totalMins) * 100) : s.percentage;
+      const safeColor = App.isValidHexColor(s.color) ? s.color : '#2563EB';
 
       return `
         <div class="flex flex-col gap-1.5 p-2 rounded bg-surface-container-low/60 hover:bg-surface-container-high transition-colors">
           <div class="flex items-center justify-between">
             <div class="flex items-center gap-2">
-              <span class="w-2 h-2 rounded-full" style="background-color: ${App.escapeHtml(s.color)};"></span>
+              <span class="w-2 h-2 rounded-full" style="background-color: ${App.escapeHtml(safeColor)};"></span>
               <span class="font-body-md text-body-md text-text-primary font-medium">${App.escapeHtml(s.name)}</span>
             </div>
             <span class="font-label-md text-label-md text-text-primary font-semibold">${sharePct}%</span>
@@ -280,7 +281,7 @@ const History = (function() {
             <span class="text-primary-container">${s.completed}/${s.total} tasks</span>
           </div>
           <div class="w-full h-1.5 rounded-full bg-surface-container-highest overflow-hidden">
-            <div class="h-full rounded-full transition-all duration-500" style="width: ${sharePct}%; background-color: ${App.escapeHtml(s.color)};"></div>
+            <div class="h-full rounded-full transition-all duration-500" style="width: ${sharePct}%; background-color: ${App.escapeHtml(safeColor)};"></div>
           </div>
         </div>
       `;
