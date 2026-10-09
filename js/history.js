@@ -248,8 +248,15 @@ const History = (function() {
     const totalMins = filteredSessions.reduce((acc, s) => acc + (s.duration || 0), 0);
 
     const subjectMins = {};
+    // OPTIMIZATION: Query raw tasks once and construct a Map for O(1) lookups instead of calling Storage.getTaskById(s.taskId) inside session loop.
+    const rawTasks = Storage.loadData ? Storage.loadData(Storage.KEYS.TASKS, Storage.DEFAULTS.tasks) : [];
+    const taskMap = new Map();
+    for (let i = 0; i < rawTasks.length; i++) {
+      taskMap.set(rawTasks[i].id, rawTasks[i]);
+    }
+
     filteredSessions.forEach(s => {
-      const task = s.taskId ? Storage.getTaskById(s.taskId) : null;
+      const task = s.taskId ? taskMap.get(s.taskId) : null;
       const subName = task ? task.subject : 'Other';
       subjectMins[subName] = (subjectMins[subName] || 0) + (s.duration || 0);
     });
@@ -299,13 +306,30 @@ const History = (function() {
       return;
     }
 
+    // OPTIMIZATION: Build a Map for O(1) task lookups and use fast Date component getters instead of expensive toLocaleTimeString / toLocaleDateString Intl calls.
+    const rawTasks = Storage.loadData ? Storage.loadData(Storage.KEYS.TASKS, Storage.DEFAULTS.tasks) : [];
+    const taskMap = new Map();
+    for (let i = 0; i < rawTasks.length; i++) {
+      taskMap.set(rawTasks[i].id, rawTasks[i]);
+    }
+    const MONTH_NAMES_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
     elements.studyHistoryList.innerHTML = sorted.map(s => {
-      const task = s.taskId ? Storage.getTaskById(s.taskId) : null;
+      const task = s.taskId ? taskMap.get(s.taskId) : null;
       const title = task ? task.title : 'General Focus';
       const subject = task ? task.subject : 'General';
-      const d = new Date(s.completedAt);
-      const timeStr = !isNaN(d.getTime()) ? d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : 'N/A';
-      const dateStr = !isNaN(d.getTime()) ? d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
+      let timeStr = 'N/A', dateStr = '';
+      if (s.completedAt) {
+        const d = new Date(s.completedAt);
+        if (!isNaN(d.getTime())) {
+          let hours = d.getHours();
+          const minutes = d.getMinutes();
+          const ampm = hours >= 12 ? 'PM' : 'AM';
+          hours = hours % 12 || 12;
+          timeStr = hours + ':' + (minutes < 10 ? '0' + minutes : minutes) + ' ' + ampm;
+          dateStr = MONTH_NAMES_SHORT[d.getMonth()] + ' ' + d.getDate();
+        }
+      }
 
       return `
         <div class="p-3.5 rounded-2xl bg-surface-container-low/70 flex items-center justify-between gap-3 shadow-sm">
