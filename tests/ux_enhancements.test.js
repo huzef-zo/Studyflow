@@ -84,4 +84,16 @@ assert(
 
 console.log('  Passed: Timer subtask controls context-aware ARIA labels and tooltips verified in source.');
 
+// Test Case 6: Keyboard-accessible import button in settings.html
+assert(
+  settingsHtml.includes('id="import-btn"'),
+  'settings.html must contain #import-btn'
+);
+assert(
+  settingsHtml.includes('aria-label="Import backup"'),
+  'settings.html #import-btn must specify aria-label="Import backup"'
+);
+
+console.log('  Passed: Settings page import backup button keyboard accessibility verified in source.');
+
 console.log('Micro-UX Enhancement tests passed successfully!');
