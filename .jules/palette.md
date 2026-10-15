@@ -93,3 +93,7 @@
 ## 2026-09-27 - [Sector Mastery Overview Card Grid Styling & Track Visibility]
 **Learning:** Rendering domain-specific cards (such as Sector Mastery in analytics) using generic unstyled `<a>` and `<div>` tags causes layout collapsing, missing progress bar tracks, and concatenated text values (e.g. `0%0/0`). Defining dedicated card CSS classes (`.mastery-card`, `.mastery-progress-mini`, `.mastery-stats`) with flex alignment, progress track backgrounds, and responsive CSS grid containers (`repeat(auto-fit, minmax(180px, 1fr))`) restores visual clarity and design system consistency.
 **Action:** Ensure all dynamically rendered overview cards have explicitly defined CSS classes with flex alignment and track backgrounds, and wrap card collections in responsive CSS grid containers.
+
+## 2026-10-10 - [Throttled Live Announcer and Context-Aware Audio Action Labels]
+**Learning:** For continuous live states like recording timers, firing screen-reader live announcements every second generates severe audio clutter and renders screen readers unusable. Throttling live announcements (e.g. every 15 seconds or on state changes) in a dedicated `aria-live="polite"` region, combined with interpolating recording titles into repetitive card action button `aria-label`s (e.g. `"Download [Lecture Title]"`), preserves assistive clarity and prevents ambiguity.
+**Action:** Use throttled live regions for continuous timers/counters and interpolate specific item titles into dynamic list control `aria-label`s.
