@@ -70,23 +70,23 @@
         </div>
 
         <!-- Controls & Timer Row -->
-        <div class="flex items-center justify-between pt-1">
-          <div class="flex items-center gap-2">
-            <button id="rec-start-btn" type="button" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-error text-surface-base font-label-md text-label-md font-bold shadow-[0_4px_16px_rgba(239,68,68,0.4)] hover:opacity-90 active:scale-95 transition-all whitespace-nowrap">
+        <div class="flex flex-wrap sm:flex-nowrap items-center justify-between gap-3 pt-1">
+          <div class="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+            <button id="rec-start-btn" type="button" class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-full bg-error text-surface-base font-label-md text-label-md font-bold shadow-[0_4px_16px_rgba(239,68,68,0.4)] hover:opacity-90 active:scale-95 transition-all whitespace-nowrap">
               <span class="material-symbols-outlined text-[20px]">graphic_eq</span>
               <span>Record</span>
             </button>
-            <button id="rec-pause-btn" type="button" class="hidden inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-surface-container-high text-text-primary font-label-md text-label-md font-semibold hover:bg-surface-bright active:scale-95 transition-all whitespace-nowrap" aria-pressed="false" aria-label="Pause recording">
+            <button id="rec-pause-btn" type="button" class="hidden inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-full bg-surface-container-high text-text-primary font-label-md text-label-md font-semibold hover:bg-surface-bright active:scale-95 transition-all whitespace-nowrap" aria-pressed="false" aria-label="Pause recording">
               <span class="material-symbols-outlined text-[20px]">pause</span>
               <span>Pause</span>
             </button>
-            <button id="rec-stop-btn" type="button" class="hidden inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-primary-container text-surface-base font-label-md text-label-md font-bold shadow-[0_4px_16px_rgba(91,155,240,0.3)] hover:bg-accent-hover active:scale-95 transition-all whitespace-nowrap" aria-label="Stop and save recording">
+            <button id="rec-stop-btn" type="button" class="hidden inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-full bg-primary-container text-surface-base font-label-md text-label-md font-bold shadow-[0_4px_16px_rgba(91,155,240,0.3)] hover:bg-accent-hover active:scale-95 transition-all whitespace-nowrap" aria-label="Stop and save recording">
               <span class="material-symbols-outlined text-[20px]">stop</span>
               <span>Stop & Save</span>
             </button>
           </div>
 
-          <div class="flex items-center gap-2">
+          <div class="flex items-center gap-2 shrink-0 ml-auto">
             <span class="font-mono font-headline-md text-headline-md text-text-primary tracking-wider" id="rec-timer-display">00:00</span>
           </div>
         </div>
@@ -255,30 +255,30 @@
 
           return `
             <div class="rounded-2xl bg-surface-glass backdrop-blur-xl border border-glass-border p-4 shadow-sm flex flex-col gap-3 transition-all hover:bg-surface-glass-active" id="rec-card-${rec.id}">
-              <div class="flex items-start justify-between gap-2">
-                <div class="flex flex-col min-w-0">
+              <div class="flex items-start justify-between gap-3">
+                <div class="flex flex-col min-w-0 flex-1">
                   <div class="flex items-center gap-2 mb-1 flex-wrap">
-                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-label-sm font-label-sm font-semibold" style="background-color: ${subjectColor}20; color: ${subjectColor};">
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-label-sm font-label-sm font-semibold shrink-0" style="background-color: ${subjectColor}20; color: ${subjectColor};">
                       <span class="w-2 h-2 rounded-full" style="background-color: ${subjectColor};"></span>
                       <span>${safeSubject}</span>
                     </span>
-                    <span class="font-body-sm text-[12px] text-text-muted">${dateStr} · ${durationStr} · ${sizeStr}</span>
+                    <span class="font-body-sm text-[12px] text-text-muted shrink-0">${dateStr} · ${durationStr} · ${sizeStr}</span>
                   </div>
-                  <h3 class="font-headline-sm text-headline-sm text-text-primary break-words">${safeTitle}</h3>
+                  <h3 class="font-headline-sm text-headline-sm text-text-primary break-words leading-tight">${safeTitle}</h3>
                 </div>
 
                 <!-- Action Controls -->
-                <div class="flex items-center gap-1 shrink-0">
-                  <button class="rename-btn p-1.5 rounded-xl text-text-secondary hover:text-text-primary hover:bg-surface-container-high transition-colors" data-id="${rec.id}" aria-label="Rename ${safeTitle}" title="Rename ${safeTitle}">
+                <div class="flex items-center gap-1 shrink-0 pt-0.5">
+                  <button class="rename-btn p-2 rounded-xl text-text-secondary hover:text-text-primary hover:bg-surface-container-high transition-colors" data-id="${rec.id}" aria-label="Rename ${safeTitle}" title="Rename ${safeTitle}">
                     <span class="material-symbols-outlined text-[18px]">edit</span>
                   </button>
-                  <button class="subject-btn p-1.5 rounded-xl text-text-secondary hover:text-text-primary hover:bg-surface-container-high transition-colors" data-id="${rec.id}" aria-label="Change subject for ${safeTitle}" title="Change subject for ${safeTitle}">
+                  <button class="subject-btn p-2 rounded-xl text-text-secondary hover:text-text-primary hover:bg-surface-container-high transition-colors" data-id="${rec.id}" aria-label="Change subject for ${safeTitle}" title="Change subject for ${safeTitle}">
                     <span class="material-symbols-outlined text-[18px]">label</span>
                   </button>
-                  <button class="download-btn p-1.5 rounded-xl text-text-secondary hover:text-text-primary hover:bg-surface-container-high transition-colors" data-id="${rec.id}" aria-label="Download ${safeTitle}" title="Download ${safeTitle}">
+                  <button class="download-btn p-2 rounded-xl text-text-secondary hover:text-text-primary hover:bg-surface-container-high transition-colors" data-id="${rec.id}" aria-label="Download ${safeTitle}" title="Download ${safeTitle}">
                     <span class="material-symbols-outlined text-[18px]">download</span>
                   </button>
-                  <button class="delete-btn p-1.5 rounded-xl text-text-secondary hover:text-error hover:bg-error-container/20 transition-colors" data-id="${rec.id}" aria-label="Delete ${safeTitle}" title="Delete ${safeTitle}">
+                  <button class="delete-btn p-2 rounded-xl text-text-secondary hover:text-error hover:bg-error-container/20 transition-colors" data-id="${rec.id}" aria-label="Delete ${safeTitle}" title="Delete ${safeTitle}">
                     <span class="material-symbols-outlined text-[18px]">delete</span>
                   </button>
                 </div>
