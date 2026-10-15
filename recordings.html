@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover"/>
+  <meta name="description" content="StudyFlow - Lecture Recorder & Audio Vault"/>
+  <meta name="theme-color" content="#090D12"/>
+
+  <link rel="icon" type="image/png" href="./icon-192.png"/>
+  <link rel="apple-touch-icon" href="./icon-192.png"/>
+  <link rel="manifest" href="./manifest.json"/>
+
+  <title>Recordings - StudyFlow</title>
+  <link rel="stylesheet" href="css/tailwind.css?v=v2026-10-10-01"/>
+  <link rel="stylesheet" href="css/app.css?v=v2026-10-10-01"/>
+</head>
+<body class="bg-surface-base text-on-surface font-body-md text-body-md flex flex-col relative antialiased selection:bg-primary-container selection:text-surface-base min-h-dvh">
+  <!-- Radial Ambient Glow -->
+  <div class="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-lg h-80 bg-[radial-gradient(ellipse_at_top,rgba(91,155,240,0.14),transparent_70%)] pointer-events-none z-0"></div>
+
+  <!-- Shell Containers -->
+  <div id="header-container"></div>
+  <div id="sidebar-container"></div>
+  <div id="bottom-nav-container"></div>
+
+  <!-- Accessibility Live Region for Throttled Announcements -->
+  <div class="sr-only" aria-live="polite" id="rec-live-announcer"></div>
+
+  <!-- Main Content -->
+  <main class="flex-1 flex flex-col relative w-full max-w-lg lg:max-w-3xl mx-auto pt-20 pb-28 px-margin bg-surface-base z-10">
+    <div class="flex flex-col w-full select-none gap-space-md">
+
+      <!-- Title & Header -->
+      <div class="flex items-center justify-between gap-space-sm pt-space-xs">
+        <div class="flex items-center gap-space-sm">
+          <h1 class="font-headline-lg-mobile text-headline-lg-mobile text-text-primary tracking-tight">Recordings</h1>
+          <span class="inline-flex items-center justify-center px-2.5 py-0.5 rounded-full bg-surface-container-high text-text-secondary font-label-sm text-label-sm" id="recordings-count-badge">0 lectures</span>
+        </div>
+        <span class="font-label-sm text-label-sm text-text-muted" id="storage-usage-badge">0 MB stored</span>
+      </div>
+
+      <!-- RECORDER WIDGET CARD -->
+      <div class="rounded-2xl bg-surface-glass backdrop-blur-xl border border-glass-border p-4 shadow-sm flex flex-col gap-3.5">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary text-[20px]">graphic_eq</span>
+            <span class="font-headline-sm text-headline-sm text-text-primary">New Lecture Recording</span>
+          </div>
+          <span class="px-2.5 py-0.5 rounded-full bg-surface-container-high text-text-muted font-label-sm text-label-sm" id="rec-state-badge">READY</span>
+        </div>
+
+        <!-- Title & Subject Inputs -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+          <div class="sm:col-span-2 relative rounded-xl bg-surface-container-lowest/80 border border-glass-border px-3 py-2">
+            <label for="rec-title-input" class="sr-only">Lecture Title</label>
+            <input id="rec-title-input" type="text" placeholder="Lecture title (optional)..." class="w-full bg-transparent text-text-primary placeholder:text-text-muted font-body-sm text-body-sm border-none outline-none focus:outline-none p-0"/>
+          </div>
+          <div class="relative rounded-xl bg-surface-container-lowest/80 border border-glass-border px-3 py-2">
+            <label for="rec-subject-select" class="sr-only">Subject</label>
+            <select id="rec-subject-select" class="w-full bg-transparent text-text-primary font-body-sm text-body-sm border-none outline-none cursor-pointer">
+              <!-- Populated by JS -->
+            </select>
+          </div>
+        </div>
+
+        <!-- Live Warning Banner -->
+        <div class="hidden bg-tertiary-container/20 border border-tertiary/30 rounded-xl p-3 text-tertiary font-body-sm text-[12px] flex items-center gap-2" id="rec-warning-banner">
+          <span class="material-symbols-outlined text-[18px] shrink-0">warning</span>
+          <span>Keep this screen open. Switching apps or locking the phone may stop recording on mobile.</span>
+        </div>
+
+        <!-- Controls & Timer Row -->
+        <div class="flex items-center justify-between pt-1">
+          <div class="flex items-center gap-2">
+            <button id="rec-start-btn" type="button" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-error text-surface-base font-label-md text-label-md font-bold shadow-[0_4px_16px_rgba(239,68,68,0.4)] hover:opacity-90 active:scale-95 transition-all whitespace-nowrap">
+              <span class="material-symbols-outlined text-[20px]">graphic_eq</span>
+              <span>Record</span>
+            </button>
+            <button id="rec-pause-btn" type="button" class="hidden inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-surface-container-high text-text-primary font-label-md text-label-md font-semibold hover:bg-surface-bright active:scale-95 transition-all whitespace-nowrap" aria-pressed="false" aria-label="Pause recording">
+              <span class="material-symbols-outlined text-[20px]">pause</span>
+              <span>Pause</span>
+            </button>
+            <button id="rec-stop-btn" type="button" class="hidden inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-primary-container text-surface-base font-label-md text-label-md font-bold shadow-[0_4px_16px_rgba(91,155,240,0.3)] hover:bg-accent-hover active:scale-95 transition-all whitespace-nowrap" aria-label="Stop and save recording">
+              <span class="material-symbols-outlined text-[20px]">stop</span>
+              <span>Stop & Save</span>
+            </button>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <span class="font-mono font-headline-md text-headline-md text-text-primary tracking-wider" id="rec-timer-display">00:00</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- SEARCH & FILTER CONTROLS -->
+      <div class="flex flex-col gap-space-sm mt-2">
+        <div class="relative w-full rounded-2xl bg-surface-container/60 backdrop-blur-xl shadow-sm flex items-center px-3.5 py-2.5 border border-glass-border">
+          <span class="material-symbols-outlined text-text-muted text-[20px] mr-2.5">search</span>
+          <input class="w-full bg-transparent text-text-primary placeholder:text-text-muted font-body-md text-body-md focus:outline-none border-none outline-none p-0" id="recordings-search-input" placeholder="Search recordings or subjects..." type="text" aria-label="Search recordings"/>
+        </div>
+
+        <div class="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none -mx-margin px-margin" id="subject-filter-chips" role="tablist" aria-label="Subject filter">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+      <!-- RECORDINGS LIST -->
+      <div class="flex flex-col gap-3.5" id="recordings-list">
+        <!-- Populated by JS -->
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Core Scripts -->
+  <script src="version.js"></script>
+  <script src="js/storage.js?v=v2026-10-10-01"></script>
+  <script src="js/subtask-utils.js?v=v2026-10-10-01"></script>
+  <script src="js/pwa-manager.js?v=v2026-10-10-01"></script>
+  <script src="js/app.js?v=v2026-10-10-01"></script>
+  <script src="js/audio-db.js?v=v2026-10-10-01"></script>
+  <script src="js/recorder.js?v=v2026-10-10-01"></script>
+
+  <script>
+    (function RecordingsPage() {
+      'use strict';
+
+      let currentSubjectFilter = 'ALL';
+      let searchQuery = '';
+      const activeObjectUrls = new Map(); // recId -> objectUrl
+
+      function formatSize(bytes) {
+        if (!bytes || bytes <= 0) return '0 KB';
+        if (bytes < 1024 * 1024) {
+          return (bytes / 1024).toFixed(1) + ' KB';
+        }
+        return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+      }
+
+      function sanitizeFilename(name, mimeType) {
+        let clean = (name || 'Lecture').replace(/[^\w\s\-\.]/gi, '_').trim().replace(/\s+/g, '_');
+        let ext = '.webm';
+        if (mimeType) {
+          if (mimeType.includes('mp4')) ext = '.m4a';
+          else if (mimeType.includes('ogg')) ext = '.ogg';
+          else if (mimeType.includes('webm')) ext = '.webm';
+        }
+        if (!clean.endsWith(ext)) {
+          clean += ext;
+        }
+        return clean;
+      }
+
+      function renderSubjectsDropdown() {
+        const select = document.getElementById('rec-subject-select');
+        if (!select) return;
+        const subjects = Storage.getSubjects ? Storage.getSubjects() : [];
+        select.innerHTML = subjects.map(s =>
+          `<option value="${App.escapeHtml(s.name)}">${App.escapeHtml(s.name)}</option>`
+        ).join('');
+      }
+
+      function renderFilterChips() {
+        const container = document.getElementById('subject-filter-chips');
+        if (!container) return;
+        const subjects = Storage.getSubjects ? Storage.getSubjects() : [];
+        const chips = [{ name: 'ALL', color: null }, ...subjects];
+
+        container.innerHTML = chips.map(c => {
+          const isSelected = currentSubjectFilter === c.name;
+          return `
+            <button role="tab" aria-selected="${isSelected}" tabindex="${isSelected ? '0' : '-1'}" class="filter-chip px-3 py-1.5 rounded-full font-label-sm text-label-sm whitespace-nowrap transition-all flex items-center gap-1.5 ${isSelected ? 'bg-primary-container text-surface-base font-semibold' : 'bg-surface-container-high/80 text-text-secondary hover:text-text-primary'}" data-subject="${App.escapeHtml(c.name)}">
+              ${c.color ? `<span class="w-2 h-2 rounded-full" style="background-color: ${App.escapeHtml(c.color)}"></span>` : ''}
+              <span>${App.escapeHtml(c.name)}</span>
+            </button>
+          `;
+        }).join('');
+
+        container.querySelectorAll('.filter-chip').forEach(btn => {
+          btn.addEventListener('click', () => {
+            currentSubjectFilter = btn.getAttribute('data-subject');
+            renderFilterChips();
+            renderRecordingsList();
+          });
+        });
+      }
+
+      async function updateStorageUsageDisplay() {
+        const badge = document.getElementById('storage-usage-badge');
+        if (!badge) return;
+
+        let totalBytes = 0;
+        if (typeof AudioDB !== 'undefined') {
+          try {
+            totalBytes = await AudioDB.getTotalSize();
+          } catch (e) {}
+        }
+        badge.textContent = `${formatSize(totalBytes)} stored`;
+      }
+
+      function revokeAllObjectUrls() {
+        activeObjectUrls.forEach((url) => {
+          try { URL.revokeObjectURL(url); } catch (e) {}
+        });
+        activeObjectUrls.clear();
+      }
+
+      async function renderRecordingsList() {
+        const container = document.getElementById('recordings-list');
+        const badge = document.getElementById('recordings-count-badge');
+        if (!container) return;
+
+        revokeAllObjectUrls();
+
+        let recordings = Storage.getRecordings ? Storage.getRecordings() : [];
+
+        recordings.sort((a, b) => {
+          const aTime = String(a.createdAt || '');
+          const bTime = String(b.createdAt || '');
+          return aTime < bTime ? 1 : (aTime > bTime ? -1 : 0);
+        });
+
+        if (badge) {
+          badge.textContent = `${recordings.length} ${recordings.length === 1 ? 'lecture' : 'lectures'}`;
+        }
+
+        if (currentSubjectFilter !== 'ALL') {
+          recordings = recordings.filter(r => r.subject === currentSubjectFilter);
+        }
+
+        if (searchQuery) {
+          const q = searchQuery.toLowerCase();
+          recordings = recordings.filter(r =>
+            (r.title && r.title.toLowerCase().includes(q)) ||
+            (r.subject && r.subject.toLowerCase().includes(q))
+          );
+        }
+
+        if (recordings.length === 0) {
+          container.innerHTML = App.createEmptyStateHtml({
+            title: 'No recordings',
+            text: searchQuery || currentSubjectFilter !== 'ALL' ? 'No recordings match your search or filter.' : 'Record your first lecture or study session using the recorder above.',
+            icon: 'graphic_eq'
+          });
+          return;
+        }
+
+        container.innerHTML = recordings.map(rec => {
+          const safeTitle = App.escapeHtml(rec.title || 'Lecture');
+          const safeSubject = App.escapeHtml(rec.subject || 'General');
+          const subjectColor = App.getSubjectColor(rec.subject);
+          const durationStr = Recorder.formatTime ? Recorder.formatTime(rec.duration || 0) : `${rec.duration || 0}s`;
+          const sizeStr = formatSize(rec.size || 0);
+          const dateStr = Storage.formatDisplayDate(rec.createdAt);
+
+          return `
+            <div class="rounded-2xl bg-surface-glass backdrop-blur-xl border border-glass-border p-4 shadow-sm flex flex-col gap-3 transition-all hover:bg-surface-glass-active" id="rec-card-${rec.id}">
+              <div class="flex items-start justify-between gap-2">
+                <div class="flex flex-col min-w-0">
+                  <div class="flex items-center gap-2 mb-1 flex-wrap">
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-label-sm font-label-sm font-semibold" style="background-color: ${subjectColor}20; color: ${subjectColor};">
+                      <span class="w-2 h-2 rounded-full" style="background-color: ${subjectColor};"></span>
+                      <span>${safeSubject}</span>
+                    </span>
+                    <span class="font-body-sm text-[12px] text-text-muted">${dateStr} · ${durationStr} · ${sizeStr}</span>
+                  </div>
+                  <h3 class="font-headline-sm text-headline-sm text-text-primary break-words">${safeTitle}</h3>
+                </div>
+
+                <!-- Action Controls -->
+                <div class="flex items-center gap-1 shrink-0">
+                  <button class="rename-btn p-1.5 rounded-xl text-text-secondary hover:text-text-primary hover:bg-surface-container-high transition-colors" data-id="${rec.id}" aria-label="Rename ${safeTitle}" title="Rename ${safeTitle}">
+                    <span class="material-symbols-outlined text-[18px]">edit</span>
+                  </button>
+                  <button class="subject-btn p-1.5 rounded-xl text-text-secondary hover:text-text-primary hover:bg-surface-container-high transition-colors" data-id="${rec.id}" aria-label="Change subject for ${safeTitle}" title="Change subject for ${safeTitle}">
+                    <span class="material-symbols-outlined text-[18px]">label</span>
+                  </button>
+                  <button class="download-btn p-1.5 rounded-xl text-text-secondary hover:text-text-primary hover:bg-surface-container-high transition-colors" data-id="${rec.id}" aria-label="Download ${safeTitle}" title="Download ${safeTitle}">
+                    <span class="material-symbols-outlined text-[18px]">download</span>
+                  </button>
+                  <button class="delete-btn p-1.5 rounded-xl text-text-secondary hover:text-error hover:bg-error-container/20 transition-colors" data-id="${rec.id}" aria-label="Delete ${safeTitle}" title="Delete ${safeTitle}">
+                    <span class="material-symbols-outlined text-[18px]">delete</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Audio Player Container -->
+              <div class="mt-1" id="player-container-${rec.id}">
+                <button class="load-audio-btn w-full py-2.5 px-3 rounded-xl bg-surface-container-low/60 hover:bg-surface-container-high text-primary font-label-md text-label-md flex items-center justify-center gap-2 transition-colors" data-id="${rec.id}">
+                  <span class="material-symbols-outlined text-[18px]">play_circle</span>
+                  <span>Load & Play Audio</span>
+                </button>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        // Event Delegation for List Actions
+        container.querySelectorAll('.load-audio-btn').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            const id = btn.getAttribute('data-id');
+            const playerContainer = document.getElementById(`player-container-${id}`);
+            if (!playerContainer) return;
+
+            btn.disabled = true;
+            btn.textContent = 'Loading audio...';
+
+            if (typeof AudioDB === 'undefined') {
+              playerContainer.innerHTML = `<span class="font-body-sm text-body-sm text-text-muted italic">Audio storage not available</span>`;
+              return;
+            }
+
+            try {
+              const blob = await AudioDB.getBlob(id);
+              if (!blob || blob.size === 0) {
+                playerContainer.innerHTML = `<span class="font-body-sm text-body-sm text-error/80 italic flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">cloud_off</span> Audio not on this device</span>`;
+                return;
+              }
+
+              const objectUrl = URL.createObjectURL(blob);
+              activeObjectUrls.set(id, objectUrl);
+
+              playerContainer.innerHTML = `
+                <audio controls class="w-full rounded-xl" src="${objectUrl}" preload="auto" autoplay></audio>
+              `;
+            } catch (err) {
+              console.error('Failed to load audio blob:', err);
+              playerContainer.innerHTML = `<span class="font-body-sm text-body-sm text-error/80 italic">Failed to load audio file</span>`;
+            }
+          });
+        });
+
+        // Rename action
+        container.querySelectorAll('.rename-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const id = btn.getAttribute('data-id');
+            const rec = recordings.find(r => r.id === id);
+            if (!rec) return;
+
+            const content = `
+              <div class="flex flex-col gap-2">
+                <label for="rename-input" class="font-label-sm text-label-sm text-text-secondary">New Title</label>
+                <input type="text" id="rename-input" class="w-full bg-surface-container-lowest/80 rounded-xl px-3 py-2 text-text-primary font-body-md text-body-md border border-glass-border outline-none focus:border-primary-container" value="${App.escapeHtml(rec.title)}"/>
+              </div>
+            `;
+
+            const modal = App.createModal({
+              title: 'Rename Recording',
+              content,
+              footer: `
+                <button class="px-4 py-2 rounded-full font-label-md text-text-secondary hover:text-text-primary transition-colors" data-action="cancel">Cancel</button>
+                <button class="px-4 py-2 rounded-full font-label-md bg-primary-container text-surface-base hover:bg-accent-hover font-semibold transition-colors" id="save-rename-btn">Save</button>
+              `
+            });
+
+            modal.querySelector('#save-rename-btn').addEventListener('click', () => {
+              const newTitle = modal.querySelector('#rename-input').value.trim();
+              if (!newTitle) {
+                App.showToast('Please enter a title', 'warning');
+                return;
+              }
+              Storage.updateRecording(id, { title: newTitle });
+              App.showToast('Recording renamed', 'success');
+              App.closeModal(modal);
+              renderRecordingsList();
+            });
+
+            modal.querySelector('[data-action="cancel"]').addEventListener('click', () => App.closeModal(modal));
+            App.openModal(modal);
+          });
+        });
+
+        // Subject action
+        container.querySelectorAll('.subject-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const id = btn.getAttribute('data-id');
+            const rec = recordings.find(r => r.id === id);
+            if (!rec) return;
+
+            const subjects = Storage.getSubjects ? Storage.getSubjects() : [];
+            const content = `
+              <div class="flex flex-col gap-2">
+                <label for="change-subject-select" class="font-label-sm text-label-sm text-text-secondary">Select Subject</label>
+                <select id="change-subject-select" class="w-full bg-surface-container-lowest/80 rounded-xl px-3 py-2 text-text-primary font-body-md text-body-md border border-glass-border outline-none">
+                  ${subjects.map(s => `<option value="${App.escapeHtml(s.name)}" ${s.name === rec.subject ? 'selected' : ''}>${App.escapeHtml(s.name)}</option>`).join('')}
+                </select>
+              </div>
+            `;
+
+            const modal = App.createModal({
+              title: 'Change Subject',
+              content,
+              footer: `
+                <button class="px-4 py-2 rounded-full font-label-md text-text-secondary hover:text-text-primary transition-colors" data-action="cancel">Cancel</button>
+                <button class="px-4 py-2 rounded-full font-label-md bg-primary-container text-surface-base hover:bg-accent-hover font-semibold transition-colors" id="save-subject-btn">Save</button>
+              `
+            });
+
+            modal.querySelector('#save-subject-btn').addEventListener('click', () => {
+              const newSubject = modal.querySelector('#change-subject-select').value;
+              Storage.updateRecording(id, { subject: newSubject });
+              App.showToast('Subject updated', 'success');
+              App.closeModal(modal);
+              renderRecordingsList();
+            });
+
+            modal.querySelector('[data-action="cancel"]').addEventListener('click', () => App.closeModal(modal));
+            App.openModal(modal);
+          });
+        });
+
+        // Download action
+        container.querySelectorAll('.download-btn').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            const id = btn.getAttribute('data-id');
+            const rec = recordings.find(r => r.id === id);
+            if (!rec) return;
+
+            if (typeof AudioDB === 'undefined') {
+              App.showToast('Audio storage not available', 'error');
+              return;
+            }
+
+            try {
+              const blob = await AudioDB.getBlob(id);
+              if (!blob || blob.size === 0) {
+                App.showToast('Audio file not found on this device', 'error');
+                return;
+              }
+
+              const filename = sanitizeFilename(rec.title, rec.mimeType);
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = filename;
+              a.click();
+              setTimeout(() => URL.revokeObjectURL(url), 1000);
+              App.showToast(`Downloading ${filename}...`, 'success');
+            } catch (err) {
+              console.error('Download failed:', err);
+              App.showToast('Failed to download recording', 'error');
+            }
+          });
+        });
+
+        // Delete action
+        container.querySelectorAll('.delete-btn').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            const id = btn.getAttribute('data-id');
+            const rec = recordings.find(r => r.id === id);
+            if (!rec) return;
+
+            const confirmed = await App.confirm({
+              title: 'Delete Recording',
+              message: `Are you sure you want to delete "${rec.title}"? The audio file and metadata will be permanently deleted.`,
+              confirmText: 'Delete Recording',
+              danger: true
+            });
+
+            if (confirmed) {
+              if (activeObjectUrls.has(id)) {
+                URL.revokeObjectURL(activeObjectUrls.get(id));
+                activeObjectUrls.delete(id);
+              }
+
+              if (typeof AudioDB !== 'undefined') {
+                await AudioDB.deleteBlob(id);
+              }
+              Storage.deleteRecording(id);
+              App.showToast('Recording deleted', 'info');
+              updateStorageUsageDisplay();
+              renderRecordingsList();
+            }
+          });
+        });
+      }
+
+      function setupRecorderControls() {
+        const startBtn = document.getElementById('rec-start-btn');
+        const pauseBtn = document.getElementById('rec-pause-btn');
+        const stopBtn = document.getElementById('rec-stop-btn');
+        const searchInput = document.getElementById('recordings-search-input');
+
+        if (startBtn) {
+          startBtn.addEventListener('click', () => {
+            Recorder.startRecording();
+          });
+        }
+
+        if (pauseBtn) {
+          pauseBtn.addEventListener('click', () => {
+            if (Recorder.getState() === 'recording') {
+              Recorder.pauseRecording();
+            } else if (Recorder.getState() === 'paused') {
+              Recorder.resumeRecording();
+            }
+          });
+        }
+
+        if (stopBtn) {
+          stopBtn.addEventListener('click', async () => {
+            await Recorder.stopRecording();
+            updateStorageUsageDisplay();
+            renderRecordingsList();
+          });
+        }
+
+        if (searchInput) {
+          searchInput.addEventListener('input', (e) => {
+            searchQuery = e.target.value.trim();
+            renderRecordingsList();
+          });
+        }
+
+        window.addEventListener('studyflow_recordings_updated', () => {
+          updateStorageUsageDisplay();
+          renderRecordingsList();
+        });
+
+        window.addEventListener('beforeunload', () => {
+          revokeAllObjectUrls();
+        });
+      }
+
+      function init() {
+        if (typeof Recorder !== 'undefined') Recorder.init();
+        renderSubjectsDropdown();
+        renderFilterChips();
+        updateStorageUsageDisplay();
+        renderRecordingsList();
+        setupRecorderControls();
+      }
+
+      init();
+    })();
+  </script>
+</body>
+</html>

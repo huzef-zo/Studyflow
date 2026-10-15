@@ -23,7 +23,7 @@ const App = (function() {
       'index.html': 'home', '': 'home',
       'tasks.html': 'tasks', 'calendar.html': 'calendar',
       'timer.html': 'focus', 'goals.html': 'goals',
-      'notes.html': 'notes',
+      'notes.html': 'notes', 'recordings.html': 'recordings',
       'history.html': 'analytics', 'settings.html': 'settings'
     };
     return pageMap[filename] || 'home';
@@ -57,7 +57,7 @@ const App = (function() {
       { id: 'calendar', label: 'Calendar', icon: 'calendar_today', href: 'calendar.html' }
     ];
 
-    const isMoreActive = ['notes', 'goals', 'analytics', 'settings'].includes(page);
+    const isMoreActive = ['notes', 'goals', 'analytics', 'settings', 'recordings'].includes(page);
 
     return `
       <nav class="fixed bottom-0 inset-x-0 z-40 pb-safe bg-surface-glass backdrop-blur-2xl lg:hidden" id="bottom-nav">
@@ -88,6 +88,7 @@ const App = (function() {
       { id: 'focus', label: 'Focus', icon: 'timelapse', href: 'timer.html' },
       { id: 'calendar', label: 'Calendar', icon: 'calendar_today', href: 'calendar.html' },
       { id: 'notes', label: 'Notes', icon: 'description', href: 'notes.html' },
+      { id: 'recordings', label: 'Recordings', icon: 'graphic_eq', href: 'recordings.html' },
       { id: 'goals', label: 'Goals', icon: 'track_changes', href: 'goals.html' },
       { id: 'analytics', label: 'Analytics', icon: 'query_stats', href: 'history.html' },
       { id: 'settings', label: 'Settings', icon: 'tune', href: 'settings.html' }
@@ -171,6 +172,7 @@ const App = (function() {
 
   function openMoreSheet() {
     const notesCount = Storage.getNotes ? Storage.getNotes().length : 0;
+    const recordingsCount = Storage.getRecordings ? Storage.getRecordings().length : 0;
     const currentWeek = Storage.getWeekNumber ? Storage.getWeekNumber() : 1;
 
     let totalMinutes = 0;
@@ -210,6 +212,18 @@ const App = (function() {
               <div class="flex flex-col min-w-0">
                 <span class="font-headline-sm text-[16px] text-text-primary truncate">Notes</span>
                 <span class="font-label-sm text-label-sm text-text-secondary truncate mt-0.5">${notesCount} active notes</span>
+              </div>
+            </a>
+            <a href="recordings.html" class="group bg-surface-container/70 hover:bg-surface-glass-active active:scale-[0.98] rounded-xl p-space-md flex flex-col justify-between h-36 transition-all relative overflow-hidden shadow-sm">
+              <div class="flex items-start justify-between w-full">
+                <div class="w-10 h-10 rounded-full bg-tertiary-container/30 text-tertiary flex items-center justify-center group-hover:bg-primary-container group-hover:text-surface-base transition-colors">
+                  <span class="material-symbols-outlined text-[20px]">graphic_eq</span>
+                </div>
+                <span class="material-symbols-outlined text-[18px] text-text-muted group-hover:text-text-primary group-hover:translate-x-0.5 transition-all">chevron_right</span>
+              </div>
+              <div class="flex flex-col min-w-0">
+                <span class="font-headline-sm text-[16px] text-text-primary truncate">Recordings</span>
+                <span class="font-label-sm text-label-sm text-text-secondary truncate mt-0.5">${recordingsCount} lectures</span>
               </div>
             </a>
             <a href="goals.html" class="group bg-surface-container/70 hover:bg-surface-glass-active active:scale-[0.98] rounded-xl p-space-md flex flex-col justify-between h-36 transition-all relative overflow-hidden shadow-sm">
