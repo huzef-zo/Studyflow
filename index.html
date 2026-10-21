@@ -17,8 +17,8 @@
   <link rel="manifest" href="./manifest.json"/>
 
   <title>Home - StudyFlow</title>
-  <link rel="stylesheet" href="css/tailwind.css?v=v2026-10-10-01"/>
-  <link rel="stylesheet" href="css/app.css?v=v2026-10-10-01"/>
+  <link rel="stylesheet" href="css/tailwind.css?v=v2026-10-21-01"/>
+  <link rel="stylesheet" href="css/app.css?v=v2026-10-21-01"/>
 </head>
 <body class="bg-surface-base text-on-surface font-body-md text-body-md flex flex-col relative antialiased selection:bg-primary-container selection:text-surface-base min-h-dvh">
   <!-- Radial Ambient Glow -->
@@ -108,8 +108,25 @@
 
       <!-- Auxiliary Details Cards: Today's Plan, Mastery, 9pm Reflection -->
       <section class="flex flex-col gap-space-md">
-        <!-- Today's Plan (Scheduler) -->
+        <!-- Today's Topics Section -->
         <details class="group bg-surface-container/60 backdrop-blur-md rounded-DEFAULT p-4 shadow-sm border border-glass-border-subtle" open>
+          <summary class="flex items-center justify-between cursor-pointer list-none font-headline-sm text-headline-sm text-text-primary">
+            <div class="flex items-center gap-2">
+              <span class="material-symbols-outlined text-primary text-[20px]">task_alt</span>
+              <span>Today's Topics</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="font-label-sm text-label-sm text-primary-container bg-surface-container-highest px-2 py-0.5 rounded-full" id="topics-count-badge">0</span>
+              <span class="material-symbols-outlined text-text-secondary transition-transform group-open:rotate-180">expand_more</span>
+            </div>
+          </summary>
+          <div class="flex flex-col gap-2 mt-3 pt-3 border-t border-glass-border-subtle" id="today-topics-container">
+            <!-- Populated by JS -->
+          </div>
+        </details>
+
+        <!-- Today's Plan (Scheduler) -->
+        <details class="group bg-surface-container/60 backdrop-blur-md rounded-DEFAULT p-4 shadow-sm border border-glass-border-subtle">
           <summary class="flex items-center justify-between cursor-pointer list-none font-headline-sm text-headline-sm text-text-primary">
             <div class="flex items-center gap-2">
               <span class="material-symbols-outlined text-primary text-[20px]">calendar_clock</span>
@@ -158,12 +175,12 @@
 
   <!-- Core Scripts -->
   <script src="version.js"></script>
-  <script src="js/storage.js?v=v2026-10-10-01"></script>
-  <script src="js/subtask-utils.js?v=v2026-10-10-01"></script>
-  <script src="js/pwa-manager.js?v=v2026-10-10-01"></script>
-  <script src="js/achievements.js?v=v2026-10-10-01"></script>
-  <script src="js/scheduler.js?v=v2026-10-10-01"></script>
-  <script src="js/app.js?v=v2026-10-10-01"></script>
+  <script src="js/storage.js?v=v2026-10-21-01"></script>
+  <script src="js/subtask-utils.js?v=v2026-10-21-01"></script>
+  <script src="js/pwa-manager.js?v=v2026-10-21-01"></script>
+  <script src="js/achievements.js?v=v2026-10-21-01"></script>
+  <script src="js/scheduler.js?v=v2026-10-21-01"></script>
+  <script src="js/app.js?v=v2026-10-21-01"></script>
 
   <script>
     (function initHome() {
@@ -390,6 +407,10 @@
               <span class="text-text-primary font-medium truncate">${App.escapeHtml(s.name)}</span>
               <span class="text-primary font-semibold">${s.percentage}%</span>
             </div>
+            <div class="flex items-center justify-between font-label-sm text-[11px] text-text-secondary">
+              <span>${s.focusedHours}h focus</span>
+              <span>${s.completedTopics} topics</span>
+            </div>
             <div class="w-full h-1.5 rounded-full bg-surface-container-highest overflow-hidden">
               <div class="h-full bg-primary-container rounded-full" style="width:${s.percentage}%;"></div>
             </div>
@@ -421,10 +442,55 @@
         });
       }
 
+      function renderTodayTopics() {
+        const topicsContainer = document.getElementById('today-topics-container');
+        const badgeEl = document.getElementById('topics-count-badge');
+        if (!topicsContainer) return;
+
+        const topics = Storage.getTodayTopics ? Storage.getTodayTopics() : [];
+        if (badgeEl) badgeEl.textContent = topics.length;
+
+        if (topics.length === 0) {
+          topicsContainer.innerHTML = '<p class="font-body-sm text-body-sm text-text-muted">No topics planned for today.</p>';
+          return;
+        }
+
+        topicsContainer.innerHTML = topics.map(topic => `
+          <div class="flex items-center justify-between p-3 rounded-xl bg-surface-container-lowest/60 hover:bg-surface-container-lowest transition-colors">
+            <a href="timer.html?taskId=${App.escapeHtml(topic.taskId)}&subtaskId=${App.escapeHtml(topic.subtaskId)}" class="flex flex-col min-w-0 flex-1 pr-2">
+              <div class="flex items-center gap-2">
+                <span class="font-body-sm text-body-sm font-medium text-text-primary truncate">${App.escapeHtml(topic.title)}</span>
+                ${topic.isOverdue ? '<span class="font-label-sm text-[10px] text-error bg-error-container/40 px-1.5 py-0.2 rounded-full">Overdue</span>' : ''}
+              </div>
+              <span class="font-label-sm text-[11px] text-text-secondary truncate">${App.escapeHtml(topic.parentTitle)} · ${App.escapeHtml(topic.subject)}</span>
+            </a>
+            <button class="move-tomorrow-btn px-2.5 py-1 rounded-full bg-surface-container-high text-primary hover:text-accent-hover font-label-sm text-[11px] transition-colors shrink-0" data-task-id="${App.escapeHtml(topic.taskId)}" data-subtask-id="${App.escapeHtml(topic.subtaskId)}">
+              Move to tomorrow
+            </button>
+          </div>
+        `).join('');
+
+        topicsContainer.querySelectorAll('.move-tomorrow-btn').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const taskId = btn.getAttribute('data-task-id');
+            const subtaskId = btn.getAttribute('data-subtask-id');
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            const tomorrowStr = Storage.formatDate(tomorrow);
+            Storage.updateSubtask(taskId, subtaskId, { plannedDate: tomorrowStr });
+            App.showToast('Topic moved to tomorrow', 'success');
+            renderHome();
+          });
+        });
+      }
+
       function renderHome() {
         renderGreeting();
         renderHeroFocusCard();
         renderMetrics();
+        renderTodayTopics();
         renderUpcomingTasks();
         renderTodayPlan();
         renderMastery();

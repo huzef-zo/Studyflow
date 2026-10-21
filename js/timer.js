@@ -385,8 +385,25 @@ const Timer = (function() {
     }
     elements.subtaskContainer.classList.remove('hidden');
     const available = task.subtasks.filter(s => !s.isCompleted);
+    const todayStr = Storage.formatDate(new Date());
+
+    // Sort available subtasks so topics planned for today appear first
+    available.sort((a, b) => {
+      const aIsToday = a.plannedDate === todayStr;
+      const bIsToday = b.plannedDate === todayStr;
+      if (aIsToday && !bIsToday) return -1;
+      if (!aIsToday && bIsToday) return 1;
+      const aDate = a.plannedDate || '9999-99-99';
+      const bDate = b.plannedDate || '9999-99-99';
+      return aDate < bDate ? -1 : (aDate > bDate ? 1 : 0);
+    });
+
     elements.subtaskSelect.innerHTML = '<option value="">Select Subtask</option>' +
-      available.map(s => `<option value="${App.escapeHtml(s.id)}" ${s.id === selectedSubtaskId ? 'selected' : ''}>${App.escapeHtml(s.title)}</option>`).join('');
+      available.map(s => {
+        const isToday = s.plannedDate === todayStr;
+        const prefix = isToday ? '★ Today: ' : '';
+        return `<option value="${App.escapeHtml(s.id)}" ${s.id === selectedSubtaskId ? 'selected' : ''}>${prefix}${App.escapeHtml(s.title)}</option>`;
+      }).join('');
 
     if (selectedSubtaskId && !available.some(s => s.id === selectedSubtaskId)) {
       selectedSubtaskId = null;
@@ -507,18 +524,24 @@ const Timer = (function() {
     const state = Storage.getTimerState ? Storage.getTimerState() : null;
     const urlParams = new URLSearchParams(window.location.search);
     const urlTaskId = urlParams.get('taskId');
+    const urlSubtaskId = urlParams.get('subtaskId');
 
     if (!state) {
       if (urlTaskId) {
         selectedTaskId = urlTaskId;
+        if (urlSubtaskId) selectedSubtaskId = urlSubtaskId;
         handleTaskChange();
+        if (urlSubtaskId && elements.subtaskSelect) {
+          elements.subtaskSelect.value = urlSubtaskId;
+          handleSubtaskChange();
+        }
       }
       return;
     }
 
     currentSessionType = state.type || 'work';
-    selectedTaskId = state.selectedTaskId;
-    selectedSubtaskId = state.selectedSubtaskId;
+    selectedTaskId = urlTaskId || state.selectedTaskId;
+    selectedSubtaskId = urlSubtaskId || state.selectedSubtaskId;
     sessionsInCycle = state.sessionsInCycle ?? 0;
 
     if (elements.taskSelect) {

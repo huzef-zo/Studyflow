@@ -11,8 +11,8 @@
   <link rel="manifest" href="./manifest.json"/>
 
   <title>Settings - StudyFlow</title>
-  <link rel="stylesheet" href="css/tailwind.css?v=v2026-10-10-01"/>
-  <link rel="stylesheet" href="css/app.css?v=v2026-10-10-01"/>
+  <link rel="stylesheet" href="css/tailwind.css?v=v2026-10-21-01"/>
+  <link rel="stylesheet" href="css/app.css?v=v2026-10-21-01"/>
 </head>
 <body class="bg-surface-base text-on-surface font-body-md text-body-md flex flex-col relative antialiased selection:bg-primary-container selection:text-surface-base min-h-dvh">
   <!-- Radial Ambient Glow -->
@@ -326,10 +326,10 @@
 
   <!-- Core Scripts -->
   <script src="version.js"></script>
-  <script src="js/storage.js?v=v2026-10-10-01"></script>
-  <script src="js/subtask-utils.js?v=v2026-10-10-01"></script>
-  <script src="js/pwa-manager.js?v=v2026-10-10-01"></script>
-  <script src="js/app.js?v=v2026-10-10-01"></script>
+  <script src="js/storage.js?v=v2026-10-21-01"></script>
+  <script src="js/subtask-utils.js?v=v2026-10-21-01"></script>
+  <script src="js/pwa-manager.js?v=v2026-10-21-01"></script>
+  <script src="js/app.js?v=v2026-10-21-01"></script>
 
   <script>
     (function initSettings() {
@@ -488,6 +488,10 @@
               <label class="font-label-sm text-label-sm text-text-secondary" for="subj-color-input">Color Accent</label>
               <input type="color" id="subj-color-input" class="w-12 h-10 rounded-xl bg-transparent border-none cursor-pointer p-0" value="${App.escapeHtml(color)}"/>
             </div>
+            <div class="flex flex-col gap-1">
+              <label class="font-label-sm text-label-sm text-text-secondary" for="subj-target-input">Target hours</label>
+              <input type="number" id="subj-target-input" min="1" max="1000" step="1" class="w-full bg-surface-container-lowest/80 rounded-xl px-3 py-2 text-text-primary text-body-md border border-glass-border outline-none focus:border-primary-container" value="${existing.targetHours || 10}"/>
+            </div>
           </div>
         `;
 
@@ -503,8 +507,10 @@
         modal.querySelector('#save-subj-btn').addEventListener('click', () => {
           const nameInput = modal.querySelector('#subj-name-input');
           const colorInput = modal.querySelector('#subj-color-input');
+          const targetInput = modal.querySelector('#subj-target-input');
           const newName = nameInput.value.trim();
           const newColor = colorInput.value;
+          const newTargetHours = parseInt(targetInput.value, 10) || 10;
 
           if (!newName) {
             App.showToast('Please enter a subject name', 'warning');
@@ -513,9 +519,9 @@
           }
 
           if (isEdit) {
-            Storage.updateSubject(existing.id, { name: newName, color: newColor });
+            Storage.updateSubject(existing.id, { name: newName, color: newColor, targetHours: newTargetHours });
           } else {
-            Storage.addSubject(newName, newColor);
+            Storage.addSubject(newName, newColor, newTargetHours);
           }
 
           App.showToast('Subject saved', 'success');

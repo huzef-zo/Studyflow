@@ -138,10 +138,10 @@ const Goals = (function() {
       };
     }
 
-    tasks.forEach(t => {
-      if (t.completed && t.completedAt) {
-        const dStr = t.completedAt.slice(0, 10);
-        if (dailyData[dStr]) dailyData[dStr].completedTasks++;
+    const completionEvents = Storage.getCompletionEvents ? Storage.getCompletionEvents(weekStartStr) : [];
+    completionEvents.forEach(e => {
+      if (dailyData[e.date]) {
+        dailyData[e.date].completedTasks++;
       }
     });
 
