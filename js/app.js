@@ -446,8 +446,12 @@ const App = (function() {
               </div>
               <div class="flex flex-col gap-2" id="modal-subtasks-list">
                 ${subtasks.map((sub, idx) => `
-                  <div class="flex items-center gap-2 bg-surface-container-lowest/70 p-2 rounded-xl">
+                  <div class="flex items-center gap-2 bg-surface-container-lowest/70 p-2 rounded-xl subtask-item-row" data-subtask-id="${escapeHtml(sub.id)}">
                     <input type="text" class="flex-1 bg-transparent border-0 text-text-primary text-body-sm outline-none subtask-title-input" value="${escapeHtml(sub.title)}" placeholder="Subtask title"/>
+                    <div class="flex items-center gap-1 shrink-0">
+                      <label class="font-label-sm text-[10px] text-text-muted uppercase">Plan for</label>
+                      <input type="date" class="bg-surface-container-high text-text-primary text-body-sm rounded px-1.5 py-0.5 outline-none subtask-planned-date-input" value="${escapeHtml(sub.plannedDate || '')}"/>
+                    </div>
                     <button type="button" class="remove-subtask-btn text-text-muted hover:text-error p-1"><span class="material-symbols-outlined text-[18px]">close</span></button>
                   </div>
                 `).join('')}
@@ -577,10 +581,16 @@ const App = (function() {
     const addSubtaskBtn = sheetOverlay.querySelector('#add-subtask-row-btn');
     if (addSubtaskBtn && subtasksList) {
       addSubtaskBtn.addEventListener('click', () => {
+        const newSubId = Storage.generateId ? Storage.generateId() : 'sub_' + Date.now();
         const row = document.createElement('div');
-        row.className = 'flex items-center gap-2 bg-surface-container-lowest/70 p-2 rounded-xl';
+        row.className = 'flex items-center gap-2 bg-surface-container-lowest/70 p-2 rounded-xl subtask-item-row';
+        row.setAttribute('data-subtask-id', newSubId);
         row.innerHTML = `
           <input type="text" class="flex-1 bg-transparent border-0 text-text-primary text-body-sm outline-none subtask-title-input" placeholder="Subtask title"/>
+          <div class="flex items-center gap-1 shrink-0">
+            <label class="font-label-sm text-[10px] text-text-muted uppercase">Plan for</label>
+            <input type="date" class="bg-surface-container-high text-text-primary text-body-sm rounded px-1.5 py-0.5 outline-none subtask-planned-date-input" value=""/>
+          </div>
           <button type="button" class="remove-subtask-btn text-text-muted hover:text-error p-1"><span class="material-symbols-outlined text-[18px]">close</span></button>
         `;
         row.querySelector('.remove-subtask-btn').addEventListener('click', () => row.remove());
@@ -605,12 +615,30 @@ const App = (function() {
           return;
         }
 
-        const subtaskInputs = sheetOverlay.querySelectorAll('.subtask-title-input');
-        const updatedSubtasks = Array.from(subtaskInputs).map((inp, idx) => ({
-          id: existingTask?.subtasks?.[idx]?.id || 'sub_' + Date.now() + '_' + idx,
-          title: inp.value.trim(),
-          completed: existingTask?.subtasks?.[idx]?.completed || false
-        })).filter(s => s.title.length > 0);
+        const existingSubtaskMap = new Map();
+        if (existingTask && Array.isArray(existingTask.subtasks)) {
+          existingTask.subtasks.forEach(s => existingSubtaskMap.set(s.id, s));
+        }
+
+        const subtaskRows = sheetOverlay.querySelectorAll('.subtask-item-row');
+        const updatedSubtasks = Array.from(subtaskRows).map(row => {
+          const stId = row.getAttribute('data-subtask-id') || (Storage.generateId ? Storage.generateId() : 'sub_' + Date.now());
+          const titleInput = row.querySelector('.subtask-title-input');
+          const dateInput = row.querySelector('.subtask-planned-date-input');
+          const title = titleInput ? titleInput.value.trim() : '';
+          const plannedDate = dateInput && dateInput.value ? dateInput.value : null;
+
+          const oldSub = existingSubtaskMap.get(stId);
+          return {
+            id: stId,
+            title: title,
+            isCompleted: oldSub ? oldSub.isCompleted : false,
+            completedAt: oldSub ? oldSub.completedAt : null,
+            plannedDate: plannedDate,
+            estimatedCycles: oldSub ? oldSub.estimatedCycles : 1,
+            completedCycles: oldSub ? oldSub.completedCycles : 0
+          };
+        }).filter(s => s.title.length > 0);
 
         let finalDueDate = dueDate;
         let finalDueTime = dueTime;

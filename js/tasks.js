@@ -130,10 +130,17 @@ const Tasks = (function() {
                         </button>
                         <span class="font-body-sm text-body-sm ${sub.isCompleted ? 'text-text-muted line-through' : 'text-on-surface'} truncate">${App.escapeHtml(sub.title)}</span>
                       </div>
-                      <div class="subtask-cycle-tracker flex items-center gap-1 text-[11px] text-text-secondary bg-surface-container-high px-2 py-0.5 rounded-full shrink-0">
-                        <button class="dec-cycle text-text-muted hover:text-text-primary px-1" data-task-id="${App.escapeHtml(task.id)}" data-subtask-id="${App.escapeHtml(sub.id)}" aria-label="Decrease session count for ${App.escapeHtml(sub.title)}">-</button>
-                        <span>${sub.completedCycles || 0} session(s)</span>
-                        <button class="inc-cycle text-text-muted hover:text-text-primary px-1" data-task-id="${App.escapeHtml(task.id)}" data-subtask-id="${App.escapeHtml(sub.id)}" aria-label="Increase session count for ${App.escapeHtml(sub.title)}">+</button>
+                      <div class="flex items-center gap-2 shrink-0">
+                        ${!sub.isCompleted ? `
+                          <button class="move-tomorrow-subtask-btn text-label-sm text-[11px] text-primary hover:text-accent-hover bg-surface-container-high px-2 py-0.5 rounded-full transition-colors" data-task-id="${App.escapeHtml(task.id)}" data-subtask-id="${App.escapeHtml(sub.id)}" title="Move to tomorrow">
+                            Move to tomorrow
+                          </button>
+                        ` : ''}
+                        <div class="subtask-cycle-tracker flex items-center gap-1 text-[11px] text-text-secondary bg-surface-container-high px-2 py-0.5 rounded-full shrink-0">
+                          <button class="dec-cycle text-text-muted hover:text-text-primary px-1" data-task-id="${App.escapeHtml(task.id)}" data-subtask-id="${App.escapeHtml(sub.id)}" aria-label="Decrease session count for ${App.escapeHtml(sub.title)}">-</button>
+                          <span>${sub.completedCycles || 0} session(s)</span>
+                          <button class="inc-cycle text-text-muted hover:text-text-primary px-1" data-task-id="${App.escapeHtml(task.id)}" data-subtask-id="${App.escapeHtml(sub.id)}" aria-label="Increase session count for ${App.escapeHtml(sub.title)}">+</button>
+                        </div>
                       </div>
                     </div>
                   `).join('')}
@@ -177,6 +184,20 @@ const Tasks = (function() {
             renderTasks();
           });
         }
+      });
+    });
+
+    listEl.querySelectorAll('.move-tomorrow-subtask-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const taskId = btn.getAttribute('data-task-id');
+        const subtaskId = btn.getAttribute('data-subtask-id');
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        const tomorrowStr = Storage.formatDate(tomorrow);
+        Storage.updateSubtask(taskId, subtaskId, { plannedDate: tomorrowStr });
+        App.showToast('Subtask moved to tomorrow', 'success');
+        renderTasks();
       });
     });
 
