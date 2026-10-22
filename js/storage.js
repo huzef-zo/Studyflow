@@ -980,6 +980,10 @@ const Storage = (function() {
   }
 
   function updateTask(id, updates) {
+    if (typeof id === 'object' && id !== null && updates === undefined) {
+      updates = id;
+      id = updates.id;
+    }
     const tasks = getTasks();
     const index = tasks.findIndex(t => t.id === id);
     if (index !== -1) {

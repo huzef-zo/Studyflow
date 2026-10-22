@@ -671,7 +671,7 @@ const App = (function() {
         if (isEdit) {
           taskData.id = existingTask.id;
           taskData.completed = existingTask.completed;
-          Storage.updateTask(taskData);
+          Storage.updateTask(existingTask.id, taskData);
           showToast('Task updated successfully', 'success');
         } else {
           Storage.addTask(taskData);
