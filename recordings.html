@@ -11,8 +11,8 @@
   <link rel="manifest" href="./manifest.json"/>
 
   <title>Recordings - StudyFlow</title>
-  <link rel="stylesheet" href="css/tailwind.css?v=v2026-10-21-01"/>
-  <link rel="stylesheet" href="css/app.css?v=v2026-10-21-01"/>
+  <link rel="stylesheet" href="css/tailwind.css?v=v2026-10-21-02"/>
+  <link rel="stylesheet" href="css/app.css?v=v2026-10-21-02"/>
 </head>
 <body class="bg-surface-base text-on-surface font-body-md text-body-md flex flex-col relative antialiased selection:bg-primary-container selection:text-surface-base min-h-dvh">
   <!-- Radial Ambient Glow -->
@@ -63,6 +63,45 @@
           </div>
         </div>
 
+        <!-- Mic Boost & Noise Controls Row -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1 border-t border-glass-border/40">
+          <!-- Mic Boost Selector -->
+          <div class="flex items-center justify-between gap-2 rounded-xl bg-surface-container-lowest/80 border border-glass-border px-3 py-2">
+            <label for="rec-boost-select" class="font-label-sm text-label-sm text-text-secondary whitespace-nowrap">Mic boost:</label>
+            <select id="rec-boost-select" class="bg-transparent text-text-primary font-body-sm text-body-sm border-none outline-none cursor-pointer text-right">
+              <option value="off">Off (1x)</option>
+              <option value="medium">Medium (2x)</option>
+              <option value="high">High (3.5x)</option>
+            </select>
+          </div>
+
+          <!-- Noise Reduction Checkbox -->
+          <div class="flex flex-col justify-center rounded-xl bg-surface-container-lowest/80 border border-glass-border px-3 py-2">
+            <label for="rec-denoise-checkbox" class="flex items-center gap-2 cursor-pointer font-label-sm text-label-sm text-text-primary">
+              <input type="checkbox" id="rec-denoise-checkbox" class="rounded accent-primary text-primary focus:ring-primary h-4 w-4 border-glass-border bg-transparent"/>
+              <span>Reduce background noise</span>
+            </label>
+            <span class="font-body-sm text-[11px] text-text-muted mt-0.5">Turn on in noisy rooms. May make distant voices sound muffled.</span>
+          </div>
+        </div>
+
+        <!-- Live Level Meter & Test Mic Button -->
+        <div class="flex flex-col gap-1.5 pt-1">
+          <div class="flex items-center justify-between text-text-muted font-label-sm text-[12px]">
+            <span>Input Level</span>
+            <button id="rec-test-btn" type="button" class="text-primary hover:underline font-semibold focus:outline-none">Test Mic</button>
+          </div>
+          <div id="rec-level-meter" role="meter" aria-label="Microphone input level" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" class="w-full h-2 rounded-full bg-surface-container-high overflow-hidden relative">
+            <div id="rec-level-bar" class="h-full bg-primary transition-all duration-75" style="width: 0%;"></div>
+          </div>
+        </div>
+
+        <!-- Diagnostics Output Line -->
+        <div class="flex flex-col gap-0.5 text-text-muted font-body-sm text-[12px] pt-1 border-t border-glass-border/40">
+          <div id="rec-diagnostics-line">Recording: mono, 48 kHz, 128 kbps</div>
+          <div id="rec-override-notice" class="hidden text-tertiary italic">Your browser applied its own audio processing.</div>
+        </div>
+
         <!-- Live Warning Banner -->
         <div class="hidden bg-tertiary-container/20 border border-tertiary/30 rounded-xl p-3 text-tertiary font-body-sm text-[12px] flex items-center gap-2" id="rec-warning-banner">
           <span class="material-symbols-outlined text-[18px] shrink-0">warning</span>
@@ -92,6 +131,14 @@
         </div>
       </div>
 
+      <!-- LECTURE PLACEMENT HINT CARD -->
+      <div class="rounded-2xl bg-surface-glass backdrop-blur-xl border border-glass-border p-3.5 shadow-sm flex items-start gap-3">
+        <span class="material-symbols-outlined text-primary text-[20px] shrink-0 mt-0.5">info</span>
+        <span class="font-body-sm text-body-sm text-text-secondary leading-snug">
+          For best quality, place the phone within 1-2 m of the speaker, microphone facing them, and avoid covering the bottom edge of the phone.
+        </span>
+      </div>
+
       <!-- SEARCH & FILTER CONTROLS -->
       <div class="flex flex-col gap-space-sm mt-2">
         <div class="relative w-full rounded-2xl bg-surface-container/60 backdrop-blur-xl shadow-sm flex items-center px-3.5 py-2.5 border border-glass-border">
@@ -114,12 +161,12 @@
 
   <!-- Core Scripts -->
   <script src="version.js"></script>
-  <script src="js/storage.js?v=v2026-10-21-01"></script>
-  <script src="js/subtask-utils.js?v=v2026-10-21-01"></script>
-  <script src="js/pwa-manager.js?v=v2026-10-21-01"></script>
-  <script src="js/app.js?v=v2026-10-21-01"></script>
-  <script src="js/audio-db.js?v=v2026-10-21-01"></script>
-  <script src="js/recorder.js?v=v2026-10-21-01"></script>
+  <script src="js/storage.js?v=v2026-10-21-02"></script>
+  <script src="js/subtask-utils.js?v=v2026-10-21-02"></script>
+  <script src="js/pwa-manager.js?v=v2026-10-21-02"></script>
+  <script src="js/app.js?v=v2026-10-21-02"></script>
+  <script src="js/audio-db.js?v=v2026-10-21-02"></script>
+  <script src="js/recorder.js?v=v2026-10-21-02"></script>
 
   <script>
     (function RecordingsPage() {
@@ -158,6 +205,26 @@
         select.innerHTML = subjects.map(s =>
           `<option value="${App.escapeHtml(s.name)}">${App.escapeHtml(s.name)}</option>`
         ).join('');
+      }
+
+      function initSettingsUI() {
+        const settings = Storage.getSettings ? Storage.getSettings() : {};
+        const boostSelect = document.getElementById('rec-boost-select');
+        const denoiseCheckbox = document.getElementById('rec-denoise-checkbox');
+
+        if (boostSelect) {
+          boostSelect.value = settings.recorder_boost || 'off';
+          boostSelect.addEventListener('change', (e) => {
+            Storage.updateSetting('recorder_boost', e.target.value);
+          });
+        }
+
+        if (denoiseCheckbox) {
+          denoiseCheckbox.checked = Boolean(settings.recorder_denoise);
+          denoiseCheckbox.addEventListener('change', (e) => {
+            Storage.updateSetting('recorder_denoise', e.target.checked);
+          });
+        }
       }
 
       function renderFilterChips() {
@@ -479,11 +546,22 @@
         const startBtn = document.getElementById('rec-start-btn');
         const pauseBtn = document.getElementById('rec-pause-btn');
         const stopBtn = document.getElementById('rec-stop-btn');
+        const testBtn = document.getElementById('rec-test-btn');
         const searchInput = document.getElementById('recordings-search-input');
 
         if (startBtn) {
           startBtn.addEventListener('click', () => {
             Recorder.startRecording();
+          });
+        }
+
+        if (testBtn) {
+          testBtn.addEventListener('click', () => {
+            if (Recorder.getState() === 'testing') {
+              Recorder.stopMicTest();
+            } else if (Recorder.getState() === 'idle') {
+              Recorder.startMicTest();
+            }
           });
         }
 
@@ -525,6 +603,7 @@
       function init() {
         if (typeof Recorder !== 'undefined') Recorder.init();
         renderSubjectsDropdown();
+        initSettingsUI();
         renderFilterChips();
         updateStorageUsageDisplay();
         renderRecordingsList();
