@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover"/>
+  <meta name="description" content="StudyFlow - Notes & Knowledge Vault"/>
+  <meta name="theme-color" content="#090D12"/>
+
+  <link rel="icon" type="image/png" href="./icon-192.png"/>
+  <link rel="apple-touch-icon" href="./icon-192.png"/>
+  <link rel="manifest" href="./manifest.json"/>
+
+  <title>Notes - StudyFlow</title>
+  <link rel="stylesheet" href="css/tailwind.css?v=v2026-10-21-02"/>
+  <link rel="stylesheet" href="css/app.css?v=v2026-10-21-02"/>
+</head>
+<body class="bg-surface-base text-on-surface font-body-md text-body-md flex flex-col relative antialiased selection:bg-primary-container selection:text-surface-base min-h-dvh">
+  <!-- Radial Ambient Glow -->
+  <div class="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-lg h-80 bg-[radial-gradient(ellipse_at_top,rgba(91,155,240,0.14),transparent_70%)] pointer-events-none z-0"></div>
+
+  <!-- Shell Containers -->
+  <div id="header-container"></div>
+  <div id="sidebar-container"></div>
+  <div id="bottom-nav-container"></div>
+
+  <!-- Main Content -->
+  <main class="flex-1 flex flex-col relative w-full max-w-lg lg:max-w-3xl mx-auto pt-20 pb-28 px-margin bg-surface-base z-10">
+    <div class="flex flex-col w-full select-none">
+
+      <!-- Title & Action Header -->
+      <div class="flex items-center justify-between gap-space-sm mb-space-md pt-space-xs">
+        <div class="flex items-center gap-space-sm">
+          <h1 class="font-headline-lg-mobile text-headline-lg-mobile text-text-primary tracking-tight">Notes</h1>
+          <span class="inline-flex items-center justify-center px-2.5 py-0.5 rounded-full bg-surface-container-high text-text-secondary font-label-sm text-label-sm" id="notes-count-badge">0 notes</span>
+        </div>
+        <button class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-primary-container text-surface-base hover:bg-accent-hover active:scale-95 transition-all shadow-[0_4px_16px_rgba(91,155,240,0.3)] font-label-md text-label-md font-semibold" id="new-note-btn" type="button">
+          <span class="material-symbols-outlined text-[18px]">add</span>
+          <span>New</span>
+        </button>
+      </div>
+
+      <!-- Search & Filter Controls -->
+      <div class="flex flex-col gap-space-sm mb-space-lg">
+        <!-- Frosted Search Bar -->
+        <div class="relative w-full rounded-2xl bg-surface-container/60 backdrop-blur-xl shadow-sm flex items-center px-3.5 py-2.5 border border-glass-border">
+          <span class="material-symbols-outlined text-text-muted text-[20px] mr-2.5">search</span>
+          <input class="w-full bg-transparent text-text-primary placeholder:text-text-muted font-body-md text-body-md focus:outline-none border-none outline-none p-0" id="notes-search-input" placeholder="Search notes, tags, or concepts..." type="text" aria-label="Search notes"/>
+        </div>
+
+        <!-- Filter Chips Row -->
+        <div class="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none -mx-margin px-margin" id="subject-filter-chips" role="tablist" aria-label="Subject filter">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+      <!-- Note Cards List -->
+      <div class="flex flex-col gap-3.5" id="notes-list">
+        <!-- Populated by JS -->
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Core Scripts -->
+  <script src="version.js"></script>
+  <script src="js/storage.js?v=v2026-10-21-02"></script>
+  <script src="js/subtask-utils.js?v=v2026-10-21-02"></script>
+  <script src="js/pwa-manager.js?v=v2026-10-21-02"></script>
+  <script src="js/app.js?v=v2026-10-21-02"></script>
+  <script src="js/notes.js?v=v2026-10-21-02"></script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      Notes.init();
+    });
+  </script>
+</body>
+</html>
