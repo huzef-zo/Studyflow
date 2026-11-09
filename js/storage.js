@@ -29,7 +29,6 @@ const Storage = (function() {
     NOTES: 'studyflow_notes',
     TIME_BLOCKS: 'studyflow_time_blocks',
     REFLECTIONS: 'studyflow_reflections',
-    RECORDINGS: 'studyflow_recordings',
     THEME: 'studyflow_theme',
     THEME_MODE: 'studyflow_theme_mode'
   };
@@ -149,8 +148,6 @@ const Storage = (function() {
       short_break: 5,
       long_break: 15,
       sessions_until_long_break: 4,
-      recorder_boost: 'off',
-      recorder_denoise: false,
       pinned_nav_items: ['timer', 'calendar']
     },
     repeatingCompletions: {},
@@ -159,7 +156,6 @@ const Storage = (function() {
     notes: [],
     timeBlocks: [],
     reflections: [],
-    recordings: [],
     theme: 'default',
     themeMode: 'dark',
     studyWindows: [
@@ -249,13 +245,6 @@ const Storage = (function() {
           title: b.title ? String(b.title).substring(0, 200) : 'Study Block',
           subject: b.subject ? String(b.subject).substring(0, 100) : 'Other'
         } : b);
-      } else if (key === KEYS.RECORDINGS && Array.isArray(data)) {
-        sanitizedData = data.map(r => r ? {
-          ...r,
-          title: r.title ? String(r.title).substring(0, 200) : 'Lecture',
-          subject: r.subject ? String(r.subject).substring(0, 100) : 'General',
-          bitrate: Number.isFinite(Number(r.bitrate)) ? Math.max(0, Math.min(512000, Math.floor(Number(r.bitrate)))) : 0
-        } : r);
       }
 
       const serialized = JSON.stringify(sanitizedData);
@@ -311,9 +300,6 @@ const Storage = (function() {
       removeData(key);
     });
     Object.keys(cache).forEach(key => delete cache[key]);
-    if (typeof AudioDB !== 'undefined' && AudioDB.clearAll) {
-      AudioDB.clearAll().catch(e => console.error('AudioDB clear error:', e));
-    }
     localStorage.setItem('studyflow_cleared_at', Date.now().toString());
     if (typeof window !== 'undefined' && window.location && window.location.reload) {
       window.location.reload();
@@ -321,7 +307,6 @@ const Storage = (function() {
   }
 
   function exportData() {
-    // Note: exportData includes recording metadata only, not audio blobs.
     return {
       user: getUser(),
       tasks: getTasks(),
@@ -329,7 +314,6 @@ const Storage = (function() {
       sessions: getSessions(),
       goals: getGoals(),
       settings: getSettings(),
-      recordings: getRecordings(),
       repeatingCompletions: getRepeatingCompletions(),
       achievements: getAchievements(),
       xpState: getXPState(),
@@ -453,7 +437,7 @@ const Storage = (function() {
 
       if (data.settings && typeof data.settings === 'object' && !Array.isArray(data.settings)) {
         const safeSettings = { ...DEFAULTS.settings };
-        const validNavIds = ['timer', 'calendar', 'notes', 'goals', 'history', 'settings', 'recordings'];
+        const validNavIds = ['timer', 'calendar', 'notes', 'goals', 'history', 'settings'];
         Object.keys(DEFAULTS.settings).forEach(key => {
           if (key in data.settings) {
             const val = data.settings[key];
@@ -471,11 +455,6 @@ const Storage = (function() {
               if (Array.isArray(val)) {
                 safeSettings[key] = val.filter(id => validNavIds.includes(id)).slice(0, 2);
               }
-            } else if (key === 'recorder_boost') {
-              const allowedBoosts = ['off', 'medium', 'high'];
-              safeSettings[key] = allowedBoosts.includes(val) ? val : DEFAULTS.settings.recorder_boost;
-            } else if (key === 'recorder_denoise') {
-              safeSettings[key] = Boolean(val);
             } else if (typeof DEFAULTS.settings[key] === 'string') {
               safeSettings[key] = String(val);
             }
@@ -580,32 +559,6 @@ const Storage = (function() {
           createdAt: String(b.createdAt || new Date().toISOString())
         }));
         saveData(KEYS.TIME_BLOCKS, safeTB);
-      }
-
-      if (Array.isArray(data.recordings)) {
-        const whitelistMime = ['audio/webm', 'audio/mp4', 'audio/ogg', 'audio/webm;codecs=opus'];
-        const safeRecordings = data.recordings.slice(0, 500).map(r => {
-          const rawDur = Number(r.duration);
-          const rawSize = Number(r.size);
-          const rawBitrate = Number(r.bitrate);
-          let safeMime = String(r.mimeType || 'audio/webm');
-          if (!whitelistMime.some(m => safeMime.startsWith(m))) {
-            safeMime = 'audio/webm';
-          }
-          return {
-            id: (r.id && isValidId(String(r.id))) ? String(r.id) : generateId(),
-            title: String(r.title || 'Lecture').substring(0, 200),
-            subject: String(r.subject || 'General').substring(0, 100),
-            duration: Number.isFinite(rawDur) ? Math.max(0, Math.floor(rawDur)) : 0,
-            size: Number.isFinite(rawSize) ? Math.max(0, Math.floor(rawSize)) : 0,
-            bitrate: Number.isFinite(rawBitrate) ? Math.max(0, Math.min(512000, Math.floor(rawBitrate))) : 0,
-            mimeType: safeMime,
-            createdAt: String(r.createdAt || new Date().toISOString()),
-            updatedAt: String(r.updatedAt || new Date().toISOString()),
-            taskId: (r.taskId && isValidId(String(r.taskId))) ? String(r.taskId) : null
-          };
-        });
-        saveData(KEYS.RECORDINGS, safeRecordings);
       }
 
       saveData(KEYS.THEME, 'default');
@@ -838,68 +791,6 @@ const Storage = (function() {
   function getStudyBlocks() { return [...loadData(KEYS.STUDY_BLOCKS, DEFAULTS.studyBlocks)]; }
   function getStudyWindows() { return [...loadData(KEYS.STUDY_WINDOWS, DEFAULTS.studyWindows)]; }
   function getNotes() { return [...loadData(KEYS.NOTES, DEFAULTS.notes)]; }
-  function getRecordings() { return [...loadData(KEYS.RECORDINGS, DEFAULTS.recordings)]; }
-  function saveRecordings(recordings) { return saveData(KEYS.RECORDINGS, [...recordings]); }
-
-  function addRecording(rec = {}) {
-    const recordings = getRecordings();
-    const subjects = getSubjects();
-    const defaultSubject = subjects.length > 0 ? subjects[0].name : 'General';
-    const now = new Date();
-    const nowIso = now.toISOString();
-
-    const formattedDate = now.toLocaleString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-
-    const rawBitrate = Number(rec.bitrate);
-    const safeBitrate = Number.isFinite(rawBitrate) ? Math.max(0, Math.min(512000, Math.floor(rawBitrate))) : 0;
-
-    const newRec = {
-      id: rec.id || generateId(),
-      title: rec.title ? String(rec.title).substring(0, 200) : `Lecture – ${formattedDate}`,
-      subject: rec.subject ? String(rec.subject).substring(0, 100) : defaultSubject,
-      duration: Number.isFinite(Number(rec.duration)) ? Math.max(0, Math.floor(Number(rec.duration))) : 0,
-      size: Number.isFinite(Number(rec.size)) ? Math.max(0, Math.floor(Number(rec.size))) : 0,
-      bitrate: safeBitrate,
-      mimeType: rec.mimeType ? String(rec.mimeType) : 'audio/webm',
-      createdAt: rec.createdAt || nowIso,
-      updatedAt: rec.updatedAt || nowIso,
-      taskId: rec.taskId ? String(rec.taskId) : null
-    };
-
-    recordings.push(newRec);
-    saveRecordings(recordings);
-    return newRec;
-  }
-
-  function updateRecording(id, updates) {
-    const recordings = getRecordings();
-    const index = recordings.findIndex(r => r.id === id);
-    if (index !== -1) {
-      const safeUpdates = { ...updates };
-      if ('title' in safeUpdates) {
-        safeUpdates.title = String(safeUpdates.title || '').substring(0, 200);
-      }
-      if ('subject' in safeUpdates) {
-        safeUpdates.subject = String(safeUpdates.subject || '').substring(0, 100);
-      }
-      safeUpdates.updatedAt = new Date().toISOString();
-      recordings[index] = { ...recordings[index], ...safeUpdates };
-      saveRecordings(recordings);
-      return recordings[index];
-    }
-    return null;
-  }
-
-  function deleteRecording(id) {
-    const recordings = getRecordings();
-    saveRecordings(recordings.filter(r => r.id !== id));
-    return true;
-  }
   function getTimeBlocks() { return [...loadData(KEYS.TIME_BLOCKS, DEFAULTS.timeBlocks)]; }
   function getReflections() { return [...loadData(KEYS.REFLECTIONS, DEFAULTS.reflections)]; }
   function getTheme() { return 'default'; }
@@ -1719,12 +1610,9 @@ const Storage = (function() {
     // Validation for specific settings
     if (key === 'pinned_nav_items') {
       if (!Array.isArray(value)) return false;
-      const VALID_IDS = ['dashboard', 'tasks', 'timer', 'calendar', 'notes', 'goals', 'history', 'settings', 'recordings'];
+      const VALID_IDS = ['dashboard', 'tasks', 'timer', 'calendar', 'notes', 'goals', 'history', 'settings'];
       // Only keep valid IDs and limit to 2 pins
       value = value.filter(id => VALID_IDS.includes(id)).slice(0, 2);
-    } else if (key === 'recorder_boost') {
-      const allowedBoosts = ['off', 'medium', 'high'];
-      if (!allowedBoosts.includes(value)) return false;
     } else if (typeof DEFAULTS.settings[key] === 'number') {
       value = Number(value);
       if (!Number.isFinite(value)) return false;
@@ -2268,7 +2156,7 @@ const Storage = (function() {
     getTimerState, saveTimerState, clearTimerState, completeTimerSession,
     getStats, calculateStreak, calculateBestStreak,
     getAchievements, getXPState, getStudyBlocks, getStudyWindows,
-    getNotes, getRecordings, addRecording, updateRecording, deleteRecording, getTimeBlocks, getReflections, getTheme, getThemeMode, setThemeMode,
+    getNotes, getTimeBlocks, getReflections, getTheme, getThemeMode, setThemeMode,
     generateId, formatDate, formatDisplayDate, getRelativeDays, getDaysUntil,
     getWeekNumber, isToday, isDateOverdue, getWeekStart, parseLocalDate,
     getRepeatingCompletions, saveRepeatingCompletions, isRepeatingTaskCompletedOnDate,
