@@ -17,8 +17,8 @@
   <link rel="manifest" href="./manifest.json"/>
 
   <title>Home - StudyFlow</title>
-  <link rel="stylesheet" href="css/tailwind.css?v=v2026-10-21-02"/>
-  <link rel="stylesheet" href="css/app.css?v=v2026-10-21-02"/>
+  <link rel="stylesheet" href="css/tailwind.css?v=v2026-11-10-01"/>
+  <link rel="stylesheet" href="css/app.css?v=v2026-11-10-01"/>
 </head>
 <body class="bg-surface-base text-on-surface font-body-md text-body-md flex flex-col relative antialiased selection:bg-primary-container selection:text-surface-base min-h-dvh">
   <!-- Radial Ambient Glow -->
@@ -50,8 +50,8 @@
         </div>
       </section>
 
-      <!-- Metric / Stats Row: 3 Glass Tiles -->
-      <section class="grid grid-cols-3 gap-gutter-sm">
+      <!-- Metric / Stats Row: Bento Grid with Streak, XP, Goal, and GPA -->
+      <section class="grid grid-cols-2 sm:grid-cols-4 gap-gutter-sm">
         <!-- Tile 1: Streak -->
         <div class="rounded-DEFAULT bg-surface-container/60 backdrop-blur-md p-3.5 flex flex-col justify-between shadow-md">
           <div class="flex items-center justify-between mb-2">
@@ -90,6 +90,24 @@
             <span class="font-label-sm text-[11px] text-text-secondary mt-0.5">Weekly goal</span>
           </div>
         </div>
+
+        <!-- Tile 4: Compact GPA -->
+        <a href="gpa.html" class="rounded-DEFAULT bg-surface-container/60 backdrop-blur-md p-3.5 flex flex-col justify-between shadow-md hover:bg-surface-container transition-all group">
+          <div class="flex items-center justify-between mb-2">
+            <span class="material-symbols-outlined text-primary text-[20px]">school</span>
+            <span class="font-label-sm text-[10px] text-primary-container group-hover:translate-x-0.5 transition-transform material-symbols-outlined text-[16px]">chevron_right</span>
+          </div>
+          <div class="flex flex-col gap-1">
+            <div class="flex items-baseline justify-between">
+              <span class="font-headline-sm text-headline-sm text-text-primary leading-tight" id="dashboard-cgpa-val">0.00</span>
+              <span class="font-label-sm text-[11px] text-text-secondary" id="dashboard-target-gpa-val">/ 3.50</span>
+            </div>
+            <div class="w-full h-1.5 rounded-full bg-surface-container-highest overflow-hidden">
+              <div class="h-full bg-primary-container rounded-full transition-all duration-300" id="dashboard-gpa-progress-bar" style="width: 0%;"></div>
+            </div>
+            <span class="font-label-sm text-[11px] text-text-secondary mt-0.5">Cumulative GPA</span>
+          </div>
+        </a>
       </section>
 
       <!-- Upcoming Tasks Section -->
@@ -175,12 +193,13 @@
 
   <!-- Core Scripts -->
   <script src="version.js"></script>
-  <script src="js/storage.js?v=v2026-10-21-02"></script>
-  <script src="js/subtask-utils.js?v=v2026-10-21-02"></script>
-  <script src="js/pwa-manager.js?v=v2026-10-21-02"></script>
-  <script src="js/achievements.js?v=v2026-10-21-02"></script>
-  <script src="js/scheduler.js?v=v2026-10-21-02"></script>
-  <script src="js/app.js?v=v2026-10-21-02"></script>
+  <script src="js/storage.js?v=v2026-11-10-01"></script>
+  <script src="js/subtask-utils.js?v=v2026-11-10-01"></script>
+  <script src="js/pwa-manager.js?v=v2026-11-10-01"></script>
+  <script src="js/achievements.js?v=v2026-11-10-01"></script>
+  <script src="js/gpa-utils.js?v=v2026-11-10-01"></script>
+  <script src="js/scheduler.js?v=v2026-11-10-01"></script>
+  <script src="js/app.js?v=v2026-11-10-01"></script>
 
   <script>
     (function initHome() {
@@ -401,10 +420,26 @@
           return;
         }
 
-        masteryContainer.innerHTML = stats.map(s => `
+        // Map course grades by subject if available
+        const courses = (typeof Storage.getCourses === 'function' && typeof GpaUtils !== 'undefined') ? Storage.getCourses() : [];
+        const subjectGradeMap = new Map();
+        courses.forEach(c => {
+          if (c.subject) {
+            const st = GpaUtils.courseStatus(c);
+            subjectGradeMap.set(c.subject.toLowerCase(), st.grade.letter);
+          }
+        });
+
+        masteryContainer.innerHTML = stats.map(s => {
+          const letter = subjectGradeMap.get(s.name.toLowerCase());
+          const gradeChip = letter ? `<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-primary-container/20 text-primary-container font-mono-timer">${letter}</span>` : '';
+          return `
           <div class="flex flex-col gap-1 p-2.5 rounded-xl bg-surface-container-lowest/60">
             <div class="flex items-center justify-between font-label-sm text-label-sm">
-              <span class="text-text-primary font-medium truncate">${App.escapeHtml(s.name)}</span>
+              <div class="flex items-center gap-1.5 min-w-0">
+                <span class="text-text-primary font-medium truncate">${App.escapeHtml(s.name)}</span>
+                ${gradeChip}
+              </div>
               <span class="text-primary font-semibold">${s.percentage}%</span>
             </div>
             <div class="flex items-center justify-between font-label-sm text-[11px] text-text-secondary">
@@ -415,7 +450,29 @@
               <div class="h-full bg-primary-container rounded-full" style="width:${s.percentage}%;"></div>
             </div>
           </div>
-        `).join('');
+        `;
+        }).join('');
+      }
+
+      function renderGpaCard() {
+        const cgpaValEl = document.getElementById('dashboard-cgpa-val');
+        const targetValEl = document.getElementById('dashboard-target-gpa-val');
+        const barEl = document.getElementById('dashboard-gpa-progress-bar');
+        if (!cgpaValEl || typeof GpaUtils === 'undefined' || !Storage.getCourses) return;
+
+        const courses = Storage.getCourses();
+        const goals = Storage.getGoals ? Storage.getGoals() : {};
+        const target = Number.isFinite(Number(goals.target_gpa)) ? Number(goals.target_gpa) : 3.50;
+
+        const res = GpaUtils.cgpa(courses, { includeProjected: true });
+        const cgpa = res.totalCredits > 0 ? res.gpa : 0;
+
+        cgpaValEl.textContent = res.totalCredits > 0 ? cgpa.toFixed(2) : '0.00';
+        if (targetValEl) targetValEl.textContent = `/ ${target.toFixed(2)}`;
+        if (barEl) {
+          const pct = target > 0 ? Math.min(100, Math.max(0, (cgpa / target) * 100)) : 0;
+          barEl.style.width = `${pct}%`;
+        }
       }
 
       function renderReflection() {
@@ -494,6 +551,7 @@
         renderUpcomingTasks();
         renderTodayPlan();
         renderMastery();
+        renderGpaCard();
       }
 
       function init() {
