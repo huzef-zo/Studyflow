@@ -22,7 +22,7 @@ const App = (function() {
     const pageMap = {
       'index.html': 'home', '': 'home',
       'tasks.html': 'tasks', 'calendar.html': 'calendar',
-      'timer.html': 'focus', 'goals.html': 'goals',
+      'timer.html': 'focus', 'goals.html': 'goals', 'gpa.html': 'gpa',
       'notes.html': 'notes', 'history.html': 'analytics',
       'settings.html': 'settings'
     };
@@ -57,7 +57,7 @@ const App = (function() {
       { id: 'calendar', label: 'Calendar', icon: 'calendar_today', href: 'calendar.html' }
     ];
 
-    const isMoreActive = ['notes', 'goals', 'analytics', 'settings'].includes(page);
+    const isMoreActive = ['notes', 'goals', 'gpa', 'analytics', 'settings'].includes(page);
 
     return `
       <nav class="fixed bottom-0 inset-x-0 z-40 pb-safe bg-surface-glass backdrop-blur-2xl lg:hidden" id="bottom-nav">
@@ -89,6 +89,7 @@ const App = (function() {
       { id: 'calendar', label: 'Calendar', icon: 'calendar_today', href: 'calendar.html' },
       { id: 'notes', label: 'Notes', icon: 'description', href: 'notes.html' },
       { id: 'goals', label: 'Goals', icon: 'track_changes', href: 'goals.html' },
+      { id: 'gpa', label: 'GPA', icon: 'school', href: 'gpa.html' },
       { id: 'analytics', label: 'Analytics', icon: 'query_stats', href: 'history.html' },
       { id: 'settings', label: 'Settings', icon: 'tune', href: 'settings.html' }
     ];
@@ -173,6 +174,13 @@ const App = (function() {
     const notesCount = Storage.getNotes ? Storage.getNotes().length : 0;
     const currentWeek = Storage.getWeekNumber ? Storage.getWeekNumber() : 1;
 
+    let cgpaDisplay = '0.00';
+    if (typeof GpaUtils !== 'undefined' && Storage.getCourses) {
+      const courses = Storage.getCourses();
+      const res = GpaUtils.cgpa(courses, { includeProjected: true });
+      cgpaDisplay = res.totalCredits > 0 ? res.gpa.toFixed(2) : '0.00';
+    }
+
     let totalMinutes = 0;
     if (Storage.getSessions) {
       const sessions = Storage.getSessions().filter(s => s.type === 'work');
@@ -222,6 +230,18 @@ const App = (function() {
               <div class="flex flex-col min-w-0">
                 <span class="font-headline-sm text-[16px] text-text-primary truncate">Goals</span>
                 <span class="font-label-sm text-label-sm text-text-secondary truncate mt-0.5">Week ${currentWeek} sprint</span>
+              </div>
+            </a>
+            <a href="gpa.html" class="group bg-surface-container/70 hover:bg-surface-glass-active active:scale-[0.98] rounded-xl p-space-md flex flex-col justify-between h-36 transition-all relative overflow-hidden shadow-sm">
+              <div class="flex items-start justify-between w-full">
+                <div class="w-10 h-10 rounded-full bg-primary-container/20 text-primary-container flex items-center justify-center group-hover:bg-primary-container group-hover:text-surface-base transition-colors">
+                  <span class="material-symbols-outlined text-[20px]">school</span>
+                </div>
+                <span class="material-symbols-outlined text-[18px] text-text-muted group-hover:text-text-primary group-hover:translate-x-0.5 transition-all">chevron_right</span>
+              </div>
+              <div class="flex flex-col min-w-0">
+                <span class="font-headline-sm text-[16px] text-text-primary truncate">GPA</span>
+                <span class="font-label-sm text-label-sm text-text-secondary truncate mt-0.5">${cgpaDisplay} CGPA</span>
               </div>
             </a>
             <a href="history.html" class="group bg-surface-container/70 hover:bg-surface-glass-active active:scale-[0.98] rounded-xl p-space-md flex flex-col justify-between h-36 transition-all relative overflow-hidden shadow-sm">

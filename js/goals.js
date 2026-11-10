@@ -256,6 +256,12 @@ const Goals = (function() {
           <label class="font-label-sm text-label-sm text-text-secondary" for="weekend-daily-hours">Weekend Study Hours Goal</label>
           <input type="number" class="w-full bg-surface-container-lowest/80 rounded-xl px-3 py-2 text-text-primary text-body-md border border-glass-border outline-none focus:border-primary-container" id="weekend-daily-hours" name="weekend_daily_hours" min="1" max="24" step="0.5" value="${goals.weekend_daily_hours || 1.5}" required>
         </div>
+
+        <h4 class="font-headline-sm text-headline-sm text-text-primary mb-1 mt-2">Academic Standing</h4>
+        <div class="flex flex-col gap-1">
+          <label class="font-label-sm text-label-sm text-text-secondary" for="target-gpa">Target CGPA</label>
+          <input type="number" class="w-full bg-surface-container-lowest/80 rounded-xl px-3 py-2 text-text-primary text-body-md border border-glass-border outline-none focus:border-primary-container" id="target-gpa" name="target_gpa" min="0" max="4" step="0.05" value="${Number.isFinite(Number(goals.target_gpa)) ? goals.target_gpa : 3.5}" required>
+        </div>
       </form>
     `;
 
@@ -279,7 +285,8 @@ const Goals = (function() {
         daily_tasks: parseInt(formData.get('daily_tasks'), 10),
         daily_hours: parseFloat(formData.get('daily_hours')),
         weekend_daily_tasks: parseInt(formData.get('weekend_daily_tasks'), 10),
-        weekend_daily_hours: parseFloat(formData.get('weekend_daily_hours'))
+        weekend_daily_hours: parseFloat(formData.get('weekend_daily_hours')),
+        target_gpa: parseFloat(formData.get('target_gpa'))
       });
 
       App.showToast('Goals updated!', 'success');

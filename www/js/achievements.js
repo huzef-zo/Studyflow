@@ -20,7 +20,8 @@ const Achievements = (function() {
     COMPLETION: 'completion',
     TIME: 'time',
     SUBJECT: 'subject',
-    MASTERY: 'mastery'
+    MASTERY: 'mastery',
+    GPA: 'gpa'
   };
 
   /**
@@ -132,6 +133,37 @@ const Achievements = (function() {
       }
     });
 
+    // GPA Badges
+    if (typeof Storage.getCourses === 'function' && typeof GpaUtils !== 'undefined') {
+      const courses = Storage.getCourses();
+      const finalizedOrComplete = courses.filter(c => {
+        if (c.finalized) return true;
+        const st = GpaUtils.courseStatus(c);
+        return st.isComplete;
+      });
+
+      // First course finalized badge
+      if (finalizedOrComplete.length >= 1 && !hasBadge(achievements, BADGE_TYPES.GPA, 'first_course')) {
+        newBadges.push(unlockBadge(achievements, BADGE_TYPES.GPA, 'first_course', '🎓', 'First course finalized'));
+      }
+
+      // CGPA milestones: 3.0, 3.5, 3.7, 4.0 (require total completed credits >= 15)
+      const gpaResult = GpaUtils.cgpa(courses, { includeProjected: false });
+      if (gpaResult.totalCredits >= 15) {
+        const milestones = [
+          { threshold: 3.0, icon: '🥉' },
+          { threshold: 3.5, icon: '🥈' },
+          { threshold: 3.7, icon: '🥇' },
+          { threshold: 4.0, icon: '💎' }
+        ];
+        milestones.forEach(m => {
+          if (gpaResult.gpa >= m.threshold && !hasBadge(achievements, BADGE_TYPES.GPA, m.threshold)) {
+            newBadges.push(unlockBadge(achievements, BADGE_TYPES.GPA, m.threshold, m.icon, `CGPA ${m.threshold} reached`));
+          }
+        });
+      }
+    }
+
     if (newBadges.length > 0) {
       Storage.saveData(Storage.KEYS.ACHIEVEMENTS, achievements);
     }
@@ -141,13 +173,14 @@ const Achievements = (function() {
     return achievements.some(a => a.type === type && a.condition === condition);
   }
 
-  function unlockBadge(achievements, type, condition, icon) {
+  function unlockBadge(achievements, type, condition, icon, customLabel) {
     const badge = {
       id: 'badge_' + Storage.generateId(),
       type,
       condition,
       icon,
-      unlockedAt: new Date().toISOString()
+      unlockedAt: new Date().toISOString(),
+      label: customLabel || null
     };
     achievements.push(badge);
     showBadgeToast(badge);
@@ -155,7 +188,12 @@ const Achievements = (function() {
   }
 
   function showBadgeToast(badge) {
-    const message = `Achievement Unlocked: ${badge.icon} ${badge.condition} ${badge.type} milestone!`;
+    let message;
+    if (badge.type === BADGE_TYPES.GPA && badge.label) {
+      message = `Achievement Unlocked: ${badge.icon} ${badge.label}!`;
+    } else {
+      message = `Achievement Unlocked: ${badge.icon} ${badge.condition} ${badge.type} milestone!`;
+    }
     App.showToast(message, 'success');
     // Apply special achievement styling to the last toast
     setTimeout(() => {
@@ -167,13 +205,90 @@ const Achievements = (function() {
     }, 10);
   }
 
+  /**
+   * Award XP for GPA accomplishments.
+   * Anti-farming: checks course.xpAwarded. Awards only the positive difference vs xpAwarded.
+   * Never subtracts XP, never awards twice for the same grade.
+   * Checks semester bonus (+250 XP if >= 3.0, +400 XP if >= 3.7) once per semester label.
+   */
+  function awardGpaXP(course, oldGradePoint) {
+    if (!course || typeof GpaUtils === 'undefined') return 0;
+    const status = GpaUtils.courseStatus(course);
+    if (!status.isComplete && !course.finalized) return 0;
+
+    const letterXpMap = {
+      'A': 150,
+      'A-': 130,
+      'B+': 110,
+      'B': 90,
+      'B-': 75,
+      'C+': 60,
+      'C': 45,
+      'C-': 30,
+      'D+': 20,
+      'D': 10,
+      'D-': 5,
+      'F': 0
+    };
+
+    const targetXp = letterXpMap[status.grade.letter] !== undefined ? letterXpMap[status.grade.letter] : 0;
+    const previousXp = Number.isFinite(Number(course.xpAwarded)) ? Number(course.xpAwarded) : 0;
+    const deltaXp = targetXp - previousXp;
+
+    let totalAwarded = 0;
+    if (deltaXp > 0) {
+      course.xpAwarded = targetXp;
+      Storage.updateCourse(course.id, { xpAwarded: targetXp });
+      awardXP(deltaXp, `Course Grade: ${course.name} (${status.grade.letter})`);
+      totalAwarded += deltaXp;
+    }
+
+    // Semester Bonus Check
+    if (course.semester && typeof course.semester === 'string' && course.semester.trim()) {
+      const semLabel = course.semester.trim();
+      const allCourses = Storage.getCourses ? Storage.getCourses() : [];
+      const semCourses = allCourses.filter(c => (c.semester || '').trim() === semLabel);
+
+      const allComplete = semCourses.length > 0 && semCourses.every(c => {
+        const st = GpaUtils.courseStatus(c);
+        return c.finalized || st.isComplete;
+      });
+
+      if (allComplete) {
+        const semResult = GpaUtils.semesterGpa(semCourses, { includeProjected: false });
+        const xpState = Storage.loadData(Storage.KEYS.XP_STATE, Storage.DEFAULTS.xpState);
+        const history = Array.isArray(xpState.history) ? xpState.history : [];
+
+        // Check if bonus was already awarded for this semester
+        const source30 = `Semester Completion Bonus (>=3.0): ${semLabel}`;
+        const source37 = `Semester Completion Bonus (>=3.7): ${semLabel}`;
+        const has30 = history.some(h => h.source === source30);
+        const has37 = history.some(h => h.source === source37);
+
+        if (semResult.gpa >= 3.7 && !has37) {
+          awardXP(400, source37);
+          totalAwarded += 400;
+        } else if (semResult.gpa >= 3.0 && !has30 && !has37) {
+          awardXP(250, source30);
+          totalAwarded += 250;
+        }
+      }
+    }
+
+    checkBadges();
+    return totalAwarded;
+  }
+
   return {
     init: checkBadges,
     awardXP,
+    awardGpaXP,
+    checkBadges,
     calculateLevel,
     getXPForLevel,
     getRank,
-    RANKS
+    RANKS,
+    BADGE_TYPES
   };
 })();
 

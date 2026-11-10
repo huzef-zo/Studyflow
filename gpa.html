@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover"/>
+  <meta name="description" content="StudyFlow - GPA Calculator & Academic Pacing"/>
+  <meta name="theme-color" content="#090D12"/>
+
+  <link rel="icon" type="image/png" href="./icon-192.png"/>
+  <link rel="apple-touch-icon" href="./icon-192.png"/>
+  <link rel="manifest" href="./manifest.json"/>
+
+  <title>GPA Calculator - StudyFlow</title>
+  <link rel="stylesheet" href="css/tailwind.css?v=v2026-11-10-01"/>
+  <link rel="stylesheet" href="css/app.css?v=v2026-11-10-01"/>
+</head>
+<body class="bg-surface-base text-on-surface font-body-md text-body-md flex flex-col relative antialiased selection:bg-primary-container selection:text-surface-base min-h-dvh">
+  <!-- Radial Ambient Glow -->
+  <div class="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-lg h-80 bg-[radial-gradient(ellipse_at_top,rgba(91,155,240,0.14),transparent_70%)] pointer-events-none z-0"></div>
+
+  <!-- Shell Containers -->
+  <div id="header-container"></div>
+  <div id="sidebar-container"></div>
+  <div id="bottom-nav-container"></div>
+
+  <!-- Main Content -->
+  <main class="flex-1 flex flex-col relative w-full max-w-lg lg:max-w-3xl mx-auto pt-20 pb-28 px-margin bg-surface-base z-10">
+    <div class="flex flex-col w-full pb-10 space-y-space-lg select-none">
+
+      <!-- Top Bar: Title & Action Controls -->
+      <div class="flex items-center justify-between pt-space-xs">
+        <div>
+          <h1 class="font-headline-lg-mobile text-headline-lg-mobile font-bold text-text-primary tracking-tight">GPA Calculator</h1>
+          <p class="font-body-sm text-body-sm text-text-secondary mt-0.5" id="gpa-subtitle">Academic standing & what-if analysis</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary-container text-surface-base font-semibold shadow-sm active:scale-95 transition-all hover:bg-accent-hover" id="add-course-btn" type="button" aria-label="Add new course">
+            <span class="material-symbols-outlined text-[18px]">add</span>
+            <span class="font-label-sm text-label-sm">Add Course</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Summary Stat-Pills: 4 Cards Bento Grid -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-gutter-sm" id="gpa-summary-grid">
+        <!-- Cumulative GPA -->
+        <div class="bg-surface-glass backdrop-blur-xl rounded-lg p-space-md flex flex-col justify-between shadow-sm">
+          <div class="flex items-center justify-between text-text-secondary mb-1">
+            <span class="font-label-sm text-label-sm font-medium">CGPA</span>
+            <span class="material-symbols-outlined text-[18px] text-primary-container">school</span>
+          </div>
+          <div class="my-1">
+            <span class="font-display-lg text-[30px] font-bold text-text-primary leading-tight" id="cgpa-stat-value">0.00</span>
+          </div>
+          <span class="font-body-sm text-[11px] text-text-secondary truncate" id="cgpa-stat-standing">Standing: N/A</span>
+        </div>
+
+        <!-- Current Semester GPA -->
+        <div class="bg-surface-glass backdrop-blur-xl rounded-lg p-space-md flex flex-col justify-between shadow-sm">
+          <div class="flex items-center justify-between text-text-secondary mb-1">
+            <span class="font-label-sm text-label-sm font-medium">Semester GPA</span>
+            <span class="material-symbols-outlined text-[18px] text-primary-container">insights</span>
+          </div>
+          <div class="my-1">
+            <span class="font-display-lg text-[30px] font-bold text-text-primary leading-tight" id="semester-gpa-stat-value">0.00</span>
+          </div>
+          <span class="font-body-sm text-[11px] text-text-secondary truncate" id="semester-gpa-stat-label">Active semester</span>
+        </div>
+
+        <!-- Total Credits -->
+        <div class="bg-surface-glass backdrop-blur-xl rounded-lg p-space-md flex flex-col justify-between shadow-sm">
+          <div class="flex items-center justify-between text-text-secondary mb-1">
+            <span class="font-label-sm text-label-sm font-medium">Credits</span>
+            <span class="material-symbols-outlined text-[18px] text-primary-container">military_tech</span>
+          </div>
+          <div class="my-1">
+            <span class="font-display-lg text-[30px] font-bold text-text-primary leading-tight" id="credits-stat-value">0</span>
+          </div>
+          <span class="font-body-sm text-[11px] text-text-secondary truncate" id="courses-count-label">0 courses counted</span>
+        </div>
+
+        <!-- Standing Letter -->
+        <div class="bg-surface-glass backdrop-blur-xl rounded-lg p-space-md flex flex-col justify-between shadow-sm">
+          <div class="flex items-center justify-between text-text-secondary mb-1">
+            <span class="font-label-sm text-label-sm font-medium">Grade</span>
+            <span class="material-symbols-outlined text-[18px] text-primary-container">stars</span>
+          </div>
+          <div class="my-1">
+            <span class="font-display-lg text-[30px] font-bold text-primary-container leading-tight" id="standing-letter-value">N/A</span>
+          </div>
+          <span class="font-body-sm text-[11px] text-text-secondary truncate" id="standing-label-desc">Cumulative tier</span>
+        </div>
+      </div>
+
+      <!-- Projection Toggle & Target Progress Card -->
+      <div class="w-full bg-surface-glass backdrop-blur-xl rounded-lg p-space-md shadow-sm flex flex-col space-y-space-sm">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div class="flex items-center justify-between sm:justify-start gap-3">
+            <span class="font-label-sm text-label-sm text-text-primary font-semibold">Include in-progress (projected)</span>
+            <button class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none bg-surface-container-high" id="toggle-projected-btn" type="button" role="switch" aria-checked="false" aria-label="Toggle include in-progress projected grades">
+              <span aria-hidden="true" class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out translate-x-0" id="toggle-projected-dot"></span>
+            </button>
+          </div>
+          <button class="flex items-center gap-1.5 self-start sm:self-auto px-2.5 py-1 rounded-full bg-surface-container-high text-text-primary hover:bg-surface-container-highest transition-all text-left" id="edit-target-gpa-btn" type="button">
+            <span class="material-symbols-outlined text-[15px] text-primary-container">tune</span>
+            <span class="font-label-sm text-[11px] font-medium">Edit target (<span id="target-gpa-badge">3.50</span>)</span>
+          </button>
+        </div>
+
+        <!-- Progress Bar: CGPA vs Target -->
+        <div class="flex flex-col gap-1.5 pt-1">
+          <div class="flex items-center justify-between font-label-sm text-[11px] text-text-secondary">
+            <span>CGPA Progress towards Target</span>
+            <span class="text-text-primary font-medium" id="target-gpa-progress-text">0.00 / 3.50</span>
+          </div>
+          <div class="w-full h-2 rounded-full bg-surface-container-high overflow-hidden">
+            <div class="h-full bg-primary-container rounded-full transition-all duration-300" id="target-gpa-progress-fill" style="width: 0%;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Semester Tabs Strip -->
+      <div class="flex items-center gap-1.5 overflow-x-auto pb-1 -mx-margin px-margin" role="tablist" aria-label="Semester filter" id="semester-tabs-container">
+        <!-- Rendered by JS -->
+      </div>
+
+      <!-- Courses List Container -->
+      <div class="flex flex-col gap-space-sm" id="courses-list-container">
+        <!-- Rendered by JS or Empty State -->
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Core Scripts -->
+  <script src="version.js"></script>
+  <script src="js/storage.js?v=v2026-11-10-01"></script>
+  <script src="js/subtask-utils.js?v=v2026-11-10-01"></script>
+  <script src="js/pwa-manager.js?v=v2026-11-10-01"></script>
+  <script src="js/achievements.js?v=v2026-11-10-01"></script>
+  <script src="js/gpa-utils.js?v=v2026-11-10-01"></script>
+  <script src="js/app.js?v=v2026-11-10-01"></script>
+  <script src="js/gpa.js?v=v2026-11-10-01"></script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      PWAManager.init();
+      Gpa.init();
+    });
+  </script>
+</body>
+</html>

@@ -30,7 +30,8 @@ const Storage = (function() {
     TIME_BLOCKS: 'studyflow_time_blocks',
     REFLECTIONS: 'studyflow_reflections',
     THEME: 'studyflow_theme',
-    THEME_MODE: 'studyflow_theme_mode'
+    THEME_MODE: 'studyflow_theme_mode',
+    COURSES: 'studyflow_courses'
   };
 
   const cache = {};
@@ -55,7 +56,8 @@ const Storage = (function() {
     weekend_daily_hours: { min: 0.5, max: 24 },
     freezeCount: { min: 0, max: 10 },
     current_tasks: { min: 0, max: 10000 },
-    current_hours: { min: 0, max: 1000 }
+    current_hours: { min: 0, max: 1000 },
+    target_gpa: { min: 0, max: 4 }
   };
 
   /**
@@ -104,8 +106,8 @@ const Storage = (function() {
           delete cache[e.key];
         }
       }
-      // Notify other modules if tasks, completions, or XP changed in another tab
-      if (e.key === KEYS.TASKS || e.key === KEYS.REPEATING_COMPLETIONS || e.key === KEYS.XP_STATE) {
+      // Notify other modules if tasks, completions, XP, or courses changed in another tab
+      if (e.key === KEYS.TASKS || e.key === KEYS.REPEATING_COMPLETIONS || e.key === KEYS.XP_STATE || e.key === KEYS.COURSES) {
         notifyTaskDataChanged();
       }
     }
@@ -136,6 +138,7 @@ const Storage = (function() {
       current_tasks: 0,
       current_hours: 0,
       freezeCount: 1,
+      target_gpa: 3.5,
       week_start: getWeekStart(new Date()).toISOString()
     },
     settings: {
@@ -175,7 +178,8 @@ const Storage = (function() {
       currentLevel: 1,
       currentRank: 'Novice',
       history: []
-    }
+    },
+    courses: []
   };
 
   function getWeekStart(date) {
@@ -245,6 +249,24 @@ const Storage = (function() {
           title: b.title ? String(b.title).substring(0, 200) : 'Study Block',
           subject: b.subject ? String(b.subject).substring(0, 100) : 'Other'
         } : b);
+      } else if (key === KEYS.COURSES && Array.isArray(data)) {
+        sanitizedData = data.map(c => c ? {
+          ...c,
+          name: c.name ? String(c.name).substring(0, 200) : 'Untitled Course',
+          semester: c.semester ? String(c.semester).substring(0, 100) : '',
+          subject: c.subject ? String(c.subject).substring(0, 100) : '',
+          creditHours: Number.isFinite(Number(c.creditHours)) ? Math.max(0.5, Math.min(12, Number(c.creditHours))) : 3,
+          finalized: Boolean(c.finalized),
+          xpAwarded: Number.isFinite(Number(c.xpAwarded)) ? Math.max(0, Number(c.xpAwarded)) : 0,
+          components: Array.isArray(c.components) ? c.components.slice(0, 20).map(cmp => cmp ? {
+            ...cmp,
+            name: cmp.name ? String(cmp.name).substring(0, 100) : 'Component',
+            max: Number.isFinite(Number(cmp.max)) ? Math.max(0, Math.min(100, Number(cmp.max))) : 0,
+            earned: (cmp.earned !== null && cmp.earned !== undefined && Number.isFinite(Number(cmp.earned)))
+              ? Math.max(0, Math.min(Number.isFinite(Number(cmp.max)) ? Number(cmp.max) : 100, Number(cmp.earned)))
+              : null
+          } : cmp) : []
+        } : c);
       }
 
       const serialized = JSON.stringify(sanitizedData);
@@ -323,6 +345,7 @@ const Storage = (function() {
       timeBlocks: getTimeBlocks(),
       reflections: getReflections(),
       theme: getTheme(),
+      courses: getCourses(),
       exported_at: new Date().toISOString(),
       version: '1.0.0'
     };
@@ -422,7 +445,7 @@ const Storage = (function() {
 
       if (data.goals && typeof data.goals === 'object' && !Array.isArray(data.goals)) {
         const safeGoals = { ...DEFAULTS.goals };
-        ['weekly_tasks', 'weekly_hours', 'daily_tasks', 'daily_hours', 'weekend_daily_tasks', 'weekend_daily_hours', 'current_tasks', 'current_hours', 'freezeCount'].forEach(key => {
+        ['weekly_tasks', 'weekly_hours', 'daily_tasks', 'daily_hours', 'weekend_daily_tasks', 'weekend_daily_hours', 'current_tasks', 'current_hours', 'freezeCount', 'target_gpa'].forEach(key => {
           if (key in data.goals) {
             const val = Number(data.goals[key]);
             if (Number.isFinite(val)) {
@@ -437,7 +460,7 @@ const Storage = (function() {
 
       if (data.settings && typeof data.settings === 'object' && !Array.isArray(data.settings)) {
         const safeSettings = { ...DEFAULTS.settings };
-        const validNavIds = ['timer', 'calendar', 'notes', 'goals', 'history', 'settings'];
+        const validNavIds = ['timer', 'calendar', 'notes', 'goals', 'history', 'settings', 'gpa'];
         Object.keys(DEFAULTS.settings).forEach(key => {
           if (key in data.settings) {
             const val = data.settings[key];
@@ -559,6 +582,42 @@ const Storage = (function() {
           createdAt: String(b.createdAt || new Date().toISOString())
         }));
         saveData(KEYS.TIME_BLOCKS, safeTB);
+      }
+
+      if (Array.isArray(data.courses)) {
+        const safeCourses = data.courses.slice(0, 200).map(c => {
+          if (!c || typeof c !== 'object') return null;
+          const courseId = (c.id && isValidId(String(c.id))) ? String(c.id) : generateId();
+          const creditHours = Number.isFinite(Number(c.creditHours)) ? Math.max(0.5, Math.min(12, Number(c.creditHours))) : 3;
+          const rawComponents = Array.isArray(c.components) ? c.components.slice(0, 20) : [];
+          const safeComponents = rawComponents.map(cmp => {
+            if (!cmp || typeof cmp !== 'object') return null;
+            const cmpId = (cmp.id && isValidId(String(cmp.id))) ? String(cmp.id) : generateId();
+            const max = Number.isFinite(Number(cmp.max)) ? Math.max(0, Math.min(100, Number(cmp.max))) : 0;
+            const earned = (cmp.earned !== null && cmp.earned !== undefined && Number.isFinite(Number(cmp.earned)))
+              ? Math.max(0, Math.min(max, Number(cmp.earned)))
+              : null;
+            return {
+              id: cmpId,
+              name: String(cmp.name || 'Component').substring(0, 100),
+              max,
+              earned
+            };
+          }).filter(Boolean);
+
+          return {
+            id: courseId,
+            name: String(c.name || 'Untitled Course').substring(0, 200),
+            creditHours,
+            semester: String(c.semester || '').substring(0, 100),
+            subject: String(c.subject || '').substring(0, 100),
+            components: safeComponents,
+            finalized: Boolean(c.finalized),
+            xpAwarded: Number.isFinite(Number(c.xpAwarded)) ? Math.max(0, Number(c.xpAwarded)) : 0,
+            createdAt: String(c.createdAt || new Date().toISOString())
+          };
+        }).filter(Boolean);
+        saveData(KEYS.COURSES, safeCourses);
       }
 
       saveData(KEYS.THEME, 'default');
@@ -1525,6 +1584,39 @@ const Storage = (function() {
   }
 
   /**
+   * Calculate total focus minutes for a subject since a given ISO date string.
+   * Maps 'work' sessions directly to task subject using raw task lookup (no per-item Date allocations).
+   */
+  function getFocusMinutesBySubject(sinceIsoDate, targetSubject) {
+    if (!targetSubject) return 0;
+    const sessions = sinceIsoDate ? getSessionsSince(sinceIsoDate) : loadData(KEYS.SESSIONS, DEFAULTS.sessions);
+    if (!sessions || sessions.length === 0) return 0;
+
+    const rawTasks = loadData(KEYS.TASKS, DEFAULTS.tasks) || [];
+    const taskSubjectMap = new Map();
+    for (let i = 0; i < rawTasks.length; i++) {
+      const t = rawTasks[i];
+      if (t && t.id) taskSubjectMap.set(t.id, t.subject || 'Other');
+    }
+
+    const normTarget = targetSubject.toLowerCase();
+    let total = 0;
+
+    for (let i = 0; i < sessions.length; i++) {
+      const s = sessions[i];
+      if (s.type !== 'work') continue;
+      let subj = s.subject;
+      if (!subj && s.taskId) {
+        subj = taskSubjectMap.get(s.taskId);
+      }
+      if (subj && subj.toLowerCase() === normTarget) {
+        total += (s.duration || 0);
+      }
+    }
+    return total;
+  }
+
+  /**
    * OPTIMIZATION: Binary search range lookup for weekly focus work duration.
    * Uses binary search to find the week start index in O(log N) time and sums
    * work durations in a fast traditional for loop, bypassing array allocations.
@@ -1610,7 +1702,7 @@ const Storage = (function() {
     // Validation for specific settings
     if (key === 'pinned_nav_items') {
       if (!Array.isArray(value)) return false;
-      const VALID_IDS = ['dashboard', 'tasks', 'timer', 'calendar', 'notes', 'goals', 'history', 'settings'];
+      const VALID_IDS = ['dashboard', 'tasks', 'timer', 'calendar', 'notes', 'goals', 'history', 'settings', 'gpa'];
       // Only keep valid IDs and limit to 2 pins
       value = value.filter(id => VALID_IDS.includes(id)).slice(0, 2);
     } else if (typeof DEFAULTS.settings[key] === 'number') {
@@ -2136,6 +2228,145 @@ const Storage = (function() {
     return dateStr < formatDate(new Date());
   }
 
+  // ── Courses (GPA) ─────────────────────────────────────────────────────────
+
+  function getCourses() {
+    const raw = loadData(KEYS.COURSES, DEFAULTS.courses);
+    if (!Array.isArray(raw)) return [];
+    return raw.map(c => ({
+      ...c,
+      components: Array.isArray(c.components) ? c.components.map(cmp => ({ ...cmp })) : []
+    }));
+  }
+
+  function saveCourses(courses) {
+    const safe = Array.isArray(courses) ? courses : [];
+    const res = saveData(KEYS.COURSES, safe);
+    notifyTaskDataChanged();
+    return res;
+  }
+
+  function addCourse(courseData) {
+    const courses = getCourses();
+    const newCourseId = (courseData && courseData.id && typeof courseData.id === 'string')
+      ? courseData.id
+      : generateId();
+
+    const creditHours = Number.isFinite(Number(courseData?.creditHours))
+      ? Math.max(0.5, Math.min(12, Number(courseData.creditHours)))
+      : 3;
+
+    let components = [];
+    if (Array.isArray(courseData?.components) && courseData.components.length > 0) {
+      components = courseData.components.map(cmp => ({
+        id: cmp.id || generateId(),
+        name: String(cmp.name || 'Component').substring(0, 100),
+        max: Number.isFinite(Number(cmp.max)) ? Math.max(0, Math.min(100, Number(cmp.max))) : 0,
+        earned: (cmp.earned !== null && cmp.earned !== undefined && Number.isFinite(Number(cmp.earned)))
+          ? Math.max(0, Math.min(Number(cmp.max) || 100, Number(cmp.earned)))
+          : null
+      }));
+    } else {
+      // DEFAULT components for every new course: Mid Exam max 30, Final Exam max 60, Class Assessment max 10
+      components = [
+        { id: generateId(), name: 'Mid Exam', max: 30, earned: null },
+        { id: generateId(), name: 'Final Exam', max: 60, earned: null },
+        { id: generateId(), name: 'Class Assessment', max: 10, earned: null }
+      ];
+    }
+
+    const newCourse = {
+      id: newCourseId,
+      name: String(courseData?.name || 'Untitled Course').substring(0, 200),
+      creditHours,
+      semester: String(courseData?.semester || '').substring(0, 100),
+      subject: String(courseData?.subject || '').substring(0, 100),
+      components,
+      finalized: Boolean(courseData?.finalized),
+      xpAwarded: Number.isFinite(Number(courseData?.xpAwarded)) ? Math.max(0, Number(courseData.xpAwarded)) : 0,
+      createdAt: courseData?.createdAt || new Date().toISOString()
+    };
+
+    courses.push(newCourse);
+    saveCourses(courses);
+    return { ...newCourse, components: newCourse.components.map(cmp => ({ ...cmp })) };
+  }
+
+  function updateCourse(id, updates) {
+    if (!id || !updates || typeof updates !== 'object') return null;
+    const courses = getCourses();
+    const idx = courses.findIndex(c => c.id === id);
+    if (idx === -1) return null;
+
+    const existing = courses[idx];
+    const safeUpdates = { ...updates };
+
+    if ('name' in safeUpdates) {
+      safeUpdates.name = String(safeUpdates.name || '').substring(0, 200);
+    }
+    if ('semester' in safeUpdates) {
+      safeUpdates.semester = String(safeUpdates.semester || '').substring(0, 100);
+    }
+    if ('subject' in safeUpdates) {
+      safeUpdates.subject = String(safeUpdates.subject || '').substring(0, 100);
+    }
+    if ('creditHours' in safeUpdates) {
+      const ch = Number(safeUpdates.creditHours);
+      safeUpdates.creditHours = Number.isFinite(ch) ? Math.max(0.5, Math.min(12, ch)) : existing.creditHours;
+    }
+    if ('finalized' in safeUpdates) {
+      safeUpdates.finalized = Boolean(safeUpdates.finalized);
+    }
+    if ('xpAwarded' in safeUpdates) {
+      const xp = Number(safeUpdates.xpAwarded);
+      safeUpdates.xpAwarded = Number.isFinite(xp) ? Math.max(0, xp) : existing.xpAwarded;
+    }
+    if (Array.isArray(safeUpdates.components)) {
+      safeUpdates.components = safeUpdates.components.slice(0, 20).map(cmp => ({
+        id: cmp.id || generateId(),
+        name: String(cmp.name || 'Component').substring(0, 100),
+        max: Number.isFinite(Number(cmp.max)) ? Math.max(0, Math.min(100, Number(cmp.max))) : 0,
+        earned: (cmp.earned !== null && cmp.earned !== undefined && Number.isFinite(Number(cmp.earned)))
+          ? Math.max(0, Math.min(Number(cmp.max) || 100, Number(cmp.earned)))
+          : null
+      }));
+    }
+
+    courses[idx] = { ...existing, ...safeUpdates };
+    saveCourses(courses);
+    return { ...courses[idx], components: courses[idx].components.map(cmp => ({ ...cmp })) };
+  }
+
+  function deleteCourse(id) {
+    const courses = getCourses();
+    const filtered = courses.filter(c => c.id !== id);
+    if (filtered.length !== courses.length) {
+      saveCourses(filtered);
+      return true;
+    }
+    return false;
+  }
+
+  function setComponentScore(courseId, componentId, earned) {
+    const courses = getCourses();
+    const course = courses.find(c => c.id === courseId);
+    if (!course || !Array.isArray(course.components)) return null;
+
+    const cmp = course.components.find(cp => cp.id === componentId);
+    if (!cmp) return null;
+
+    if (earned === null || earned === undefined || earned === '') {
+      cmp.earned = null;
+    } else {
+      const val = Number(earned);
+      if (!Number.isFinite(val)) return null;
+      cmp.earned = Math.max(0, Math.min(cmp.max, val));
+    }
+
+    saveCourses(courses);
+    return { ...course, components: course.components.map(c => ({ ...c })) };
+  }
+
   return {
     KEYS, DEFAULTS,
     saveData, loadData, removeData, clearAllData, exportData, importData,
@@ -2150,7 +2381,8 @@ const Storage = (function() {
     getSessions, saveSessions, addSession,
     getTodaySessions, getTodayWorkSessions, getWeekSessions, getWeekWorkSessions,
     getTotalMinutesToday, getTotalMinutesWeek,
-    getSessionsSince, pruneSessions,
+    getSessionsSince, pruneSessions, getFocusMinutesBySubject,
+    getCourses, saveCourses, addCourse, updateCourse, deleteCourse, setComponentScore,
     getGoals, saveGoals, updateGoals,
     getSettings, saveSettings, updateSetting,
     getTimerState, saveTimerState, clearTimerState, completeTimerSession,

@@ -9,6 +9,7 @@ A simple, offline-capable study organizer built with vanilla HTML, CSS, and Java
 - 📅 **Calendar** - Monthly view with task indicators
 - ⏱️ **Pomodoro Timer** - Work/break cycles with session tracking
 - 🎯 **Goals** - Weekly task and study hour targets
+- 🎓 **GPA Calculator** - Academic standing, semester & cumulative GPA, and what-if targets
 - ⚙️ **Settings** - Customize subjects, timer, and manage data
 
 ## Tech Stack
@@ -64,6 +65,7 @@ All data is stored in localStorage under these keys:
 'studyflow_sessions'  // Pomodoro sessions
 'studyflow_goals'     // Weekly goals
 'studyflow_settings'  // App settings
+'studyflow_courses'   // Courses, credit hours, components, and scores
 ```
 
 ## Features in Detail
@@ -91,8 +93,48 @@ All data is stored in localStorage under these keys:
 ### Goals
 - Set weekly task completion target
 - Set weekly study hours target
+- Target cumulative GPA setting
 - Daily progress breakdown
 - Automatic weekly reset
+
+### GPA Calculator
+- Semester and cumulative credit-weighted GPA calculation
+- Track assessment components with live running weights totaling 100
+- "What do I need?" target breakdown on remaining points for in-progress courses
+- Toggle to include in-progress projected course grades
+- Focus hours tracked per linked course subject
+
+## Grading Scale & Course Defaults
+
+### University Grading Scale Table
+The default grading scale is defined centrally inside `js/gpa-utils.js` within `GRADING_SCALE`:
+
+```javascript
+const GRADING_SCALE = [
+  { min: 93, gp: 4.00, letter: 'A',  label: 'Excellent' },
+  { min: 90, gp: 3.70, letter: 'A-', label: 'Excellent' },
+  { min: 87, gp: 3.30, letter: 'B+', label: 'Very Good' },
+  { min: 83, gp: 3.00, letter: 'B',  label: 'Good' },
+  { min: 80, gp: 2.70, letter: 'B-', label: 'Good' },
+  { min: 77, gp: 2.30, letter: 'C+', label: 'Satisfactory' },
+  { min: 73, gp: 2.00, letter: 'C',  label: 'Satisfactory' },
+  { min: 70, gp: 1.70, letter: 'C-', label: 'Fair' },
+  { min: 67, gp: 1.30, letter: 'D+', label: 'Poor' },
+  { min: 63, gp: 1.00, letter: 'D',  label: 'Poor' },
+  { min: 60, gp: 0.70, letter: 'D-', label: 'Very Poor' },
+  { min: 0,  gp: 0.00, letter: 'F',  label: 'Fail' }
+];
+```
+
+To modify grade boundaries or letter mappings, update the `GRADING_SCALE` array in `js/gpa-utils.js`.
+
+### Default Course Assessment Weights
+Every newly created course initializes with standard default assessment components summing to 100:
+- Mid Exam: 30 points
+- Final Exam: 60 points
+- Class Assessment: 10 points
+
+Users can add, remove, rename, and adjust max point values inside the course modal editor at any time. Assessment weights must always sum to exactly 100 before saving. To change the default weights across new courses, adjust `addCourse` in `js/storage.js` and `openCourseModal` in `js/gpa.js`.
 
 ## Customization
 
