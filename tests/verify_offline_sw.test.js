@@ -26,8 +26,7 @@ const htmlFiles = [
   'notes.html',
   'settings.html',
   'tasks.html',
-  'timer.html',
-  'recordings.html'
+  'timer.html'
 ];
 
 htmlFiles.forEach((htmlFile) => {
@@ -67,8 +66,6 @@ const assetPaths = [
   'js/achievements.js',
   'js/scheduler.js',
   'js/notes.js',
-  'js/audio-db.js',
-  'js/recorder.js',
   'fonts/inter.woff2',
   'fonts/plus-jakarta-sans.woff2',
   'fonts/material-symbols-outlined.woff2',
