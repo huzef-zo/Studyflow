@@ -109,3 +109,7 @@
 ## 2026-11-10 - [Contextual ARIA Naming and Live Validation for Assessment Components]
 **Learning:** Repetitive score and component input controls across multiple course cards create ambiguity for screen reader users when labeled generically (e.g. "Score" or "Max points"). Dynamic interpolation of both component name and parent course name into `aria-label`s (e.g. `aria-label="Score for Mid Exam in Algorithms"`) delivers unambiguous context. Furthermore, live running total badges on dynamic weighting editors with contrasting visual pills and assistive warnings prevent saving invalid sum states.
 **Action:** Always interpolate both parent entity and child component names into repetitive card input ARIA attributes, and provide live running validation summaries that clearly communicate required state boundaries.
+
+## 2026-11-10 - Unified Academic Courses & Direct GPA Integration
+**Learning:** Transitioning fragmented categorized labels ("Subjects") to cohesive domain entities ("Courses") requires consolidating their visual indicators (color accent chips, target focus hours) alongside academic telemetry (credit weight, semester, assessment components, and live GPA letter grades).
+**Action:** When unifying categorical entities into academic courses, remove redundant selector dropdowns in sub-calculators (e.g., GPA course editor linking to subjects) and render real-time grade chips (`A`, `B+`, etc.) computed via `GpaUtils.courseStatus` in settings and overview cards to provide immediate positive feedback.
