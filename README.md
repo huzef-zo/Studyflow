@@ -10,7 +10,7 @@ A simple, offline-capable study organizer built with vanilla HTML, CSS, and Java
 - ⏱️ **Pomodoro Timer** - Work/break cycles with session tracking
 - 🎯 **Goals** - Weekly task and study hour targets
 - 🎓 **GPA Calculator** - Academic standing, semester & cumulative GPA, and what-if targets
-- ⚙️ **Settings** - Customize subjects, timer, and manage data
+- ⚙️ **Settings** - Customize courses, timer, and manage data
 
 ## Tech Stack
 
@@ -61,19 +61,19 @@ All data is stored in localStorage under these keys:
 ```javascript
 'studyflow_user'      // Profile settings
 'studyflow_tasks'     // Task list
-'studyflow_subjects'  // Subject categories
+'studyflow_subjects'  // Subject / Course categories (synchronized)
 'studyflow_sessions'  // Pomodoro sessions
 'studyflow_goals'     // Weekly goals
 'studyflow_settings'  // App settings
-'studyflow_courses'   // Courses, credit hours, components, and scores
+'studyflow_courses'   // Unified courses, credit hours, components, colors, and scores
 ```
 
 ## Features in Detail
 
 ### Task Management
-- Create tasks with title, due date, priority, and subject
+- Create tasks with title, due date, priority, and course
 - Filter by status (All/Pending/Completed)
-- Filter by priority and subject
+- Filter by priority and course
 - Real-time search
 - Mark complete/incomplete with one click
 
@@ -102,7 +102,7 @@ All data is stored in localStorage under these keys:
 - Track assessment components with live running weights totaling 100
 - "What do I need?" target breakdown on remaining points for in-progress courses
 - Toggle to include in-progress projected course grades
-- Focus hours tracked per linked course subject
+- Focus hours tracked per unified course and academic unit
 
 ## Grading Scale & Course Defaults
 

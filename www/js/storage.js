@@ -1371,10 +1371,66 @@ const Storage = (function() {
     return !!_pendingCompletions[taskId];
   }
 
-  // ── Subjects ────────────────────────────────────────────────────────────────
+  // ── Subjects & Courses Unified ──────────────────────────────────────────────
 
-  function getSubjects() { return [...loadData(KEYS.SUBJECTS, DEFAULTS.subjects)]; }
-  function saveSubjects(subjects) { return saveData(KEYS.SUBJECTS, [...subjects]); }
+  function getSubjects() {
+    const rawSubjects = loadData(KEYS.SUBJECTS, null);
+    if (Array.isArray(rawSubjects)) {
+      return [...rawSubjects];
+    }
+    // If subjects not explicitly set in storage, check if courses exist
+    const rawCourses = loadData(KEYS.COURSES, null);
+    if (Array.isArray(rawCourses) && rawCourses.length > 0) {
+      return rawCourses.map(c => ({
+        id: c.id,
+        name: c.name,
+        color: c.color || '#2563EB',
+        targetHours: c.targetHours || 10,
+        createdAt: c.createdAt || new Date().toISOString()
+      }));
+    }
+    return [...DEFAULTS.subjects];
+  }
+
+  function saveSubjects(subjects) {
+    const safe = Array.isArray(subjects) ? subjects : [];
+    const res = saveData(KEYS.SUBJECTS, [...safe]);
+    // Synchronize to courses so any added or edited subject is also a valid course for GPA
+    const rawCourses = loadData(KEYS.COURSES, null);
+    if (Array.isArray(rawCourses)) {
+      const updatedCourses = [...rawCourses];
+      safe.forEach(s => {
+        const idx = updatedCourses.findIndex(c => c.id === s.id || c.name.toLowerCase() === s.name.toLowerCase());
+        if (idx !== -1) {
+          updatedCourses[idx] = {
+            ...updatedCourses[idx],
+            name: s.name,
+            color: s.color || updatedCourses[idx].color || '#2563EB',
+            targetHours: s.targetHours || updatedCourses[idx].targetHours || 10
+          };
+        } else {
+          updatedCourses.push({
+            id: s.id,
+            name: s.name,
+            color: s.color || '#2563EB',
+            targetHours: s.targetHours || 10,
+            creditHours: 3,
+            semester: 'Semester 1',
+            components: [
+              { id: generateId(), name: 'Mid Exam', max: 30, earned: null },
+              { id: generateId(), name: 'Final Exam', max: 60, earned: null },
+              { id: generateId(), name: 'Class Assessment', max: 10, earned: null }
+            ],
+            finalized: false,
+            xpAwarded: 0,
+            createdAt: s.createdAt || new Date().toISOString()
+          });
+        }
+      });
+      saveData(KEYS.COURSES, updatedCourses);
+    }
+    return res;
+  }
 
   function addSubject(name, color, targetHours = 10) {
     const subjects = getSubjects();
@@ -2235,6 +2291,8 @@ const Storage = (function() {
     if (!Array.isArray(raw)) return [];
     return raw.map(c => ({
       ...c,
+      color: c.color || '#2563EB',
+      targetHours: c.targetHours || 10,
       components: Array.isArray(c.components) ? c.components.map(cmp => ({ ...cmp })) : []
     }));
   }
@@ -2242,6 +2300,17 @@ const Storage = (function() {
   function saveCourses(courses) {
     const safe = Array.isArray(courses) ? courses : [];
     const res = saveData(KEYS.COURSES, safe);
+    // Keep subjects list synchronized with courses
+    try {
+      const subjectProjections = safe.map(c => ({
+        id: c.id,
+        name: c.name,
+        color: c.color || '#2563EB',
+        targetHours: c.targetHours || 10,
+        createdAt: c.createdAt || new Date().toISOString()
+      }));
+      saveData(KEYS.SUBJECTS, subjectProjections);
+    } catch (_) {}
     notifyTaskDataChanged();
     return res;
   }
@@ -2255,6 +2324,13 @@ const Storage = (function() {
     const creditHours = Number.isFinite(Number(courseData?.creditHours))
       ? Math.max(0.5, Math.min(12, Number(courseData.creditHours)))
       : 3;
+
+    let safeColor = courseData?.color || '#2563EB';
+    if (!isValidHexColor(safeColor)) {
+      safeColor = '#2563EB';
+    }
+    const rawTh = Number(courseData?.targetHours);
+    const safeTh = Number.isFinite(rawTh) ? Math.max(1, Math.min(1000, Math.floor(rawTh))) : 10;
 
     let components = [];
     if (Array.isArray(courseData?.components) && courseData.components.length > 0) {
@@ -2275,12 +2351,15 @@ const Storage = (function() {
       ];
     }
 
+    const courseName = String(courseData?.name || 'Untitled Course').substring(0, 200);
     const newCourse = {
       id: newCourseId,
-      name: String(courseData?.name || 'Untitled Course').substring(0, 200),
+      name: courseName,
+      color: safeColor,
+      targetHours: safeTh,
       creditHours,
       semester: String(courseData?.semester || '').substring(0, 100),
-      subject: String(courseData?.subject || '').substring(0, 100),
+      subject: String(courseData?.subject || courseName).substring(0, 100),
       components,
       finalized: Boolean(courseData?.finalized),
       xpAwarded: Number.isFinite(Number(courseData?.xpAwarded)) ? Math.max(0, Number(courseData.xpAwarded)) : 0,
@@ -2304,11 +2383,24 @@ const Storage = (function() {
     if ('name' in safeUpdates) {
       safeUpdates.name = String(safeUpdates.name || '').substring(0, 200);
     }
+    if ('color' in safeUpdates) {
+      if (isValidHexColor(safeUpdates.color)) {
+        safeUpdates.color = safeUpdates.color;
+      } else {
+        safeUpdates.color = existing.color || '#2563EB';
+      }
+    }
+    if ('targetHours' in safeUpdates) {
+      const rawTh = Number(safeUpdates.targetHours);
+      safeUpdates.targetHours = Number.isFinite(rawTh) ? Math.max(1, Math.min(1000, Math.floor(rawTh))) : (existing.targetHours || 10);
+    }
     if ('semester' in safeUpdates) {
       safeUpdates.semester = String(safeUpdates.semester || '').substring(0, 100);
     }
     if ('subject' in safeUpdates) {
       safeUpdates.subject = String(safeUpdates.subject || '').substring(0, 100);
+    } else if ('name' in safeUpdates) {
+      safeUpdates.subject = safeUpdates.name;
     }
     if ('creditHours' in safeUpdates) {
       const ch = Number(safeUpdates.creditHours);

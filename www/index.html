@@ -161,8 +161,8 @@
         <details class="group bg-surface-container/60 backdrop-blur-md rounded-DEFAULT p-4 shadow-sm border border-glass-border-subtle">
           <summary class="flex items-center justify-between cursor-pointer list-none font-headline-sm text-headline-sm text-text-primary">
             <div class="flex items-center gap-2">
-              <span class="material-symbols-outlined text-primary text-[20px]">pie_chart</span>
-              <span>Mastery Overview</span>
+              <span class="material-symbols-outlined text-primary text-[20px]">school</span>
+              <span>Course Mastery & GPA</span>
             </div>
             <span class="material-symbols-outlined text-text-secondary transition-transform group-open:rotate-180">expand_more</span>
           </summary>
@@ -416,27 +416,27 @@
 
         const stats = Storage.getSubjectMasteryStats ? Storage.getSubjectMasteryStats() : [];
         if (stats.length === 0) {
-          masteryContainer.innerHTML = '<p class="font-body-sm text-body-sm text-text-muted col-span-2">No subjects configured.</p>';
+          masteryContainer.innerHTML = '<p class="font-body-sm text-body-sm text-text-muted col-span-2">No courses configured.</p>';
           return;
         }
 
-        // Map course grades by subject if available
+        // Map course grades by course name if available
         const courses = (typeof Storage.getCourses === 'function' && typeof GpaUtils !== 'undefined') ? Storage.getCourses() : [];
-        const subjectGradeMap = new Map();
+        const courseGradeMap = new Map();
         courses.forEach(c => {
-          if (c.subject) {
-            const st = GpaUtils.courseStatus(c);
-            subjectGradeMap.set(c.subject.toLowerCase(), st.grade.letter);
-          }
+          const st = GpaUtils.courseStatus(c);
+          courseGradeMap.set(c.name.toLowerCase(), st.grade.letter);
         });
 
         masteryContainer.innerHTML = stats.map(s => {
-          const letter = subjectGradeMap.get(s.name.toLowerCase());
+          const letter = courseGradeMap.get(s.name.toLowerCase());
           const gradeChip = letter ? `<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-primary-container/20 text-primary-container font-mono-timer">${letter}</span>` : '';
+          const safeColor = s.color || '#2563EB';
           return `
           <div class="flex flex-col gap-1 p-2.5 rounded-xl bg-surface-container-lowest/60">
             <div class="flex items-center justify-between font-label-sm text-label-sm">
               <div class="flex items-center gap-1.5 min-w-0">
+                <span class="w-2 h-2 rounded-full shrink-0" style="background-color: ${App.escapeHtml(safeColor)};"></span>
                 <span class="text-text-primary font-medium truncate">${App.escapeHtml(s.name)}</span>
                 ${gradeChip}
               </div>
@@ -447,7 +447,7 @@
               <span>${s.completedTopics} topics</span>
             </div>
             <div class="w-full h-1.5 rounded-full bg-surface-container-highest overflow-hidden">
-              <div class="h-full bg-primary-container rounded-full" style="width:${s.percentage}%;"></div>
+              <div class="h-full rounded-full" style="width:${s.percentage}%; background-color: ${App.escapeHtml(safeColor)};"></div>
             </div>
           </div>
         `;

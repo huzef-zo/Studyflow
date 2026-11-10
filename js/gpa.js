@@ -200,10 +200,12 @@ const Gpa = (function() {
       const components = Array.isArray(course.components) ? course.components : [];
 
       let focusHours = 0;
-      if (course.subject && Storage.getFocusMinutesBySubject) {
-        const mins = Storage.getFocusMinutesBySubject(semesterCutoffIso, course.subject);
+      const courseKey = course.name || course.subject;
+      if (courseKey && Storage.getFocusMinutesBySubject) {
+        const mins = Storage.getFocusMinutesBySubject(semesterCutoffIso, courseKey);
         focusHours = (mins / 60).toFixed(1);
       }
+      const courseColor = course.color || '#2563EB';
 
       // What do I need table for in-progress courses
       let whatDoINeedHtml = '';
@@ -261,6 +263,7 @@ const Gpa = (function() {
           <div class="flex items-start justify-between gap-3">
             <div class="flex flex-col min-w-0 cursor-pointer edit-course-trigger" data-course-id="${App.escapeHtml(course.id)}">
               <div class="flex items-center gap-2">
+                <span class="w-3 h-3 rounded-full shrink-0" style="background-color: ${App.escapeHtml(courseColor)};"></span>
                 <h3 class="font-headline-sm text-headline-sm font-bold text-text-primary hover:text-primary-container transition-colors truncate">
                   ${App.escapeHtml(course.name)}
                 </h3>
@@ -270,8 +273,9 @@ const Gpa = (function() {
                 <span>${course.creditHours} credits</span>
                 <span>·</span>
                 <span>${App.escapeHtml(course.semester || 'Unassigned')}</span>
-                ${course.subject ? `<span>·</span><span class="text-primary-container">${App.escapeHtml(course.subject)}</span>` : ''}
-                ${course.subject ? `<span>·</span><span>${focusHours}h focus</span>` : ''}
+                <span>·</span>
+                <span class="text-primary-container">${focusHours}h focus</span>
+                ${course.targetHours ? `<span>·</span><span>${course.targetHours}h target</span>` : ''}
               </div>
             </div>
 
@@ -377,13 +381,13 @@ const Gpa = (function() {
 
   function openCourseModal(existingCourse) {
     const isEdit = Boolean(existingCourse);
-    const subjects = Storage.getSubjects ? Storage.getSubjects() : [];
     const availableSemesters = getAvailableSemesters(Storage.getCourses ? Storage.getCourses() : []);
 
     const name = existingCourse ? existingCourse.name : '';
+    const color = existingCourse ? (existingCourse.color || '#2563EB') : '#2563EB';
+    const targetHours = existingCourse ? (existingCourse.targetHours || 10) : 10;
     const credits = existingCourse ? existingCourse.creditHours : 3;
     const semester = existingCourse ? (existingCourse.semester || '') : (selectedSemester !== 'all' ? selectedSemester : 'Year 1 - Sem 1');
-    const subject = existingCourse ? (existingCourse.subject || '') : '';
     const finalized = existingCourse ? Boolean(existingCourse.finalized) : false;
 
     let components = existingCourse && Array.isArray(existingCourse.components)
@@ -396,22 +400,33 @@ const Gpa = (function() {
 
     const content = `
       <form id="course-form" class="flex flex-col gap-3.5 select-none">
-        <div class="flex flex-col gap-1">
-          <label class="font-label-sm text-label-sm text-text-secondary" for="course-name-input">Course Name</label>
-          <input
-            id="course-name-input"
-            type="text"
-            required
-            maxlength="200"
-            placeholder="e.g. Data Structures & Algorithms"
-            value="${App.escapeHtml(name)}"
-            class="w-full bg-surface-container-lowest/80 rounded-xl px-3 py-2 text-text-primary text-body-md border border-glass-border outline-none focus:border-primary-container"
-          />
+        <div class="flex items-center gap-2">
+          <div class="flex-1 flex flex-col gap-1">
+            <label class="font-label-sm text-label-sm text-text-secondary" for="course-name-input">Course Name</label>
+            <input
+              id="course-name-input"
+              type="text"
+              required
+              maxlength="200"
+              placeholder="e.g. Data Structures & Algorithms"
+              value="${App.escapeHtml(name)}"
+              class="w-full bg-surface-container-lowest/80 rounded-xl px-3 py-2 text-text-primary text-body-md border border-glass-border outline-none focus:border-primary-container"
+            />
+          </div>
+          <div class="flex flex-col gap-1 shrink-0">
+            <label class="font-label-sm text-label-sm text-text-secondary" for="course-color-input">Color</label>
+            <input
+              type="color"
+              id="course-color-input"
+              value="${App.escapeHtml(color)}"
+              class="w-12 h-10 rounded-xl bg-transparent border-none cursor-pointer p-0"
+            />
+          </div>
         </div>
 
-        <div class="grid grid-cols-2 gap-2">
+        <div class="grid grid-cols-3 gap-2">
           <div class="flex flex-col gap-1">
-            <label class="font-label-sm text-label-sm text-text-secondary" for="course-credits-input">Credit Hours</label>
+            <label class="font-label-sm text-label-sm text-text-secondary" for="course-credits-input">Credits</label>
             <input
               id="course-credits-input"
               type="number"
@@ -431,7 +446,7 @@ const Gpa = (function() {
               type="text"
               list="semester-options"
               maxlength="100"
-              placeholder="e.g. Year 1 - Sem 1"
+              placeholder="e.g. Semester 1"
               value="${App.escapeHtml(semester)}"
               required
               class="w-full bg-surface-container-lowest/80 rounded-xl px-3 py-2 text-text-primary text-body-md border border-glass-border outline-none focus:border-primary-container"
@@ -440,21 +455,20 @@ const Gpa = (function() {
               ${availableSemesters.map(s => `<option value="${App.escapeHtml(s)}">`).join('')}
             </datalist>
           </div>
-        </div>
 
-        <div class="flex flex-col gap-1">
-          <label class="font-label-sm text-label-sm text-text-secondary" for="course-subject-select">Link Subject (for Focus Time tracking)</label>
-          <select
-            id="course-subject-select"
-            class="w-full bg-surface-container-lowest/80 rounded-xl px-3 py-2 text-text-primary text-body-md border border-glass-border outline-none focus:border-primary-container cursor-pointer"
-          >
-            <option value="">No linked subject</option>
-            ${subjects.map(s => `
-              <option value="${App.escapeHtml(s.name)}" ${s.name === subject ? 'selected' : ''}>
-                ${App.escapeHtml(s.name)}
-              </option>
-            `).join('')}
-          </select>
+          <div class="flex flex-col gap-1">
+            <label class="font-label-sm text-label-sm text-text-secondary" for="course-target-hours-input">Target (hrs)</label>
+            <input
+              id="course-target-hours-input"
+              type="number"
+              min="1"
+              max="1000"
+              step="1"
+              value="${targetHours}"
+              required
+              class="w-full bg-surface-container-lowest/80 rounded-xl px-3 py-2 text-text-primary text-body-md border border-glass-border outline-none focus:border-primary-container"
+            />
+          </div>
         </div>
 
         <div class="flex items-center justify-between p-2.5 rounded-xl bg-surface-container-lowest/60 border border-glass-border">
@@ -600,9 +614,10 @@ const Gpa = (function() {
     if (saveBtn) {
       saveBtn.addEventListener('click', () => {
         const nameInput = modal.querySelector('#course-name-input');
+        const colorInput = modal.querySelector('#course-color-input');
+        const targetHoursInput = modal.querySelector('#course-target-hours-input');
         const creditsInput = modal.querySelector('#course-credits-input');
         const semesterInput = modal.querySelector('#course-semester-input');
-        const subjectSelect = modal.querySelector('#course-subject-select');
         const finalizedBox = modal.querySelector('#course-finalized-checkbox');
 
         const courseName = nameInput ? nameInput.value.trim() : '';
@@ -612,6 +627,8 @@ const Gpa = (function() {
           return;
         }
 
+        const courseColor = colorInput ? colorInput.value : '#2563EB';
+        const targetHoursVal = targetHoursInput ? parseInt(targetHoursInput.value, 10) : 10;
         const creditHours = creditsInput ? Number(creditsInput.value) : 3;
         if (!Number.isFinite(creditHours) || creditHours < 0.5 || creditHours > 12) {
           App.showToast('Credit hours must be between 0.5 and 12', 'warning');
@@ -667,9 +684,11 @@ const Gpa = (function() {
 
         const courseData = {
           name: courseName,
+          color: courseColor,
+          targetHours: Number.isFinite(targetHoursVal) ? Math.max(1, Math.min(1000, targetHoursVal)) : 10,
           creditHours,
           semester: courseSemester,
-          subject: subjectSelect ? subjectSelect.value : '',
+          subject: courseName,
           finalized: Boolean(finalizedBox && finalizedBox.checked),
           components: updatedComponents
         };

@@ -244,10 +244,10 @@
         </div>
       </div>
 
-      <!-- SUBJECTS -->
+      <!-- COURSES -->
       <div class="flex flex-col space-y-2">
         <div class="flex items-center justify-between px-1">
-          <span class="font-label-sm text-label-sm uppercase tracking-widest text-text-muted">Subjects</span>
+          <span class="font-label-sm text-label-sm uppercase tracking-widest text-text-muted">Courses & Academic Units</span>
           <span class="font-body-sm text-body-sm text-text-secondary" id="subjects-count-label">0 active</span>
         </div>
         <div class="rounded-2xl bg-surface-glass backdrop-blur-xl overflow-hidden shadow-sm flex flex-col">
@@ -256,7 +256,7 @@
           </div>
           <button class="flex items-center justify-center gap-2 p-3.5 m-2.5 rounded-xl bg-surface-container-high/60 text-primary hover:bg-surface-container-high hover:text-text-primary active:scale-[0.99] transition-all" id="add-subject-btn" type="button">
             <span class="material-symbols-outlined text-[18px]">add</span>
-            <span class="font-label-md text-label-md">Add Subject</span>
+            <span class="font-label-md text-label-md">Add Course</span>
           </button>
         </div>
       </div>
@@ -328,6 +328,7 @@
   <script src="js/storage.js?v=v2026-11-10-01"></script>
   <script src="js/subtask-utils.js?v=v2026-11-10-01"></script>
   <script src="js/pwa-manager.js?v=v2026-11-10-01"></script>
+  <script src="js/gpa-utils.js?v=v2026-11-10-01"></script>
   <script src="js/app.js?v=v2026-11-10-01"></script>
 
   <script>
@@ -386,52 +387,68 @@
         const countLabel = document.getElementById('subjects-count-label');
         if (!container) return;
 
-        const subjects = Storage.getSubjects ? Storage.getSubjects() : [];
-        if (countLabel) countLabel.textContent = `${subjects.length} active`;
+        const courses = Storage.getCourses ? Storage.getCourses() : [];
+        if (countLabel) countLabel.textContent = `${courses.length} active`;
 
-        if (subjects.length === 0) {
-          container.innerHTML = '<p class="font-body-sm text-body-sm text-text-muted p-4">No subjects added.</p>';
+        if (courses.length === 0) {
+          container.innerHTML = '<p class="font-body-sm text-body-sm text-text-muted p-4">No courses added.</p>';
           return;
         }
 
-        container.innerHTML = subjects.map(s => `
-          <div class="flex items-center justify-between p-4 bg-surface-container-low/40 border-b border-glass-border-subtle last:border-b-0">
-            <div class="flex items-center gap-3">
-              <span class="w-3 h-3 rounded-full shrink-0" style="background-color: ${App.escapeHtml(s.color)};"></span>
-              <span class="font-label-md text-label-md text-text-primary font-medium">${App.escapeHtml(s.name)}</span>
+        container.innerHTML = courses.map(c => {
+          const color = c.color || '#2563EB';
+          const credits = c.creditHours || 3;
+          const sem = c.semester || 'Semester 1';
+          const gradeLetter = (typeof GpaUtils !== 'undefined') ? GpaUtils.courseStatus(c).grade.letter : null;
+          const gradePill = gradeLetter
+            ? `<span class="px-2 py-0.5 rounded-full text-[11px] font-bold font-mono-timer bg-primary-container/20 text-primary-container">${gradeLetter}</span>`
+            : '';
+
+          return `
+            <div class="flex items-center justify-between p-4 bg-surface-container-low/40 border-b border-glass-border-subtle last:border-b-0">
+              <div class="flex items-center gap-3 min-w-0">
+                <span class="w-3 h-3 rounded-full shrink-0" style="background-color: ${App.escapeHtml(color)};"></span>
+                <div class="flex flex-col min-w-0">
+                  <div class="flex items-center gap-2">
+                    <span class="font-label-md text-label-md text-text-primary font-medium truncate">${App.escapeHtml(c.name)}</span>
+                    ${gradePill}
+                  </div>
+                  <span class="font-label-sm text-[11px] text-text-secondary truncate">${credits} cr · ${App.escapeHtml(sem)} · ${c.targetHours || 10}h target</span>
+                </div>
+              </div>
+              <div class="flex items-center gap-1 shrink-0">
+                <button class="edit-subject-btn p-1 rounded-lg text-text-muted hover:text-text-primary transition-colors" data-id="${App.escapeHtml(c.id)}" aria-label="Edit ${App.escapeHtml(c.name)}">
+                  <span class="material-symbols-outlined text-[18px]">edit</span>
+                </button>
+                <button class="delete-subject-btn p-1 rounded-lg text-text-muted hover:text-error transition-colors" data-id="${App.escapeHtml(c.id)}" aria-label="Delete ${App.escapeHtml(c.name)}">
+                  <span class="material-symbols-outlined text-[18px]">delete_forever</span>
+                </button>
+              </div>
             </div>
-            <div class="flex items-center gap-1">
-              <button class="edit-subject-btn p-1 rounded-lg text-text-muted hover:text-text-primary transition-colors" data-id="${App.escapeHtml(s.id)}" aria-label="Edit ${App.escapeHtml(s.name)}">
-                <span class="material-symbols-outlined text-[18px]">edit</span>
-              </button>
-              <button class="delete-subject-btn p-1 rounded-lg text-text-muted hover:text-error transition-colors" data-id="${App.escapeHtml(s.id)}" aria-label="Delete ${App.escapeHtml(s.name)}">
-                <span class="material-symbols-outlined text-[18px]">delete_forever</span>
-              </button>
-            </div>
-          </div>
-        `).join('');
+          `;
+        }).join('');
 
         // Wire edit/delete
         container.querySelectorAll('.edit-subject-btn').forEach(btn => {
           btn.addEventListener('click', () => {
             const id = btn.getAttribute('data-id');
-            const sub = subjects.find(s => s.id === id);
-            if (sub) openSubjectModal(sub);
+            const crs = (Storage.getCourses ? Storage.getCourses() : []).find(c => c.id === id);
+            if (crs) openSubjectModal(crs);
           });
         });
 
         container.querySelectorAll('.delete-subject-btn').forEach(btn => {
           btn.addEventListener('click', async () => {
             const id = btn.getAttribute('data-id');
-            const sub = subjects.find(s => s.id === id);
-            if (sub && await App.confirm({
-              title: 'Delete Subject',
-              message: `Delete subject "${sub.name}"?`,
+            const crs = (Storage.getCourses ? Storage.getCourses() : []).find(c => c.id === id);
+            if (crs && await App.confirm({
+              title: 'Delete Course',
+              message: `Delete course "${crs.name}"? This removes it from GPA calculation and focus tracking.`,
               confirmText: 'Delete',
               danger: true
             })) {
-              Storage.deleteSubject(id);
-              App.showToast('Subject deleted', 'info');
+              Storage.deleteCourse(id);
+              App.showToast('Course deleted', 'info');
               renderSubjects();
             }
           });
@@ -475,55 +492,89 @@
       function openSubjectModal(existing = null) {
         const isEdit = !!existing;
         const name = existing?.name || '';
-        const color = existing?.color || '#5B9BF0';
+        const color = existing?.color || '#2563EB';
+        const credits = existing?.creditHours || 3;
+        const semester = existing?.semester || 'Semester 1';
 
         const content = `
           <div class="flex flex-col gap-3">
-            <div class="flex flex-col gap-1">
-              <label class="font-label-sm text-label-sm text-text-secondary" for="subj-name-input">Subject Name</label>
-              <input type="text" id="subj-name-input" class="w-full bg-surface-container-lowest/80 rounded-xl px-3 py-2 text-text-primary text-body-md border border-glass-border outline-none focus:border-primary-container" value="${App.escapeHtml(name)}" placeholder="e.g. Neuroscience"/>
+            <div class="flex items-center gap-2">
+              <div class="flex-1 flex flex-col gap-1">
+                <label class="font-label-sm text-label-sm text-text-secondary" for="subj-name-input">Course Name</label>
+                <input type="text" id="subj-name-input" class="w-full bg-surface-container-lowest/80 rounded-xl px-3 py-2 text-text-primary text-body-md border border-glass-border outline-none focus:border-primary-container" value="${App.escapeHtml(name)}" placeholder="e.g. Neuroscience"/>
+              </div>
+              <div class="flex flex-col gap-1 shrink-0">
+                <label class="font-label-sm text-label-sm text-text-secondary" for="subj-color-input">Color</label>
+                <input type="color" id="subj-color-input" class="w-12 h-10 rounded-xl bg-transparent border-none cursor-pointer p-0" value="${App.escapeHtml(color)}"/>
+              </div>
             </div>
-            <div class="flex flex-col gap-1">
-              <label class="font-label-sm text-label-sm text-text-secondary" for="subj-color-input">Color Accent</label>
-              <input type="color" id="subj-color-input" class="w-12 h-10 rounded-xl bg-transparent border-none cursor-pointer p-0" value="${App.escapeHtml(color)}"/>
-            </div>
-            <div class="flex flex-col gap-1">
-              <label class="font-label-sm text-label-sm text-text-secondary" for="subj-target-input">Target hours</label>
-              <input type="number" id="subj-target-input" min="1" max="1000" step="1" class="w-full bg-surface-container-lowest/80 rounded-xl px-3 py-2 text-text-primary text-body-md border border-glass-border outline-none focus:border-primary-container" value="${existing?.targetHours || 10}"/>
+
+            <div class="grid grid-cols-3 gap-2">
+              <div class="flex flex-col gap-1">
+                <label class="font-label-sm text-label-sm text-text-secondary" for="subj-credits-input">Credits</label>
+                <input type="number" id="subj-credits-input" min="0.5" max="12" step="0.5" class="w-full bg-surface-container-lowest/80 rounded-xl px-3 py-2 text-text-primary text-body-md border border-glass-border outline-none focus:border-primary-container" value="${credits}"/>
+              </div>
+              <div class="flex flex-col gap-1">
+                <label class="font-label-sm text-label-sm text-text-secondary" for="subj-semester-input">Semester</label>
+                <input type="text" id="subj-semester-input" maxlength="100" class="w-full bg-surface-container-lowest/80 rounded-xl px-3 py-2 text-text-primary text-body-md border border-glass-border outline-none focus:border-primary-container" value="${App.escapeHtml(semester)}"/>
+              </div>
+              <div class="flex flex-col gap-1">
+                <label class="font-label-sm text-label-sm text-text-secondary" for="subj-target-input">Target (hrs)</label>
+                <input type="number" id="subj-target-input" min="1" max="1000" step="1" class="w-full bg-surface-container-lowest/80 rounded-xl px-3 py-2 text-text-primary text-body-md border border-glass-border outline-none focus:border-primary-container" value="${existing?.targetHours || 10}"/>
+              </div>
             </div>
           </div>
         `;
 
         const modal = App.createModal({
-          title: isEdit ? 'Edit Subject' : 'Add Subject',
+          title: isEdit ? 'Edit Course' : 'Add Course',
           content,
           footer: `
             <button class="px-4 py-2 rounded-full font-label-md text-text-secondary hover:text-text-primary transition-colors" data-action="cancel">Cancel</button>
-            <button class="px-4 py-2 rounded-full font-label-md bg-primary-container text-surface-base hover:bg-accent-hover font-semibold transition-colors" id="save-subj-btn">Save</button>
+            <button class="px-4 py-2 rounded-full font-label-md bg-primary-container text-surface-base hover:bg-accent-hover font-semibold transition-colors" id="save-subj-btn">Save Course</button>
           `
         });
 
         modal.querySelector('#save-subj-btn').addEventListener('click', () => {
           const nameInput = modal.querySelector('#subj-name-input');
           const colorInput = modal.querySelector('#subj-color-input');
+          const creditsInput = modal.querySelector('#subj-credits-input');
+          const semesterInput = modal.querySelector('#subj-semester-input');
           const targetInput = modal.querySelector('#subj-target-input');
+
           const newName = nameInput.value.trim();
           const newColor = colorInput.value;
+          const newCredits = parseFloat(creditsInput.value) || 3;
+          const newSemester = semesterInput.value.trim() || 'Semester 1';
           const newTargetHours = parseInt(targetInput.value, 10) || 10;
 
           if (!newName) {
-            App.showToast('Please enter a subject name', 'warning');
+            App.showToast('Please enter a course name', 'warning');
             nameInput.focus();
             return;
           }
 
           if (isEdit) {
-            Storage.updateSubject(existing.id, { name: newName, color: newColor, targetHours: newTargetHours });
+            Storage.updateCourse(existing.id, {
+              name: newName,
+              color: newColor,
+              creditHours: newCredits,
+              semester: newSemester,
+              targetHours: newTargetHours,
+              subject: newName
+            });
           } else {
-            Storage.addSubject(newName, newColor, newTargetHours);
+            Storage.addCourse({
+              name: newName,
+              color: newColor,
+              creditHours: newCredits,
+              semester: newSemester,
+              targetHours: newTargetHours,
+              subject: newName
+            });
           }
 
-          App.showToast('Subject saved', 'success');
+          App.showToast('Course saved', 'success');
           App.closeModal(modal);
           renderSubjects();
         });

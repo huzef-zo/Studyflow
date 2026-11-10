@@ -273,9 +273,9 @@ const History = (function() {
     const stats = Storage.getSubjectMasteryStats ? Storage.getSubjectMasteryStats() : [];
     if (stats.length === 0) {
       elements.masteryOverview.innerHTML = App.createEmptyStateHtml({
-        title: 'No Subjects Configured',
-        text: 'Set up subjects in settings to track your focus distribution.',
-        icon: 'pie_chart'
+        title: 'No Courses Configured',
+        text: 'Set up courses in settings to track your focus distribution and GPA.',
+        icon: 'school'
       });
       return;
     }
@@ -297,8 +297,19 @@ const History = (function() {
       subjectMins[subName] = (subjectMins[subName] || 0) + (s.duration || 0);
     });
 
+    const courses = (typeof Storage.getCourses === 'function' && typeof GpaUtils !== 'undefined') ? Storage.getCourses() : [];
+    const courseGradeMap = new Map();
+    courses.forEach(c => {
+      const st = GpaUtils.courseStatus(c);
+      courseGradeMap.set(c.name.toLowerCase(), st.grade.letter);
+    });
+
     elements.masteryOverview.innerHTML = stats.map(s => {
       const safeColor = App.isValidHexColor(s.color) ? s.color : '#2563EB';
+      const letter = courseGradeMap.get(s.name.toLowerCase());
+      const gradeBadge = letter
+        ? `<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-primary-container/20 text-primary-container font-mono-timer">${letter}</span>`
+        : '';
 
       return `
         <div class="flex flex-col gap-1.5 p-2 rounded bg-surface-container-low/60 hover:bg-surface-container-high transition-colors">
@@ -306,6 +317,7 @@ const History = (function() {
             <div class="flex items-center gap-2">
               <span class="w-2 h-2 rounded-full" style="background-color: ${App.escapeHtml(safeColor)};"></span>
               <span class="font-body-md text-body-md text-text-primary font-medium">${App.escapeHtml(s.name)}</span>
+              ${gradeBadge}
             </div>
             <span class="font-label-md text-label-md text-text-primary font-semibold">${s.percentage}%</span>
           </div>

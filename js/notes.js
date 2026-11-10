@@ -215,7 +215,7 @@ const Notes = (function() {
         <input type="text" id="editor-title-input" class="w-full bg-transparent border-none outline-none font-headline-lg text-headline-lg text-text-primary placeholder:text-text-muted p-0" placeholder="Note title..." value="${App.escapeHtml(title)}" aria-label="Note title"/>
 
         <div class="flex items-center gap-3">
-          <label class="font-label-sm text-label-sm text-text-secondary" for="editor-subject-select">Subject:</label>
+          <label class="font-label-sm text-label-sm text-text-secondary" for="editor-subject-select">Course:</label>
           <select id="editor-subject-select" class="px-3 py-1.5 rounded-full bg-surface-container-high text-text-primary font-label-md text-label-md border border-glass-border outline-none cursor-pointer">
             ${subjects.map(s => `
               <option value="${App.escapeHtml(s.name)}" ${s.name === subject ? 'selected' : ''}>${App.escapeHtml(s.name)}</option>

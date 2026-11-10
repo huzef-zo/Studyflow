@@ -395,26 +395,29 @@ const App = (function() {
               </div>
             </div>
 
-            <!-- Course / Subject Dropdown Selector -->
+            <!-- Course Dropdown Selector -->
             <div class="relative">
               <button class="w-full rounded-2xl bg-surface-container-lowest/70 hover:bg-surface-container-lowest active:scale-[0.99] p-3.5 flex items-center justify-between transition-all text-left" id="subject-dropdown-btn" type="button">
                 <div class="flex items-center gap-3">
                   <div class="w-3 h-3 rounded-full flex-shrink-0" style="background-color: ${getSubjectColor(selectedSubject)};"></div>
                   <div class="flex flex-col">
-                    <span class="font-label-sm text-[11px] text-text-muted uppercase tracking-wider">Subject</span>
+                    <span class="font-label-sm text-[11px] text-text-muted uppercase tracking-wider">Course</span>
                     <span class="font-label-md text-label-md text-text-primary truncate" id="selected-subject-label">${escapeHtml(selectedSubject)}</span>
                   </div>
                 </div>
                 <span class="material-symbols-outlined text-text-secondary text-[20px] transition-transform duration-200" id="dropdown-chevron">expand_more</span>
               </button>
               <div class="hidden absolute top-full mt-2 inset-x-0 z-30 rounded-2xl bg-surface-container-high/95 backdrop-blur-xl p-2 shadow-2xl flex flex-col gap-1 max-h-48 overflow-y-auto" id="subject-menu">
-                ${subjects.map(s => `
+                ${subjects.map(s => {
+                  const sGrade = (typeof GpaUtils !== 'undefined') ? GpaUtils.courseStatus(s).grade.letter : null;
+                  return `
                   <div class="px-3 py-2 rounded-xl flex items-center gap-3 cursor-pointer hover:bg-surface-variant transition-colors" data-subject="${escapeHtml(s.name)}">
                     <div class="w-2.5 h-2.5 rounded-full" style="background-color: ${escapeHtml(s.color)};"></div>
                     <span class="font-label-md text-label-md text-text-primary flex-1">${escapeHtml(s.name)}</span>
+                    ${sGrade ? `<span class="text-[11px] font-mono-timer text-text-muted font-bold">${sGrade}</span>` : ''}
                     ${s.name === selectedSubject ? '<span class="material-symbols-outlined text-primary-container text-[18px]">check</span>' : ''}
                   </div>
-                `).join('')}
+                `;}).join('')}
               </div>
             </div>
 
@@ -931,6 +934,10 @@ const App = (function() {
     return isValidHexColor(color) ? color : '#5B9BF0';
   }
 
+  function getCourseColor(courseName) {
+    return getSubjectColor(courseName);
+  }
+
   function isValidHexColor(hex) {
     return /^#([0-9A-F]{3}){1,2}$/i.test(hex);
   }
@@ -981,7 +988,7 @@ const App = (function() {
     createModal, openModal, closeModal, confirm, alert,
     showToast, showUndoToast,
     debounce, formatDuration, formatNumber,
-    escapeHtml, getSubjectColor, isValidHexColor,
+    escapeHtml, getSubjectColor, getCourseColor, isValidHexColor,
     createProgressBar, createEmptyStateHtml
   };
 })();
