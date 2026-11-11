@@ -15,7 +15,7 @@ const Notes = (function() {
       searchInput: document.getElementById('notes-search-input'),
       notesCountBadge: document.getElementById('notes-count-badge'),
       newNoteBtn: document.getElementById('new-note-btn'),
-      subjectFilterChips: document.getElementById('subject-filter-chips')
+      subjectFilterChips: document.getElementById('course-filter-chips') || document.getElementById('subject-filter-chips')
     };
   }
 
@@ -181,11 +181,11 @@ const Notes = (function() {
 
   function openNoteEditorModal(existingNote = null) {
     const isEdit = !!existingNote;
-    const subjects = Storage.getSubjects ? Storage.getSubjects() : [];
-    const defaultSubject = subjects.length > 0 ? subjects[0].name : 'General';
+    const courses = (Storage.getCourses ? Storage.getCourses() : null) || (Storage.getSubjects ? Storage.getSubjects() : []);
+    const defaultCourse = courses.length > 0 ? courses[0].name : 'General';
 
     const title = existingNote?.title || '';
-    const subject = existingNote?.subject || defaultSubject;
+    const course = existingNote?.course || existingNote?.subject || defaultCourse;
     const content = existingNote?.content || '';
 
     const editorOverlay = document.createElement('div');
@@ -215,10 +215,10 @@ const Notes = (function() {
         <input type="text" id="editor-title-input" class="w-full bg-transparent border-none outline-none font-headline-lg text-headline-lg text-text-primary placeholder:text-text-muted p-0" placeholder="Note title..." value="${App.escapeHtml(title)}" aria-label="Note title"/>
 
         <div class="flex items-center gap-3">
-          <label class="font-label-sm text-label-sm text-text-secondary" for="editor-subject-select">Course:</label>
-          <select id="editor-subject-select" class="px-3 py-1.5 rounded-full bg-surface-container-high text-text-primary font-label-md text-label-md border border-glass-border outline-none cursor-pointer">
-            ${subjects.map(s => `
-              <option value="${App.escapeHtml(s.name)}" ${s.name === subject ? 'selected' : ''}>${App.escapeHtml(s.name)}</option>
+          <label class="font-label-sm text-label-sm text-text-secondary" for="editor-course-select">Course:</label>
+          <select id="editor-course-select" class="px-3 py-1.5 rounded-full bg-surface-container-high text-text-primary font-label-md text-label-md border border-glass-border outline-none cursor-pointer">
+            ${courses.map(s => `
+              <option value="${App.escapeHtml(s.name)}" ${s.name === course ? 'selected' : ''}>${App.escapeHtml(s.name)}</option>
             `).join('')}
           </select>
         </div>
@@ -231,7 +231,7 @@ const Notes = (function() {
 
     const titleInput = editorOverlay.querySelector('#editor-title-input');
     const contentInput = editorOverlay.querySelector('#editor-content-textarea');
-    const subjectSelect = editorOverlay.querySelector('#editor-subject-select');
+    const courseSelect = editorOverlay.querySelector('#editor-course-select') || editorOverlay.querySelector('#editor-subject-select');
 
     if (!isEdit && titleInput) {
       titleInput.focus();
@@ -247,7 +247,7 @@ const Notes = (function() {
     editorOverlay.querySelector('#editor-save-btn').addEventListener('click', () => {
       const newTitle = titleInput.value.trim() || 'Untitled Note';
       const newContent = contentInput.value;
-      const newSubject = subjectSelect.value;
+      const newCourse = courseSelect ? courseSelect.value : 'General';
 
       const notes = Storage.getNotes ? Storage.getNotes() : [];
       if (isEdit) {
@@ -257,7 +257,8 @@ const Notes = (function() {
             ...notes[idx],
             title: newTitle,
             content: newContent,
-            subject: newSubject,
+            course: newCourse,
+            subject: newCourse,
             updatedAt: new Date().toISOString()
           };
         }
@@ -266,7 +267,8 @@ const Notes = (function() {
           id: 'note_' + Storage.generateId(),
           title: newTitle,
           content: newContent,
-          subject: newSubject,
+          course: newCourse,
+          subject: newCourse,
           pinned: false,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString()
