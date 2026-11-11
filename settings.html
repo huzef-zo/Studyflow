@@ -248,13 +248,13 @@
       <div class="flex flex-col space-y-2">
         <div class="flex items-center justify-between px-1">
           <span class="font-label-sm text-label-sm uppercase tracking-widest text-text-muted">Courses & Academic Units</span>
-          <span class="font-body-sm text-body-sm text-text-secondary" id="subjects-count-label">0 active</span>
+          <span class="font-body-sm text-body-sm text-text-secondary" id="courses-count-label">0 active</span>
         </div>
         <div class="rounded-2xl bg-surface-glass backdrop-blur-xl overflow-hidden shadow-sm flex flex-col">
-          <div class="flex flex-col" id="subjects-list-container">
+          <div class="flex flex-col" id="courses-list-container">
             <!-- Populated by JS -->
           </div>
-          <button class="flex items-center justify-center gap-2 p-3.5 m-2.5 rounded-xl bg-surface-container-high/60 text-primary hover:bg-surface-container-high hover:text-text-primary active:scale-[0.99] transition-all" id="add-subject-btn" type="button">
+          <button class="flex items-center justify-center gap-2 p-3.5 m-2.5 rounded-xl bg-surface-container-high/60 text-primary hover:bg-surface-container-high hover:text-text-primary active:scale-[0.99] transition-all" id="add-course-btn" type="button">
             <span class="material-symbols-outlined text-[18px]">add</span>
             <span class="font-label-md text-label-md">Add Course</span>
           </button>
@@ -382,9 +382,9 @@
         });
       }
 
-      function renderSubjects() {
-        const container = document.getElementById('subjects-list-container');
-        const countLabel = document.getElementById('subjects-count-label');
+      function renderCourses() {
+        const container = document.getElementById('courses-list-container') || document.getElementById('subjects-list-container');
+        const countLabel = document.getElementById('courses-count-label') || document.getElementById('subjects-count-label');
         if (!container) return;
 
         const courses = Storage.getCourses ? Storage.getCourses() : [];
@@ -417,10 +417,10 @@
                 </div>
               </div>
               <div class="flex items-center gap-1 shrink-0">
-                <button class="edit-subject-btn p-1 rounded-lg text-text-muted hover:text-text-primary transition-colors" data-id="${App.escapeHtml(c.id)}" aria-label="Edit ${App.escapeHtml(c.name)}">
+                <button class="edit-course-btn p-1 rounded-lg text-text-muted hover:text-text-primary transition-colors" data-id="${App.escapeHtml(c.id)}" aria-label="Edit ${App.escapeHtml(c.name)}">
                   <span class="material-symbols-outlined text-[18px]">edit</span>
                 </button>
-                <button class="delete-subject-btn p-1 rounded-lg text-text-muted hover:text-error transition-colors" data-id="${App.escapeHtml(c.id)}" aria-label="Delete ${App.escapeHtml(c.name)}">
+                <button class="delete-course-btn p-1 rounded-lg text-text-muted hover:text-error transition-colors" data-id="${App.escapeHtml(c.id)}" aria-label="Delete ${App.escapeHtml(c.name)}">
                   <span class="material-symbols-outlined text-[18px]">delete_forever</span>
                 </button>
               </div>
@@ -429,15 +429,15 @@
         }).join('');
 
         // Wire edit/delete
-        container.querySelectorAll('.edit-subject-btn').forEach(btn => {
+        container.querySelectorAll('.edit-course-btn').forEach(btn => {
           btn.addEventListener('click', () => {
             const id = btn.getAttribute('data-id');
             const crs = (Storage.getCourses ? Storage.getCourses() : []).find(c => c.id === id);
-            if (crs) openSubjectModal(crs);
+            if (crs) openCourseModal(crs);
           });
         });
 
-        container.querySelectorAll('.delete-subject-btn').forEach(btn => {
+        container.querySelectorAll('.delete-course-btn').forEach(btn => {
           btn.addEventListener('click', async () => {
             const id = btn.getAttribute('data-id');
             const crs = (Storage.getCourses ? Storage.getCourses() : []).find(c => c.id === id);
@@ -449,7 +449,7 @@
             })) {
               Storage.deleteCourse(id);
               App.showToast('Course deleted', 'info');
-              renderSubjects();
+              renderCourses();
             }
           });
         });
@@ -489,7 +489,7 @@
         });
       }
 
-      function openSubjectModal(existing = null) {
+      function openCourseModal(existing = null) {
         const isEdit = !!existing;
         const name = existing?.name || '';
         const color = existing?.color || '#2563EB';
@@ -576,7 +576,7 @@
 
           App.showToast('Course saved', 'success');
           App.closeModal(modal);
-          renderSubjects();
+          renderCourses();
         });
 
         modal.querySelector('[data-action="cancel"]').addEventListener('click', () => App.closeModal(modal));
@@ -651,7 +651,7 @@
         });
 
         // Add Subject
-        document.getElementById('add-subject-btn')?.addEventListener('click', () => openSubjectModal());
+        (document.getElementById('add-course-btn') || document.getElementById('add-subject-btn'))?.addEventListener('click', () => openCourseModal());
 
         // Add Study Window
         document.getElementById('add-study-window-btn')?.addEventListener('click', () => {
@@ -774,7 +774,7 @@
       renderProfile();
       renderSteppers();
       renderToggles();
-      renderSubjects();
+      renderCourses();
       renderStudyWindows();
       setupEventListeners();
     })();

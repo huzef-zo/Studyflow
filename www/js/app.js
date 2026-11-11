@@ -298,12 +298,12 @@ const App = (function() {
 
   function openAddTaskModal(existingTask = null) {
     const isEdit = !!existingTask;
-    const subjects = Storage.getSubjects ? Storage.getSubjects() : [];
-    const defaultSubject = subjects.length > 0 ? subjects[0].name : 'General';
+    const courses = (Storage.getCourses ? Storage.getCourses() : null) || (Storage.getSubjects ? Storage.getSubjects() : []);
+    const defaultCourse = courses.length > 0 ? courses[0].name : 'General';
 
     const taskType = existingTask?.type || 'one-time';
     const taskTitle = existingTask?.title || '';
-    const selectedSubject = existingTask?.subject || defaultSubject;
+    const selectedCourse = existingTask?.course || existingTask?.subject || defaultCourse;
     const priority = existingTask?.priority || 'medium';
     const repeatDays = existingTask?.repeatDays || [1, 2, 3, 4, 5];
     const startDate = existingTask?.startDate || Storage.formatDate(new Date());
@@ -397,25 +397,25 @@ const App = (function() {
 
             <!-- Course Dropdown Selector -->
             <div class="relative">
-              <button class="w-full rounded-2xl bg-surface-container-lowest/70 hover:bg-surface-container-lowest active:scale-[0.99] p-3.5 flex items-center justify-between transition-all text-left" id="subject-dropdown-btn" type="button">
+              <button class="w-full rounded-2xl bg-surface-container-lowest/70 hover:bg-surface-container-lowest active:scale-[0.99] p-3.5 flex items-center justify-between transition-all text-left" id="course-dropdown-btn" type="button">
                 <div class="flex items-center gap-3">
-                  <div class="w-3 h-3 rounded-full flex-shrink-0" style="background-color: ${getSubjectColor(selectedSubject)};"></div>
+                  <div class="w-3 h-3 rounded-full flex-shrink-0" style="background-color: ${getCourseColor(selectedCourse)};"></div>
                   <div class="flex flex-col">
                     <span class="font-label-sm text-[11px] text-text-muted uppercase tracking-wider">Course</span>
-                    <span class="font-label-md text-label-md text-text-primary truncate" id="selected-subject-label">${escapeHtml(selectedSubject)}</span>
+                    <span class="font-label-md text-label-md text-text-primary truncate" id="selected-course-label">${escapeHtml(selectedCourse)}</span>
                   </div>
                 </div>
                 <span class="material-symbols-outlined text-text-secondary text-[20px] transition-transform duration-200" id="dropdown-chevron">expand_more</span>
               </button>
-              <div class="hidden absolute top-full mt-2 inset-x-0 z-30 rounded-2xl bg-surface-container-high/95 backdrop-blur-xl p-2 shadow-2xl flex flex-col gap-1 max-h-48 overflow-y-auto" id="subject-menu">
-                ${subjects.map(s => {
-                  const sGrade = (typeof GpaUtils !== 'undefined') ? GpaUtils.courseStatus(s).grade.letter : null;
+              <div class="hidden absolute top-full mt-2 inset-x-0 z-30 rounded-2xl bg-surface-container-high/95 backdrop-blur-xl p-2 shadow-2xl flex flex-col gap-1 max-h-48 overflow-y-auto" id="course-menu">
+                ${courses.map(c => {
+                  const cGrade = (typeof GpaUtils !== 'undefined') ? GpaUtils.courseStatus(c).grade.letter : null;
                   return `
-                  <div class="px-3 py-2 rounded-xl flex items-center gap-3 cursor-pointer hover:bg-surface-variant transition-colors" data-subject="${escapeHtml(s.name)}">
-                    <div class="w-2.5 h-2.5 rounded-full" style="background-color: ${escapeHtml(s.color)};"></div>
-                    <span class="font-label-md text-label-md text-text-primary flex-1">${escapeHtml(s.name)}</span>
-                    ${sGrade ? `<span class="text-[11px] font-mono-timer text-text-muted font-bold">${sGrade}</span>` : ''}
-                    ${s.name === selectedSubject ? '<span class="material-symbols-outlined text-primary-container text-[18px]">check</span>' : ''}
+                  <div class="px-3 py-2 rounded-xl flex items-center gap-3 cursor-pointer hover:bg-surface-variant transition-colors" data-course="${escapeHtml(c.name)}">
+                    <div class="w-2.5 h-2.5 rounded-full" style="background-color: ${escapeHtml(c.color || '#2563EB')};"></div>
+                    <span class="font-label-md text-label-md text-text-primary flex-1">${escapeHtml(c.name)}</span>
+                    ${cGrade ? `<span class="text-[11px] font-mono-timer text-text-muted font-bold">${cGrade}</span>` : ''}
+                    ${c.name === selectedCourse ? '<span class="material-symbols-outlined text-primary-container text-[18px]">check</span>' : ''}
                   </div>
                 `;}).join('')}
               </div>
@@ -541,27 +541,27 @@ const App = (function() {
       });
     }
 
-    // Subject dropdown
-    let activeSubject = selectedSubject;
-    const subjectBtn = sheetOverlay.querySelector('#subject-dropdown-btn');
-    const subjectMenu = sheetOverlay.querySelector('#subject-menu');
+    // Course dropdown
+    let activeCourse = selectedCourse;
+    const courseBtn = sheetOverlay.querySelector('#course-dropdown-btn') || sheetOverlay.querySelector('#subject-dropdown-btn');
+    const courseMenu = sheetOverlay.querySelector('#course-menu') || sheetOverlay.querySelector('#subject-menu');
     const dropdownChevron = sheetOverlay.querySelector('#dropdown-chevron');
-    const selectedSubjectLabel = sheetOverlay.querySelector('#selected-subject-label');
+    const selectedCourseLabel = sheetOverlay.querySelector('#selected-course-label') || sheetOverlay.querySelector('#selected-subject-label');
 
-    if (subjectBtn && subjectMenu) {
-      subjectBtn.addEventListener('click', (e) => {
+    if (courseBtn && courseMenu) {
+      courseBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        const isHidden = subjectMenu.classList.contains('hidden');
-        subjectMenu.classList.toggle('hidden', !isHidden);
+        const isHidden = courseMenu.classList.contains('hidden');
+        courseMenu.classList.toggle('hidden', !isHidden);
         if (dropdownChevron) dropdownChevron.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
       });
 
-      subjectMenu.querySelectorAll('[data-subject]').forEach(item => {
+      courseMenu.querySelectorAll('[data-course], [data-subject]').forEach(item => {
         item.addEventListener('click', (e) => {
           e.stopPropagation();
-          activeSubject = item.getAttribute('data-subject');
-          if (selectedSubjectLabel) selectedSubjectLabel.textContent = activeSubject;
-          subjectMenu.classList.add('hidden');
+          activeCourse = item.getAttribute('data-course') || item.getAttribute('data-subject');
+          if (selectedCourseLabel) selectedCourseLabel.textContent = activeCourse;
+          courseMenu.classList.add('hidden');
           if (dropdownChevron) dropdownChevron.style.transform = 'rotate(0deg)';
         });
       });
@@ -668,7 +668,8 @@ const App = (function() {
         const taskData = {
           title,
           type: currentActiveType,
-          subject: activeSubject,
+          course: activeCourse,
+          subject: activeCourse,
           priority: activePriority,
           repeatDays: selectedRepeatDays,
           startDate: finalStartDate,

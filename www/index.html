@@ -262,7 +262,7 @@
           <div class="flex flex-col gap-1.5">
             <h2 class="font-headline-md text-headline-md text-text-primary tracking-tight leading-snug">${App.escapeHtml(topTask.title)}</h2>
             <div class="flex items-center gap-2 mt-0.5">
-              <span class="font-label-sm text-[11px] px-2.5 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-medium">${App.escapeHtml(topTask.subject || 'General')}</span>
+              <span class="font-label-sm text-[11px] px-2.5 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-medium">${App.escapeHtml(topTask.course || topTask.subject || 'General')}</span>
             </div>
           </div>
           <div class="pt-2 flex items-center gap-3">
@@ -341,7 +341,7 @@
                 <div class="flex flex-col min-w-0">
                   <span class="task-title font-body-md text-body-md text-text-primary font-medium truncate">${App.escapeHtml(task.title)}</span>
                   <div class="flex items-center gap-2 mt-0.5">
-                    <span class="font-label-sm text-[11px] text-text-secondary">${App.escapeHtml(task.subject || 'General')}</span>
+                    <span class="font-label-sm text-[11px] text-text-secondary">${App.escapeHtml(task.course || task.subject || 'General')}</span>
                     <span class="text-text-muted text-xs">•</span>
                     <span class="font-body-sm text-body-sm text-text-secondary">${App.escapeHtml(dueText)}</span>
                   </div>
@@ -405,7 +405,7 @@
               <span class="font-label-sm text-[11px] text-primary font-medium w-24 flex-shrink-0">${App.escapeHtml(block.startTime)} - ${App.escapeHtml(block.endTime)}</span>
               <span class="font-body-sm text-body-sm text-text-primary truncate">${App.escapeHtml(block.label)}</span>
             </div>
-            <span class="font-label-sm text-[11px] text-text-secondary px-2 py-0.5 rounded-full bg-surface-container-high">${App.escapeHtml(block.subject || 'General')}</span>
+            <span class="font-label-sm text-[11px] text-text-secondary px-2 py-0.5 rounded-full bg-surface-container-high">${App.escapeHtml(block.course || block.subject || 'General')}</span>
           </a>
         `).join('');
       }
@@ -519,7 +519,7 @@
                 <span class="font-body-sm text-body-sm font-medium text-text-primary truncate">${App.escapeHtml(topic.title)}</span>
                 ${topic.isOverdue ? '<span class="font-label-sm text-[10px] text-error bg-error-container/40 px-1.5 py-0.2 rounded-full">Overdue</span>' : ''}
               </div>
-              <span class="font-label-sm text-[11px] text-text-secondary truncate">${App.escapeHtml(topic.parentTitle)} · ${App.escapeHtml(topic.subject)}</span>
+              <span class="font-label-sm text-[11px] text-text-secondary truncate">${App.escapeHtml(topic.parentTitle)} · ${App.escapeHtml(topic.course || topic.subject || 'General')}</span>
             </a>
             <button class="move-tomorrow-btn px-2.5 py-1 rounded-full bg-surface-container-high text-primary hover:text-accent-hover font-label-sm text-[11px] transition-colors shrink-0" data-task-id="${App.escapeHtml(topic.taskId)}" data-subtask-id="${App.escapeHtml(topic.subtaskId)}">
               Move to tomorrow

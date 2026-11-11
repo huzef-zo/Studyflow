@@ -227,7 +227,8 @@ const Storage = (function() {
         sanitizedData = data.map(t => t ? {
           ...t,
           title: t.title ? String(t.title).substring(0, 200) : 'Untitled Task',
-          subject: t.subject ? String(t.subject).substring(0, 100) : 'Other',
+          course: t.course ? String(t.course).substring(0, 100) : (t.subject ? String(t.subject).substring(0, 100) : 'Other'),
+          subject: t.course ? String(t.course).substring(0, 100) : (t.subject ? String(t.subject).substring(0, 100) : 'Other'),
           priority: t.priority ? String(t.priority).substring(0, 50) : 'medium',
           subtasks: Array.isArray(t.subtasks) ? t.subtasks.map(st => st ? {
             ...st,
@@ -400,7 +401,8 @@ const Storage = (function() {
             dueDate: (t.dueDate && isValidDate(t.dueDate)) ? String(t.dueDate) : null,
             dueTime: (t.dueTime && isValidTime(t.dueTime)) ? String(t.dueTime) : null,
             priority: String(t.priority || 'medium').substring(0, 50),
-            subject: String(t.subject || 'Other').substring(0, 100),
+            course: String(t.course || t.subject || 'Other').substring(0, 100),
+            subject: String(t.course || t.subject || 'Other').substring(0, 100),
             repeatDays: Array.isArray(t.repeatDays) ? t.repeatDays.map(Number) : [],
             completed: Boolean(t.completed),
             completedAt: t.completedAt ? String(t.completedAt) : null,
@@ -920,6 +922,7 @@ const Storage = (function() {
       progress = Math.round((completedSubtasks / subtasks.length) * 100);
       completed = subtasks.every(s => s.isCompleted);
     }
+    const resolvedCourse = String(task.course || task.subject || 'Other').substring(0, 100);
     const newTask = {
       id: generateId(),
       title: String(task.title || '').substring(0, 200),
@@ -928,7 +931,8 @@ const Storage = (function() {
       dueDate: task.dueDate || null,
       dueTime: task.dueTime || null,
       priority: task.priority || 'medium',
-      subject: task.subject || 'Other',
+      course: resolvedCourse,
+      subject: resolvedCourse,
       repeatDays: task.repeatDays || [],
       completed: completed,
       completedAt: completed ? new Date().toISOString() : null,
@@ -955,6 +959,11 @@ const Storage = (function() {
       const safeUpdates = { ...updates };
       if ('title' in safeUpdates) {
         safeUpdates.title = String(safeUpdates.title || '').substring(0, 200);
+      }
+      if ('course' in safeUpdates || 'subject' in safeUpdates) {
+        const cVal = String(safeUpdates.course || safeUpdates.subject || 'Other').substring(0, 100);
+        safeUpdates.course = cVal;
+        safeUpdates.subject = cVal;
       }
       if (Array.isArray(safeUpdates.subtasks)) {
         const oldSubtasksMap = new Map();
@@ -1203,7 +1212,8 @@ const Storage = (function() {
   }
 
   function getTasksByStatus(completed) { return getTasks().filter(t => t.completed === completed); }
-  function getTasksBySubject(subject) { return getTasks().filter(t => t.subject === subject); }
+  function getTasksByCourse(course) { return getTasks().filter(t => (t.course === course || t.subject === course)); }
+  function getTasksBySubject(subject) { return getTasksByCourse(subject); }
   function getTasksByPriority(priority) { return getTasks().filter(t => t.priority === priority); }
 
   function getUpcomingTasks(days = 7) {
@@ -2464,7 +2474,7 @@ const Storage = (function() {
     saveData, loadData, removeData, clearAllData, exportData, importData,
     getUser, saveUser, updateUserName, updateUserEmail,
     getTasks, saveTasks, addTask, updateTask, deleteTask, completeTask, uncompleteTask,
-    getCompletionEvents, getTaskById, getTasksByDate, getTasksByStatus, getTasksBySubject, getTasksByPriority,
+    getCompletionEvents, getTaskById, getTasksByDate, getTasksByStatus, getTasksByCourse, getTasksBySubject, getTasksByPriority,
     getUpcomingTasks, getOverdueTasks, getTodayTasks, getTodayTopics,
     stageTaskCompletion, hasPendingCompletion,
     addSubtask, toggleSubtask, updateSubtask,
