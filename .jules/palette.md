@@ -113,3 +113,7 @@
 ## 2026-11-10 - Unified Academic Courses & Direct GPA Integration
 **Learning:** Transitioning fragmented categorized labels ("Subjects") to cohesive domain entities ("Courses") requires consolidating their visual indicators (color accent chips, target focus hours) alongside academic telemetry (credit weight, semester, assessment components, and live GPA letter grades).
 **Action:** When unifying categorical entities into academic courses, remove redundant selector dropdowns in sub-calculators (e.g., GPA course editor linking to subjects) and render real-time grade chips (`A`, `B+`, etc.) computed via `GpaUtils.courseStatus` in settings and overview cards to provide immediate positive feedback.
+
+## 2026-11-11 - End-to-End Course Alignment Across Modals & Task Management
+**Learning:** When unifying legacy categorical fields (like "subject") into domain entities ("courses"), partial UI updates leave user-facing forms (like Add Task modals, task filter chips, and selector dropdowns) asking for the legacy concept. Ensuring every entry point presents "Course" while preserving transparent bidirectional field mapping (`course` and `subject`) prevents cognitive dissonance and avoids breaking historical data schemas.
+**Action:** Update all interactive task forms, dropdown selectors, and display badges to consistently reference courses, provide accessible ARIA controls (`aria-expanded`, `aria-label`, `role="listbox"`), and automatically populate both `course` and legacy `subject` attributes during write operations to safeguard backward compatibility.

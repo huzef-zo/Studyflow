@@ -36,7 +36,9 @@ const Tasks = (function() {
     const query = searchInput ? searchInput.value.trim().toLowerCase() : '';
 
     if (query) {
-      tasks = tasks.filter(t => t.title.toLowerCase().includes(query) || (t.subject && t.subject.toLowerCase().includes(query)));
+      tasks = tasks.filter(t => t.title.toLowerCase().includes(query) ||
+        (t.course && t.course.toLowerCase().includes(query)) ||
+        (t.subject && t.subject.toLowerCase().includes(query)));
     }
 
     if (currentFilter === 'active') {
@@ -110,8 +112,8 @@ const Tasks = (function() {
               </div>
               <div class="flex items-center gap-2 mt-1.5">
                 <div class="flex items-center gap-1.5">
-                  <span class="w-1.5 h-1.5 rounded-full" style="background-color: ${App.getSubjectColor(task.subject)};"></span>
-                  <span class="font-body-sm text-body-sm text-text-secondary">${App.escapeHtml(task.subject || 'General')}</span>
+                  <span class="w-1.5 h-1.5 rounded-full" style="background-color: ${App.getCourseColor ? App.getCourseColor(task.course || task.subject) : App.getSubjectColor(task.subject)};"></span>
+                  <span class="font-body-sm text-body-sm text-text-secondary">${App.escapeHtml(task.course || task.subject || 'General')}</span>
                 </div>
                 <span class="text-text-muted text-xs">•</span>
                 <span class="font-body-sm text-body-sm ${isOverdue ? 'text-error' : 'text-text-muted'} flex items-center gap-1">

@@ -460,7 +460,7 @@ const Timer = (function() {
     const available = Array.from(map.values()).filter(t => !t.completed);
 
     elements.taskSelect.innerHTML = '<option value="">General Focus</option>' +
-      available.map(t => `<option value="${App.escapeHtml(t.id)}">${App.escapeHtml(t.subject)}: ${App.escapeHtml(t.title)}</option>`).join('');
+      available.map(t => `<option value="${App.escapeHtml(t.id)}">${App.escapeHtml(t.course || t.subject || 'General')}: ${App.escapeHtml(t.title)}</option>`).join('');
 
     if (selectedTaskId && !available.some(t => t.id === selectedTaskId)) {
       selectedTaskId = null;

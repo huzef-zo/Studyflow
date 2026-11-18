@@ -125,3 +125,18 @@ assert.strictEqual(qcCourse.color, '#10B981');
 assert.strictEqual(qcCourse.targetHours, 12);
 
 console.log('--- ALL COURSE & GPA UNIFICATION INTEGRATION TESTS PASSED ---');
+
+// 8. Verify task creation with course and getTasksByCourse
+const testTask = Storage.addTask({
+  title: 'Complete Course Project',
+  course: 'Quantum Computing'
+});
+assert.strictEqual(testTask.course, 'Quantum Computing');
+assert.strictEqual(testTask.subject, 'Quantum Computing');
+
+const fetchedByCourse = Storage.getTasksByCourse('Quantum Computing');
+assert.ok(fetchedByCourse.some(t => t.id === testTask.id), 'Task should be found via getTasksByCourse');
+
+const fetchedBySubj = Storage.getTasksBySubject('Quantum Computing');
+assert.ok(fetchedBySubj.some(t => t.id === testTask.id), 'Task should be found via backward-compatible getTasksBySubject');
+console.log('Passed: Task course integration verified');
