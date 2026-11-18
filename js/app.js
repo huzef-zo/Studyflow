@@ -22,9 +22,9 @@ const App = (function() {
     const pageMap = {
       'index.html': 'home', '': 'home',
       'tasks.html': 'tasks', 'calendar.html': 'calendar',
-      'timer.html': 'focus', 'goals.html': 'goals',
-      'notes.html': 'notes',
-      'history.html': 'analytics', 'settings.html': 'settings'
+      'timer.html': 'focus', 'goals.html': 'goals', 'gpa.html': 'gpa',
+      'notes.html': 'notes', 'history.html': 'analytics',
+      'settings.html': 'settings'
     };
     return pageMap[filename] || 'home';
   }
@@ -57,7 +57,7 @@ const App = (function() {
       { id: 'calendar', label: 'Calendar', icon: 'calendar_today', href: 'calendar.html' }
     ];
 
-    const isMoreActive = ['notes', 'goals', 'analytics', 'settings'].includes(page);
+    const isMoreActive = ['notes', 'goals', 'gpa', 'analytics', 'settings'].includes(page);
 
     return `
       <nav class="fixed bottom-0 inset-x-0 z-40 pb-safe bg-surface-glass backdrop-blur-2xl lg:hidden" id="bottom-nav">
@@ -89,6 +89,7 @@ const App = (function() {
       { id: 'calendar', label: 'Calendar', icon: 'calendar_today', href: 'calendar.html' },
       { id: 'notes', label: 'Notes', icon: 'description', href: 'notes.html' },
       { id: 'goals', label: 'Goals', icon: 'track_changes', href: 'goals.html' },
+      { id: 'gpa', label: 'GPA', icon: 'school', href: 'gpa.html' },
       { id: 'analytics', label: 'Analytics', icon: 'query_stats', href: 'history.html' },
       { id: 'settings', label: 'Settings', icon: 'tune', href: 'settings.html' }
     ];
@@ -173,6 +174,13 @@ const App = (function() {
     const notesCount = Storage.getNotes ? Storage.getNotes().length : 0;
     const currentWeek = Storage.getWeekNumber ? Storage.getWeekNumber() : 1;
 
+    let cgpaDisplay = '0.00';
+    if (typeof GpaUtils !== 'undefined' && Storage.getCourses) {
+      const courses = Storage.getCourses();
+      const res = GpaUtils.cgpa(courses, { includeProjected: true });
+      cgpaDisplay = res.totalCredits > 0 ? res.gpa.toFixed(2) : '0.00';
+    }
+
     let totalMinutes = 0;
     if (Storage.getSessions) {
       const sessions = Storage.getSessions().filter(s => s.type === 'work');
@@ -222,6 +230,18 @@ const App = (function() {
               <div class="flex flex-col min-w-0">
                 <span class="font-headline-sm text-[16px] text-text-primary truncate">Goals</span>
                 <span class="font-label-sm text-label-sm text-text-secondary truncate mt-0.5">Week ${currentWeek} sprint</span>
+              </div>
+            </a>
+            <a href="gpa.html" class="group bg-surface-container/70 hover:bg-surface-glass-active active:scale-[0.98] rounded-xl p-space-md flex flex-col justify-between h-36 transition-all relative overflow-hidden shadow-sm">
+              <div class="flex items-start justify-between w-full">
+                <div class="w-10 h-10 rounded-full bg-primary-container/20 text-primary-container flex items-center justify-center group-hover:bg-primary-container group-hover:text-surface-base transition-colors">
+                  <span class="material-symbols-outlined text-[20px]">school</span>
+                </div>
+                <span class="material-symbols-outlined text-[18px] text-text-muted group-hover:text-text-primary group-hover:translate-x-0.5 transition-all">chevron_right</span>
+              </div>
+              <div class="flex flex-col min-w-0">
+                <span class="font-headline-sm text-[16px] text-text-primary truncate">GPA</span>
+                <span class="font-label-sm text-label-sm text-text-secondary truncate mt-0.5">${cgpaDisplay} CGPA</span>
               </div>
             </a>
             <a href="history.html" class="group bg-surface-container/70 hover:bg-surface-glass-active active:scale-[0.98] rounded-xl p-space-md flex flex-col justify-between h-36 transition-all relative overflow-hidden shadow-sm">
@@ -278,12 +298,12 @@ const App = (function() {
 
   function openAddTaskModal(existingTask = null) {
     const isEdit = !!existingTask;
-    const subjects = Storage.getSubjects ? Storage.getSubjects() : [];
-    const defaultSubject = subjects.length > 0 ? subjects[0].name : 'General';
+    const courses = (Storage.getCourses ? Storage.getCourses() : null) || (Storage.getSubjects ? Storage.getSubjects() : []);
+    const defaultCourse = courses.length > 0 ? courses[0].name : 'General';
 
     const taskType = existingTask?.type || 'one-time';
     const taskTitle = existingTask?.title || '';
-    const selectedSubject = existingTask?.subject || defaultSubject;
+    const selectedCourse = existingTask?.course || existingTask?.subject || defaultCourse;
     const priority = existingTask?.priority || 'medium';
     const repeatDays = existingTask?.repeatDays || [1, 2, 3, 4, 5];
     const startDate = existingTask?.startDate || Storage.formatDate(new Date());
@@ -375,26 +395,29 @@ const App = (function() {
               </div>
             </div>
 
-            <!-- Course / Subject Dropdown Selector -->
+            <!-- Course Dropdown Selector -->
             <div class="relative">
-              <button class="w-full rounded-2xl bg-surface-container-lowest/70 hover:bg-surface-container-lowest active:scale-[0.99] p-3.5 flex items-center justify-between transition-all text-left" id="subject-dropdown-btn" type="button">
+              <button class="w-full rounded-2xl bg-surface-container-lowest/70 hover:bg-surface-container-lowest active:scale-[0.99] p-3.5 flex items-center justify-between transition-all text-left" id="course-dropdown-btn" type="button">
                 <div class="flex items-center gap-3">
-                  <div class="w-3 h-3 rounded-full flex-shrink-0" style="background-color: ${getSubjectColor(selectedSubject)};"></div>
+                  <div class="w-3 h-3 rounded-full flex-shrink-0" style="background-color: ${getCourseColor(selectedCourse)};"></div>
                   <div class="flex flex-col">
-                    <span class="font-label-sm text-[11px] text-text-muted uppercase tracking-wider">Subject</span>
-                    <span class="font-label-md text-label-md text-text-primary truncate" id="selected-subject-label">${escapeHtml(selectedSubject)}</span>
+                    <span class="font-label-sm text-[11px] text-text-muted uppercase tracking-wider">Course</span>
+                    <span class="font-label-md text-label-md text-text-primary truncate" id="selected-course-label">${escapeHtml(selectedCourse)}</span>
                   </div>
                 </div>
                 <span class="material-symbols-outlined text-text-secondary text-[20px] transition-transform duration-200" id="dropdown-chevron">expand_more</span>
               </button>
-              <div class="hidden absolute top-full mt-2 inset-x-0 z-30 rounded-2xl bg-surface-container-high/95 backdrop-blur-xl p-2 shadow-2xl flex flex-col gap-1 max-h-48 overflow-y-auto" id="subject-menu">
-                ${subjects.map(s => `
-                  <div class="px-3 py-2 rounded-xl flex items-center gap-3 cursor-pointer hover:bg-surface-variant transition-colors" data-subject="${escapeHtml(s.name)}">
-                    <div class="w-2.5 h-2.5 rounded-full" style="background-color: ${escapeHtml(s.color)};"></div>
-                    <span class="font-label-md text-label-md text-text-primary flex-1">${escapeHtml(s.name)}</span>
-                    ${s.name === selectedSubject ? '<span class="material-symbols-outlined text-primary-container text-[18px]">check</span>' : ''}
+              <div class="hidden absolute top-full mt-2 inset-x-0 z-30 rounded-2xl bg-surface-container-high/95 backdrop-blur-xl p-2 shadow-2xl flex flex-col gap-1 max-h-48 overflow-y-auto" id="course-menu">
+                ${courses.map(c => {
+                  const cGrade = (typeof GpaUtils !== 'undefined') ? GpaUtils.courseStatus(c).grade.letter : null;
+                  return `
+                  <div class="px-3 py-2 rounded-xl flex items-center gap-3 cursor-pointer hover:bg-surface-variant transition-colors" data-course="${escapeHtml(c.name)}">
+                    <div class="w-2.5 h-2.5 rounded-full" style="background-color: ${escapeHtml(c.color || '#2563EB')};"></div>
+                    <span class="font-label-md text-label-md text-text-primary flex-1">${escapeHtml(c.name)}</span>
+                    ${cGrade ? `<span class="text-[11px] font-mono-timer text-text-muted font-bold">${cGrade}</span>` : ''}
+                    ${c.name === selectedCourse ? '<span class="material-symbols-outlined text-primary-container text-[18px]">check</span>' : ''}
                   </div>
-                `).join('')}
+                `;}).join('')}
               </div>
             </div>
 
@@ -432,8 +455,12 @@ const App = (function() {
               </div>
               <div class="flex flex-col gap-2" id="modal-subtasks-list">
                 ${subtasks.map((sub, idx) => `
-                  <div class="flex items-center gap-2 bg-surface-container-lowest/70 p-2 rounded-xl">
+                  <div class="flex items-center gap-2 bg-surface-container-lowest/70 p-2 rounded-xl subtask-item-row" data-subtask-id="${escapeHtml(sub.id)}">
                     <input type="text" class="flex-1 bg-transparent border-0 text-text-primary text-body-sm outline-none subtask-title-input" value="${escapeHtml(sub.title)}" placeholder="Subtask title"/>
+                    <div class="flex items-center gap-1 shrink-0">
+                      <label class="font-label-sm text-[10px] text-text-muted uppercase">Plan for</label>
+                      <input type="date" class="bg-surface-container-high text-text-primary text-body-sm rounded px-1.5 py-0.5 outline-none subtask-planned-date-input" value="${escapeHtml(sub.plannedDate || '')}"/>
+                    </div>
                     <button type="button" class="remove-subtask-btn text-text-muted hover:text-error p-1"><span class="material-symbols-outlined text-[18px]">close</span></button>
                   </div>
                 `).join('')}
@@ -514,27 +541,27 @@ const App = (function() {
       });
     }
 
-    // Subject dropdown
-    let activeSubject = selectedSubject;
-    const subjectBtn = sheetOverlay.querySelector('#subject-dropdown-btn');
-    const subjectMenu = sheetOverlay.querySelector('#subject-menu');
+    // Course dropdown
+    let activeCourse = selectedCourse;
+    const courseBtn = sheetOverlay.querySelector('#course-dropdown-btn') || sheetOverlay.querySelector('#subject-dropdown-btn');
+    const courseMenu = sheetOverlay.querySelector('#course-menu') || sheetOverlay.querySelector('#subject-menu');
     const dropdownChevron = sheetOverlay.querySelector('#dropdown-chevron');
-    const selectedSubjectLabel = sheetOverlay.querySelector('#selected-subject-label');
+    const selectedCourseLabel = sheetOverlay.querySelector('#selected-course-label') || sheetOverlay.querySelector('#selected-subject-label');
 
-    if (subjectBtn && subjectMenu) {
-      subjectBtn.addEventListener('click', (e) => {
+    if (courseBtn && courseMenu) {
+      courseBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        const isHidden = subjectMenu.classList.contains('hidden');
-        subjectMenu.classList.toggle('hidden', !isHidden);
+        const isHidden = courseMenu.classList.contains('hidden');
+        courseMenu.classList.toggle('hidden', !isHidden);
         if (dropdownChevron) dropdownChevron.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
       });
 
-      subjectMenu.querySelectorAll('[data-subject]').forEach(item => {
+      courseMenu.querySelectorAll('[data-course], [data-subject]').forEach(item => {
         item.addEventListener('click', (e) => {
           e.stopPropagation();
-          activeSubject = item.getAttribute('data-subject');
-          if (selectedSubjectLabel) selectedSubjectLabel.textContent = activeSubject;
-          subjectMenu.classList.add('hidden');
+          activeCourse = item.getAttribute('data-course') || item.getAttribute('data-subject');
+          if (selectedCourseLabel) selectedCourseLabel.textContent = activeCourse;
+          courseMenu.classList.add('hidden');
           if (dropdownChevron) dropdownChevron.style.transform = 'rotate(0deg)';
         });
       });
@@ -563,10 +590,16 @@ const App = (function() {
     const addSubtaskBtn = sheetOverlay.querySelector('#add-subtask-row-btn');
     if (addSubtaskBtn && subtasksList) {
       addSubtaskBtn.addEventListener('click', () => {
+        const newSubId = Storage.generateId ? Storage.generateId() : 'sub_' + Date.now();
         const row = document.createElement('div');
-        row.className = 'flex items-center gap-2 bg-surface-container-lowest/70 p-2 rounded-xl';
+        row.className = 'flex items-center gap-2 bg-surface-container-lowest/70 p-2 rounded-xl subtask-item-row';
+        row.setAttribute('data-subtask-id', newSubId);
         row.innerHTML = `
           <input type="text" class="flex-1 bg-transparent border-0 text-text-primary text-body-sm outline-none subtask-title-input" placeholder="Subtask title"/>
+          <div class="flex items-center gap-1 shrink-0">
+            <label class="font-label-sm text-[10px] text-text-muted uppercase">Plan for</label>
+            <input type="date" class="bg-surface-container-high text-text-primary text-body-sm rounded px-1.5 py-0.5 outline-none subtask-planned-date-input" value=""/>
+          </div>
           <button type="button" class="remove-subtask-btn text-text-muted hover:text-error p-1"><span class="material-symbols-outlined text-[18px]">close</span></button>
         `;
         row.querySelector('.remove-subtask-btn').addEventListener('click', () => row.remove());
@@ -591,12 +624,30 @@ const App = (function() {
           return;
         }
 
-        const subtaskInputs = sheetOverlay.querySelectorAll('.subtask-title-input');
-        const updatedSubtasks = Array.from(subtaskInputs).map((inp, idx) => ({
-          id: existingTask?.subtasks?.[idx]?.id || 'sub_' + Date.now() + '_' + idx,
-          title: inp.value.trim(),
-          completed: existingTask?.subtasks?.[idx]?.completed || false
-        })).filter(s => s.title.length > 0);
+        const existingSubtaskMap = new Map();
+        if (existingTask && Array.isArray(existingTask.subtasks)) {
+          existingTask.subtasks.forEach(s => existingSubtaskMap.set(s.id, s));
+        }
+
+        const subtaskRows = sheetOverlay.querySelectorAll('.subtask-item-row');
+        const updatedSubtasks = Array.from(subtaskRows).map(row => {
+          const stId = row.getAttribute('data-subtask-id') || (Storage.generateId ? Storage.generateId() : 'sub_' + Date.now());
+          const titleInput = row.querySelector('.subtask-title-input');
+          const dateInput = row.querySelector('.subtask-planned-date-input');
+          const title = titleInput ? titleInput.value.trim() : '';
+          const plannedDate = dateInput && dateInput.value ? dateInput.value : null;
+
+          const oldSub = existingSubtaskMap.get(stId);
+          return {
+            id: stId,
+            title: title,
+            isCompleted: oldSub ? oldSub.isCompleted : false,
+            completedAt: oldSub ? oldSub.completedAt : null,
+            plannedDate: plannedDate,
+            estimatedCycles: oldSub ? oldSub.estimatedCycles : 1,
+            completedCycles: oldSub ? oldSub.completedCycles : 0
+          };
+        }).filter(s => s.title.length > 0);
 
         let finalDueDate = dueDate;
         let finalDueTime = dueTime;
@@ -617,7 +668,8 @@ const App = (function() {
         const taskData = {
           title,
           type: currentActiveType,
-          subject: activeSubject,
+          course: activeCourse,
+          subject: activeCourse,
           priority: activePriority,
           repeatDays: selectedRepeatDays,
           startDate: finalStartDate,
@@ -629,7 +681,7 @@ const App = (function() {
         if (isEdit) {
           taskData.id = existingTask.id;
           taskData.completed = existingTask.completed;
-          Storage.updateTask(taskData);
+          Storage.updateTask(existingTask.id, taskData);
           showToast('Task updated successfully', 'success');
         } else {
           Storage.addTask(taskData);
@@ -879,7 +931,12 @@ const App = (function() {
 
   function getSubjectColor(subjectName) {
     const subject = Storage.getSubjectByName ? Storage.getSubjectByName(subjectName) : null;
-    return (subject && isValidHexColor(subject.color)) ? subject.color : '#5B9BF0';
+    const color = subject ? subject.color : '#5B9BF0';
+    return isValidHexColor(color) ? color : '#5B9BF0';
+  }
+
+  function getCourseColor(courseName) {
+    return getSubjectColor(courseName);
   }
 
   function isValidHexColor(hex) {
@@ -932,7 +989,7 @@ const App = (function() {
     createModal, openModal, closeModal, confirm, alert,
     showToast, showUndoToast,
     debounce, formatDuration, formatNumber,
-    escapeHtml, getSubjectColor, isValidHexColor,
+    escapeHtml, getSubjectColor, getCourseColor, isValidHexColor,
     createProgressBar, createEmptyStateHtml
   };
 })();

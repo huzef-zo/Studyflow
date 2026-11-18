@@ -150,12 +150,16 @@ function runTests() {
         for (let i = 0; i < 10; i++) {
             Storage.addSession(25, 'work');
         }
-        // Add 1 session yesterday (should be in same week if today is not Monday)
-        const yesterday = new Date(today);
-        yesterday.setDate(yesterday.getDate() - 1);
-        const sessions = Storage.getSessions();
-        sessions.push({ id: 'old_work', duration: 25, type: 'work', completedAt: yesterday.toISOString() });
-        Storage.saveSessions(sessions);
+
+        const isMonday = today.getDay() === 1;
+        if (!isMonday) {
+            // Add 1 session yesterday (guaranteed to be in the same week since today is not Monday)
+            const yesterday = new Date(today);
+            yesterday.setDate(yesterday.getDate() - 1);
+            const sessions = Storage.getSessions();
+            sessions.push({ id: 'old_work', duration: 25, type: 'work', completedAt: yesterday.toISOString() });
+            Storage.saveSessions(sessions);
+        }
 
         const stats = Storage.getStats();
         if (stats.sessions.today !== 10) throw new Error(`Expected 10 today sessions, got ${stats.sessions.today}`);
@@ -165,9 +169,10 @@ function runTests() {
         const minsToday = Storage.getTotalMinutesToday();
         if (minsToday !== 250) throw new Error(`getTotalMinutesToday: Expected 250, got ${minsToday}`);
 
-        // Total minutes week helper (includes the one from 2 days ago)
+        // Total minutes week helper
+        const expectedWeekMinutes = isMonday ? 250 : 275;
         const minsWeek = Storage.getTotalMinutesWeek();
-        if (minsWeek !== 275) throw new Error(`getTotalMinutesWeek: Expected 275, got ${minsWeek}`);
+        if (minsWeek !== expectedWeekMinutes) throw new Error(`getTotalMinutesWeek: Expected ${expectedWeekMinutes}, got ${minsWeek}`);
 
         console.log('  Passed: Stats remain accurate with the new getSessionsSince optimization.');
     })();

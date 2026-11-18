@@ -26,7 +26,8 @@ const htmlFiles = [
   'notes.html',
   'settings.html',
   'tasks.html',
-  'timer.html'
+  'timer.html',
+  'gpa.html'
 ];
 
 htmlFiles.forEach((htmlFile) => {
@@ -49,6 +50,7 @@ const assetPaths = [
   'tasks.html',
   'timer.html',
   'notes.html',
+  'gpa.html',
   'version.js',
   'browserconfig.xml',
   'css/tailwind.css',
@@ -66,6 +68,8 @@ const assetPaths = [
   'js/achievements.js',
   'js/scheduler.js',
   'js/notes.js',
+  'js/gpa.js',
+  'js/gpa-utils.js',
   'fonts/inter.woff2',
   'fonts/plus-jakarta-sans.woff2',
   'fonts/material-symbols-outlined.woff2',

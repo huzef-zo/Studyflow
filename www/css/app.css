@@ -1,0 +1,59 @@
+/* Custom styles supplementary to Tailwind CSS */
+
+/* Focus Mode */
+body.focus-mode {
+  background: #000000 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  min-height: 100vh;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+body.focus-mode::before {
+  display: none !important;
+}
+
+body.focus-mode header,
+body.focus-mode nav,
+body.focus-mode .page-header,
+body.focus-mode section:not(.timer-ring-container):not(.timer-controls-fab),
+body.focus-mode .timer-ring-svg,
+body.focus-mode .active-mission,
+body.focus-mode .timer-status-badge,
+body.focus-mode #cycle-indicator,
+body.focus-mode .timer-task-name,
+body.focus-mode #reset-btn,
+body.focus-mode #skip-btn {
+  display: none !important;
+}
+
+body.focus-mode .timer-ring-container {
+  width: auto !important;
+  height: auto !important;
+  margin: 0 0 2rem 0 !important;
+}
+
+body.focus-mode .timer-center {
+  position: relative !important;
+  top: auto !important;
+  left: auto !important;
+  transform: none !important;
+  width: 100% !important;
+}
+
+body.focus-mode .timer-main-time {
+  font-size: clamp(5rem, 20vw, 10rem);
+  color: #FFFFFF !important;
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -30,7 +30,8 @@ const Storage = (function() {
     TIME_BLOCKS: 'studyflow_time_blocks',
     REFLECTIONS: 'studyflow_reflections',
     THEME: 'studyflow_theme',
-    THEME_MODE: 'studyflow_theme_mode'
+    THEME_MODE: 'studyflow_theme_mode',
+    COURSES: 'studyflow_courses'
   };
 
   const cache = {};
@@ -55,7 +56,8 @@ const Storage = (function() {
     weekend_daily_hours: { min: 0.5, max: 24 },
     freezeCount: { min: 0, max: 10 },
     current_tasks: { min: 0, max: 10000 },
-    current_hours: { min: 0, max: 1000 }
+    current_hours: { min: 0, max: 1000 },
+    target_gpa: { min: 0, max: 4 }
   };
 
   /**
@@ -104,8 +106,8 @@ const Storage = (function() {
           delete cache[e.key];
         }
       }
-      // Notify other modules if tasks, completions, or XP changed in another tab
-      if (e.key === KEYS.TASKS || e.key === KEYS.REPEATING_COMPLETIONS || e.key === KEYS.XP_STATE) {
+      // Notify other modules if tasks, completions, XP, or courses changed in another tab
+      if (e.key === KEYS.TASKS || e.key === KEYS.REPEATING_COMPLETIONS || e.key === KEYS.XP_STATE || e.key === KEYS.COURSES) {
         notifyTaskDataChanged();
       }
     }
@@ -119,11 +121,11 @@ const Storage = (function() {
     },
     tasks: [],
     subjects: [
-      { id: 'sub_1', name: 'Math', color: '#2563EB', createdAt: new Date().toISOString() },
-      { id: 'sub_2', name: 'Science', color: '#22C55E', createdAt: new Date().toISOString() },
-      { id: 'sub_3', name: 'English', color: '#EAB308', createdAt: new Date().toISOString() },
-      { id: 'sub_4', name: 'History', color: '#F97316', createdAt: new Date().toISOString() },
-      { id: 'sub_5', name: 'Other', color: '#6B7280', createdAt: new Date().toISOString() }
+      { id: 'sub_1', name: 'Math', color: '#2563EB', targetHours: 10, createdAt: new Date().toISOString() },
+      { id: 'sub_2', name: 'Science', color: '#22C55E', targetHours: 10, createdAt: new Date().toISOString() },
+      { id: 'sub_3', name: 'English', color: '#EAB308', targetHours: 10, createdAt: new Date().toISOString() },
+      { id: 'sub_4', name: 'History', color: '#F97316', targetHours: 10, createdAt: new Date().toISOString() },
+      { id: 'sub_5', name: 'Other', color: '#6B7280', targetHours: 10, createdAt: new Date().toISOString() }
     ],
     sessions: [],
     goals: {
@@ -136,6 +138,7 @@ const Storage = (function() {
       current_tasks: 0,
       current_hours: 0,
       freezeCount: 1,
+      target_gpa: 3.5,
       week_start: getWeekStart(new Date()).toISOString()
     },
     settings: {
@@ -175,7 +178,8 @@ const Storage = (function() {
       currentLevel: 1,
       currentRank: 'Novice',
       history: []
-    }
+    },
+    courses: []
   };
 
   function getWeekStart(date) {
@@ -219,21 +223,26 @@ const Storage = (function() {
           pinned: Boolean(n.pinned)
         } : n);
       } else if (key === KEYS.TASKS && Array.isArray(data)) {
+        const isValidDateStr = (str) => typeof str === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(str);
         sanitizedData = data.map(t => t ? {
           ...t,
           title: t.title ? String(t.title).substring(0, 200) : 'Untitled Task',
-          subject: t.subject ? String(t.subject).substring(0, 100) : 'Other',
+          course: t.course ? String(t.course).substring(0, 100) : (t.subject ? String(t.subject).substring(0, 100) : 'Other'),
+          subject: t.course ? String(t.course).substring(0, 100) : (t.subject ? String(t.subject).substring(0, 100) : 'Other'),
           priority: t.priority ? String(t.priority).substring(0, 50) : 'medium',
           subtasks: Array.isArray(t.subtasks) ? t.subtasks.map(st => st ? {
             ...st,
-            title: st.title ? String(st.title).substring(0, 200) : 'Subtask'
+            title: st.title ? String(st.title).substring(0, 200) : 'Subtask',
+            completedAt: st.completedAt ? String(st.completedAt) : null,
+            plannedDate: (st.plannedDate && isValidDateStr(st.plannedDate)) ? String(st.plannedDate) : null
           } : st) : []
         } : t);
       } else if (key === KEYS.SUBJECTS && Array.isArray(data)) {
         sanitizedData = data.map(s => s ? {
           ...s,
           name: s.name ? String(s.name).substring(0, 200) : 'Unnamed Subject',
-          color: (s.color && isValidHexColor(s.color)) ? String(s.color) : '#2563EB'
+          color: (s.color && isValidHexColor(s.color)) ? String(s.color) : '#2563EB',
+          targetHours: Number.isFinite(Number(s.targetHours)) ? Math.max(1, Math.min(1000, Math.floor(Number(s.targetHours)))) : 10
         } : s);
       } else if (key === KEYS.STUDY_BLOCKS && Array.isArray(data)) {
         sanitizedData = data.map(b => b ? {
@@ -241,6 +250,24 @@ const Storage = (function() {
           title: b.title ? String(b.title).substring(0, 200) : 'Study Block',
           subject: b.subject ? String(b.subject).substring(0, 100) : 'Other'
         } : b);
+      } else if (key === KEYS.COURSES && Array.isArray(data)) {
+        sanitizedData = data.map(c => c ? {
+          ...c,
+          name: c.name ? String(c.name).substring(0, 200) : 'Untitled Course',
+          semester: c.semester ? String(c.semester).substring(0, 100) : '',
+          subject: c.subject ? String(c.subject).substring(0, 100) : '',
+          creditHours: Number.isFinite(Number(c.creditHours)) ? Math.max(0.5, Math.min(12, Number(c.creditHours))) : 3,
+          finalized: Boolean(c.finalized),
+          xpAwarded: Number.isFinite(Number(c.xpAwarded)) ? Math.max(0, Number(c.xpAwarded)) : 0,
+          components: Array.isArray(c.components) ? c.components.slice(0, 20).map(cmp => cmp ? {
+            ...cmp,
+            name: cmp.name ? String(cmp.name).substring(0, 100) : 'Component',
+            max: Number.isFinite(Number(cmp.max)) ? Math.max(0, Math.min(100, Number(cmp.max))) : 0,
+            earned: (cmp.earned !== null && cmp.earned !== undefined && Number.isFinite(Number(cmp.earned)))
+              ? Math.max(0, Math.min(Number.isFinite(Number(cmp.max)) ? Number(cmp.max) : 100, Number(cmp.earned)))
+              : null
+          } : cmp) : []
+        } : c);
       }
 
       const serialized = JSON.stringify(sanitizedData);
@@ -319,6 +346,7 @@ const Storage = (function() {
       timeBlocks: getTimeBlocks(),
       reflections: getReflections(),
       theme: getTheme(),
+      courses: getCourses(),
       exported_at: new Date().toISOString(),
       version: '1.0.0'
     };
@@ -348,10 +376,13 @@ const Storage = (function() {
           if (!isValidHexColor(color)) {
             color = '#2563EB';
           }
+          const rawTh = Number(s.targetHours);
+          const safeTh = Number.isFinite(rawTh) ? Math.max(1, Math.min(1000, Math.floor(rawTh))) : 10;
           return {
             id: (s.id && isValidId(String(s.id))) ? String(s.id) : generateId(),
             name: String(s.name || 'Unnamed Subject').substring(0, 200),
             color: color,
+            targetHours: safeTh,
             createdAt: String(s.createdAt || new Date().toISOString())
           };
         });
@@ -370,17 +401,21 @@ const Storage = (function() {
             dueDate: (t.dueDate && isValidDate(t.dueDate)) ? String(t.dueDate) : null,
             dueTime: (t.dueTime && isValidTime(t.dueTime)) ? String(t.dueTime) : null,
             priority: String(t.priority || 'medium').substring(0, 50),
-            subject: String(t.subject || 'Other').substring(0, 100),
+            course: String(t.course || t.subject || 'Other').substring(0, 100),
+            subject: String(t.course || t.subject || 'Other').substring(0, 100),
             repeatDays: Array.isArray(t.repeatDays) ? t.repeatDays.map(Number) : [],
             completed: Boolean(t.completed),
             completedAt: t.completedAt ? String(t.completedAt) : null,
             subtasks: Array.isArray(t.subtasks) ? t.subtasks.map(st => {
               const est = Number(st.estimatedCycles);
               const comp = Number(st.completedCycles);
+              const isComp = Boolean(st.isCompleted);
               return {
                 id: (st.id && isValidId(String(st.id))) ? String(st.id) : generateId(),
                 title: String(st.title || 'Untitled Subtask').substring(0, 200),
-                isCompleted: Boolean(st.isCompleted),
+                isCompleted: isComp,
+                completedAt: isComp ? (st.completedAt ? String(st.completedAt) : null) : null,
+                plannedDate: (st.plannedDate && isValidDate(st.plannedDate)) ? String(st.plannedDate) : null,
                 estimatedCycles: Number.isFinite(est) ? Math.max(1, Math.min(100, Math.floor(est))) : 1,
                 completedCycles: Number.isFinite(comp) ? Math.max(0, Math.min(1000, Math.floor(comp))) : 0
               };
@@ -402,6 +437,7 @@ const Storage = (function() {
             duration: safeDur,
             type: String(s.type || 'work'),
             taskId: (s.taskId && isValidId(String(s.taskId))) ? String(s.taskId) : null,
+            subject: s.subject ? String(s.subject).substring(0, 100) : null,
             notes: s.notes ? String(s.notes).substring(0, 2000) : '',
             completedAt: String(s.completedAt || new Date().toISOString())
           };
@@ -411,7 +447,7 @@ const Storage = (function() {
 
       if (data.goals && typeof data.goals === 'object' && !Array.isArray(data.goals)) {
         const safeGoals = { ...DEFAULTS.goals };
-        ['weekly_tasks', 'weekly_hours', 'daily_tasks', 'daily_hours', 'weekend_daily_tasks', 'weekend_daily_hours', 'current_tasks', 'current_hours', 'freezeCount'].forEach(key => {
+        ['weekly_tasks', 'weekly_hours', 'daily_tasks', 'daily_hours', 'weekend_daily_tasks', 'weekend_daily_hours', 'current_tasks', 'current_hours', 'freezeCount', 'target_gpa'].forEach(key => {
           if (key in data.goals) {
             const val = Number(data.goals[key]);
             if (Number.isFinite(val)) {
@@ -426,7 +462,7 @@ const Storage = (function() {
 
       if (data.settings && typeof data.settings === 'object' && !Array.isArray(data.settings)) {
         const safeSettings = { ...DEFAULTS.settings };
-        const validNavIds = ['timer', 'calendar', 'notes', 'goals', 'history', 'settings'];
+        const validNavIds = ['timer', 'calendar', 'notes', 'goals', 'history', 'settings', 'gpa'];
         Object.keys(DEFAULTS.settings).forEach(key => {
           if (key in data.settings) {
             const val = data.settings[key];
@@ -550,6 +586,42 @@ const Storage = (function() {
         saveData(KEYS.TIME_BLOCKS, safeTB);
       }
 
+      if (Array.isArray(data.courses)) {
+        const safeCourses = data.courses.slice(0, 200).map(c => {
+          if (!c || typeof c !== 'object') return null;
+          const courseId = (c.id && isValidId(String(c.id))) ? String(c.id) : generateId();
+          const creditHours = Number.isFinite(Number(c.creditHours)) ? Math.max(0.5, Math.min(12, Number(c.creditHours))) : 3;
+          const rawComponents = Array.isArray(c.components) ? c.components.slice(0, 20) : [];
+          const safeComponents = rawComponents.map(cmp => {
+            if (!cmp || typeof cmp !== 'object') return null;
+            const cmpId = (cmp.id && isValidId(String(cmp.id))) ? String(cmp.id) : generateId();
+            const max = Number.isFinite(Number(cmp.max)) ? Math.max(0, Math.min(100, Number(cmp.max))) : 0;
+            const earned = (cmp.earned !== null && cmp.earned !== undefined && Number.isFinite(Number(cmp.earned)))
+              ? Math.max(0, Math.min(max, Number(cmp.earned)))
+              : null;
+            return {
+              id: cmpId,
+              name: String(cmp.name || 'Component').substring(0, 100),
+              max,
+              earned
+            };
+          }).filter(Boolean);
+
+          return {
+            id: courseId,
+            name: String(c.name || 'Untitled Course').substring(0, 200),
+            creditHours,
+            semester: String(c.semester || '').substring(0, 100),
+            subject: String(c.subject || '').substring(0, 100),
+            components: safeComponents,
+            finalized: Boolean(c.finalized),
+            xpAwarded: Number.isFinite(Number(c.xpAwarded)) ? Math.max(0, Number(c.xpAwarded)) : 0,
+            createdAt: String(c.createdAt || new Date().toISOString())
+          };
+        }).filter(Boolean);
+        saveData(KEYS.COURSES, safeCourses);
+      }
+
       saveData(KEYS.THEME, 'default');
       saveData(KEYS.THEME_MODE, 'dark');
 
@@ -642,12 +714,6 @@ const Storage = (function() {
     const task = [...loadData(KEYS.TASKS, DEFAULTS.tasks)].find(t => t.id === taskId);
 
     if (completed) {
-      if (completions[key] !== true) {
-        if (task && typeof Achievements !== 'undefined') {
-          const xpAwards = { low: 10, medium: 25, high: 50, critical: 100 };
-          Achievements.awardXP(xpAwards[task.priority] || 25, 'Repeating Task Completed');
-        }
-      }
       completions[key] = true;
       if (task && task.subtasks) {
         task.subtasks.forEach(s => {
@@ -679,6 +745,101 @@ const Storage = (function() {
       if (dateStr >= cutoffStr) pruned[key] = completions[key];
     });
     saveRepeatingCompletions(pruned);
+  }
+
+  // ── Completion Events Engine ────────────────────────────────────────────────
+
+  function getCompletionEvents(sinceDateStr = null) {
+    const rawTasks = loadData(KEYS.TASKS, DEFAULTS.tasks) || [];
+    const completions = getRepeatingCompletions() || {};
+    const events = [];
+
+    const taskMap = new Map();
+    rawTasks.forEach(t => taskMap.set(t.id, t));
+
+    // 1. Non-repeating tasks and subtasks from tasks array
+    rawTasks.forEach(task => {
+      if (task.type === 'repeating') return; // Handled via repeatingCompletions map below
+
+      const hasSubtasks = Array.isArray(task.subtasks) && task.subtasks.length > 0;
+      if (hasSubtasks) {
+        task.subtasks.forEach(st => {
+          if (st.isCompleted) {
+            let date = st.completedAt ? st.completedAt.slice(0, 10) : (task.completedAt ? task.completedAt.slice(0, 10) : formatDate(new Date()));
+            if (!sinceDateStr || date >= sinceDateStr) {
+              events.push({
+                date,
+                taskId: task.id,
+                subtaskId: st.id,
+                subject: task.subject || 'Other'
+              });
+            }
+          }
+        });
+      } else {
+        if (task.completed) {
+          let date = task.completedAt ? task.completedAt.slice(0, 10) : formatDate(new Date());
+          if (!sinceDateStr || date >= sinceDateStr) {
+            events.push({
+              date,
+              taskId: task.id,
+              subtaskId: null,
+              subject: task.subject || 'Other'
+            });
+          }
+        }
+      }
+    });
+
+    // 2. Repeating task and subtask completions from repeatingCompletions map
+    for (const key in completions) {
+      if (!Object.prototype.hasOwnProperty.call(completions, key)) continue;
+      if (completions[key] !== true) continue;
+      if (key.includes('_cycles_')) continue;
+
+      const date = key.slice(-10);
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) continue;
+      if (sinceDateStr && date < sinceDateStr) continue;
+
+      const prefix = key.slice(0, -11); // remove _YYYY-MM-DD
+
+      // Check if prefix is direct taskId
+      if (taskMap.has(prefix)) {
+        const task = taskMap.get(prefix);
+        if (task.type === 'repeating') {
+          const hasSubtasks = Array.isArray(task.subtasks) && task.subtasks.length > 0;
+          if (!hasSubtasks) {
+            events.push({
+              date,
+              taskId: task.id,
+              subtaskId: null,
+              subject: task.subject || 'Other'
+            });
+          }
+        }
+      } else {
+        // Check if prefix is taskId_subtaskId
+        for (const [taskId, task] of taskMap.entries()) {
+          if (task.type === 'repeating' && Array.isArray(task.subtasks) && task.subtasks.length > 0) {
+            if (prefix.startsWith(taskId + '_')) {
+              const subtaskId = prefix.slice(taskId.length + 1);
+              const subtaskExists = task.subtasks.some(st => st.id === subtaskId);
+              if (subtaskExists) {
+                events.push({
+                  date,
+                  taskId: task.id,
+                  subtaskId: subtaskId,
+                  subject: task.subject || 'Other'
+                });
+                break;
+              }
+            }
+          }
+        }
+      }
+    }
+
+    return events;
   }
 
   // ── User ────────────────────────────────────────────────────────────────────
@@ -741,13 +902,20 @@ const Storage = (function() {
   function addTask(task) {
     const tasks = getTasks();
     const rawSubtasks = task.subtasks || [];
-    const subtasks = rawSubtasks.map(st => ({
-      id: String(st.id || generateId()),
-      title: String(st.title || '').substring(0, 200),
-      isCompleted: Boolean(st.isCompleted),
-      estimatedCycles: Number(st.estimatedCycles || 1),
-      completedCycles: Number(st.completedCycles || 0)
-    }));
+    const nowIso = new Date().toISOString();
+    const isValidDateStr = (str) => typeof str === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(str);
+    const subtasks = rawSubtasks.map(st => {
+      const isComp = Boolean(st.isCompleted);
+      return {
+        id: String(st.id || generateId()),
+        title: String(st.title || '').substring(0, 200),
+        isCompleted: isComp,
+        completedAt: isComp ? (st.completedAt ? String(st.completedAt) : nowIso) : null,
+        plannedDate: (st.plannedDate && isValidDateStr(st.plannedDate)) ? String(st.plannedDate) : null,
+        estimatedCycles: Number(st.estimatedCycles || 1),
+        completedCycles: Number(st.completedCycles || 0)
+      };
+    });
     let completed = task.completed || false;
     let progress = 0;
     if (subtasks.length > 0) {
@@ -755,6 +923,7 @@ const Storage = (function() {
       progress = Math.round((completedSubtasks / subtasks.length) * 100);
       completed = subtasks.every(s => s.isCompleted);
     }
+    const resolvedCourse = String(task.course || task.subject || 'Other').substring(0, 100);
     const newTask = {
       id: generateId(),
       title: String(task.title || '').substring(0, 200),
@@ -763,7 +932,8 @@ const Storage = (function() {
       dueDate: task.dueDate || null,
       dueTime: task.dueTime || null,
       priority: task.priority || 'medium',
-      subject: task.subject || 'Other',
+      course: resolvedCourse,
+      subject: resolvedCourse,
       repeatDays: task.repeatDays || [],
       completed: completed,
       completedAt: completed ? new Date().toISOString() : null,
@@ -779,6 +949,10 @@ const Storage = (function() {
   }
 
   function updateTask(id, updates) {
+    if (typeof id === 'object' && id !== null && updates === undefined) {
+      updates = id;
+      id = updates.id;
+    }
     const tasks = getTasks();
     const index = tasks.findIndex(t => t.id === id);
     if (index !== -1) {
@@ -787,14 +961,36 @@ const Storage = (function() {
       if ('title' in safeUpdates) {
         safeUpdates.title = String(safeUpdates.title || '').substring(0, 200);
       }
+      if ('course' in safeUpdates || 'subject' in safeUpdates) {
+        const cVal = String(safeUpdates.course || safeUpdates.subject || 'Other').substring(0, 100);
+        safeUpdates.course = cVal;
+        safeUpdates.subject = cVal;
+      }
       if (Array.isArray(safeUpdates.subtasks)) {
-        safeUpdates.subtasks = safeUpdates.subtasks.map(st => ({
-          id: String(st.id || generateId()),
-          title: String(st.title || '').substring(0, 200),
-          isCompleted: Boolean(st.isCompleted),
-          estimatedCycles: Number.isFinite(Number(st.estimatedCycles)) ? Math.max(1, Math.min(100, Math.floor(st.estimatedCycles))) : 1,
-          completedCycles: Number.isFinite(Number(st.completedCycles)) ? Math.max(0, Math.min(1000, Math.floor(st.completedCycles))) : 0
-        }));
+        const oldSubtasksMap = new Map();
+        if (tasks[index].subtasks && Array.isArray(tasks[index].subtasks)) {
+          tasks[index].subtasks.forEach(s => oldSubtasksMap.set(s.id, s));
+        }
+        const nowIso = new Date().toISOString();
+        const isValidDateStr = (str) => typeof str === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(str);
+        safeUpdates.subtasks = safeUpdates.subtasks.map(st => {
+          const stId = String(st.id || generateId());
+          const oldSt = oldSubtasksMap.get(stId);
+          const isComp = Boolean(st.isCompleted);
+          let completedAt = null;
+          if (isComp) {
+            completedAt = st.completedAt ? String(st.completedAt) : (oldSt && oldSt.completedAt ? oldSt.completedAt : nowIso);
+          }
+          return {
+            id: stId,
+            title: String(st.title || '').substring(0, 200),
+            isCompleted: isComp,
+            completedAt: completedAt,
+            plannedDate: (st.plannedDate && isValidDateStr(st.plannedDate)) ? String(st.plannedDate) : null,
+            estimatedCycles: Number(st.estimatedCycles || 1),
+            completedCycles: Number(st.completedCycles || 0)
+          };
+        });
       }
       const task = { ...tasks[index], ...safeUpdates };
       if (task.subtasks && task.subtasks.length > 0) {
@@ -821,12 +1017,17 @@ const Storage = (function() {
     const task = getTaskById(taskId);
     if (!task) return null;
     const subtasks = task.subtasks || [];
+    const isComp = Boolean(subtaskData.isCompleted);
+    const nowIso = new Date().toISOString();
+    const isValidDateStr = (str) => typeof str === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(str);
     const newSubtask = {
       id: generateId(),
       title: String(subtaskData.title || '').substring(0, 200),
-      isCompleted: Boolean(subtaskData.isCompleted),
-      estimatedCycles: Number.isFinite(Number(subtaskData.estimatedCycles)) ? Math.max(1, Math.min(100, Math.floor(subtaskData.estimatedCycles))) : 1,
-      completedCycles: Number.isFinite(Number(subtaskData.completedCycles)) ? Math.max(0, Math.min(1000, Math.floor(subtaskData.completedCycles))) : 0
+      isCompleted: isComp,
+      completedAt: isComp ? (subtaskData.completedAt ? String(subtaskData.completedAt) : nowIso) : null,
+      plannedDate: (subtaskData.plannedDate && isValidDateStr(subtaskData.plannedDate)) ? String(subtaskData.plannedDate) : null,
+      estimatedCycles: subtaskData.estimatedCycles || 1,
+      completedCycles: subtaskData.completedCycles || 0
     };
     subtasks.push(newSubtask);
     return updateTask(taskId, { subtasks });
@@ -888,14 +1089,25 @@ const Storage = (function() {
     }
 
     if (!task.subtasks) return null;
-    const safeSubtaskUpdates = { ...updates };
-    if ('estimatedCycles' in safeSubtaskUpdates) {
-      safeSubtaskUpdates.estimatedCycles = Number.isFinite(Number(safeSubtaskUpdates.estimatedCycles)) ? Math.max(1, Math.min(100, Math.floor(safeSubtaskUpdates.estimatedCycles))) : 1;
-    }
-    if ('completedCycles' in safeSubtaskUpdates) {
-      safeSubtaskUpdates.completedCycles = Number.isFinite(Number(safeSubtaskUpdates.completedCycles)) ? Math.max(0, Math.min(1000, Math.floor(safeSubtaskUpdates.completedCycles))) : 0;
-    }
-    const subtasks = task.subtasks.map(s => s.id === subtaskId ? { ...s, ...safeSubtaskUpdates } : s);
+    const nowIso = new Date().toISOString();
+    const isValidDateStr = (str) => typeof str === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(str);
+    const subtasks = task.subtasks.map(s => {
+      if (s.id === subtaskId) {
+        const newIsComp = ('isCompleted' in updates) ? Boolean(updates.isCompleted) : s.isCompleted;
+        let completedAt = s.completedAt || null;
+        if (newIsComp && !s.isCompleted) {
+          completedAt = nowIso;
+        } else if (!newIsComp && s.isCompleted) {
+          completedAt = null;
+        }
+        let plannedDate = s.plannedDate || null;
+        if ('plannedDate' in updates) {
+          plannedDate = (updates.plannedDate && isValidDateStr(updates.plannedDate)) ? String(updates.plannedDate) : null;
+        }
+        return { ...s, ...updates, isCompleted: newIsComp, completedAt, plannedDate };
+      }
+      return s;
+    });
     const result = updateTask(taskId, { subtasks });
 
     // Trigger callbacks if subtask was completed
@@ -931,16 +1143,16 @@ const Storage = (function() {
     }
 
     if (!task.completed) {
-      const xpAwards = { low: 10, medium: 25, high: 50, critical: 100 };
-      if (typeof Achievements !== 'undefined') {
-        Achievements.awardXP(xpAwards[task.priority] || 25, 'Task Completed');
-      }
-
+      const nowIso = new Date().toISOString();
       if (task.subtasks && task.subtasks.length > 0) {
-        const updatedSubtasks = task.subtasks.map(s => ({ ...s, isCompleted: true }));
-        return updateTask(id, { completed: true, completedAt: new Date().toISOString(), subtasks: updatedSubtasks });
+        const updatedSubtasks = task.subtasks.map(s => ({
+          ...s,
+          isCompleted: true,
+          completedAt: s.isCompleted ? (s.completedAt || nowIso) : nowIso
+        }));
+        return updateTask(id, { completed: true, completedAt: nowIso, subtasks: updatedSubtasks });
       }
-      return updateTask(id, { completed: true, completedAt: new Date().toISOString() });
+      return updateTask(id, { completed: true, completedAt: nowIso });
     }
     return null;
   }
@@ -1001,7 +1213,8 @@ const Storage = (function() {
   }
 
   function getTasksByStatus(completed) { return getTasks().filter(t => t.completed === completed); }
-  function getTasksBySubject(subject) { return getTasks().filter(t => t.subject === subject); }
+  function getTasksByCourse(course) { return getTasks().filter(t => (t.course === course || t.subject === course)); }
+  function getTasksBySubject(subject) { return getTasksByCourse(subject); }
   function getTasksByPriority(priority) { return getTasks().filter(t => t.priority === priority); }
 
   function getUpcomingTasks(days = 7) {
@@ -1034,11 +1247,54 @@ const Storage = (function() {
     const todayStr = formatDate(new Date());
     return tasks.filter(t => {
       if (t.completed || !t.dueDate) return false;
-      return t.dueDate < todayStr;
+      if (t.dueDate >= todayStr) return false;
+
+      // A parent task with subtasks should no longer be displayed as overdue purely because its due date passed
+      // while it still has topics planned in the future.
+      const hasSubtasks = Array.isArray(t.subtasks) && t.subtasks.length > 0;
+      if (hasSubtasks) {
+        const hasIncompleteFuturePlannedTopics = t.subtasks.some(st => !st.isCompleted && st.plannedDate && st.plannedDate >= todayStr);
+        if (hasIncompleteFuturePlannedTopics) {
+          return false;
+        }
+      }
+
+      return true;
     }).sort((a, b) => {
       // OPTIMIZATION: Use fast lexicographical string comparison instead of `new Date` to avoid allocations and parsing overhead.
       const aDate = a.dueDate;
       const bDate = b.dueDate;
+      return aDate < bDate ? -1 : (aDate > bDate ? 1 : 0);
+    });
+  }
+
+  function getTodayTopics() {
+    const rawTasks = loadData(KEYS.TASKS, DEFAULTS.tasks) || [];
+    const todayStr = formatDate(new Date());
+    const topics = [];
+
+    rawTasks.forEach(task => {
+      if (task.type === 'repeating') return; // Handled per-date
+      if (!Array.isArray(task.subtasks) || task.subtasks.length === 0) return;
+
+      task.subtasks.forEach(st => {
+        if (!st.isCompleted && st.plannedDate && st.plannedDate <= todayStr) {
+          topics.push({
+            taskId: task.id,
+            subtaskId: st.id,
+            title: st.title,
+            parentTitle: task.title,
+            subject: task.subject || 'Other',
+            plannedDate: st.plannedDate,
+            isOverdue: st.plannedDate < todayStr
+          });
+        }
+      });
+    });
+
+    return topics.sort((a, b) => {
+      const aDate = a.plannedDate || '';
+      const bDate = b.plannedDate || '';
       return aDate < bDate ? -1 : (aDate > bDate ? 1 : 0);
     });
   }
@@ -1126,18 +1382,76 @@ const Storage = (function() {
     return !!_pendingCompletions[taskId];
   }
 
-  // ── Subjects ────────────────────────────────────────────────────────────────
+  // ── Subjects & Courses Unified ──────────────────────────────────────────────
 
-  function getSubjects() { return [...loadData(KEYS.SUBJECTS, DEFAULTS.subjects)]; }
-  function saveSubjects(subjects) { return saveData(KEYS.SUBJECTS, [...subjects]); }
+  function getSubjects() {
+    const rawSubjects = loadData(KEYS.SUBJECTS, null);
+    if (Array.isArray(rawSubjects)) {
+      return [...rawSubjects];
+    }
+    // If subjects not explicitly set in storage, check if courses exist
+    const rawCourses = loadData(KEYS.COURSES, null);
+    if (Array.isArray(rawCourses) && rawCourses.length > 0) {
+      return rawCourses.map(c => ({
+        id: c.id,
+        name: c.name,
+        color: c.color || '#2563EB',
+        targetHours: c.targetHours || 10,
+        createdAt: c.createdAt || new Date().toISOString()
+      }));
+    }
+    return [...DEFAULTS.subjects];
+  }
 
-  function addSubject(name, color) {
+  function saveSubjects(subjects) {
+    const safe = Array.isArray(subjects) ? subjects : [];
+    const res = saveData(KEYS.SUBJECTS, [...safe]);
+    // Synchronize to courses so any added or edited subject is also a valid course for GPA
+    const rawCourses = loadData(KEYS.COURSES, null);
+    if (Array.isArray(rawCourses)) {
+      const updatedCourses = [...rawCourses];
+      safe.forEach(s => {
+        const idx = updatedCourses.findIndex(c => c.id === s.id || c.name.toLowerCase() === s.name.toLowerCase());
+        if (idx !== -1) {
+          updatedCourses[idx] = {
+            ...updatedCourses[idx],
+            name: s.name,
+            color: s.color || updatedCourses[idx].color || '#2563EB',
+            targetHours: s.targetHours || updatedCourses[idx].targetHours || 10
+          };
+        } else {
+          updatedCourses.push({
+            id: s.id,
+            name: s.name,
+            color: s.color || '#2563EB',
+            targetHours: s.targetHours || 10,
+            creditHours: 3,
+            semester: 'Semester 1',
+            components: [
+              { id: generateId(), name: 'Mid Exam', max: 30, earned: null },
+              { id: generateId(), name: 'Final Exam', max: 60, earned: null },
+              { id: generateId(), name: 'Class Assessment', max: 10, earned: null }
+            ],
+            finalized: false,
+            xpAwarded: 0,
+            createdAt: s.createdAt || new Date().toISOString()
+          });
+        }
+      });
+      saveData(KEYS.COURSES, updatedCourses);
+    }
+    return res;
+  }
+
+  function addSubject(name, color, targetHours = 10) {
     const subjects = getSubjects();
     let safeColor = color || '#2563EB';
     if (!isValidHexColor(safeColor)) {
       safeColor = '#2563EB';
     }
-    const newSubject = { id: generateId(), name: String(name || '').substring(0, 200), color: safeColor, createdAt: new Date().toISOString() };
+    const rawTh = Number(targetHours);
+    const safeTh = Number.isFinite(rawTh) ? Math.max(1, Math.min(1000, Math.floor(rawTh))) : 10;
+    const newSubject = { id: generateId(), name: String(name || '').substring(0, 200), color: safeColor, targetHours: safeTh, createdAt: new Date().toISOString() };
     subjects.push(newSubject);
     saveSubjects(subjects);
     return newSubject;
@@ -1153,6 +1467,10 @@ const Storage = (function() {
       const safeUpdates = { ...updates };
       if ('name' in safeUpdates) {
         safeUpdates.name = String(safeUpdates.name || '').substring(0, 200);
+      }
+      if ('targetHours' in safeUpdates) {
+        const rawTh = Number(safeUpdates.targetHours);
+        safeUpdates.targetHours = Number.isFinite(rawTh) ? Math.max(1, Math.min(1000, Math.floor(rawTh))) : 10;
       }
       subjects[index] = { ...subjects[index], ...safeUpdates };
       saveSubjects(subjects);
@@ -1189,11 +1507,21 @@ const Storage = (function() {
     // SECURITY: Validate and sanitize duration to a finite bounded integer to prevent Stored XSS and numeric corruption
     const parsedDuration = Number(duration);
     const safeDuration = Number.isFinite(parsedDuration) ? Math.max(0, Math.min(1440, Math.floor(parsedDuration))) : 0;
+
+    let subject = null;
+    if (type === 'work' && taskId) {
+      const task = getTaskById(taskId);
+      if (task && task.subject) {
+        subject = task.subject;
+      }
+    }
+
     const newSession = {
       id: generateId(),
       duration: safeDuration,
       type,
       taskId,
+      subject: subject ? String(subject).substring(0, 100) : null,
       notes: String(notes || '').substring(0, 2000),
       completedAt: new Date().toISOString()
     };
@@ -1323,6 +1651,39 @@ const Storage = (function() {
   }
 
   /**
+   * Calculate total focus minutes for a subject since a given ISO date string.
+   * Maps 'work' sessions directly to task subject using raw task lookup (no per-item Date allocations).
+   */
+  function getFocusMinutesBySubject(sinceIsoDate, targetSubject) {
+    if (!targetSubject) return 0;
+    const sessions = sinceIsoDate ? getSessionsSince(sinceIsoDate) : loadData(KEYS.SESSIONS, DEFAULTS.sessions);
+    if (!sessions || sessions.length === 0) return 0;
+
+    const rawTasks = loadData(KEYS.TASKS, DEFAULTS.tasks) || [];
+    const taskSubjectMap = new Map();
+    for (let i = 0; i < rawTasks.length; i++) {
+      const t = rawTasks[i];
+      if (t && t.id) taskSubjectMap.set(t.id, t.subject || 'Other');
+    }
+
+    const normTarget = targetSubject.toLowerCase();
+    let total = 0;
+
+    for (let i = 0; i < sessions.length; i++) {
+      const s = sessions[i];
+      if (s.type !== 'work') continue;
+      let subj = s.subject;
+      if (!subj && s.taskId) {
+        subj = taskSubjectMap.get(s.taskId);
+      }
+      if (subj && subj.toLowerCase() === normTarget) {
+        total += (s.duration || 0);
+      }
+    }
+    return total;
+  }
+
+  /**
    * OPTIMIZATION: Binary search range lookup for weekly focus work duration.
    * Uses binary search to find the week start index in O(log N) time and sums
    * work durations in a fast traditional for loop, bypassing array allocations.
@@ -1364,18 +1725,10 @@ const Storage = (function() {
     }
 
     // Dynamically recalculate from source of truth
-    const tasks = getTasks();
-    const taskIds = new Set(tasks.map(t => t.id));
-    const oneTimeCompleted = tasks.filter(t => t.type !== 'repeating' && t.completed && t.completedAt && new Date(t.completedAt) >= weekStart).length;
-
-    const completions = getRepeatingCompletions();
     const weekStartDateStr = formatDate(weekStart);
-    const repeatingCompleted = Object.keys(completions).filter(key => {
-      const dateStr = key.slice(-10);
-      return dateStr >= weekStartDateStr && taskIds.has(key.slice(0, -11));
-    }).length;
+    const completionEvents = getCompletionEvents(weekStartDateStr);
 
-    goals.current_tasks = oneTimeCompleted + repeatingCompleted;
+    goals.current_tasks = completionEvents.length;
     goals.current_hours = getTotalMinutesWeek() / 60;
 
     return goals;
@@ -1416,7 +1769,7 @@ const Storage = (function() {
     // Validation for specific settings
     if (key === 'pinned_nav_items') {
       if (!Array.isArray(value)) return false;
-      const VALID_IDS = ['dashboard', 'tasks', 'timer', 'calendar', 'notes', 'goals', 'history', 'settings'];
+      const VALID_IDS = ['dashboard', 'tasks', 'timer', 'calendar', 'notes', 'goals', 'history', 'settings', 'gpa'];
       // Only keep valid IDs and limit to 2 pins
       value = value.filter(id => VALID_IDS.includes(id)).slice(0, 2);
     } else if (typeof DEFAULTS.settings[key] === 'number') {
@@ -1515,30 +1868,64 @@ const Storage = (function() {
   // ── Statistics ───────────────────────────────────────────────────────────────
 
   function getSubjectMasteryStats() {
-    const tasks = getTasks();
     const subjects = getSubjects();
+    const rawTasks = loadData(KEYS.TASKS, DEFAULTS.tasks) || [];
+    const taskMap = new Map();
+    rawTasks.forEach(t => taskMap.set(t.id, t));
+
+    const sessions = loadData(KEYS.SESSIONS, DEFAULTS.sessions) || [];
+    const completionEvents = getCompletionEvents();
+
     const subjectMetrics = {};
-    const completions = getRepeatingCompletions();
-
-    // OPTIMIZATION: Extract task IDs from completions once to avoid O(N*M) nested loop
-    const completedRepeatingTaskIds = new Set();
-    Object.keys(completions).forEach(key => {
-      // Key format is "taskId_YYYY-MM-DD"
-      completedRepeatingTaskIds.add(key.slice(0, -11));
+    subjects.forEach(s => {
+      subjectMetrics[s.name] = {
+        focusedMinutes: 0,
+        completedTopics: 0,
+        targetHours: Number.isFinite(Number(s.targetHours)) ? Number(s.targetHours) : 10
+      };
     });
 
-    subjects.forEach(s => { subjectMetrics[s.name] = { total: 0, completed: 0 }; });
-    tasks.forEach(t => {
-      if (subjectMetrics[t.subject]) {
-        subjectMetrics[t.subject].total++;
-        const isRepeatingDone = t.type === 'repeating' && completedRepeatingTaskIds.has(t.id);
-        if (t.completed || isRepeatingDone) subjectMetrics[t.subject].completed++;
+    // 1. Accumulate focus minutes
+    sessions.forEach(s => {
+      if (s.type !== 'work') return;
+      let subjName = s.subject || null;
+      if (!subjName && s.taskId) {
+        const t = taskMap.get(s.taskId);
+        if (t) subjName = t.subject;
       }
+      if (!subjName) subjName = 'Other';
+
+      if (!subjectMetrics[subjName]) {
+        subjectMetrics[subjName] = { focusedMinutes: 0, completedTopics: 0, targetHours: 10 };
+      }
+      subjectMetrics[subjName].focusedMinutes += (s.duration || 0);
     });
+
+    // 2. Accumulate completed topics
+    completionEvents.forEach(e => {
+      const subjName = e.subject || 'Other';
+      if (!subjectMetrics[subjName]) {
+        subjectMetrics[subjName] = { focusedMinutes: 0, completedTopics: 0, targetHours: 10 };
+      }
+      subjectMetrics[subjName].completedTopics++;
+    });
+
     return subjects.map(subject => {
-      const metrics = subjectMetrics[subject.name] || { total: 0, completed: 0 };
-      const percentage = metrics.total > 0 ? Math.round((metrics.completed / metrics.total) * 100) : 0;
-      return { ...subject, total: metrics.total, completed: metrics.completed, percentage };
+      const metrics = subjectMetrics[subject.name] || { focusedMinutes: 0, completedTopics: 0, targetHours: 10 };
+      const focusedMinutes = metrics.focusedMinutes;
+      const focusedHours = Number((focusedMinutes / 60).toFixed(1));
+      const targetHours = Number.isFinite(Number(subject.targetHours)) ? Number(subject.targetHours) : 10;
+      const targetMinutes = targetHours * 60;
+      const percentage = targetMinutes > 0 ? Math.min(100, Math.round((focusedMinutes / targetMinutes) * 100)) : 0;
+
+      return {
+        ...subject,
+        focusedMinutes,
+        focusedHours,
+        completedTopics: metrics.completedTopics,
+        targetHours,
+        percentage
+      };
     });
   }
 
@@ -1558,25 +1945,36 @@ const Storage = (function() {
     const future7DaysStr = formatDate(new Date(todayStartTime + 7 * 86400000));
     const activityCutoff = todayStartTime - (366 * 86400000);
 
-    let completedTasks = 0, todayCompleted = 0, todayTotalCount = 0, todayPendingCount = 0;
-    let pendingCount = 0, weekCompleted = 0, overdueTasks = 0, upcomingTasks = 0;
+    let todayTotalCount = 0, todayPendingCount = 0;
+    let pendingCount = 0, overdueTasks = 0, upcomingTasks = 0;
 
     const activityDates = new Set();
     const completions = getRepeatingCompletions();
     const reusableDate = new Date();
-    const taskIds = new Set();
 
-    // OPTIMIZATION: Use high-performance traditional for loop instead of tasks.forEach to avoid callback overhead.
+    // Calculate completions using getCompletionEvents as single source of truth
+    const completionEvents = getCompletionEvents();
+    const completedTasks = completionEvents.length;
+    const weekStartDateStr = formatDate(weekStart);
+    const cutoffDateStr = formatDate(new Date(activityCutoff));
+
+    let todayCompleted = 0;
+    let weekCompleted = 0;
+
+    for (let i = 0; i < completionEvents.length; i++) {
+      const e = completionEvents[i];
+      if (e.date === todayStr) todayCompleted++;
+      if (e.date >= weekStartDateStr) weekCompleted++;
+      if (e.date >= cutoffDateStr) activityDates.add(e.date);
+    }
+
     for (let idx = 0; idx < tasks.length; idx++) {
       const t = tasks[idx];
-      taskIds.add(t.id);
       const isRepeating = t.type === 'repeating';
-      const compAt = t.completedAt;
-      let compTime = 0;
 
       const isCompletedToday = isRepeating
         ? (completions[`${t.id}_${todayStr}`] === true)
-        : (t.completed && (compTime = (typeof compAt === 'number' ? compAt : (compAt ? Date.parse(compAt) : 0))) >= todayStartTime && compTime < todayEndTime);
+        : (t.completed && t.completedAt && t.completedAt.slice(0, 10) === todayStr);
 
       let isScheduledForToday = false;
       let isOverdue = false;
@@ -1596,51 +1994,16 @@ const Storage = (function() {
         if (!isCompletedToday && (isRepeating || !t.completed)) todayPendingCount++;
       }
 
-      if (t.completed) {
-        completedTasks++;
-        if (!compTime && compAt) compTime = typeof compAt === 'number' ? compAt : Date.parse(compAt);
-        if (compTime > 0) {
-          if (compTime >= weekStartTime) weekCompleted++;
-          if (compTime >= activityCutoff) {
-            if (typeof compAt === 'string' && compAt.length >= 10 && compAt[4] === '-' && compAt[7] === '-') {
-              activityDates.add(compAt.slice(0, 10));
-            } else {
-              reusableDate.setTime(compTime);
-              activityDates.add(formatDate(reusableDate));
-            }
-          }
-        }
-      } else {
+      if (!t.completed && !isRepeating) {
         if (!isCompletedToday) pendingCount++;
         if (isOverdue) overdueTasks++;
-        if (isRepeating) {
-          upcomingTasks++;
-        } else if (t.dueDate) {
+        if (t.dueDate) {
           const start = t.startDate || t.dueDate;
           if (t.dueDate < todayStr || (t.dueDate >= todayStr && start <= future7DaysStr)) upcomingTasks++;
         }
-      }
-      if (isCompletedToday) {
-        todayCompleted++;
-        activityDates.add(todayStr);
-      }
-    }
-
-    // Add repeating completions to aggregate metrics
-    const weekStartDateStr = formatDate(weekStart);
-    const cutoffDateStr = formatDate(new Date(activityCutoff));
-
-    for (const key in completions) {
-      if (!Object.prototype.hasOwnProperty.call(completions, key)) continue;
-      const dateStr = key.slice(-10);
-      const taskId = key.slice(0, -11);
-
-      if (taskIds.has(taskId)) {
-        completedTasks++;
-        if (dateStr >= weekStartDateStr) weekCompleted++;
-        if (dateStr >= cutoffDateStr) {
-          activityDates.add(dateStr);
-        }
+      } else if (isRepeating) {
+        if (!isCompletedToday) pendingCount++;
+        upcomingTasks++;
       }
     }
 
@@ -1932,13 +2295,188 @@ const Storage = (function() {
     return dateStr < formatDate(new Date());
   }
 
+  // ── Courses (GPA) ─────────────────────────────────────────────────────────
+
+  function getCourses() {
+    const raw = loadData(KEYS.COURSES, DEFAULTS.courses);
+    if (!Array.isArray(raw)) return [];
+    return raw.map(c => ({
+      ...c,
+      color: c.color || '#2563EB',
+      targetHours: c.targetHours || 10,
+      components: Array.isArray(c.components) ? c.components.map(cmp => ({ ...cmp })) : []
+    }));
+  }
+
+  function saveCourses(courses) {
+    const safe = Array.isArray(courses) ? courses : [];
+    const res = saveData(KEYS.COURSES, safe);
+    // Keep subjects list synchronized with courses
+    try {
+      const subjectProjections = safe.map(c => ({
+        id: c.id,
+        name: c.name,
+        color: c.color || '#2563EB',
+        targetHours: c.targetHours || 10,
+        createdAt: c.createdAt || new Date().toISOString()
+      }));
+      saveData(KEYS.SUBJECTS, subjectProjections);
+    } catch (_) {}
+    notifyTaskDataChanged();
+    return res;
+  }
+
+  function addCourse(courseData) {
+    const courses = getCourses();
+    const newCourseId = (courseData && courseData.id && typeof courseData.id === 'string')
+      ? courseData.id
+      : generateId();
+
+    const creditHours = Number.isFinite(Number(courseData?.creditHours))
+      ? Math.max(0.5, Math.min(12, Number(courseData.creditHours)))
+      : 3;
+
+    let safeColor = courseData?.color || '#2563EB';
+    if (!isValidHexColor(safeColor)) {
+      safeColor = '#2563EB';
+    }
+    const rawTh = Number(courseData?.targetHours);
+    const safeTh = Number.isFinite(rawTh) ? Math.max(1, Math.min(1000, Math.floor(rawTh))) : 10;
+
+    let components = [];
+    if (Array.isArray(courseData?.components) && courseData.components.length > 0) {
+      components = courseData.components.map(cmp => ({
+        id: cmp.id || generateId(),
+        name: String(cmp.name || 'Component').substring(0, 100),
+        max: Number.isFinite(Number(cmp.max)) ? Math.max(0, Math.min(100, Number(cmp.max))) : 0,
+        earned: (cmp.earned !== null && cmp.earned !== undefined && Number.isFinite(Number(cmp.earned)))
+          ? Math.max(0, Math.min(Number(cmp.max) || 100, Number(cmp.earned)))
+          : null
+      }));
+    } else {
+      // DEFAULT components for every new course: Mid Exam max 30, Final Exam max 60, Class Assessment max 10
+      components = [
+        { id: generateId(), name: 'Mid Exam', max: 30, earned: null },
+        { id: generateId(), name: 'Final Exam', max: 60, earned: null },
+        { id: generateId(), name: 'Class Assessment', max: 10, earned: null }
+      ];
+    }
+
+    const courseName = String(courseData?.name || 'Untitled Course').substring(0, 200);
+    const newCourse = {
+      id: newCourseId,
+      name: courseName,
+      color: safeColor,
+      targetHours: safeTh,
+      creditHours,
+      semester: String(courseData?.semester || '').substring(0, 100),
+      subject: String(courseData?.subject || courseName).substring(0, 100),
+      components,
+      finalized: Boolean(courseData?.finalized),
+      xpAwarded: Number.isFinite(Number(courseData?.xpAwarded)) ? Math.max(0, Number(courseData.xpAwarded)) : 0,
+      createdAt: courseData?.createdAt || new Date().toISOString()
+    };
+
+    courses.push(newCourse);
+    saveCourses(courses);
+    return { ...newCourse, components: newCourse.components.map(cmp => ({ ...cmp })) };
+  }
+
+  function updateCourse(id, updates) {
+    if (!id || !updates || typeof updates !== 'object') return null;
+    const courses = getCourses();
+    const idx = courses.findIndex(c => c.id === id);
+    if (idx === -1) return null;
+
+    const existing = courses[idx];
+    const safeUpdates = { ...updates };
+
+    if ('name' in safeUpdates) {
+      safeUpdates.name = String(safeUpdates.name || '').substring(0, 200);
+    }
+    if ('color' in safeUpdates) {
+      if (isValidHexColor(safeUpdates.color)) {
+        safeUpdates.color = safeUpdates.color;
+      } else {
+        safeUpdates.color = existing.color || '#2563EB';
+      }
+    }
+    if ('targetHours' in safeUpdates) {
+      const rawTh = Number(safeUpdates.targetHours);
+      safeUpdates.targetHours = Number.isFinite(rawTh) ? Math.max(1, Math.min(1000, Math.floor(rawTh))) : (existing.targetHours || 10);
+    }
+    if ('semester' in safeUpdates) {
+      safeUpdates.semester = String(safeUpdates.semester || '').substring(0, 100);
+    }
+    if ('subject' in safeUpdates) {
+      safeUpdates.subject = String(safeUpdates.subject || '').substring(0, 100);
+    } else if ('name' in safeUpdates) {
+      safeUpdates.subject = safeUpdates.name;
+    }
+    if ('creditHours' in safeUpdates) {
+      const ch = Number(safeUpdates.creditHours);
+      safeUpdates.creditHours = Number.isFinite(ch) ? Math.max(0.5, Math.min(12, ch)) : existing.creditHours;
+    }
+    if ('finalized' in safeUpdates) {
+      safeUpdates.finalized = Boolean(safeUpdates.finalized);
+    }
+    if ('xpAwarded' in safeUpdates) {
+      const xp = Number(safeUpdates.xpAwarded);
+      safeUpdates.xpAwarded = Number.isFinite(xp) ? Math.max(0, xp) : existing.xpAwarded;
+    }
+    if (Array.isArray(safeUpdates.components)) {
+      safeUpdates.components = safeUpdates.components.slice(0, 20).map(cmp => ({
+        id: cmp.id || generateId(),
+        name: String(cmp.name || 'Component').substring(0, 100),
+        max: Number.isFinite(Number(cmp.max)) ? Math.max(0, Math.min(100, Number(cmp.max))) : 0,
+        earned: (cmp.earned !== null && cmp.earned !== undefined && Number.isFinite(Number(cmp.earned)))
+          ? Math.max(0, Math.min(Number(cmp.max) || 100, Number(cmp.earned)))
+          : null
+      }));
+    }
+
+    courses[idx] = { ...existing, ...safeUpdates };
+    saveCourses(courses);
+    return { ...courses[idx], components: courses[idx].components.map(cmp => ({ ...cmp })) };
+  }
+
+  function deleteCourse(id) {
+    const courses = getCourses();
+    const filtered = courses.filter(c => c.id !== id);
+    if (filtered.length !== courses.length) {
+      saveCourses(filtered);
+      return true;
+    }
+    return false;
+  }
+
+  function setComponentScore(courseId, componentId, earned) {
+    const courses = getCourses();
+    const course = courses.find(c => c.id === courseId);
+    if (!course || !Array.isArray(course.components)) return null;
+
+    const cmp = course.components.find(cp => cp.id === componentId);
+    if (!cmp) return null;
+
+    if (earned === null || earned === undefined || earned === '') {
+      cmp.earned = null;
+    } else {
+      const val = Number(earned);
+      if (!Number.isFinite(val)) return null;
+      cmp.earned = Math.max(0, Math.min(cmp.max, val));
+    }
+
+    saveCourses(courses);
+    return { ...course, components: course.components.map(c => ({ ...c })) };
+  }
+
   return {
     KEYS, DEFAULTS,
     saveData, loadData, removeData, clearAllData, exportData, importData,
     getUser, saveUser, updateUserName, updateUserEmail,
     getTasks, saveTasks, addTask, updateTask, deleteTask, completeTask, uncompleteTask,
-    getTaskById, getTasksByDate, getTasksByStatus, getTasksBySubject, getTasksByPriority,
-    getUpcomingTasks, getOverdueTasks, getTodayTasks,
+    getCompletionEvents, getTaskById, getTasksByDate, getTasksByStatus, getTasksByCourse, getTasksBySubject, getTasksByPriority,
+    getUpcomingTasks, getOverdueTasks, getTodayTasks, getTodayTopics,
     stageTaskCompletion, hasPendingCompletion,
     addSubtask, toggleSubtask, updateSubtask,
     getSubjects, saveSubjects, addSubject, updateSubject, deleteSubject,
@@ -1946,7 +2484,8 @@ const Storage = (function() {
     getSessions, saveSessions, addSession,
     getTodaySessions, getTodayWorkSessions, getWeekSessions, getWeekWorkSessions,
     getTotalMinutesToday, getTotalMinutesWeek,
-    getSessionsSince, pruneSessions,
+    getSessionsSince, pruneSessions, getFocusMinutesBySubject,
+    getCourses, saveCourses, addCourse, updateCourse, deleteCourse, setComponentScore,
     getGoals, saveGoals, updateGoals,
     getSettings, saveSettings, updateSetting,
     getTimerState, saveTimerState, clearTimerState, completeTimerSession,

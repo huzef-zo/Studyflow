@@ -55,20 +55,56 @@ const History = (function() {
   }
 
   function updateSummaryStats() {
-    const filteredTasks = getFilteredTasks();
     const filteredSessions = getFilteredSessions();
     const workSessions = filteredSessions.filter(s => s.type === 'work');
     const stats = Storage.getStats ? Storage.getStats() : { streak: 0, bestStreak: 0 };
 
-    const completedTasksCount = filteredTasks.filter(t => t.completed).length;
+    const cutoff = getCutoffDate();
+    const cutoffStr = cutoff ? Storage.formatDate(cutoff) : null;
+    const completionEvents = Storage.getCompletionEvents ? Storage.getCompletionEvents(cutoffStr) : [];
+    const completedTopicsCount = completionEvents.length;
+
     const studyMinutes = workSessions.reduce((acc, s) => acc + (s.duration || 0), 0);
     const studyHours = (studyMinutes / 60).toFixed(1);
 
-    if (elements.totalCompletedTasks) elements.totalCompletedTasks.textContent = completedTasksCount;
+    if (elements.totalCompletedTasks) elements.totalCompletedTasks.textContent = completedTopicsCount;
     if (elements.totalStudyHours) elements.totalStudyHours.textContent = `${studyHours}h`;
     if (elements.allTimeStreak) elements.allTimeStreak.textContent = stats.bestStreak || stats.streak || 0;
 
-    const rate = filteredTasks.length > 0 ? Math.round((completedTasksCount / filteredTasks.length) * 100) : 0;
+    // Success Rate calculation under new core rule:
+    // Completed topics divided by topics that were planned or due in the period
+    const rawTasks = Storage.loadData ? Storage.loadData(Storage.KEYS.TASKS, Storage.DEFAULTS.tasks) : [];
+    const todayStr = Storage.formatDate(new Date());
+
+    let totalPlannedOrDueTopics = 0;
+    rawTasks.forEach(task => {
+      const hasSubtasks = Array.isArray(task.subtasks) && task.subtasks.length > 0;
+      if (hasSubtasks) {
+        task.subtasks.forEach(st => {
+          const isComp = st.isCompleted;
+          const compDate = st.completedAt ? st.completedAt.slice(0, 10) : (task.completedAt ? task.completedAt.slice(0, 10) : null);
+          const planned = st.plannedDate;
+
+          const isCompInPeriod = isComp && (!cutoffStr || (compDate && compDate >= cutoffStr && compDate <= todayStr));
+          const isPlannedInPeriod = planned && (!cutoffStr || (planned >= cutoffStr && planned <= todayStr));
+          if (isCompInPeriod || isPlannedInPeriod) {
+            totalPlannedOrDueTopics++;
+          }
+        });
+      } else {
+        const isComp = task.completed;
+        const compDate = task.completedAt ? task.completedAt.slice(0, 10) : null;
+        const dueDate = task.dueDate;
+
+        const isCompInPeriod = isComp && (!cutoffStr || (compDate && compDate >= cutoffStr && compDate <= todayStr));
+        const isDueInPeriod = dueDate && (!cutoffStr || (dueDate >= cutoffStr && dueDate <= todayStr));
+        if (isCompInPeriod || isDueInPeriod) {
+          totalPlannedOrDueTopics++;
+        }
+      }
+    });
+
+    const rate = totalPlannedOrDueTopics > 0 ? Math.min(100, Math.round((completedTopicsCount / totalPlannedOrDueTopics) * 100)) : 0;
     if (elements.completionRate) elements.completionRate.textContent = `${rate}%`;
 
     const streakDelta = document.getElementById('streak-delta-label');
@@ -237,9 +273,9 @@ const History = (function() {
     const stats = Storage.getSubjectMasteryStats ? Storage.getSubjectMasteryStats() : [];
     if (stats.length === 0) {
       elements.masteryOverview.innerHTML = App.createEmptyStateHtml({
-        title: 'No Subjects Configured',
-        text: 'Set up subjects in settings to track your focus distribution.',
-        icon: 'pie_chart'
+        title: 'No Courses Configured',
+        text: 'Set up courses in settings to track your focus distribution and GPA.',
+        icon: 'school'
       });
       return;
     }
@@ -248,32 +284,49 @@ const History = (function() {
     const totalMins = filteredSessions.reduce((acc, s) => acc + (s.duration || 0), 0);
 
     const subjectMins = {};
+    // OPTIMIZATION: Query raw tasks once and construct a Map for O(1) lookups instead of calling Storage.getTaskById(s.taskId) inside session loop.
+    const rawTasks = Storage.loadData ? Storage.loadData(Storage.KEYS.TASKS, Storage.DEFAULTS.tasks) : [];
+    const taskMap = new Map();
+    for (let i = 0; i < rawTasks.length; i++) {
+      taskMap.set(rawTasks[i].id, rawTasks[i]);
+    }
+
     filteredSessions.forEach(s => {
-      const task = s.taskId ? Storage.getTaskById(s.taskId) : null;
+      const task = s.taskId ? taskMap.get(s.taskId) : null;
       const subName = task ? task.subject : 'Other';
       subjectMins[subName] = (subjectMins[subName] || 0) + (s.duration || 0);
     });
 
+    const courses = (typeof Storage.getCourses === 'function' && typeof GpaUtils !== 'undefined') ? Storage.getCourses() : [];
+    const courseGradeMap = new Map();
+    courses.forEach(c => {
+      const st = GpaUtils.courseStatus(c);
+      courseGradeMap.set(c.name.toLowerCase(), st.grade.letter);
+    });
+
     elements.masteryOverview.innerHTML = stats.map(s => {
-      const mins = subjectMins[s.name] || 0;
-      const hours = (mins / 60).toFixed(1);
-      const sharePct = totalMins > 0 ? Math.round((mins / totalMins) * 100) : s.percentage;
+      const safeColor = App.isValidHexColor(s.color) ? s.color : '#2563EB';
+      const letter = courseGradeMap.get(s.name.toLowerCase());
+      const gradeBadge = letter
+        ? `<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-primary-container/20 text-primary-container font-mono-timer">${letter}</span>`
+        : '';
 
       return `
         <div class="flex flex-col gap-1.5 p-2 rounded bg-surface-container-low/60 hover:bg-surface-container-high transition-colors">
           <div class="flex items-center justify-between">
             <div class="flex items-center gap-2">
-              <span class="w-2 h-2 rounded-full" style="background-color: ${App.escapeHtml(s.color)};"></span>
+              <span class="w-2 h-2 rounded-full" style="background-color: ${App.escapeHtml(safeColor)};"></span>
               <span class="font-body-md text-body-md text-text-primary font-medium">${App.escapeHtml(s.name)}</span>
+              ${gradeBadge}
             </div>
-            <span class="font-label-md text-label-md text-text-primary font-semibold">${sharePct}%</span>
+            <span class="font-label-md text-label-md text-text-primary font-semibold">${s.percentage}%</span>
           </div>
           <div class="flex items-center justify-between text-text-secondary font-label-sm text-[12px] mb-0.5">
-            <span>${hours}h logged</span>
-            <span class="text-primary-container">${s.completed}/${s.total} tasks</span>
+            <span>${s.focusedHours}h focus</span>
+            <span class="text-primary-container">${s.completedTopics} topic${s.completedTopics === 1 ? '' : 's'}</span>
           </div>
           <div class="w-full h-1.5 rounded-full bg-surface-container-highest overflow-hidden">
-            <div class="h-full rounded-full transition-all duration-500" style="width: ${sharePct}%; background-color: ${App.escapeHtml(s.color)};"></div>
+            <div class="h-full rounded-full transition-all duration-500" style="width: ${s.percentage}%; background-color: ${App.escapeHtml(safeColor)};"></div>
           </div>
         </div>
       `;
@@ -299,13 +352,30 @@ const History = (function() {
       return;
     }
 
+    // OPTIMIZATION: Build a Map for O(1) task lookups and use fast Date component getters instead of expensive toLocaleTimeString / toLocaleDateString Intl calls.
+    const rawTasks = Storage.loadData ? Storage.loadData(Storage.KEYS.TASKS, Storage.DEFAULTS.tasks) : [];
+    const taskMap = new Map();
+    for (let i = 0; i < rawTasks.length; i++) {
+      taskMap.set(rawTasks[i].id, rawTasks[i]);
+    }
+    const MONTH_NAMES_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
     elements.studyHistoryList.innerHTML = sorted.map(s => {
-      const task = s.taskId ? Storage.getTaskById(s.taskId) : null;
+      const task = s.taskId ? taskMap.get(s.taskId) : null;
       const title = task ? task.title : 'General Focus';
       const subject = task ? task.subject : 'General';
-      const d = new Date(s.completedAt);
-      const timeStr = !isNaN(d.getTime()) ? d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : 'N/A';
-      const dateStr = !isNaN(d.getTime()) ? d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
+      let timeStr = 'N/A', dateStr = '';
+      if (s.completedAt) {
+        const d = new Date(s.completedAt);
+        if (!isNaN(d.getTime())) {
+          let hours = d.getHours();
+          const minutes = d.getMinutes();
+          const ampm = hours >= 12 ? 'PM' : 'AM';
+          hours = hours % 12 || 12;
+          timeStr = hours + ':' + (minutes < 10 ? '0' + minutes : minutes) + ' ' + ampm;
+          dateStr = MONTH_NAMES_SHORT[d.getMonth()] + ' ' + d.getDate();
+        }
+      }
 
       return `
         <div class="p-3.5 rounded-2xl bg-surface-container-low/70 flex items-center justify-between gap-3 shadow-sm">
@@ -355,9 +425,58 @@ const History = (function() {
     });
   }
 
+  function renderGpaOverview() {
+    const container = document.getElementById('gpa-semester-overview');
+    if (!container) return;
+
+    if (typeof GpaUtils === 'undefined' || !Storage.getCourses) {
+      container.innerHTML = '<p class="font-body-sm text-body-sm text-text-muted">GPA calculation unavailable.</p>';
+      return;
+    }
+
+    const courses = Storage.getCourses();
+    if (courses.length === 0) {
+      container.innerHTML = '<p class="font-body-sm text-body-sm text-text-muted">No course data recorded yet.</p>';
+      return;
+    }
+
+    const grouped = GpaUtils.groupBySemester(courses);
+    const semesters = Object.keys(grouped);
+
+    const rows = semesters.map(sem => {
+      const semCourses = grouped[sem];
+      const res = GpaUtils.semesterGpa(semCourses, { includeProjected: true });
+      const gpaVal = res.totalCredits > 0 ? res.gpa : 0;
+      const barPct = Math.min(100, Math.max(0, (gpaVal / 4.0) * 100));
+      const grade = GpaUtils.rawToGrade((gpaVal / 4.0) * 100);
+
+      return `
+        <div class="flex flex-col gap-1 p-2.5 rounded-xl bg-surface-container-lowest/60">
+          <div class="flex items-center justify-between font-label-sm text-label-sm">
+            <span class="text-text-primary font-medium truncate">${App.escapeHtml(sem)}</span>
+            <div class="flex items-center gap-1.5">
+              <span class="text-text-primary font-bold font-mono-timer">${gpaVal.toFixed(2)}</span>
+              <span class="text-primary-container font-semibold">${grade.letter}</span>
+            </div>
+          </div>
+          <div class="flex items-center justify-between font-label-sm text-[11px] text-text-secondary">
+            <span>${res.totalCredits} credits</span>
+            <span>${res.countedCourses} courses</span>
+          </div>
+          <div class="w-full h-1.5 rounded-full bg-surface-container-highest overflow-hidden">
+            <div class="h-full bg-primary-container rounded-full" style="width: ${barPct}%;"></div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    container.innerHTML = rows;
+  }
+
   function renderAnalytics() {
     updateSummaryStats();
     renderActivityChart();
+    renderGpaOverview();
     updateMasteryOverview();
     renderStudyHistory();
   }

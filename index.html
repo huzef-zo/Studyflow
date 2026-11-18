@@ -17,8 +17,8 @@
   <link rel="manifest" href="./manifest.json"/>
 
   <title>Home - StudyFlow</title>
-  <link rel="stylesheet" href="css/tailwind.css?v=v2026-09-30-01"/>
-  <link rel="stylesheet" href="css/app.css?v=v2026-09-30-01"/>
+  <link rel="stylesheet" href="css/tailwind.css?v=v2026-11-10-01"/>
+  <link rel="stylesheet" href="css/app.css?v=v2026-11-10-01"/>
 </head>
 <body class="bg-surface-base text-on-surface font-body-md text-body-md flex flex-col relative antialiased selection:bg-primary-container selection:text-surface-base min-h-dvh">
   <!-- Radial Ambient Glow -->
@@ -50,8 +50,8 @@
         </div>
       </section>
 
-      <!-- Metric / Stats Row: 3 Glass Tiles -->
-      <section class="grid grid-cols-3 gap-gutter-sm">
+      <!-- Metric / Stats Row: Bento Grid with Streak, XP, Goal, and GPA -->
+      <section class="grid grid-cols-2 sm:grid-cols-4 gap-gutter-sm">
         <!-- Tile 1: Streak -->
         <div class="rounded-DEFAULT bg-surface-container/60 backdrop-blur-md p-3.5 flex flex-col justify-between shadow-md">
           <div class="flex items-center justify-between mb-2">
@@ -90,6 +90,24 @@
             <span class="font-label-sm text-[11px] text-text-secondary mt-0.5">Weekly goal</span>
           </div>
         </div>
+
+        <!-- Tile 4: Compact GPA -->
+        <a href="gpa.html" class="rounded-DEFAULT bg-surface-container/60 backdrop-blur-md p-3.5 flex flex-col justify-between shadow-md hover:bg-surface-container transition-all group">
+          <div class="flex items-center justify-between mb-2">
+            <span class="material-symbols-outlined text-primary text-[20px]">school</span>
+            <span class="font-label-sm text-[10px] text-primary-container group-hover:translate-x-0.5 transition-transform material-symbols-outlined text-[16px]">chevron_right</span>
+          </div>
+          <div class="flex flex-col gap-1">
+            <div class="flex items-baseline justify-between">
+              <span class="font-headline-sm text-headline-sm text-text-primary leading-tight" id="dashboard-cgpa-val">0.00</span>
+              <span class="font-label-sm text-[11px] text-text-secondary" id="dashboard-target-gpa-val">/ 3.50</span>
+            </div>
+            <div class="w-full h-1.5 rounded-full bg-surface-container-highest overflow-hidden">
+              <div class="h-full bg-primary-container rounded-full transition-all duration-300" id="dashboard-gpa-progress-bar" style="width: 0%;"></div>
+            </div>
+            <span class="font-label-sm text-[11px] text-text-secondary mt-0.5">Cumulative GPA</span>
+          </div>
+        </a>
       </section>
 
       <!-- Upcoming Tasks Section -->
@@ -108,8 +126,25 @@
 
       <!-- Auxiliary Details Cards: Today's Plan, Mastery, 9pm Reflection -->
       <section class="flex flex-col gap-space-md">
-        <!-- Today's Plan (Scheduler) -->
+        <!-- Today's Topics Section -->
         <details class="group bg-surface-container/60 backdrop-blur-md rounded-DEFAULT p-4 shadow-sm border border-glass-border-subtle" open>
+          <summary class="flex items-center justify-between cursor-pointer list-none font-headline-sm text-headline-sm text-text-primary">
+            <div class="flex items-center gap-2">
+              <span class="material-symbols-outlined text-primary text-[20px]">task_alt</span>
+              <span>Today's Topics</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="font-label-sm text-label-sm text-primary-container bg-surface-container-highest px-2 py-0.5 rounded-full" id="topics-count-badge">0</span>
+              <span class="material-symbols-outlined text-text-secondary transition-transform group-open:rotate-180">expand_more</span>
+            </div>
+          </summary>
+          <div class="flex flex-col gap-2 mt-3 pt-3 border-t border-glass-border-subtle" id="today-topics-container">
+            <!-- Populated by JS -->
+          </div>
+        </details>
+
+        <!-- Today's Plan (Scheduler) -->
+        <details class="group bg-surface-container/60 backdrop-blur-md rounded-DEFAULT p-4 shadow-sm border border-glass-border-subtle">
           <summary class="flex items-center justify-between cursor-pointer list-none font-headline-sm text-headline-sm text-text-primary">
             <div class="flex items-center gap-2">
               <span class="material-symbols-outlined text-primary text-[20px]">calendar_clock</span>
@@ -126,8 +161,8 @@
         <details class="group bg-surface-container/60 backdrop-blur-md rounded-DEFAULT p-4 shadow-sm border border-glass-border-subtle">
           <summary class="flex items-center justify-between cursor-pointer list-none font-headline-sm text-headline-sm text-text-primary">
             <div class="flex items-center gap-2">
-              <span class="material-symbols-outlined text-primary text-[20px]">pie_chart</span>
-              <span>Mastery Overview</span>
+              <span class="material-symbols-outlined text-primary text-[20px]">school</span>
+              <span>Course Mastery & GPA</span>
             </div>
             <span class="material-symbols-outlined text-text-secondary transition-transform group-open:rotate-180">expand_more</span>
           </summary>
@@ -158,12 +193,13 @@
 
   <!-- Core Scripts -->
   <script src="version.js"></script>
-  <script src="js/storage.js?v=v2026-09-30-01"></script>
-  <script src="js/subtask-utils.js?v=v2026-09-30-01"></script>
-  <script src="js/pwa-manager.js?v=v2026-09-30-01"></script>
-  <script src="js/achievements.js?v=v2026-09-30-01"></script>
-  <script src="js/scheduler.js?v=v2026-09-30-01"></script>
-  <script src="js/app.js?v=v2026-09-30-01"></script>
+  <script src="js/storage.js?v=v2026-11-10-01"></script>
+  <script src="js/subtask-utils.js?v=v2026-11-10-01"></script>
+  <script src="js/pwa-manager.js?v=v2026-11-10-01"></script>
+  <script src="js/achievements.js?v=v2026-11-10-01"></script>
+  <script src="js/gpa-utils.js?v=v2026-11-10-01"></script>
+  <script src="js/scheduler.js?v=v2026-11-10-01"></script>
+  <script src="js/app.js?v=v2026-11-10-01"></script>
 
   <script>
     (function initHome() {
@@ -226,7 +262,7 @@
           <div class="flex flex-col gap-1.5">
             <h2 class="font-headline-md text-headline-md text-text-primary tracking-tight leading-snug">${App.escapeHtml(topTask.title)}</h2>
             <div class="flex items-center gap-2 mt-0.5">
-              <span class="font-label-sm text-[11px] px-2.5 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-medium">${App.escapeHtml(topTask.subject || 'General')}</span>
+              <span class="font-label-sm text-[11px] px-2.5 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-medium">${App.escapeHtml(topTask.course || topTask.subject || 'General')}</span>
             </div>
           </div>
           <div class="pt-2 flex items-center gap-3">
@@ -305,7 +341,7 @@
                 <div class="flex flex-col min-w-0">
                   <span class="task-title font-body-md text-body-md text-text-primary font-medium truncate">${App.escapeHtml(task.title)}</span>
                   <div class="flex items-center gap-2 mt-0.5">
-                    <span class="font-label-sm text-[11px] text-text-secondary">${App.escapeHtml(task.subject || 'General')}</span>
+                    <span class="font-label-sm text-[11px] text-text-secondary">${App.escapeHtml(task.course || task.subject || 'General')}</span>
                     <span class="text-text-muted text-xs">•</span>
                     <span class="font-body-sm text-body-sm text-text-secondary">${App.escapeHtml(dueText)}</span>
                   </div>
@@ -369,7 +405,7 @@
               <span class="font-label-sm text-[11px] text-primary font-medium w-24 flex-shrink-0">${App.escapeHtml(block.startTime)} - ${App.escapeHtml(block.endTime)}</span>
               <span class="font-body-sm text-body-sm text-text-primary truncate">${App.escapeHtml(block.label)}</span>
             </div>
-            <span class="font-label-sm text-[11px] text-text-secondary px-2 py-0.5 rounded-full bg-surface-container-high">${App.escapeHtml(block.subject || 'General')}</span>
+            <span class="font-label-sm text-[11px] text-text-secondary px-2 py-0.5 rounded-full bg-surface-container-high">${App.escapeHtml(block.course || block.subject || 'General')}</span>
           </a>
         `).join('');
       }
@@ -380,21 +416,63 @@
 
         const stats = Storage.getSubjectMasteryStats ? Storage.getSubjectMasteryStats() : [];
         if (stats.length === 0) {
-          masteryContainer.innerHTML = '<p class="font-body-sm text-body-sm text-text-muted col-span-2">No subjects configured.</p>';
+          masteryContainer.innerHTML = '<p class="font-body-sm text-body-sm text-text-muted col-span-2">No courses configured.</p>';
           return;
         }
 
-        masteryContainer.innerHTML = stats.map(s => `
+        // Map course grades by course name if available
+        const courses = (typeof Storage.getCourses === 'function' && typeof GpaUtils !== 'undefined') ? Storage.getCourses() : [];
+        const courseGradeMap = new Map();
+        courses.forEach(c => {
+          const st = GpaUtils.courseStatus(c);
+          courseGradeMap.set(c.name.toLowerCase(), st.grade.letter);
+        });
+
+        masteryContainer.innerHTML = stats.map(s => {
+          const letter = courseGradeMap.get(s.name.toLowerCase());
+          const gradeChip = letter ? `<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-primary-container/20 text-primary-container font-mono-timer">${letter}</span>` : '';
+          const safeColor = s.color || '#2563EB';
+          return `
           <div class="flex flex-col gap-1 p-2.5 rounded-xl bg-surface-container-lowest/60">
             <div class="flex items-center justify-between font-label-sm text-label-sm">
-              <span class="text-text-primary font-medium truncate">${App.escapeHtml(s.name)}</span>
+              <div class="flex items-center gap-1.5 min-w-0">
+                <span class="w-2 h-2 rounded-full shrink-0" style="background-color: ${App.escapeHtml(safeColor)};"></span>
+                <span class="text-text-primary font-medium truncate">${App.escapeHtml(s.name)}</span>
+                ${gradeChip}
+              </div>
               <span class="text-primary font-semibold">${s.percentage}%</span>
             </div>
+            <div class="flex items-center justify-between font-label-sm text-[11px] text-text-secondary">
+              <span>${s.focusedHours}h focus</span>
+              <span>${s.completedTopics} topics</span>
+            </div>
             <div class="w-full h-1.5 rounded-full bg-surface-container-highest overflow-hidden">
-              <div class="h-full bg-primary-container rounded-full" style="width:${s.percentage}%;"></div>
+              <div class="h-full rounded-full" style="width:${s.percentage}%; background-color: ${App.escapeHtml(safeColor)};"></div>
             </div>
           </div>
-        `).join('');
+        `;
+        }).join('');
+      }
+
+      function renderGpaCard() {
+        const cgpaValEl = document.getElementById('dashboard-cgpa-val');
+        const targetValEl = document.getElementById('dashboard-target-gpa-val');
+        const barEl = document.getElementById('dashboard-gpa-progress-bar');
+        if (!cgpaValEl || typeof GpaUtils === 'undefined' || !Storage.getCourses) return;
+
+        const courses = Storage.getCourses();
+        const goals = Storage.getGoals ? Storage.getGoals() : {};
+        const target = Number.isFinite(Number(goals.target_gpa)) ? Number(goals.target_gpa) : 3.50;
+
+        const res = GpaUtils.cgpa(courses, { includeProjected: true });
+        const cgpa = res.totalCredits > 0 ? res.gpa : 0;
+
+        cgpaValEl.textContent = res.totalCredits > 0 ? cgpa.toFixed(2) : '0.00';
+        if (targetValEl) targetValEl.textContent = `/ ${target.toFixed(2)}`;
+        if (barEl) {
+          const pct = target > 0 ? Math.min(100, Math.max(0, (cgpa / target) * 100)) : 0;
+          barEl.style.width = `${pct}%`;
+        }
       }
 
       function renderReflection() {
@@ -421,13 +499,59 @@
         });
       }
 
+      function renderTodayTopics() {
+        const topicsContainer = document.getElementById('today-topics-container');
+        const badgeEl = document.getElementById('topics-count-badge');
+        if (!topicsContainer) return;
+
+        const topics = Storage.getTodayTopics ? Storage.getTodayTopics() : [];
+        if (badgeEl) badgeEl.textContent = topics.length;
+
+        if (topics.length === 0) {
+          topicsContainer.innerHTML = '<p class="font-body-sm text-body-sm text-text-muted">No topics planned for today.</p>';
+          return;
+        }
+
+        topicsContainer.innerHTML = topics.map(topic => `
+          <div class="flex items-center justify-between p-3 rounded-xl bg-surface-container-lowest/60 hover:bg-surface-container-lowest transition-colors">
+            <a href="timer.html?taskId=${App.escapeHtml(topic.taskId)}&subtaskId=${App.escapeHtml(topic.subtaskId)}" class="flex flex-col min-w-0 flex-1 pr-2">
+              <div class="flex items-center gap-2">
+                <span class="font-body-sm text-body-sm font-medium text-text-primary truncate">${App.escapeHtml(topic.title)}</span>
+                ${topic.isOverdue ? '<span class="font-label-sm text-[10px] text-error bg-error-container/40 px-1.5 py-0.2 rounded-full">Overdue</span>' : ''}
+              </div>
+              <span class="font-label-sm text-[11px] text-text-secondary truncate">${App.escapeHtml(topic.parentTitle)} · ${App.escapeHtml(topic.course || topic.subject || 'General')}</span>
+            </a>
+            <button class="move-tomorrow-btn px-2.5 py-1 rounded-full bg-surface-container-high text-primary hover:text-accent-hover font-label-sm text-[11px] transition-colors shrink-0" data-task-id="${App.escapeHtml(topic.taskId)}" data-subtask-id="${App.escapeHtml(topic.subtaskId)}">
+              Move to tomorrow
+            </button>
+          </div>
+        `).join('');
+
+        topicsContainer.querySelectorAll('.move-tomorrow-btn').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const taskId = btn.getAttribute('data-task-id');
+            const subtaskId = btn.getAttribute('data-subtask-id');
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            const tomorrowStr = Storage.formatDate(tomorrow);
+            Storage.updateSubtask(taskId, subtaskId, { plannedDate: tomorrowStr });
+            App.showToast('Topic moved to tomorrow', 'success');
+            renderHome();
+          });
+        });
+      }
+
       function renderHome() {
         renderGreeting();
         renderHeroFocusCard();
         renderMetrics();
+        renderTodayTopics();
         renderUpcomingTasks();
         renderTodayPlan();
         renderMastery();
+        renderGpaCard();
       }
 
       function init() {

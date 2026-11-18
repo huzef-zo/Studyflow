@@ -11,8 +11,8 @@
   <link rel="manifest" href="./manifest.json"/>
 
   <title>Analytics - StudyFlow</title>
-  <link rel="stylesheet" href="css/tailwind.css?v=v2026-09-30-01"/>
-  <link rel="stylesheet" href="css/app.css?v=v2026-09-30-01"/>
+  <link rel="stylesheet" href="css/tailwind.css?v=v2026-11-10-01"/>
+  <link rel="stylesheet" href="css/app.css?v=v2026-11-10-01"/>
 </head>
 <body class="bg-surface-base text-on-surface font-body-md text-body-md flex flex-col relative antialiased selection:bg-primary-container selection:text-surface-base min-h-dvh">
   <!-- Radial Ambient Glow -->
@@ -71,7 +71,7 @@
         <!-- Metric 1: Total Tasks -->
         <div class="rounded-DEFAULT bg-surface-container p-space-md flex flex-col justify-between shadow-md">
           <div class="flex items-center justify-between">
-            <span class="font-label-sm text-label-sm text-text-secondary">Total tasks</span>
+            <span class="font-label-sm text-label-sm text-text-secondary">Topics Done</span>
             <span class="material-symbols-outlined text-text-secondary text-[18px]">check_circle</span>
           </div>
           <div class="my-space-xs">
@@ -129,14 +129,28 @@
         </div>
       </div>
 
-      <!-- Subjects Breakdown Card -->
+      <!-- Academic Performance (GPA by Semester) -->
       <div class="rounded-lg bg-surface-container p-space-md backdrop-blur-md flex flex-col gap-space-md shadow-xl">
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-space-xs">
-            <span class="material-symbols-outlined text-primary-container text-[18px]">pie_chart</span>
-            <span class="font-headline-sm text-headline-sm text-text-primary">Subjects</span>
+            <span class="material-symbols-outlined text-primary-container text-[18px]">school</span>
+            <span class="font-headline-sm text-headline-sm text-text-primary">Academic Standing</span>
           </div>
-          <span class="font-label-sm text-label-sm text-text-secondary" id="subjects-total-hours">Focus share</span>
+          <a href="gpa.html" class="font-label-sm text-label-sm text-primary hover:text-accent-hover transition-colors">View details</a>
+        </div>
+        <div class="flex flex-col gap-space-sm" id="gpa-semester-overview">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+      <!-- Courses Breakdown Card -->
+      <div class="rounded-lg bg-surface-container p-space-md backdrop-blur-md flex flex-col gap-space-md shadow-xl">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-space-xs">
+            <span class="material-symbols-outlined text-primary-container text-[18px]">school</span>
+            <span class="font-headline-sm text-headline-sm text-text-primary">Courses & Grades</span>
+          </div>
+          <span class="font-label-sm text-label-sm text-text-secondary" id="courses-total-hours">Focus share</span>
         </div>
         <div class="flex flex-col gap-space-sm" id="mastery-overview">
           <!-- Populated by JS -->
@@ -169,11 +183,12 @@
 
   <!-- Core Scripts -->
   <script src="version.js"></script>
-  <script src="js/storage.js?v=v2026-09-30-01"></script>
-  <script src="js/subtask-utils.js?v=v2026-09-30-01"></script>
-  <script src="js/pwa-manager.js?v=v2026-09-30-01"></script>
-  <script src="js/app.js?v=v2026-09-30-01"></script>
-  <script src="js/history.js?v=v2026-09-30-01"></script>
+  <script src="js/storage.js?v=v2026-11-10-01"></script>
+  <script src="js/subtask-utils.js?v=v2026-11-10-01"></script>
+  <script src="js/pwa-manager.js?v=v2026-11-10-01"></script>
+  <script src="js/gpa-utils.js?v=v2026-11-10-01"></script>
+  <script src="js/app.js?v=v2026-11-10-01"></script>
+  <script src="js/history.js?v=v2026-11-10-01"></script>
 
   <script>
     document.addEventListener('DOMContentLoaded', () => {
