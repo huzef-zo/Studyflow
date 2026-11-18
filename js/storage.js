@@ -670,8 +670,9 @@ const Storage = (function() {
   function setRepeatingSubtaskCyclesOnDate(taskId, subtaskId, dateStr, cycles) {
     const completions = getRepeatingCompletions();
     const key = `${taskId}_${subtaskId}_cycles_${dateStr}`;
-    if (cycles > 0) {
-      completions[key] = cycles;
+    const safeCycles = Number.isFinite(Number(cycles)) ? Math.max(0, Math.min(1000, Math.floor(cycles))) : 0;
+    if (safeCycles > 0) {
+      completions[key] = safeCycles;
     } else {
       delete completions[key];
     }
