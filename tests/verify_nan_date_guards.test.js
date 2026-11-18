@@ -35,7 +35,7 @@ eval(storageCode);
 const appCode = fs.readFileSync(path.join(__dirname, '../js/app.js'), 'utf8');
 eval(appCode);
 
-const Storage = global.Storage || window.Storage;
+const Storage = window.Storage || global.Storage;
 const App = global.App || window.App;
 
 console.log('Running NaN & Date Guards Verification Tests...');

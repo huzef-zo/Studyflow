@@ -102,7 +102,7 @@ const SubtaskUtils = (function() {
   function buildProgressIndicator(task) {
     const progress = calculateProgress(task);
     if (progress.total === 0) return '';
-
+    
     const progressClass = getProgressClass(progress.percentage);
     return `
       <div class="progress-badge ${progressClass}" title="Progress: ${progress.completed}/${progress.total}">

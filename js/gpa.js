@@ -9,6 +9,34 @@ const Gpa = (function() {
   let elements = {};
   let selectedSemester = 'all'; // 'all' or semester string
   let includeProjected = false;
+  let expandedCourseIds = new Set();
+  const EXPANDED_STORAGE_KEY = 'studyflow_gpa_expanded';
+
+  function loadExpandedState() {
+    try {
+      if (typeof sessionStorage !== 'undefined') {
+        const raw = sessionStorage.getItem(EXPANDED_STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) {
+            expandedCourseIds = new Set(parsed);
+          }
+        }
+      }
+    } catch (e) {
+      // Guarded against sessionStorage restrictions
+    }
+  }
+
+  function saveExpandedState() {
+    try {
+      if (typeof sessionStorage !== 'undefined') {
+        sessionStorage.setItem(EXPANDED_STORAGE_KEY, JSON.stringify(Array.from(expandedCourseIds)));
+      }
+    } catch (e) {
+      // Guarded against sessionStorage restrictions
+    }
+  }
 
   function initElements() {
     elements = {
@@ -27,6 +55,7 @@ const Gpa = (function() {
       targetGpaProgressText: document.getElementById('target-gpa-progress-text'),
       targetGpaProgressFill: document.getElementById('target-gpa-progress-fill'),
       semesterTabsContainer: document.getElementById('semester-tabs-container'),
+      toggleAllCoursesBtn: document.getElementById('toggle-all-courses-btn'),
       coursesListContainer: document.getElementById('courses-list-container'),
       addCourseBtn: document.getElementById('add-course-btn')
     };
@@ -159,6 +188,235 @@ const Gpa = (function() {
     }
   }
 
+  function isCourseExpanded(courseId) {
+    return expandedCourseIds.has(courseId);
+  }
+
+  function setCourseExpanded(courseId, expanded) {
+    if (expanded) {
+      expandedCourseIds.add(courseId);
+    } else {
+      expandedCourseIds.delete(courseId);
+    }
+    saveExpandedState();
+    updateToggleAllBtn();
+  }
+
+  function getCourseCardGradeHtml(status) {
+    const isNotGraded = status.gradedMax === 0;
+    if (isNotGraded) {
+      return `
+        <div class="flex items-baseline gap-1">
+          <span class="font-display-lg text-[22px] font-bold text-text-muted leading-none">--</span>
+        </div>
+        <span class="font-label-sm text-[10px] text-text-muted">
+          Tap to enter scores
+        </span>
+      `;
+    }
+    return `
+      <div class="flex items-baseline gap-1">
+        <span class="font-display-lg text-[22px] font-bold text-text-primary leading-none">${status.grade.letter}</span>
+        <span class="font-label-sm text-[12px] text-text-secondary">(${status.grade.gp.toFixed(2)})</span>
+      </div>
+      <span class="font-label-sm text-[10px] ${status.grade.isProjected ? 'text-text-muted' : 'text-primary-container'}">
+        ${status.grade.isProjected ? 'Projected' : 'Complete'}
+      </span>
+    `;
+  }
+
+  function getCourseSummaryText(status) {
+    if (status.gradedMax === 0) {
+      return 'Graded 0/100';
+    }
+    return `Earned <strong class="text-text-primary">${Math.round(status.earned * 10) / 10}</strong> / graded ${status.gradedMax}`;
+  }
+
+  function getCourseToggleAriaLabel(courseName, isExpanded, status) {
+    const isNotGraded = status.gradedMax === 0;
+    if (isNotGraded) {
+      return `${courseName}, ${isExpanded ? 'expanded' : 'collapsed'}. Tap to enter scores`;
+    }
+    return `${courseName}, ${isExpanded ? 'expanded' : 'collapsed'}. ${isExpanded ? 'Tap to collapse' : 'Tap to expand'}`;
+  }
+
+  function renderWhatDoINeedHtml(course, status, targetGrade) {
+    const isComplete = status.isComplete || course.finalized;
+    if (isComplete || status.ungradedMax <= 0) {
+      return '';
+    }
+
+    const targetMarks = [
+      { label: 'A (4.0)', mark: 93, letter: 'A' },
+      { label: 'A- (3.7)', mark: 90, letter: 'A-' },
+      { label: 'B+ (3.3)', mark: 87, letter: 'B+' },
+      { label: 'B (3.0)', mark: 83, letter: 'B' },
+      { label: 'B- (2.7)', mark: 80, letter: 'B-' },
+      { label: 'C+ (2.3)', mark: 77, letter: 'C+' },
+      { label: 'C (2.0)', mark: 73, letter: 'C' }
+    ];
+
+    return `
+      <div class="mt-3 pt-3 border-t border-glass-border">
+        <div class="flex items-center justify-between mb-2">
+          <span class="font-label-sm text-[11px] font-semibold text-text-primary uppercase tracking-wider">What Do I Need?</span>
+          <span class="font-label-sm text-[11px] text-text-secondary">${status.ungradedMax} pts remaining</span>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+          ${targetMarks.map(tm => {
+            const req = GpaUtils.requiredOnRemaining(course, tm.mark);
+            const isTargetMatch = tm.letter === targetGrade.letter;
+            let text = '';
+            let bgClass = 'bg-surface-container-lowest/60 text-text-secondary';
+            if (req.status === 'secured') {
+              text = 'Secured';
+              bgClass = 'bg-primary-container/20 text-primary-container font-semibold';
+            } else if (req.status === 'unreachable') {
+              text = 'Not reachable';
+              bgClass = 'bg-surface-container-lowest/40 text-text-muted';
+            } else {
+              text = `${req.pointsNeeded} pts (${req.percentNeeded}%)`;
+              if (isTargetMatch) {
+                bgClass = 'bg-primary-container/15 text-primary-container border border-primary-container/40 font-semibold';
+              }
+            }
+            return `
+              <div class="p-1.5 rounded-lg ${bgClass} flex flex-col text-center">
+                <span class="font-label-sm text-[10px] uppercase">${App.escapeHtml(tm.label)}</span>
+                <span class="font-label-sm text-label-sm mt-0.5 truncate">${App.escapeHtml(text)}</span>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    `;
+  }
+
+  function setCardExpandedDom(card, isExpanded, courseId) {
+    card.setAttribute('data-expanded', String(isExpanded));
+    const toggleEl = card.querySelector('.course-card-toggle');
+    const collapsible = card.querySelector('.course-card-collapsible');
+    const chevron = card.querySelector('.course-card-chevron');
+
+    const courses = Storage.getCourses ? Storage.getCourses() : [];
+    const course = courses.find(c => c.id === courseId);
+    if (course && toggleEl) {
+      const status = GpaUtils.courseStatus(course);
+      toggleEl.setAttribute('aria-expanded', String(isExpanded));
+      toggleEl.setAttribute('aria-label', getCourseToggleAriaLabel(course.name, isExpanded, status));
+    }
+
+    if (collapsible) {
+      if (isExpanded) {
+        collapsible.removeAttribute('inert');
+        collapsible.setAttribute('aria-hidden', 'false');
+      } else {
+        collapsible.setAttribute('inert', '');
+        collapsible.setAttribute('aria-hidden', 'true');
+      }
+    }
+
+    if (chevron) {
+      chevron.style.transform = isExpanded ? 'rotate(180deg)' : 'rotate(0deg)';
+    }
+  }
+
+  function toggleCourse(courseId) {
+    const card = elements.coursesListContainer ? elements.coursesListContainer.querySelector(`.course-card[data-course-id="${courseId}"]`) : null;
+    const isCurrentlyExpanded = expandedCourseIds.has(courseId);
+    const willBeExpanded = !isCurrentlyExpanded;
+
+    if (willBeExpanded) {
+      expandedCourseIds.add(courseId);
+    } else {
+      expandedCourseIds.delete(courseId);
+    }
+    saveExpandedState();
+    updateToggleAllBtn();
+
+    if (card) {
+      setCardExpandedDom(card, willBeExpanded, courseId);
+    }
+  }
+
+  function updateToggleAllBtn() {
+    if (!elements.toggleAllCoursesBtn) return;
+    const courses = Storage.getCourses ? Storage.getCourses() : [];
+    let displayCourses = courses;
+    if (selectedSemester !== 'all') {
+      displayCourses = courses.filter(c => (c.semester || 'Unassigned') === selectedSemester);
+    }
+
+    if (displayCourses.length === 0) {
+      elements.toggleAllCoursesBtn.style.display = 'none';
+      return;
+    }
+
+    elements.toggleAllCoursesBtn.style.display = '';
+    const allExpanded = displayCourses.every(c => expandedCourseIds.has(c.id));
+    if (allExpanded) {
+      elements.toggleAllCoursesBtn.textContent = 'Collapse all';
+      elements.toggleAllCoursesBtn.setAttribute('aria-label', 'Collapse all courses');
+    } else {
+      elements.toggleAllCoursesBtn.textContent = 'Expand all';
+      elements.toggleAllCoursesBtn.setAttribute('aria-label', 'Expand all courses');
+    }
+  }
+
+  function updateCourseCardInPlace(courseId) {
+    const card = elements.coursesListContainer ? elements.coursesListContainer.querySelector(`.course-card[data-course-id="${courseId}"]`) : null;
+    if (!card) {
+      render();
+      return;
+    }
+
+    const courses = Storage.getCourses ? Storage.getCourses() : [];
+    const course = courses.find(c => c.id === courseId);
+    if (!course) {
+      render();
+      return;
+    }
+
+    const status = GpaUtils.courseStatus(course);
+    const goals = Storage.getGoals ? Storage.getGoals() : {};
+    const targetGpa = Number.isFinite(Number(goals.target_gpa)) ? Number(goals.target_gpa) : 3.50;
+    const targetGrade = GpaUtils.rawToGrade((targetGpa / 4.0) * 100);
+    const progressPct = Math.min(100, Math.round(status.currentMark));
+    const isExpanded = expandedCourseIds.has(courseId);
+
+    // Update Grade Badge
+    const gradeBadge = card.querySelector('.course-card-grade-badge');
+    if (gradeBadge) {
+      gradeBadge.innerHTML = getCourseCardGradeHtml(status);
+    }
+
+    // Update Summary line text and progress bar
+    const earnedText = card.querySelector('.course-card-earned-text');
+    if (earnedText) {
+      earnedText.innerHTML = getCourseSummaryText(status);
+    }
+    const gradedText = card.querySelector('.course-card-graded-text');
+    if (gradedText) {
+      gradedText.textContent = `Graded: ${status.gradedMax}/100`;
+    }
+    const progressBar = card.querySelector('.course-card-progress-bar');
+    if (progressBar) {
+      progressBar.style.width = `${progressPct}%`;
+    }
+
+    // Update What-If section
+    const whatIfSlot = card.querySelector('.course-what-if-slot');
+    if (whatIfSlot) {
+      whatIfSlot.innerHTML = renderWhatDoINeedHtml(course, status, targetGrade);
+    }
+
+    // Update Toggle aria-label
+    const toggleEl = card.querySelector('.course-card-toggle');
+    if (toggleEl) {
+      toggleEl.setAttribute('aria-label', getCourseToggleAriaLabel(course.name, isExpanded, status));
+    }
+  }
+
   function renderCoursesList() {
     if (!elements.coursesListContainer) return;
     const courses = Storage.getCourses ? Storage.getCourses() : [];
@@ -167,6 +425,8 @@ const Gpa = (function() {
     if (selectedSemester !== 'all') {
       displayCourses = courses.filter(c => (c.semester || 'Unassigned') === selectedSemester);
     }
+
+    updateToggleAllBtn();
 
     if (displayCourses.length === 0) {
       elements.coursesListContainer.innerHTML = App.createEmptyStateHtml({
@@ -196,7 +456,6 @@ const Gpa = (function() {
 
     elements.coursesListContainer.innerHTML = displayCourses.map(course => {
       const status = GpaUtils.courseStatus(course);
-      const isComplete = status.isComplete || course.finalized;
       const components = Array.isArray(course.components) ? course.components : [];
 
       let focusHours = 0;
@@ -206,148 +465,159 @@ const Gpa = (function() {
         focusHours = (mins / 60).toFixed(1);
       }
       const courseColor = course.color || '#2563EB';
-
-      // What do I need table for in-progress courses
-      let whatDoINeedHtml = '';
-      if (!isComplete && status.ungradedMax > 0) {
-        const targetMarks = [
-          { label: 'A (4.0)', mark: 93, letter: 'A' },
-          { label: 'A- (3.7)', mark: 90, letter: 'A-' },
-          { label: 'B+ (3.3)', mark: 87, letter: 'B+' },
-          { label: 'B (3.0)', mark: 83, letter: 'B' },
-          { label: 'B- (2.7)', mark: 80, letter: 'B-' },
-          { label: 'C+ (2.3)', mark: 77, letter: 'C+' },
-          { label: 'C (2.0)', mark: 73, letter: 'C' }
-        ];
-
-        whatDoINeedHtml = `
-          <div class="mt-3 pt-3 border-t border-glass-border">
-            <div class="flex items-center justify-between mb-2">
-              <span class="font-label-sm text-[11px] font-semibold text-text-primary uppercase tracking-wider">What Do I Need?</span>
-              <span class="font-label-sm text-[11px] text-text-secondary">${status.ungradedMax} pts remaining</span>
-            </div>
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
-              ${targetMarks.map(tm => {
-                const req = GpaUtils.requiredOnRemaining(course, tm.mark);
-                const isTargetMatch = tm.letter === targetGrade.letter;
-                let text = '';
-                let bgClass = 'bg-surface-container-lowest/60 text-text-secondary';
-                if (req.status === 'secured') {
-                  text = 'Secured';
-                  bgClass = 'bg-primary-container/20 text-primary-container font-semibold';
-                } else if (req.status === 'unreachable') {
-                  text = 'Not reachable';
-                  bgClass = 'bg-surface-container-lowest/40 text-text-muted';
-                } else {
-                  text = `${req.pointsNeeded} pts (${req.percentNeeded}%)`;
-                  if (isTargetMatch) {
-                    bgClass = 'bg-primary-container/15 text-primary-container border border-primary-container/40 font-semibold';
-                  }
-                }
-                return `
-                  <div class="p-1.5 rounded-lg ${bgClass} flex flex-col text-center">
-                    <span class="font-label-sm text-[10px] uppercase">${App.escapeHtml(tm.label)}</span>
-                    <span class="font-label-sm text-label-sm mt-0.5 truncate">${App.escapeHtml(text)}</span>
-                  </div>
-                `;
-              }).join('')}
-            </div>
-          </div>
-        `;
-      }
-
+      const isExpanded = expandedCourseIds.has(course.id);
       const progressPct = Math.min(100, Math.round(status.currentMark));
+      const whatDoINeedHtml = renderWhatDoINeedHtml(course, status, targetGrade);
 
       return `
-        <div class="w-full bg-surface-glass backdrop-blur-xl rounded-lg p-space-md shadow-sm border border-glass-border flex flex-col gap-3 transition-all course-card" data-course-id="${App.escapeHtml(course.id)}">
-          <div class="flex items-start justify-between gap-3">
-            <div class="flex flex-col min-w-0 cursor-pointer edit-course-trigger" data-course-id="${App.escapeHtml(course.id)}">
-              <div class="flex items-center gap-2">
-                <span class="w-3 h-3 rounded-full shrink-0" style="background-color: ${App.escapeHtml(courseColor)};"></span>
-                <h3 class="font-headline-sm text-headline-sm font-bold text-text-primary hover:text-primary-container transition-colors truncate">
-                  ${App.escapeHtml(course.name)}
-                </h3>
-                ${course.finalized ? '<span class="px-2 py-0.5 text-[10px] font-label-sm rounded-full bg-primary-container/20 text-primary-container font-semibold">Finalized</span>' : ''}
-              </div>
-              <div class="flex items-center gap-2 mt-0.5 text-text-secondary font-label-sm text-[11px] flex-wrap">
-                <span>${course.creditHours} credits</span>
-                <span>·</span>
-                <span>${App.escapeHtml(course.semester || 'Unassigned')}</span>
-                <span>·</span>
-                <span class="text-primary-container">${focusHours}h focus</span>
-                ${course.targetHours ? `<span>·</span><span>${course.targetHours}h target</span>` : ''}
-              </div>
-            </div>
-
-            <!-- Grade Badge -->
-            <div class="flex items-center gap-2 shrink-0">
-              <div class="flex flex-col items-end">
-                <div class="flex items-baseline gap-1">
-                  <span class="font-display-lg text-[22px] font-bold text-text-primary leading-none">${status.grade.letter}</span>
-                  <span class="font-label-sm text-[12px] text-text-secondary">(${status.grade.gp.toFixed(2)})</span>
+        <div class="w-full bg-surface-glass backdrop-blur-xl rounded-lg p-space-md shadow-sm border border-glass-border flex flex-col gap-3 transition-all course-card" data-course-id="${App.escapeHtml(course.id)}" data-expanded="${isExpanded}">
+          <!-- Header & Summary Clickable Toggle Area -->
+          <div
+            role="button"
+            tabindex="0"
+            aria-expanded="${isExpanded}"
+            aria-controls="course-details-${App.escapeHtml(course.id)}"
+            aria-label="${App.escapeHtml(getCourseToggleAriaLabel(course.name, isExpanded, status))}"
+            class="course-card-toggle flex flex-col gap-3 cursor-pointer select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-container rounded-lg"
+            data-course-id="${App.escapeHtml(course.id)}"
+          >
+            <div class="flex items-start justify-between gap-3">
+              <div class="flex flex-col min-w-0">
+                <div class="flex items-center gap-2">
+                  <span class="w-3 h-3 rounded-full shrink-0" style="background-color: ${App.escapeHtml(courseColor)};"></span>
+                  <h3 class="font-headline-sm text-headline-sm font-bold text-text-primary hover:text-primary-container transition-colors truncate">
+                    ${App.escapeHtml(course.name)}
+                  </h3>
+                  ${course.finalized ? '<span class="px-2 py-0.5 text-[10px] font-label-sm rounded-full bg-primary-container/20 text-primary-container font-semibold">Finalized</span>' : ''}
                 </div>
-                <span class="font-label-sm text-[10px] ${status.grade.isProjected ? 'text-text-muted' : 'text-primary-container'}">
-                  ${status.grade.isProjected ? 'Projected' : 'Complete'}
-                </span>
+                <div class="flex items-center gap-2 mt-0.5 text-text-secondary font-label-sm text-[11px] flex-wrap">
+                  <span>${course.creditHours} credits</span>
+                  <span>·</span>
+                  <span>${App.escapeHtml(course.semester || 'Unassigned')}</span>
+                  <span>·</span>
+                  <span class="text-primary-container">${focusHours}h focus</span>
+                  ${course.targetHours ? `<span>·</span><span>${course.targetHours}h target</span>` : ''}
+                </div>
               </div>
-              <button type="button" aria-label="Edit course ${App.escapeHtml(course.name)}" class="w-8 h-8 rounded-full bg-surface-container-high/80 hover:bg-surface-bright flex items-center justify-center text-text-secondary hover:text-text-primary transition-all edit-course-btn" data-course-id="${App.escapeHtml(course.id)}">
-                <span class="material-symbols-outlined text-[16px]">edit</span>
-              </button>
+
+              <!-- Grade Badge, Edit Button, Chevron -->
+              <div class="flex items-center gap-2 shrink-0">
+                <div class="flex flex-col items-end course-card-grade-badge">
+                  ${getCourseCardGradeHtml(status)}
+                </div>
+                <button
+                  type="button"
+                  aria-label="Edit course ${App.escapeHtml(course.name)}"
+                  class="w-8 h-8 rounded-full bg-surface-container-high/80 hover:bg-surface-bright flex items-center justify-center text-text-secondary hover:text-text-primary transition-all edit-course-btn"
+                  data-course-id="${App.escapeHtml(course.id)}"
+                >
+                  <span class="material-symbols-outlined text-[16px]">edit</span>
+                </button>
+                <span
+                  class="material-symbols-outlined text-[20px] text-text-secondary transition-transform duration-200 course-card-chevron"
+                  style="transform: ${isExpanded ? 'rotate(180deg)' : 'rotate(0deg)'};"
+                  aria-hidden="true"
+                >expand_more</span>
+              </div>
+            </div>
+
+            <!-- Graded Progress Bar (Compact summary line) -->
+            <div class="flex flex-col gap-1 course-card-summary">
+              <div class="flex items-center justify-between font-label-sm text-[11px] text-text-secondary">
+                <span class="course-card-earned-text">${getCourseSummaryText(status)}</span>
+                <span class="course-card-graded-text">Graded: ${status.gradedMax}/100</span>
+              </div>
+              <div class="w-full h-1.5 rounded-full bg-surface-container-high overflow-hidden">
+                <div class="h-full bg-primary-container rounded-full transition-all duration-300 course-card-progress-bar" style="width: ${progressPct}%;"></div>
+              </div>
             </div>
           </div>
 
-          <!-- Graded Progress Bar -->
-          <div class="flex flex-col gap-1">
-            <div class="flex items-center justify-between font-label-sm text-[11px] text-text-secondary">
-              <span>Points Earned: <strong class="text-text-primary">${Math.round(status.earned * 10) / 10}</strong> / 100</span>
-              <span>Graded: ${status.gradedMax}/100</span>
-            </div>
-            <div class="w-full h-1.5 rounded-full bg-surface-container-high overflow-hidden">
-              <div class="h-full bg-primary-container rounded-full transition-all duration-300" style="width: ${progressPct}%;"></div>
+          <!-- Collapsible Body (Assessment Components + What Do I Need) -->
+          <div
+            class="course-card-collapsible"
+            id="course-details-${App.escapeHtml(course.id)}"
+            ${!isExpanded ? 'inert aria-hidden="true"' : 'aria-hidden="false"'}
+          >
+            <div class="course-card-collapsible-inner flex flex-col gap-3">
+              <!-- Components Scores Input Row -->
+              <div class="flex flex-col gap-1.5 pt-2 border-t border-glass-border">
+                <span class="font-label-sm text-[11px] font-semibold text-text-secondary uppercase tracking-wider">Assessment Components</span>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  ${components.map(cmp => {
+                    const isGraded = cmp.earned !== null && cmp.earned !== undefined;
+                    return `
+                      <div class="flex items-center justify-between p-2 rounded-xl bg-surface-container-lowest/60 border border-glass-border-subtle">
+                        <div class="flex flex-col min-w-0 pr-2">
+                          <span class="font-label-sm text-label-sm text-text-primary font-medium truncate" title="${App.escapeHtml(cmp.name)}">${App.escapeHtml(cmp.name)}</span>
+                          <span class="font-label-sm text-[10px] text-text-muted">Max ${cmp.max} pts</span>
+                        </div>
+                        <div class="flex items-center gap-1 shrink-0">
+                          <input
+                            type="number"
+                            min="0"
+                            max="${cmp.max}"
+                            step="0.5"
+                            placeholder="--"
+                            value="${isGraded ? cmp.earned : ''}"
+                            aria-label="Score for ${App.escapeHtml(cmp.name)} in ${App.escapeHtml(course.name)}"
+                            data-course-id="${App.escapeHtml(course.id)}"
+                            data-component-id="${App.escapeHtml(cmp.id)}"
+                            class="w-14 px-1.5 py-1 text-center bg-surface-container-high rounded-lg text-text-primary font-mono-timer text-body-sm outline-none border border-glass-border focus:border-primary-container component-score-input"
+                          />
+                          <span class="font-label-sm text-[11px] text-text-muted">/${cmp.max}</span>
+                        </div>
+                      </div>
+                    `;
+                  }).join('')}
+                </div>
+              </div>
+
+              <!-- What-If Section -->
+              <div class="course-what-if-slot">
+                ${whatDoINeedHtml}
+              </div>
             </div>
           </div>
-
-          <!-- Components Scores Input Row -->
-          <div class="flex flex-col gap-1.5 pt-1">
-            <span class="font-label-sm text-[11px] font-semibold text-text-secondary uppercase tracking-wider">Assessment Components</span>
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
-              ${components.map(cmp => {
-                const isGraded = cmp.earned !== null && cmp.earned !== undefined;
-                return `
-                  <div class="flex items-center justify-between p-2 rounded-xl bg-surface-container-lowest/60 border border-glass-border-subtle">
-                    <div class="flex flex-col min-w-0 pr-2">
-                      <span class="font-label-sm text-label-sm text-text-primary font-medium truncate" title="${App.escapeHtml(cmp.name)}">${App.escapeHtml(cmp.name)}</span>
-                      <span class="font-label-sm text-[10px] text-text-muted">Max ${cmp.max} pts</span>
-                    </div>
-                    <div class="flex items-center gap-1 shrink-0">
-                      <input
-                        type="number"
-                        min="0"
-                        max="${cmp.max}"
-                        step="0.5"
-                        placeholder="--"
-                        value="${isGraded ? cmp.earned : ''}"
-                        aria-label="Score for ${App.escapeHtml(cmp.name)} in ${App.escapeHtml(course.name)}"
-                        data-course-id="${App.escapeHtml(course.id)}"
-                        data-component-id="${App.escapeHtml(cmp.id)}"
-                        class="w-14 px-1.5 py-1 text-center bg-surface-container-high rounded-lg text-text-primary font-mono-timer text-body-sm outline-none border border-glass-border focus:border-primary-container component-score-input"
-                      />
-                      <span class="font-label-sm text-[11px] text-text-muted">/${cmp.max}</span>
-                    </div>
-                  </div>
-                `;
-              }).join('')}
-            </div>
-          </div>
-
-          <!-- What-If Section -->
-          ${whatDoINeedHtml}
         </div>
       `;
     }).join('');
 
-    // Attach inline score listeners
+    // Wire Card Toggle listeners
+    elements.coursesListContainer.querySelectorAll('.course-card-toggle').forEach(toggleEl => {
+      toggleEl.addEventListener('click', (e) => {
+        if (e.target.closest('.edit-course-btn')) return;
+        const courseId = toggleEl.getAttribute('data-course-id');
+        toggleCourse(courseId);
+      });
+
+      toggleEl.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          if (e.target.closest('.edit-course-btn')) return;
+          e.preventDefault();
+          const courseId = toggleEl.getAttribute('data-course-id');
+          toggleCourse(courseId);
+        }
+      });
+    });
+
+    // Wire Edit Button listeners (with stopPropagation)
+    elements.coursesListContainer.querySelectorAll('.edit-course-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const cId = btn.getAttribute('data-course-id');
+        const c = (Storage.getCourses ? Storage.getCourses() : []).find(item => item.id === cId);
+        if (c) openCourseModal(c);
+      });
+      btn.addEventListener('keydown', (e) => {
+        e.stopPropagation();
+      });
+    });
+
+    // Wire Inline Score Input listeners (with stopPropagation & in-place update)
     elements.coursesListContainer.querySelectorAll('.component-score-input').forEach(input => {
+      input.addEventListener('click', (e) => e.stopPropagation());
+      input.addEventListener('keydown', (e) => e.stopPropagation());
       input.addEventListener('change', () => {
         const courseId = input.getAttribute('data-course-id');
         const componentId = input.getAttribute('data-component-id');
@@ -364,17 +634,9 @@ const Gpa = (function() {
           if (typeof Achievements !== 'undefined' && Achievements.awardGpaXP) {
             Achievements.awardGpaXP(updated, oldGp);
           }
-          render();
+          renderSummary();
+          updateCourseCardInPlace(courseId);
         }
-      });
-    });
-
-    // Attach edit triggers
-    elements.coursesListContainer.querySelectorAll('.edit-course-trigger, .edit-course-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const cId = btn.getAttribute('data-course-id');
-        const c = (Storage.getCourses ? Storage.getCourses() : []).find(item => item.id === cId);
-        if (c) openCourseModal(c);
       });
     });
   }
@@ -704,6 +966,10 @@ const Gpa = (function() {
           if (created && typeof Achievements !== 'undefined' && Achievements.awardGpaXP) {
             Achievements.awardGpaXP(created, null);
           }
+          if (created && created.id) {
+            expandedCourseIds.add(created.id);
+            saveExpandedState();
+          }
           App.showToast('Course created!', 'success');
         }
 
@@ -730,6 +996,8 @@ const Gpa = (function() {
         });
         if (confirmed) {
           Storage.deleteCourse(existingCourse.id);
+          expandedCourseIds.delete(existingCourse.id);
+          saveExpandedState();
           App.showToast('Course deleted', 'info');
           App.closeModal(modal);
           render();
@@ -827,6 +1095,27 @@ const Gpa = (function() {
       elements.addCourseBtn.addEventListener('click', () => openCourseModal(null));
     }
 
+    if (elements.toggleAllCoursesBtn) {
+      elements.toggleAllCoursesBtn.addEventListener('click', () => {
+        const courses = Storage.getCourses ? Storage.getCourses() : [];
+        let displayCourses = courses;
+        if (selectedSemester !== 'all') {
+          displayCourses = courses.filter(c => (c.semester || 'Unassigned') === selectedSemester);
+        }
+        if (displayCourses.length === 0) return;
+
+        const allExpanded = displayCourses.every(c => expandedCourseIds.has(c.id));
+        if (allExpanded) {
+          displayCourses.forEach(c => expandedCourseIds.delete(c.id));
+        } else {
+          displayCourses.forEach(c => expandedCourseIds.add(c.id));
+        }
+        saveExpandedState();
+        updateToggleAllBtn();
+        renderCoursesList();
+      });
+    }
+
     window.addEventListener('studyflow_taskDataChanged', render);
   }
 
@@ -844,6 +1133,7 @@ const Gpa = (function() {
   }
 
   function init() {
+    loadExpandedState();
     initElements();
     setupEventListeners();
     render();
@@ -854,7 +1144,11 @@ const Gpa = (function() {
     init,
     render,
     openCourseModal,
-    openEditTargetGpaModal
+    openEditTargetGpaModal,
+    isCourseExpanded,
+    setCourseExpanded,
+    toggleCourse,
+    getExpandedCourseIds: () => new Set(expandedCourseIds)
   };
 })();
 

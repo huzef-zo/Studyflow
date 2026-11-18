@@ -10,17 +10,25 @@ const vm = require('vm');
 
 // Setup mock browser environment
 let storageStore = {};
+let sessionStore = {};
 const mockLocalStorage = {
   getItem: (key) => storageStore[key] || null,
   setItem: (key, val) => { storageStore[key] = String(val); },
   removeItem: (key) => { delete storageStore[key]; },
   clear: () => { storageStore = {}; }
 };
+const mockSessionStorage = {
+  getItem: (key) => sessionStore[key] || null,
+  setItem: (key, val) => { sessionStore[key] = String(val); },
+  removeItem: (key) => { delete sessionStore[key]; },
+  clear: () => { sessionStore = {}; }
+};
 
 const sandbox = {
   localStorage: mockLocalStorage,
-  sessionStorage: mockLocalStorage,
-  document: { querySelectorAll: () => [] },
+  sessionStorage: mockSessionStorage,
+  document: { querySelectorAll: () => [], getElementById: () => null },
+  URLSearchParams: class { constructor() {} get() { return null; } },
   CustomEvent: class {
     constructor(type, detail) {
       this.type = type;
@@ -41,17 +49,20 @@ const sandbox = {
 sandbox.window = sandbox;
 sandbox.window.addEventListener = () => {};
 sandbox.window.dispatchEvent = () => {};
+sandbox.window.location = { search: '' };
 
 const storageCode = fs.readFileSync(path.join(__dirname, '../js/storage.js'), 'utf8');
 const gpaUtilsCode = fs.readFileSync(path.join(__dirname, '../js/gpa-utils.js'), 'utf8');
 const achievementsCode = fs.readFileSync(path.join(__dirname, '../js/achievements.js'), 'utf8');
+const gpaCode = fs.readFileSync(path.join(__dirname, '../js/gpa.js'), 'utf8');
 
 vm.createContext(sandbox);
 vm.runInContext(storageCode, sandbox);
 vm.runInContext(gpaUtilsCode, sandbox);
 vm.runInContext(achievementsCode, sandbox);
+vm.runInContext(gpaCode, sandbox);
 
-const { Storage, GpaUtils, Achievements } = sandbox;
+const { Storage, GpaUtils, Achievements, Gpa } = sandbox;
 
 test('Grading scale: boundary marks and rounding', () => {
   // Boundary tests:
@@ -386,4 +397,67 @@ test('Export, clearAllData, and import round-trip', () => {
   assert.strictEqual(restoredCourses[0].name, 'Software Engineering');
   assert.strictEqual(restoredCourses[0].components.length, 2);
   assert.strictEqual(restoredCourses[0].components[0].earned, 25);
+});
+
+test('Course card expanded state persistence and helpers do not affect GPA calculations', () => {
+  Storage.clearAllData();
+  const c1 = Storage.addCourse({
+    name: 'Intro to Algorithms',
+    creditHours: 4,
+    semester: 'Fall 2026',
+    components: [
+      { id: 'mid', name: 'Midterm', max: 40, earned: 38 },
+      { id: 'fin', name: 'Final', max: 60, earned: 56 }
+    ]
+  });
+
+  const c2 = Storage.addCourse({
+    name: 'Operating Systems',
+    creditHours: 3,
+    semester: 'Fall 2026',
+    components: [
+      { id: 'p1', name: 'Project', max: 50, earned: 45 },
+      { id: 'ex', name: 'Exam', max: 50, earned: null }
+    ]
+  });
+
+  const coursesBefore = Storage.getCourses();
+  const cgpaBefore = GpaUtils.cgpa(coursesBefore, { includeProjected: true });
+  const semGpaBefore = GpaUtils.semesterGpa(coursesBefore, { includeProjected: true });
+  const status1Before = GpaUtils.courseStatus(coursesBefore[0]);
+
+  // Test expanded state helpers
+  assert.strictEqual(Gpa.isCourseExpanded(c1.id), false); // Storage.addCourse alone does not touch expandedCourseIds (UI openCourseModal does)
+  Gpa.setCourseExpanded(c1.id, true);
+  assert.strictEqual(Gpa.isCourseExpanded(c1.id), true);
+
+  Gpa.setCourseExpanded(c2.id, true);
+  assert.strictEqual(Gpa.isCourseExpanded(c2.id), true);
+
+  Gpa.setCourseExpanded(c1.id, false);
+  assert.strictEqual(Gpa.isCourseExpanded(c1.id), false);
+  assert.strictEqual(Gpa.isCourseExpanded(c2.id), true);
+
+  Gpa.toggleCourse(c2.id);
+  assert.strictEqual(Gpa.isCourseExpanded(c2.id), false);
+
+  // Expanded state saved in sessionStorage
+  const storedExpanded = JSON.parse(sandbox.sessionStorage.getItem('studyflow_gpa_expanded') || '[]');
+  assert.deepStrictEqual(storedExpanded, []);
+
+  Gpa.setCourseExpanded(c1.id, true);
+  const storedExpandedAfter = JSON.parse(sandbox.sessionStorage.getItem('studyflow_gpa_expanded') || '[]');
+  assert.deepStrictEqual(storedExpandedAfter, [c1.id]);
+
+  // Assert calculations remain invariant to card expanded/collapsed state
+  const coursesAfter = Storage.getCourses();
+  const cgpaAfter = GpaUtils.cgpa(coursesAfter, { includeProjected: true });
+  const semGpaAfter = GpaUtils.semesterGpa(coursesAfter, { includeProjected: true });
+  const status1After = GpaUtils.courseStatus(coursesAfter[0]);
+
+  assert.strictEqual(cgpaBefore.gpa, cgpaAfter.gpa);
+  assert.strictEqual(cgpaBefore.totalCredits, cgpaAfter.totalCredits);
+  assert.strictEqual(semGpaBefore.gpa, semGpaAfter.gpa);
+  assert.strictEqual(status1Before.earned, status1After.earned);
+  assert.strictEqual(status1Before.grade.letter, status1After.grade.letter);
 });

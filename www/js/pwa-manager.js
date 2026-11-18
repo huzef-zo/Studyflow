@@ -10,7 +10,7 @@
 
 const PWAManager = (() => {
   'use strict';
-
+  
   let config = {
     name: 'StudyFlow',
     swPath: 'sw.js',
@@ -18,13 +18,13 @@ const PWAManager = (() => {
     updateCheckInterval: 60000, // 60 seconds
     debug: true
   };
-
+  
   const log = (message, data = null) => {
     if (config.debug) {
       console.log(`[PWA Manager] ${message}`, data || '');
     }
   };
-
+  
   // ============================================
   // UPDATE CHECKING
   // ============================================
@@ -36,12 +36,12 @@ const PWAManager = (() => {
       });
     }, config.updateCheckInterval);
   };
-
+  
   // ============================================
   // INSTALL PROMPT HANDLING
   // ============================================
   let deferredPrompt = null;
-
+  
   const setupInstallPrompt = () => {
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
@@ -49,14 +49,14 @@ const PWAManager = (() => {
       log('Install prompt deferred - ready to show');
       emitEvent('install-prompt-ready');
     });
-
+    
     window.addEventListener('appinstalled', () => {
       log('App installed successfully');
       emitEvent('app-installed');
       deferredPrompt = null;
     });
   };
-
+  
   // ============================================
   // OFFLINE/ONLINE DETECTION
   // ============================================
@@ -72,25 +72,25 @@ const PWAManager = (() => {
         emitEvent('offline');
       }
     };
-
+    
     window.addEventListener('online', updateOnlineStatus);
     window.addEventListener('offline', updateOnlineStatus);
-
+    
     // Set initial state
     updateOnlineStatus();
   };
-
+  
   // ============================================
   // STANDALONE MODE DETECTION
   // ============================================
   const isStandaloneMode = () => {
-    return window.navigator.standalone === true ||
+    return window.navigator.standalone === true || 
            window.matchMedia('(display-mode: standalone)').matches ||
            window.matchMedia('(display-mode: fullscreen)').matches ||
            window.matchMedia('(display-mode: minimal-ui)').matches ||
            window.matchMedia('(display-mode: window-controls-overlay)').matches;
   };
-
+  
   const setupStandaloneDetection = () => {
     if (isStandaloneMode()) {
       document.documentElement.setAttribute('data-standalone', 'true');
@@ -101,7 +101,7 @@ const PWAManager = (() => {
       log('App running in browser mode');
       emitEvent('browser-mode');
     }
-
+    
     // Listen for display mode changes
     window.matchMedia('(display-mode: standalone)').addEventListener('change', (e) => {
       if (e.matches) {
@@ -113,7 +113,7 @@ const PWAManager = (() => {
       }
     });
   };
-
+  
   // ============================================
   // NOTIFICATIONS
   // ============================================
@@ -122,12 +122,12 @@ const PWAManager = (() => {
       log('Notifications not supported');
       return false;
     }
-
+    
     if (Notification.permission === 'granted') {
       log('Notification permission already granted');
       return true;
     }
-
+    
     try {
       const permission = await Notification.requestPermission();
       const granted = permission === 'granted';
@@ -142,7 +142,7 @@ const PWAManager = (() => {
       return false;
     }
   };
-
+  
   const sendNotification = (title, options = {}) => {
     if (!('Notification' in window) || Notification.permission !== 'granted') {
       return false;
@@ -175,7 +175,7 @@ const PWAManager = (() => {
     }
     return true;
   };
-
+  
   // ============================================
   // BACKGROUND SYNC
   // ============================================
@@ -184,7 +184,7 @@ const PWAManager = (() => {
       log('Background Sync not supported');
       return false;
     }
-
+    
     try {
       const registration = await navigator.serviceWorker.ready;
       await registration.sync.register(tag);
@@ -196,7 +196,7 @@ const PWAManager = (() => {
       return false;
     }
   };
-
+  
   // ============================================
   // PERIODIC BACKGROUND SYNC
   // ============================================
@@ -205,7 +205,7 @@ const PWAManager = (() => {
       log('Periodic Sync not supported');
       return false;
     }
-
+    
     try {
       const registration = await navigator.serviceWorker.ready;
       await registration.periodicSync.register(tag, { minInterval });
@@ -216,7 +216,7 @@ const PWAManager = (() => {
       return false;
     }
   };
-
+  
   // ============================================
   // INSTALL PROMPT
   // ============================================
@@ -225,11 +225,11 @@ const PWAManager = (() => {
       log('No install prompt available');
       return false;
     }
-
+    
     try {
       deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
-
+      
       if (outcome === 'accepted') {
         log('User accepted installation');
         emitEvent('install-accepted');
@@ -244,11 +244,11 @@ const PWAManager = (() => {
       return false;
     }
   };
-
+  
   const isInstallPromptAvailable = () => {
     return deferredPrompt !== null;
   };
-
+  
   // ============================================
   // DISPLAY MODE DETECTION
   // ============================================
@@ -267,7 +267,7 @@ const PWAManager = (() => {
     }
     return 'browser';
   };
-
+  
   // ============================================
   // VISIBILITY & LIFECYCLE
   // ============================================
@@ -282,25 +282,25 @@ const PWAManager = (() => {
       }
     });
   };
-
+  
   // ============================================
   // EVENT SYSTEM
   // ============================================
   const eventListeners = {};
-
+  
   const on = (eventName, callback) => {
     if (!eventListeners[eventName]) {
       eventListeners[eventName] = [];
     }
     eventListeners[eventName].push(callback);
   };
-
+  
   const off = (eventName, callback) => {
     if (eventListeners[eventName]) {
       eventListeners[eventName] = eventListeners[eventName].filter(cb => cb !== callback);
     }
   };
-
+  
   const emitEvent = (eventName, data = null) => {
     if (eventListeners[eventName]) {
       eventListeners[eventName].forEach(callback => {
@@ -308,20 +308,20 @@ const PWAManager = (() => {
       });
     }
   };
-
+  
   // ============================================
   // INITIALIZATION
   // ============================================
   const init = async (customConfig = {}) => {
     config = { ...config, ...customConfig };
     log('Initializing PWA Manager', { config });
-
+    
     // Setup all features
     setupInstallPrompt();
     setupOfflineDetection();
     setupStandaloneDetection();
     setupVisibilityHandling();
-
+    
     // Register service worker for offline functionality
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
@@ -349,14 +349,14 @@ const PWAManager = (() => {
       requestSync: requestBackgroundSync,
       requestNotificationPermission: requestNotificationPermission
     };
-
+    
     log('PWA Manager initialized successfully');
     emitEvent('ready');
-
+    
     // Return undefined since no service worker registration is done
     return undefined;
   };
-
+  
   // ============================================
   // PUBLIC API
   // ============================================

@@ -1,0 +1,33 @@
+/* ============================================
+   StudyFlow - Course Card Expand / Collapse Styles (GPA Module)
+   ============================================ */
+
+.course-card-collapsible {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.25s ease;
+}
+
+.course-card[data-expanded="true"] .course-card-collapsible {
+  grid-template-rows: 1fr;
+}
+
+.course-card-collapsible-inner {
+  overflow: hidden;
+  min-height: 0;
+}
+
+.course-card-chevron {
+  transition: transform 0.25s ease;
+}
+
+.course-card[data-expanded="true"] .course-card-chevron {
+  transform: rotate(180deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .course-card-collapsible,
+  .course-card-chevron {
+    transition: none !important;
+  }
+}

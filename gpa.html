@@ -11,8 +11,8 @@
   <link rel="manifest" href="./manifest.json"/>
 
   <title>GPA Calculator - StudyFlow</title>
-  <link rel="stylesheet" href="css/tailwind.css?v=v2026-11-10-01"/>
-  <link rel="stylesheet" href="css/app.css?v=v2026-11-10-01"/>
+  <link rel="stylesheet" href="css/tailwind.css?v=v2026-11-18-01"/>
+  <link rel="stylesheet" href="css/app.css?v=v2026-11-18-01"/>
 </head>
 <body class="bg-surface-base text-on-surface font-body-md text-body-md flex flex-col relative antialiased selection:bg-primary-container selection:text-surface-base min-h-dvh">
   <!-- Radial Ambient Glow -->
@@ -119,9 +119,19 @@
         </div>
       </div>
 
-      <!-- Semester Tabs Strip -->
-      <div class="flex items-center gap-1.5 overflow-x-auto pb-1 -mx-margin px-margin" role="tablist" aria-label="Semester filter" id="semester-tabs-container">
-        <!-- Rendered by JS -->
+      <!-- Semester Tabs Strip & Expand/Collapse Toggle -->
+      <div class="flex items-center justify-between gap-2">
+        <div class="flex items-center gap-1.5 overflow-x-auto pb-1 -mx-margin px-margin flex-1 min-w-0" role="tablist" aria-label="Semester filter" id="semester-tabs-container">
+          <!-- Rendered by JS -->
+        </div>
+        <button
+          type="button"
+          id="toggle-all-courses-btn"
+          class="font-label-sm text-[12px] font-medium text-text-secondary hover:text-text-primary whitespace-nowrap px-2.5 py-1 rounded-full bg-surface-glass hover:bg-surface-container-high transition-colors shrink-0"
+          aria-label="Expand all courses"
+        >
+          Expand all
+        </button>
       </div>
 
       <!-- Courses List Container -->
@@ -134,13 +144,13 @@
 
   <!-- Core Scripts -->
   <script src="version.js"></script>
-  <script src="js/storage.js?v=v2026-11-10-01"></script>
-  <script src="js/subtask-utils.js?v=v2026-11-10-01"></script>
-  <script src="js/pwa-manager.js?v=v2026-11-10-01"></script>
-  <script src="js/achievements.js?v=v2026-11-10-01"></script>
-  <script src="js/gpa-utils.js?v=v2026-11-10-01"></script>
-  <script src="js/app.js?v=v2026-11-10-01"></script>
-  <script src="js/gpa.js?v=v2026-11-10-01"></script>
+  <script src="js/storage.js?v=v2026-11-18-01"></script>
+  <script src="js/subtask-utils.js?v=v2026-11-18-01"></script>
+  <script src="js/pwa-manager.js?v=v2026-11-18-01"></script>
+  <script src="js/achievements.js?v=v2026-11-18-01"></script>
+  <script src="js/gpa-utils.js?v=v2026-11-18-01"></script>
+  <script src="js/app.js?v=v2026-11-18-01"></script>
+  <script src="js/gpa.js?v=v2026-11-18-01"></script>
 
   <script>
     document.addEventListener('DOMContentLoaded', () => {
